@@ -1,0 +1,384 @@
+<!DOCTYPE html><html class="light" lang="vi"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>BIM4C CONSTRUCTION | Trang Chủ</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700&amp;family=Libre+Franklin:wght@400;600&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "tertiary-container": "#1f3152",
+                        "primary": "#001b42",
+                        "inverse-on-surface": "#f1f1f1",
+                        "outline-variant": "#c4c6d0",
+                        "tertiary-fixed-dim": "#b5c6ef",
+                        "error-container": "#ffdad6",
+                        "surface-container-lowest": "#ffffff",
+                        "surface": "#f9f9f9",
+                        "on-primary-fixed": "#001a41",
+                        "secondary-fixed-dim": "#ffb3ad",
+                        "primary-container": "#16305c",
+                        "on-secondary-fixed-variant": "#930011",
+                        "primary-fixed-dim": "#afc6fb",
+                        "primary-fixed": "#d8e2ff",
+                        "surface-bright": "#f9f9f9",
+                        "surface-container-high": "#e8e8e8",
+                        "on-surface-variant": "#44474f",
+                        "surface-container": "#eeeeee",
+                        "deep-navy": "#0D2040",
+                        "on-primary": "#ffffff",
+                        "on-primary-fixed-variant": "#2e4673",
+                        "outline": "#747780",
+                        "on-tertiary": "#ffffff",
+                        "surface-variant": "#e2e2e2",
+                        "on-secondary-container": "#fffbff",
+                        "inverse-surface": "#2f3131",
+                        "surface-container-highest": "#e2e2e2",
+                        "tertiary": "#081c3b",
+                        "paper-white": "#FFFFFF",
+                        "secondary-container": "#dd2e32",
+                        "surface-container-low": "#f4f3f3",
+                        "on-tertiary-fixed-variant": "#364769",
+                        "on-surface": "#1a1c1c",
+                        "surface-dim": "#dadada",
+                        "on-error": "#ffffff",
+                        "secondary-fixed": "#ffdad6",
+                        "surface-tint": "#475e8d",
+                        "secondary": "#b90d1c",
+                        "error": "#ba1a1a",
+                        "on-background": "#1a1c1c",
+                        "structural-red": "#D0242A",
+                        "concrete-gray": "#333333",
+                        "on-tertiary-fixed": "#071b3b",
+                        "on-tertiary-container": "#8899c0",
+                        "background": "#f9f9f9",
+                        "on-error-container": "#93000a",
+                        "on-primary-container": "#8299cb",
+                        "on-secondary-fixed": "#410003",
+                        "on-secondary": "#ffffff",
+                        "inverse-primary": "#afc6fb",
+                        "tertiary-fixed": "#d8e2ff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0px",
+                        "lg": "0px",
+                        "xl": "0px",
+                        "full": "0px"
+                    },
+                    "spacing": {
+                        "stack-sm": "0.5rem",
+                        "stack-md": "1.5rem",
+                        "margin-edge": "4rem",
+                        "stack-lg": "3rem",
+                        "section-gap": "8rem",
+                        "gutter": "1.5rem"
+                    },
+                    "fontFamily": {
+                        "body-md": ["Libre Franklin", "sans-serif"],
+                        "headline-lg-mobile": ["Barlow Condensed", "sans-serif"],
+                        "display-lg": ["Barlow Condensed", "sans-serif"],
+                        "headline-md": ["Barlow Condensed", "sans-serif"],
+                        "title-lg": ["Barlow Condensed", "sans-serif"],
+                        "body-lg": ["Libre Franklin", "sans-serif"],
+                        "label-md": ["Barlow Condensed", "sans-serif"],
+                        "headline-lg": ["Barlow Condensed", "sans-serif"]
+                    },
+                    "fontSize": {
+                        "body-md": ["16px", { "lineHeight": "1.6", "fontWeight": "400" }],
+                        "headline-lg-mobile": ["32px", { "lineHeight": "1.2", "letterSpacing": "0.04em", "fontWeight": "700" }],
+                        "display-lg": ["72px", { "lineHeight": "1.1", "letterSpacing": "0.04em", "fontWeight": "700" }],
+                        "headline-md": ["32px", { "lineHeight": "1.2", "letterSpacing": "0.02em", "fontWeight": "600" }],
+                        "title-lg": ["20px", { "lineHeight": "1.4", "letterSpacing": "0.1em", "fontWeight": "600" }],
+                        "body-lg": ["18px", { "lineHeight": "1.6", "fontWeight": "400" }],
+                        "label-md": ["14px", { "lineHeight": "1.0", "letterSpacing": "0.15em", "fontWeight": "600" }],
+                        "headline-lg": ["48px", { "lineHeight": "1.2", "letterSpacing": "0.04em", "fontWeight": "700" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .fill-icon {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        /* Double Frame Effect */
+        .double-frame {
+            position: relative;
+        }
+        .double-frame::after {
+            content: '';
+            position: absolute;
+            inset: 8px;
+            border: 1px solid white;
+            pointer-events: none;
+            z-index: 10;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md antialiased overflow-x-hidden">
+<!-- HEADER: TopNavBar -->
+<header class="bg-paper-white dark:bg-deep-navy font-label-md text-label-md uppercase tracking-[0.15em] docked full-width top-0 z-50 border-b-4 border-primary dark:border-tertiary-container sticky">
+<div class="flex flex-col md:flex-row justify-between items-center w-full px-margin-edge py-stack-sm max-w-screen-2xl mx-auto">
+<!-- Brand Logo -->
+<a class="font-display-lg text-title-lg font-bold text-primary dark:text-on-primary tracking-tighter shrink-0 mb-4 md:mb-0" href="#">
+                BIM4C CONSTRUCTION
+            </a>
+<!-- Navigation Links -->
+<nav class="hidden md:flex space-x-8 items-center w-full justify-center">
+<a class="text-primary dark:text-on-primary-container hover:text-secondary dark:hover:text-secondary-fixed transition-colors duration-300" href="#">PROJECTS</a>
+<a class="text-secondary dark:text-secondary-fixed border-b-2 border-secondary pb-1" href="#">SERVICES</a>
+<a class="text-primary dark:text-on-primary-container hover:text-secondary dark:hover:text-secondary-fixed transition-colors duration-300" href="#">ABOUT US</a>
+<a class="text-primary dark:text-on-primary-container hover:text-secondary dark:hover:text-secondary-fixed transition-colors duration-300" href="#">NEWS</a>
+<a class="text-primary dark:text-on-primary-container hover:text-secondary dark:hover:text-secondary-fixed transition-colors duration-300" href="#">CAREERS</a>
+<a class="text-primary dark:text-on-primary-container hover:text-secondary dark:hover:text-secondary-fixed transition-colors duration-300" href="#">CONTACT</a>
+</nav>
+<!-- Trailing Action -->
+<div class="hidden md:block shrink-0">
+<button class="bg-primary text-on-primary px-6 py-3 font-label-md uppercase tracking-[0.1em] hover:bg-structural-red transition-colors duration-300">
+                    GET A QUOTE
+                </button>
+</div>
+<!-- Mobile Menu Toggle (Placeholder) -->
+<button class="md:hidden text-primary">
+<span class="material-symbols-outlined text-3xl">menu</span>
+</button>
+</div>
+</header>
+<main>
+<!-- 2. HERO: Full-screen duotone navy image -->
+<section class="relative w-full h-[80vh] bg-deep-navy flex items-center justify-center overflow-hidden">
+<div class="absolute inset-0 opacity-60 mix-blend-multiply bg-primary"></div>
+<img alt="BIM Model Construction Site" class="absolute inset-0 w-full h-full object-cover mix-blend-overlay opacity-80" data-alt="A massive, high-tech construction site illuminated at twilight, featuring towering skyscrapers under construction. The scene is rendered in a deep, moody navy duotone aesthetic, reflecting industrial scale and precision engineering. A subtle blue overlay enhances the structural and architectural focus, conveying a sense of corporate authority and modern development." src="https://lh3.googleusercontent.com/aida/AP1WRLvt2C4040d18EL5FKvETEn1xDTrJ1LDpij_HuR9ODN0kGsSOng10dh8lCV1tkCF9WUoqjXeSRK-2mbCsGg5UwSDEEv2yr7HlMRWN9zbgQacdS0QSHHsDxXpBZSE6BHZlsMZNZXZQA230irAb65XBGvuDi8i0a41y3a9xqUdWemdeh6yJ19cLMRfrpLaZXD409cusLhz1bcrwd3Sv7BreEdzd9QWVxBZHt8X_FE1BvUgiyXKg1C7mCzChg">
+<div class="relative z-10 text-center px-4 max-w-4xl">
+<h1 class="font-display-lg text-display-lg md:text-display-lg font-bold text-white uppercase mb-6 tracking-widest drop-shadow-lg">
+                    BIM4C — CHUYỂN ĐỔI SỐ XÂY DỰNG
+                </h1>
+<div class="w-24 h-1 bg-structural-red mx-auto mb-8"></div>
+<p class="font-body-lg text-body-lg text-surface-container-high max-w-2xl mx-auto">
+                    Pioneering the future of construction through precision, scale, and uncompromising reliability.
+                </p>
+</div>
+<!-- Overlay gradient bottom -->
+<div class="absolute bottom-0 left-0 w-full h-32 bg-gradient-to-t from-deep-navy to-transparent"></div>
+</section>
+<!-- 3. STATS Section -->
+<section class="bg-paper-white py-section-gap border-b border-surface-variant">
+<div class="max-w-screen-2xl mx-auto px-margin-edge">
+<div class="grid grid-cols-2 md:grid-cols-4 gap-gutter text-center divide-x divide-surface-variant">
+<div class="flex flex-col items-center px-4">
+<span class="material-symbols-outlined text-5xl text-primary mb-4">domain</span>
+<div class="font-headline-lg text-headline-lg text-primary font-bold">2004</div>
+<div class="font-label-md text-label-md text-outline mt-2 uppercase tracking-widest">Năm Thành Lập</div>
+</div>
+<div class="flex flex-col items-center px-4">
+<span class="material-symbols-outlined text-5xl text-primary mb-4">architecture</span>
+<div class="font-headline-lg text-headline-lg text-primary font-bold">180+</div>
+<div class="font-label-md text-label-md text-outline mt-2 uppercase tracking-widest">Dự Án Lớn</div>
+</div>
+<div class="flex flex-col items-center px-4">
+<span class="material-symbols-outlined text-5xl text-primary mb-4">engineering</span>
+<div class="font-headline-lg text-headline-lg text-primary font-bold">1000+</div>
+<div class="font-label-md text-label-md text-outline mt-2 uppercase tracking-widest">Chuyên Gia</div>
+</div>
+<div class="flex flex-col items-center px-4">
+<span class="material-symbols-outlined text-5xl text-primary mb-4">school</span>
+<div class="font-headline-lg text-headline-lg text-primary font-bold">9042</div>
+<div class="font-label-md text-label-md text-outline mt-2 uppercase tracking-widest">Học Viên BIM</div>
+</div>
+</div>
+</div>
+</section>
+<!-- 4. SERVICES Section -->
+<section class="bg-surface py-section-gap">
+<div class="max-w-screen-2xl mx-auto px-margin-edge">
+<div class="text-center mb-stack-lg">
+<h2 class="font-headline-md text-headline-md text-primary font-bold uppercase tracking-widest mb-4">Dịch Vụ Cốt Lõi</h2>
+<div class="w-16 h-1 bg-structural-red mx-auto"></div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-gutter">
+<!-- Service 1 -->
+<div class="group relative bg-deep-navy overflow-hidden cursor-pointer h-96">
+<img alt="BIM Services" class="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-40 transition-opacity duration-500 mix-blend-luminosity" data-alt="Close up architectural blueprint with digital overlay, representing Building Information Modeling services in a professional, technical setting. Deep navy and white tones." src="https://lh3.googleusercontent.com/aida/AP1WRLtsOamic7xheKWXdf23uTn403T83kB-WPAD2Dn0pPN96Vpa5-MQlPikWMz8T_EVOPFK-L6YlCtWhiU2m6Ob0ccj9L_rBBb3-iaivVgHwWxQc_QsItUYa8f-AEwVuErLpgKkIZMim1MeEci2gj2tXcMY0gX0kTjfNVujnDyQGY2PWe_yHT4wIhQOfZVp1F8yywUCMNjvsneDHoisnl8TMIrhgkZlwMgsxQZdErGeUa7mHQsURCIMJRgTj2w">
+<div class="absolute inset-0 double-frame"></div>
+<div class="absolute inset-0 p-8 flex flex-col justify-end">
+<span class="material-symbols-outlined text-4xl text-white mb-4">view_in_ar</span>
+<h3 class="font-title-lg text-title-lg text-white font-bold uppercase mb-2">Tư Vấn BIM</h3>
+<div class="w-8 h-0.5 bg-structural-red group-hover:w-16 transition-all duration-300"></div>
+</div>
+</div>
+<!-- Service 2 -->
+<div class="group relative bg-deep-navy overflow-hidden cursor-pointer h-96">
+<img alt="Training Services" class="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-40 transition-opacity duration-500 mix-blend-luminosity" data-alt="A professional corporate training room with engineers studying construction plans and digital models on large screens. Industrial aesthetic, focused on technical education." src="https://lh3.googleusercontent.com/aida/AP1WRLuFBZO28xxa-qpzrXraufjWUTa5Y-pfURKDhA8LRZ8WD2tsWg8eUPBgYC9Ues2S3r9UvAo5ZlaVykBpwbnmEP7GT8H46OYnSR9T5BqTVqJtyqD5OXT5cUUVMHji-7JMOU-LYJNsNfYrokCJw4W9q87W4aXJZhvfk0UaljVcITfxzPw_46X41nBcVlep2qZRXwhpJLyItCqzUQxvbz877cK9dwHF4hfJFRZXw5YvPbZsxWNf0EfvbmMjsg">
+<div class="absolute inset-0 double-frame"></div>
+<div class="absolute inset-0 p-8 flex flex-col justify-end">
+<span class="material-symbols-outlined text-4xl text-white mb-4">co_present</span>
+<h3 class="font-title-lg text-title-lg text-white font-bold uppercase mb-2">Đào Tạo</h3>
+<div class="w-8 h-0.5 bg-structural-red group-hover:w-16 transition-all duration-300"></div>
+</div>
+</div>
+<!-- Service 3 -->
+<div class="group relative bg-deep-navy overflow-hidden cursor-pointer h-96">
+<img alt="Design Services" class="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-40 transition-opacity duration-500 mix-blend-luminosity" data-alt="A detailed architectural rendering of a modern commercial high-rise building, showcasing intricate structural design and facade engineering. Crisp, clear, and professional." src="https://lh3.googleusercontent.com/aida/AP1WRLteaXoq1__e10HwVoo-44iDAsDv3uTcJJtsHLYMDOUKUK3tHdc3aIxshbwfLmV3tF6-WBzBtaadKtdWk3-smxPcx5IEZE6q7-PTuBA3xbdGk27bHe3J2IlXeCXDqGBF_w4oATJogFd8C0z-nshEWmy_3COfW8WVqg9sk9VuRPKML9x31RajENB9Y-NIYO7BoxFV0tiNLSkD3T6Gtkg7uDw5DJSIbcIYDfYlqVEHoKKsED8OZ0DLYp0e5g">
+<div class="absolute inset-0 double-frame"></div>
+<div class="absolute inset-0 p-8 flex flex-col justify-end">
+<span class="material-symbols-outlined text-4xl text-white mb-4">architecture</span>
+<h3 class="font-title-lg text-title-lg text-white font-bold uppercase mb-2">Thiết Kế</h3>
+<div class="w-8 h-0.5 bg-structural-red group-hover:w-16 transition-all duration-300"></div>
+</div>
+</div>
+<!-- Service 4 -->
+<div class="group relative bg-deep-navy overflow-hidden cursor-pointer h-96">
+<img alt="Consulting Services" class="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-40 transition-opacity duration-500 mix-blend-luminosity" data-alt="Engineers in hard hats reviewing project plans on a vast construction site during daytime. High contrast, sharp details emphasizing project management and consulting expertise." src="https://lh3.googleusercontent.com/aida/AP1WRLunj2SxiXPQN5TR8kTNa3WWHsvp9YIAiWkJTOtx7bXDDPZU-Bv-u7l5RgyxHlZQTFVdi7mXcMZHhy7c28Zkrj3To8AuGrrTa_8KASP7hWHK5LBk6D3bNyDMuoiVPkmMIJEbhWCTBJSTCtvF_v_7U_rrOnlTvJovuf5qzq38xVegvQpy0Zrc79wTWZBqzXoOlW5bGlwmA-pt1dKbp_x0I1EYtTKEcxXLyes5uieDLYa2Zws7TG2_Ge9yeb4">
+<div class="absolute inset-0 double-frame"></div>
+<div class="absolute inset-0 p-8 flex flex-col justify-end">
+<span class="material-symbols-outlined text-4xl text-white mb-4">engineering</span>
+<h3 class="font-title-lg text-title-lg text-white font-bold uppercase mb-2">Tư Vấn Giám Sát</h3>
+<div class="w-8 h-0.5 bg-structural-red group-hover:w-16 transition-all duration-300"></div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- 6. ABOUT Section -->
+<section class="bg-paper-white py-section-gap">
+<div class="max-w-screen-2xl mx-auto px-margin-edge grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+<div class="relative">
+<div class="absolute inset-0 border-4 border-primary translate-x-4 translate-y-4"></div>
+<img alt="Corporate Construction Overview" class="relative z-10 w-full h-[500px] object-cover grayscale hover:grayscale-0 transition-all duration-700" data-alt="A sweeping aerial view of a massive, completed corporate campus or commercial complex, highlighting pristine structural engineering and modern architectural scale. High contrast, professional presentation." src="https://lh3.googleusercontent.com/aida/AP1WRLuNxH562aYf5I7Q54MqqTNjqSVRLJiyDD-8r6UFcx6oObda3sd877cww_RnJK5DxdlkmVmfQKIg0tRQRQ1TiF3t7VKSG0FW5tzAMCTA4CBRKy0Rgq6iFnbFtcDConLo935ojyo2oji1PerRbfO5mr4HV1G2UcvNYkC9_uKDywX6OQUk_Ij1G0YrMjwClIlNvWAnO1TtiZ800HK4gXN9JbybpFZc007zRZHssL_TpK_oqIwFaE0DtjWx3Tg">
+</div>
+<div class="space-y-6">
+<div class="w-12 h-1 bg-structural-red mb-4"></div>
+<h2 class="font-headline-md text-headline-md text-primary font-bold uppercase tracking-widest">
+                        NHÀ THẦU XÂY DỰNG UY TÍN HÀNG ĐẦU VIỆT NAM
+                    </h2>
+<p class="font-body-md text-body-md text-on-surface-variant">
+                        BIM4C tự hào là đơn vị tiên phong trong việc ứng dụng Mô hình Thông tin Xây dựng (BIM) vào thực tiễn thiết kế, thi công và quản lý dự án tại Việt Nam. Với nền tảng kỹ thuật vững chắc và đội ngũ chuyên gia giàu kinh nghiệm, chúng tôi cam kết mang đến những giải pháp tối ưu, đảm bảo chất lượng, tiến độ và hiệu quả đầu tư cho mọi công trình.
+                    </p>
+<p class="font-body-md text-body-md text-on-surface-variant">
+                        Triết lý hoạt động của chúng tôi dựa trên sự minh bạch, chính xác và không ngừng đổi mới công nghệ.
+                    </p>
+<button class="mt-8 bg-transparent border-2 border-primary text-primary px-8 py-3 font-label-md uppercase tracking-[0.1em] hover:bg-primary hover:text-white transition-colors duration-300">
+                        TÌM HIỂU THÊM VỀ CHÚNG TÔI
+                    </button>
+</div>
+</div>
+</section>
+<!-- 7. FEATURED PROJECTS -->
+<section class="bg-surface py-section-gap"><div class="max-w-screen-2xl mx-auto px-margin-edge relative">
+    <div class="text-center mb-stack-lg">
+        <h2 class="font-headline-md text-headline-md text-primary font-bold uppercase tracking-widest mb-6">DỰ ÁN NỔI BẬT</h2>
+        <div class="flex flex-wrap justify-center space-x-8 font-label-md text-label-md uppercase tracking-wider border-b border-surface-variant pb-4">
+            <button class="text-primary border-b-4 border-structural-red pb-4 font-bold">Nhà cao tầng</button>
+            <button class="text-outline hover:text-primary transition-colors pb-4">Nhà thấp tầng</button>
+            <button class="text-outline hover:text-primary transition-colors pb-4">Công nghiệp</button>
+            <button class="text-outline hover:text-primary transition-colors pb-4">Hạ tầng</button>
+            <button class="text-outline hover:text-primary transition-colors pb-4">Cơ điện</button>
+        </div>
+    </div>
+
+    <div class="relative group">
+        <!-- Navigation Arrows -->
+        <button class="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-12 z-10 w-12 h-12 bg-primary text-white flex items-center justify-center hover:bg-structural-red transition-colors">
+            <span class="material-symbols-outlined">chevron_left</span>
+        </button>
+        <button class="absolute right-0 top-1/2 -translate-y-1/2 translate-x-12 z-10 w-12 h-12 bg-primary text-white flex items-center justify-center hover:bg-structural-red transition-colors">
+            <span class="material-symbols-outlined">chevron_right</span>
+        </button>
+
+        <!-- Projects Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
+            <!-- Project 1: LUMI HANOI -->
+            <div class="group relative bg-deep-navy overflow-hidden h-[500px]">
+                <img src="https://lh3.googleusercontent.com/aida/AP1WRLuJmc3-NBYUu0PIqWSX-3S6Hpb55ZY5vmxqqkNZC7CNKb2KeDtImbwKc-HWNq-ckPmOy7ojlV5XRVbbR0O4QmcGxY8zknHN9Wsf8bjHZE6CH339c9BaXOn8jb54KfPdiL2mMdezDUgPGqKS_Lp4RQXTLsVKyDh0FMj1u7ShJjUE2_Erchl-zxELBuO9hrXHIHATU1abg2RISVQU2NLMY_aU7qucBNFhJJhjOW_k3R3EHoQzGtEekjt8ZfA" alt="LUMI HANOI" class="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-all duration-700 mix-blend-luminosity group-hover:mix-blend-normal">
+                <div class="absolute inset-0 bg-primary/20 mix-blend-multiply"></div>
+                <div class="absolute bottom-0 left-0 w-full p-8 bg-gradient-to-t from-deep-navy to-transparent">
+                    <h3 class="font-title-lg text-title-lg text-white font-bold uppercase tracking-wider">LUMI HANOI</h3>
+                </div>
+            </div>
+            <!-- Project 2: THE MATRIX ONE -->
+            <div class="group relative bg-deep-navy overflow-hidden h-[500px]">
+                <img src="https://lh3.googleusercontent.com/aida/AP1WRLsttqiPJsDlRWLPnTATn0WgsfeThS0mc-aOvT4Otk4FcLXCkqkRl7sP2gUpTNb0vGJ2Q2Uj9My8zQdRkBlajI22JKcLxf9BrqXToLsPIllwUCV9LhhW3CdctzwcMigfBSiYcLZrqtmBXJBSpz5ItJWZlWmhnFt-xTVkq_OmFQqMODRUmFhP62pwWjXTfXttwFt44Jhm4QxpQF_I6ukFzydxlTqxajQ9CwzCvctH2PsXCqaztIW-McL1CQ" alt="THE MATRIX ONE" class="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-all duration-700 mix-blend-luminosity group-hover:mix-blend-normal">
+                <div class="absolute inset-0 bg-primary/20 mix-blend-multiply"></div>
+                <div class="absolute bottom-0 left-0 w-full p-8 bg-gradient-to-t from-deep-navy to-transparent">
+                    <h3 class="font-title-lg text-title-lg text-white font-bold uppercase tracking-wider">THE MATRIX ONE - GIAI ĐOẠN 2</h3>
+                </div>
+            </div>
+            <!-- Project 3: ELYSIAN -->
+            <div class="group relative bg-deep-navy overflow-hidden h-[500px]">
+                <img src="https://lh3.googleusercontent.com/aida/AP1WRLvcgufrrWqJgyKgwxXPXRU8v4FDlZNmktZontWPsNz1jyvxVMOWWcJ0ZHtP6G5rY4k6okmktkxZ983L52t7rC2Kawsh_7fR5KZoCvlCXf1aulB88f3zHfc7aWasOmynOz_VeYNfPEmz4b1lZMHlkH9ySKnO982yEaTTtYdAU8yZ8OXfekPrOISDagztXvHcfIldKgDGx2OuJO6uCKiPhEIfOh8J75ICaVgdwM-L07KFxJ-A1aTS8Vvtug" alt="ELYSIAN" class="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-all duration-700 mix-blend-luminosity group-hover:mix-blend-normal">
+                <div class="absolute inset-0 bg-primary/20 mix-blend-multiply"></div>
+                <div class="absolute bottom-0 left-0 w-full p-8 bg-gradient-to-t from-deep-navy to-transparent">
+                    <h3 class="font-title-lg text-title-lg text-white font-bold uppercase tracking-wider">ELYSIAN</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="text-center mt-12">
+        <button class="bg-primary text-white px-8 py-3 font-label-md uppercase tracking-[0.1em] hover:bg-structural-red transition-colors duration-300">
+            XEM TẤT CẢ DỰ ÁN
+        </button>
+    </div>
+</div></section>
+</main>
+<!-- FOOTER -->
+<footer class="bg-deep-navy dark:bg-primary font-body-md text-body-md text-on-primary dark:text-on-primary-fixed-variant w-full min-h-[400px] border-t-8 border-secondary">
+<div class="grid grid-cols-1 md:grid-cols-4 gap-gutter px-margin-edge py-section-gap max-w-screen-2xl mx-auto">
+<!-- Brand Info -->
+<div class="col-span-1 md:col-span-2 pr-8">
+<div class="font-headline-md text-headline-md font-bold text-white uppercase tracking-widest mb-6">
+                    BIM4C CONSTRUCTION
+                </div>
+<p class="text-on-primary/70 mb-6 max-w-md">
+                    Kiến tạo nền tảng vững chắc cho tương lai thông qua công nghệ BIM và quy trình quản lý xây dựng tiên tiến nhất.
+                </p>
+<div class="flex space-x-4">
+<!-- Social icons placeholder -->
+<div class="w-10 h-10 border border-on-primary/30 flex items-center justify-center hover:bg-secondary hover:border-secondary transition-colors cursor-pointer">
+<span class="material-symbols-outlined text-white">share</span>
+</div>
+<div class="w-10 h-10 border border-on-primary/30 flex items-center justify-center hover:bg-secondary hover:border-secondary transition-colors cursor-pointer">
+<span class="material-symbols-outlined text-white">mail</span>
+</div>
+</div>
+</div>
+<!-- Links -->
+<div class="col-span-1">
+<h4 class="font-title-lg text-title-lg text-white font-bold uppercase mb-6 tracking-wider">THÔNG TIN</h4>
+<ul class="space-y-4 font-label-md text-label-md tracking-wider">
+<li class=""><a class="text-on-primary/70 hover:text-white hover:underline underline-offset-4 transition-all" href="#">VỀ CHÚNG TÔI</a></li>
+<li class=""><a class="text-on-primary/70 hover:text-white hover:underline underline-offset-4 transition-all" href="#">DỰ ÁN</a></li>
+<li class=""><a class="text-on-primary/70 hover:text-white hover:underline underline-offset-4 transition-all" href="#">TIN TỨC SỰ KIỆN</a></li>
+<li class=""><a class="text-on-primary/70 hover:text-white hover:underline underline-offset-4 transition-all" href="#">TUYỂN DỤNG</a></li>
+<li class=""><a class="text-on-primary/70 hover:text-white hover:underline underline-offset-4 transition-all" href="#">LIÊN HỆ</a></li>
+</ul>
+</div>
+<!-- Contact / Legal -->
+<div class="col-span-1">
+<h4 class="font-title-lg text-title-lg text-white font-bold uppercase mb-6 tracking-wider">PHÁP LÝ</h4>
+<ul class="space-y-4 font-label-md text-label-md tracking-wider">
+<li class=""><a class="text-on-primary/70 hover:text-white hover:underline underline-offset-4 transition-all" href="#">PRIVACY POLICY</a></li>
+<li class=""><a class="text-on-primary/70 hover:text-white hover:underline underline-offset-4 transition-all" href="#">TERMS OF SERVICE</a></li>
+<li class=""><a class="text-on-primary/70 hover:text-white hover:underline underline-offset-4 transition-all" href="#">SITE MAP</a></li>
+<li class=""><a class="text-on-primary/70 hover:text-white hover:underline underline-offset-4 transition-all" href="#">SUSTAINABILITY</a></li>
+<li class=""><a class="text-on-primary/70 hover:text-white hover:underline underline-offset-4 transition-all" href="#">INVESTOR RELATIONS</a></li>
+</ul>
+</div>
+</div>
+<div class="border-t border-on-primary/20 px-margin-edge py-6 text-center">
+<p class="font-label-md text-label-md text-on-primary/50 tracking-widest uppercase">
+                © 2025 BIM4C CONSTRUCTION. ALL RIGHTS RESERVED. STRUCTURAL INTEGRITY GUARANTEED.
+            </p>
+</div>
+</footer>
+
+
+</body></html>

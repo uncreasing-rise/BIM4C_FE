@@ -1,0 +1,9 @@
+"use client";
+import { FormEvent, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+
+export default function AdminLogin() {
+  const router=useRouter(); const params=useSearchParams(); const [email,setEmail]=useState(""); const [password,setPassword]=useState(""); const [busy,setBusy]=useState(false); const [error,setError]=useState("");
+  async function submit(event:FormEvent){event.preventDefault();if(busy)return;setBusy(true);setError("");try{const response=await fetch('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password})});if(!response.ok){const body=await response.json().catch(()=>null) as {message?:string}|null;throw new Error(body?.message??'Đăng nhập thất bại');}const next=params.get('next');router.replace(next?.startsWith('/admin')?next:'/admin');router.refresh();}catch(e){setError(e instanceof Error?e.message:'Đăng nhập thất bại');}finally{setBusy(false)}}
+  return <main style={{minHeight:'100vh',display:'grid',placeItems:'center',background:'#101820',padding:24}}><form onSubmit={submit} className="admin-panel" style={{width:'min(440px,100%)',padding:32,display:'grid',gap:18}}><div className="admin-brand"><span style={{fontSize:30,fontWeight:800}}>BIM<span style={{color:'#ef7d00'}}>4C</span></span><small>ADMIN CMS</small></div><h1>Đăng nhập quản trị</h1><label>Email<input autoComplete="username" type="email" required maxLength={254} value={email} onChange={e=>setEmail(e.target.value)}/></label><label>Mật khẩu<input autoComplete="current-password" type="password" required minLength={10} maxLength={128} value={password} onChange={e=>setPassword(e.target.value)}/></label>{error&&<p role="alert" className="homepage-feedback">{error}</p>}<button className="admin-primary" disabled={busy} type="submit">{busy?'Đang đăng nhập…':'Đăng nhập'}</button></form></main>;
+}

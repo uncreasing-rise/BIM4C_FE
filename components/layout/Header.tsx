@@ -1,0 +1,10 @@
+"use client";
+
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { MobileNavigation } from "./MobileNavigation";
+import { HEADER_MENUS } from "@/constants/navigation";
+import { ROUTES } from "@/constants/routes";
+function isCurrent(pathname:string,href:string){return href==="/"?pathname===href:pathname===href||pathname.startsWith(`${href}/`)}
+function NavMenu({label,href,items,pathname}:{label:string;href:string;items:ReadonlyArray<{label:string;href:string}>;pathname:string}){const active=isCurrent(pathname,href);return <div className={`nav-menu${active?" active":""}`}><Link href={href} aria-current={active?"page":undefined}>{label}</Link><div className="nav-dropdown">{items.map(item=><Link href={item.href} key={item.label}>{item.label}<span>→</span></Link>)}</div></div>}
+export function Header(){const pathname=usePathname();return <header className="site-header"><div className="utility-bar"><div><span>CÔNG TY CỔ PHẦN BIM4C</span><span>ONE TEAM · GREAT SOLUTION</span><nav><Link href={ROUTES.courses}>TUYỂN DỤNG</Link><Link href={ROUTES.contact}>LIÊN HỆ</Link><div className="languages"><span>VN</span><div><a href="#">VN</a><a href="#">EN</a><a href="#">CN</a></div></div></nav></div></div><div className="header-inner"><nav className="desktop-nav left" aria-label="Điều hướng chính"><NavMenu label="GIỚI THIỆU" href={ROUTES.about} items={HEADER_MENUS.about} pathname={pathname}/><NavMenu label="DỊCH VỤ" href={ROUTES.services} items={HEADER_MENUS.services} pathname={pathname}/><NavMenu label="DỰ ÁN" href={ROUTES.projects} items={HEADER_MENUS.projects} pathname={pathname}/></nav><Link className="brand" href={ROUTES.home}>BIM<span>4C</span></Link><nav className="desktop-nav right"><Link className={isCurrent(pathname,ROUTES.courses)?"active":""} aria-current={isCurrent(pathname,ROUTES.courses)?"page":undefined} href={ROUTES.courses}>KHÓA HỌC</Link><Link className={isCurrent(pathname,ROUTES.blog)?"active":""} aria-current={isCurrent(pathname,ROUTES.blog)?"page":undefined} href={ROUTES.blog}>TIN TỨC</Link><Link href={ROUTES.contact}>LIÊN HỆ</Link></nav><MobileNavigation/></div></header>}

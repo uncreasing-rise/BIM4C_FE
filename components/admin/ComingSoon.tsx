@@ -1,0 +1,2 @@
+import { AdminShell } from "./AdminShell";
+export function ComingSoon({title,description}:{title:string;description:string}){return <AdminShell title={title} description={description}><section className="admin-panel admin-coming"><span>◇</span><h2>Giao diện đang được chuẩn bị</h2><p>Module này thuộc hệ thống quản trị và sẽ được hoàn thiện ở vòng UI tiếp theo.</p><button className="admin-primary">Nhận thông báo khi hoàn tất</button></section></AdminShell>}

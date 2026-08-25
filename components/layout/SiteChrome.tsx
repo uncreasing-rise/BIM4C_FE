@@ -1,0 +1,12 @@
+"use client";
+
+import { usePathname } from "next/navigation";
+import { Header } from "./Header";
+import { Footer } from "./Footer";
+import { PageTransition } from "@/components/shared/PageTransition";
+
+export function SiteChrome({ children }: { children: React.ReactNode }) {
+  const isAdmin = usePathname().startsWith("/admin");
+  if (isAdmin) return <main className="admin-main">{children}</main>;
+  return <><Header/><main className="public-main"><PageTransition>{children}</PageTransition></main><Footer/></>;
+}
