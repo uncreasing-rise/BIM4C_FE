@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 export async function backendProxy(request: NextRequest, path: string) {
-  const expectedOrigin = process.env.FRONTEND_URL ?? request.nextUrl.origin;
+  const expectedOrigin = process.env.NEXT_PUBLIC_APP_URL ?? request.nextUrl.origin;
   if (!["GET", "HEAD", "OPTIONS"].includes(request.method)) {
     const incomingOrigin = request.headers.get("origin");
     if (incomingOrigin && incomingOrigin !== expectedOrigin) {
