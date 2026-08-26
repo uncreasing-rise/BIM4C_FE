@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { PageHero } from "@/components/shared/PageHero";
-import { ContactBand } from "@/components/shared/ContactBand";
 import { ROUTES } from "@/constants/routes";
 import { getServices } from "@/features/services/api/queries";
 
@@ -45,6 +44,5 @@ export default async function ServicesPage() {
       <div className="process-grid">{process.map(item => <article key={item.number}><span>{item.number}</span><h3>{item.title}</h3><p>{item.text}</p></article>)}</div>
     </div></section>
 
-    <ContactBand/>
   </main>;
 }

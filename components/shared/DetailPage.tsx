@@ -1,6 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { ContentEntry } from "@/types/content";
+import { ConsultationForm } from "@/features/contact/components/ConsultationForm";
+import { CourseRegistrationForm } from "@/features/contact/components/CourseRegistrationForm";
 import { PageHero } from "./PageHero";
 
 type DetailKind = "course" | "project" | "article" | "service";
@@ -45,13 +47,13 @@ export function DetailPage({ entry, backHref, backLabel, kind = "service", relat
         <main className="detail-main">
           <nav className="detail-index" aria-label="Mục lục"><p>{copy.index}</p>{entry.sections.map((section, index) => <a href={`#section-${index + 1}`} key={section.title}><span>0{index + 1}</span>{section.title}</a>)}</nav>
           {entry.sections.map((section, index) => <section id={`section-${index + 1}`} key={section.title}>
-            <span className="detail-section-number">0{index + 1}</span><div><h2>{section.title}</h2><p>{section.body}</p></div>
+            <span className="detail-section-number">{String(index + 1).padStart(2, "0")}</span><div className="detail-section-body"><h2>{section.title}</h2>{section.body.split(/\n\s*\n/).filter(Boolean).map((paragraph, paragraphIndex) => <p key={paragraphIndex}>{paragraph}</p>)}{section.unorderedList?.length ? <ul>{section.unorderedList.map(item => <li key={item}>{item}</li>)}</ul> : null}{section.orderedList?.length ? <ol>{section.orderedList.map(item => <li key={item}>{item}</li>)}</ol> : null}{section.quote && <blockquote>{section.quote}</blockquote>}{section.images?.length ? <div className={`detail-section-media ${section.imageLayout === "grid" ? "grid" : "stack"}`}>{section.images.map((image, imageIndex) => <figure key={`${image.url}-${imageIndex}`}><Image src={image.url} alt={image.alt} width={image.width ?? 1200} height={image.height ?? 800} sizes={section.imageLayout === "grid" ? "(max-width: 767px) 100vw, 36vw" : "(max-width: 767px) 100vw, 70vw"}/>{image.caption && <figcaption>{image.caption}</figcaption>}</figure>)}</div> : null}</div>
           </section>)}
           <figure className="detail-visual"><Image src={entry.image} alt={entry.title} fill sizes="(max-width: 767px) 100vw, 70vw"/><figcaption>{entry.title} — BIM4C</figcaption></figure>
           <section className="detail-principles"><div><p className="eyebrow">BIM4C STANDARD</p><h2>{copy.extraTitle}</h2></div><ol>{copy.extras.map((item, index) => <li key={item}><span>0{index + 1}</span>{item}</li>)}</ol></section>
         </main>
 
-        <aside className="detail-aside"><p className="eyebrow">{copy.aside}</p><h2>Tóm tắt nhanh</h2><ul>{entry.highlights.map((highlight) => <li key={highlight}>{highlight}</li>)}</ul><div className="detail-aside-note"><span>Đội ngũ BIM4C</span><p>Sẵn sàng trao đổi để giúp bạn xác định giải pháp phù hợp.</p></div><Link className="button button-primary" href="mailto:info@bim4c.vn">{copy.cta} <span>→</span></Link></aside>
+        <aside className="detail-aside"><p className="eyebrow">{copy.aside}</p><h2>Tóm tắt nhanh</h2><ul>{entry.highlights.map((highlight) => <li key={highlight}>{highlight}</li>)}</ul>{kind === "course" ? <CourseRegistrationForm courseId={entry.id ?? entry.slug} courseTitle={entry.title}/> : <><div className="detail-aside-note"><span>Đội ngũ BIM4C</span><p>Sẵn sàng trao đổi để giúp bạn xác định giải pháp phù hợp.</p></div><ConsultationForm compact subject={`Yêu cầu tư vấn: ${entry.title}`}/></>}</aside>
       </div>
 
       {related.length > 0 && <section className="detail-related"><div className="page-shell"><header><div><p className="eyebrow">KHÁM PHÁ THÊM</p><h2>Nội dung liên quan</h2></div><Link href={backHref}>Xem tất cả <span>→</span></Link></header><div>{related.slice(0, 3).map((item) => <article key={item.slug}><Link className="card-link" href={`${backHref}/${item.slug}`} aria-label={`Xem ${item.title}`}/><div><Image src={item.image} alt={item.title} fill sizes="(max-width: 767px) 100vw, 33vw"/></div><p className="eyebrow">{item.eyebrow}</p><h3>{item.title}</h3><span>Khám phá →</span></article>)}</div></div></section>}

@@ -1,6 +1,12 @@
 export interface ContentSectionDto {
   title: string;
   body: string;
+  images?: { url: string; alt?: string; caption?: string; width?: number; height?: number }[];
+  imageLayout?: "stack" | "grid";
+  unorderedList?: string[];
+  orderedList?: string[];
+  quote?: string;
+  videoUrl?: string;
 }
 
 export interface ContentEntryDto {

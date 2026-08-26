@@ -19,6 +19,7 @@ export function mapContentDto(dto: ContentEntryDto): ContentEntry {
   if (!Array.isArray(dto.sections)) throw new ContentMappingError("sections");
   if (!Array.isArray(dto.highlights) || !dto.highlights.every(item => typeof item === "string")) throw new ContentMappingError("highlights");
   return {
+    id: typeof dto.id === "string" && dto.id ? dto.id : undefined,
     slug: requireString(dto.slug, "slug"),
     title: requireString(dto.title, "title"),
     description: requireString(dto.description, "description"),
@@ -28,6 +29,12 @@ export function mapContentDto(dto: ContentEntryDto): ContentEntry {
     sections: dto.sections.map((section, index) => ({
       title: requireString(section?.title, `sections[${index}].title`),
       body: requireString(section?.body, `sections[${index}].body`),
+      images: section.images?.map((image, imageIndex) => ({ url: requireString(image.url, `sections[${index}].images[${imageIndex}].url`), alt: image.alt?.trim() || "", caption: image.caption?.trim() || undefined, width: image.width, height: image.height })),
+      imageLayout: section.imageLayout,
+      unorderedList: section.unorderedList?.filter(item => typeof item === "string" && item.trim()).map(item => item.trim()),
+      orderedList: section.orderedList?.filter(item => typeof item === "string" && item.trim()).map(item => item.trim()),
+      quote: section.quote?.trim() || undefined,
+      videoUrl: section.videoUrl?.trim() || undefined,
     })),
     highlights: dto.highlights,
   };

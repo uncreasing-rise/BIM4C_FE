@@ -16,7 +16,7 @@ export function Company({ services }: { services: ContentEntry[] }) {
     </div>
     <div className="business company-business container" id="services">
       <p className="eyebrow">NĂNG LỰC BIM4C</p>
-      <div className="business-grid">{services.map((item) => <article key={item.title}><Link className="card-link" href={ROUTES.serviceDetail(item.slug)} aria-label={`Xem ${item.title}`}/><Image src={item.image} alt={item.title} fill sizes="(max-width: 767px) 100vw, 20vw"/><div/><h3>{item.title}</h3></article>)}<article><Image src="/images/about.jpg" alt="Đầu tư xây dựng" fill sizes="(max-width: 767px) 100vw, 20vw"/><div/><h3>Đầu tư</h3></article></div>
+      <div className="business-grid">{services.map((item) => <article key={item.title}><Link className="card-link" href={ROUTES.serviceDetail(item.slug)} aria-label={`Xem ${item.title}`}/><Image src={item.image} alt="" fill sizes="(max-width: 767px) 50vw, 20vw"/><div/><h3>{item.title}</h3></article>)}<article><Image src="/images/about.jpg" alt="" fill sizes="(max-width: 767px) 50vw, 20vw"/><div/><h3>Đầu tư</h3></article></div>
     </div>
   </div></section>;
 }
