@@ -1,41 +1,118 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+import { PageHero } from "@/components/shared/PageHero";
 import { ROUTES } from "@/constants/routes";
-import { AboutSectionTabs } from "@/components/sections/AboutSectionTabs";
 
-export const metadata: Metadata = { title: "Giới thiệu công ty | BIM4C", description: "BIM4C tiên phong chuyển đổi số xây dựng với BIM, AI, IoT và Digital Twin." };
+export const metadata: Metadata = {
+  title: "Giới thiệu công ty | BIM4C",
+  description: "BIM4C tiên phong chuyển đổi số xây dựng với BIM, AI, IoT và Digital Twin.",
+};
 
-const waysOfWorking = [
-  { number: "01", title: "Đổi mới sáng tạo", text: "Không ngừng thử nghiệm công nghệ và phương pháp mới để tạo ra giải pháp hiệu quả, thực tiễn." },
-  { number: "02", title: "Văn hoá hợp tác", text: "Chia sẻ dữ liệu minh bạch, phối hợp chủ động và cùng chịu trách nhiệm với kết quả chung." },
-  { number: "03", title: "Khách hàng trung tâm", text: "Mọi quyết định đều bắt đầu từ nhu cầu, mục tiêu và thành công dài hạn của khách hàng." },
-  { number: "04", title: "Quản lý linh hoạt", text: "Thích ứng nhanh với thay đổi, kiểm soát chặt chẽ và liên tục tối ưu trong suốt dự án." },
-];
-const coreValues = [
-  { title: "Làm việc thông minh", text: "Tối ưu quy trình bằng công nghệ BIM, giảm sai sót, phối hợp hiệu quả." },
-  { title: "Chính trực", text: "Minh bạch – đáng tin cậy – tuân thủ chuẩn mực đạo đức." },
-  { title: "Chân thành", text: "Tận tâm đồng hành vì thành công dài hạn của khách hàng và đối tác." },
-];
-const reasons = [
-  { title: "Chuyên môn theo chiều sâu", text: "Giải pháp BIM được thiết kế theo đặc thù, mục tiêu và mức độ trưởng thành số của từng dự án." },
-  { title: "Công nghệ tạo hiệu suất", text: "Quy trình luôn được cập nhật để rút ngắn thời gian phối hợp, giảm sai sót và kiểm soát chất lượng." },
-  { title: "Đồng hành đến kết quả", text: "Đội ngũ chuyên gia hỗ trợ xuyên suốt, chuyển giao rõ ràng và cùng khách hàng đo lường hiệu quả." },
-];
+const workingPrinciples = [
+  ["Hiểu đúng bài toán", "Bắt đầu từ quy trình, con người và mục tiêu thực tế của từng dự án."],
+  ["Thiết kế vừa đủ", "Chọn công nghệ phù hợp thay vì áp dụng một mô hình chung cho mọi tổ chức."],
+  ["Làm cùng đội ngũ", "Triển khai, kiểm chứng và chuyển giao ngay trong công việc hằng ngày."],
+  ["Đo bằng kết quả", "Theo dõi sai sót, thời gian phối hợp và chất lượng dữ liệu sau triển khai."],
+] as const;
+
 const technologies = [
-  { code: "AI", title: "AI / Machine Learning", text: "Phân tích dữ liệu, dự đoán rủi ro và hỗ trợ ra quyết định sớm." },
-  { code: "IoT", title: "Internet of Things", text: "Thu thập dữ liệu hiện trường và giám sát trạng thái theo thời gian thực." },
-  { code: "DT", title: "Digital Twin", text: "Mô phỏng tài sản số xuyên suốt từ thiết kế đến vận hành." },
-];
+  ["AI", "Phân tích dữ liệu và nhận diện rủi ro sớm."],
+  ["IoT", "Kết nối dữ liệu hiện trường theo thời gian thực."],
+  ["Digital Twin", "Mô phỏng tài sản trong suốt vòng đời vận hành."],
+] as const;
 
 export default function AboutPage() {
   return <main>
-    <section className="border-b border-[#dbe7e5] bg-white pt-12 lg:pt-20"><div className="mx-auto w-[calc(100%_-_32px)] max-w-[1440px] md:w-[calc(100%_-_64px)]"><div className="flex flex-col items-start justify-between gap-7 pb-10 sm:flex-row sm:items-end lg:pb-16"><div><p className="mb-4 text-xs font-semibold uppercase tracking-[.14em] text-[#087f7d]">BIM4C CONSTRUCTION</p><h1 className="m-0 text-4xl font-bold leading-[1.05] tracking-[-.03em] text-[#063f46] sm:text-5xl lg:text-[48px]">VỀ CHÚNG TÔI</h1></div><Link className="group inline-flex min-h-12 items-center gap-4 bg-[#09a7a5] px-6 text-sm font-bold text-white transition hover:bg-[#087f7d]" href={ROUTES.contactEmail}>NHẬN HỒ SƠ NĂNG LỰC <span className="text-xl transition-transform group-hover:translate-x-1">→</span></Link></div><AboutSectionTabs /></div></section>
-    <section id="company-overview" className="grid grid-cols-1 bg-white lg:grid-cols-2"><div className="relative min-h-[520px] overflow-hidden lg:min-h-[520px] [&>img]:object-cover [&>div]:absolute [&>div]:bottom-10 [&>div]:left-8 [&>div]:z-[2] [&>div]:flex [&>div]:items-end [&>div]:gap-5 [&>div]:text-white [&_strong]:text-6xl [&_span]:border-l-[3px] [&_span]:border-[#09a7a5] [&_span]:pl-5 [&_span]:text-xs [&_span]:font-semibold [&_span]:uppercase"><Image src="/images/hero.jpg" alt="Công trình ứng dụng giải pháp số của BIM4C" fill sizes="(max-width: 900px) 100vw, 50vw" /><div><strong>25+</strong><span>Khách hàng<br />tin tưởng</span></div></div><div className="flex flex-col justify-center px-5 py-16 md:px-10 lg:p-20 [&>h2]:mb-7 [&>h2]:text-4xl lg:[&>h2]:text-[48px] [&>h2]:leading-[1.1] [&>h2]:font-semibold [&>h2]:text-[#063f46] [&>p:not(:first-child)]:mb-4 [&>p:not(:first-child)]:text-[16px] [&>p:not(:first-child)]:leading-6 [&>p:not(:first-child)]:text-[#667775]"><p className="mb-3 text-xs font-semibold uppercase tracking-wider text-[#087f7d]">GIỚI THIỆU CÔNG TY</p><h2>BIM4C – Tiên phong trong <em>chuyển đổi số xây dựng</em></h2><p>Chúng tôi ứng dụng Mô hình Thông tin Công trình (BIM) kết hợp AI, IoT và Digital Twin để tối ưu thiết kế, thi công và vận hành.</p><p>Giải pháp của BIM4C giúp giảm sai sót, tiết kiệm chi phí – thời gian, đồng thời tạo môi trường hợp tác minh bạch, bền vững.</p><div className="mt-5 grid grid-cols-2 gap-4 [&_strong]:block [&_strong]:text-2xl [&_strong]:text-[#063f46] [&_span]:text-xs [&_span]:text-[#667775]"><div><strong>25+</strong><span>Khách hàng tin tưởng</span></div><div><strong>150+</strong><span>Học viên</span></div></div><div className="mt-8 border-t border-[#dbe7e5] pt-5 text-xl font-bold text-[#063f46] [&_span]:block [&_span]:text-xs [&_span]:text-[#667775]">BIM4C <span>One team · Great solution</span></div></div></section>
-    <section id="ways-of-working" className="border-t border-[#dbe7e5] bg-[#f5fafa] py-16 lg:py-24"><div className="mx-auto w-[calc(100%_-_32px)] max-w-[1440px] md:w-[calc(100%_-_48px)] lg:w-[calc(100%_-_80px)]"><header className="mb-10 grid gap-6 lg:grid-cols-2 lg:items-end [&_h2]:text-4xl lg:[&_h2]:text-[48px] [&_h2]:leading-[1.1] [&_h2]:font-semibold [&_h2]:text-[#063f46] [&>p]:leading-relaxed [&>p]:text-[#667775]"><div><p className="mb-3 text-xs font-semibold uppercase tracking-wider text-[#087f7d]">CÁCH LÀM VIỆC</p><h2>Đổi mới trong tư duy.<br />Hiệu quả trong hành động.</h2></div><p>Tại BIM4C, phương châm làm việc của chúng tôi là sự kết hợp hài hòa giữa đổi mới sáng tạo, tinh thần hợp tác và định hướng khách hàng làm trung tâm.</p></header><div className="grid grid-cols-1 border-l border-t border-[#dbe7e5] md:grid-cols-2 xl:grid-cols-4 [&_article]:min-h-[220px] [&_article]:border-b [&_article]:border-r [&_article]:border-[#dbe7e5] [&_article]:bg-white [&_article]:p-6 [&_article_span]:text-xs [&_article_span]:font-bold [&_article_span]:text-[#09a7a5] [&_h3]:mb-3 [&_h3]:mt-11 [&_h3]:text-xl [&_h3]:leading-[1.25] [&_h3]:font-semibold [&_h3]:text-[#063f46] [&_article_p]:text-[16px] [&_article_p]:leading-6 [&_article_p]:text-[#667775]">{waysOfWorking.map(item => <article key={item.title}><span>{item.number}</span><h3>{item.title}</h3><p>{item.text}</p></article>)}</div></div></section>
-    <section className="grid grid-cols-1 bg-[#063f46] text-white lg:grid-cols-2"><div className="relative min-h-[480px] overflow-hidden lg:min-h-[520px] [&_img]:object-cover"><Image src="/images/service-training.jpg" alt="Trần Ngọc Hiếu – Nhà sáng lập BIM4C" fill sizes="(max-width: 900px) 100vw, 42vw" /></div><div className="flex flex-col justify-center px-5 py-16 md:px-10 lg:p-20 [&_h2]:mb-7 [&_h2]:text-section-title [&_h2]:font-semibold [&_blockquote]:leading-[1.8] [&_blockquote]:text-white/70"><p className="mb-3 text-xs font-semibold uppercase tracking-wider text-[#087f7d]">THƯ NGỎ</p><h2>“Công nghệ chỉ thật sự có ý nghĩa khi tạo ra giá trị cho con người.”</h2><blockquote>BIM4C là đơn vị tiên phong trong lĩnh vực tư vấn xây dựng, thúc đẩy chuyển đổi số thông qua công nghệ BIM. Chúng tôi cam kết đổi mới sáng tạo, nâng cao hiệu quả dự án và tăng cường sự phối hợp giữa các bên liên quan.</blockquote><div className="mt-8 border-t border-white/20 pt-5 [&_strong]:block [&_span]:text-xs [&_span]:text-white/60"><strong>Trần Ngọc Hiếu</strong><span>CEO Company | Founder</span></div></div></section>
-    <section className="border-t border-[#dbe7e5] bg-white py-16 lg:py-24 [&>div]:grid [&>div]:gap-12 lg:[&>div]:grid-cols-2"><div className="mx-auto w-[calc(100%_-_32px)] max-w-[1440px] md:w-[calc(100%_-_48px)] lg:w-[calc(100%_-_80px)]"><div className="[&_h2]:text-4xl lg:[&_h2]:text-[48px] [&_h2]:leading-[1.1] [&_h2]:font-semibold [&_h2]:text-[#063f46] [&>p:not(:first-child)]:my-5 [&>p:not(:first-child)]:text-[#667775]"><p className="mb-3 text-xs font-semibold uppercase tracking-wider text-[#087f7d]">ĐỊNH HƯỚNG CÔNG NGHỆ CỐT LÕI</p><h2>Từ mô hình BIM đến hệ sinh thái xây dựng số</h2><p>Chúng tôi tích hợp BIM với AI/ML, IoT và Digital Twin để tạo hệ sinh thái xây dựng số: phát hiện xung đột, dự đoán rủi ro, mô phỏng và ra quyết định theo thời gian thực nhằm giảm sai sót, tiết kiệm chi phí và thời gian.</p><Link className="inline-flex min-h-12 items-center bg-[#09a7a5] px-6 text-xs font-semibold uppercase text-white" href={ROUTES.contactEmail}>Hồ sơ năng lực</Link></div><div className="grid bg-[#f5fafa] p-5 md:p-8" aria-label="Hệ sinh thái công nghệ cốt lõi"><div className="bg-[#063f46] p-7 text-white [&>span]:text-micro [&_strong]:my-2 [&_strong]:block [&_strong]:text-5xl [&_p]:text-xs [&_p]:text-white/70"><span>Nền tảng dữ liệu</span><strong>BIM</strong><p>Nguồn thông tin thống nhất cho toàn bộ vòng đời công trình</p></div><div className="grid [&_article]:grid [&_article]:grid-cols-[30px_62px_1fr] [&_article]:items-center [&_article]:gap-3 [&_article]:border-b [&_article]:border-[#dbe7e5] [&_article]:p-5 [&_article>span]:text-[#09a7a5] [&_b]:text-xl [&_b]:text-[#063f46] [&_h3]:font-semibold [&_p]:text-xs [&_p]:text-[#667775]">{technologies.map((item, index) => <article key={item.code}><span>0{index + 1}</span><b>{item.code}</b><div><h3>{item.title}</h3><p>{item.text}</p></div></article>)}</div></div></div></section>
-    <section className="border-t border-[#dbe7e5] bg-white py-16 lg:py-24 [&_header]:mb-10 [&_header]:max-w-[760px] [&_header_h2]:text-4xl lg:text-[48px] leading-[1.1] [&_header_h2]:font-semibold [&_header_h2]:text-[#063f46] [&_header>p:last-child]:mt-4 [&_header>p:last-child]:text-[#667775]"><div className="mx-auto w-[calc(100%_-_32px)] max-w-[1440px] md:w-[calc(100%_-_48px)] lg:w-[calc(100%_-_80px)]"><header><p className="mb-3 text-xs font-semibold uppercase tracking-wider text-[#087f7d]">TẦM NHÌN &amp; SỨ MỆNH</p><h2>Định hướng phát triển bền vững</h2><p>Công nghệ, con người và giá trị thực tiễn là ba yếu tố xuyên suốt mọi quyết định của BIM4C.</p></header><div className="grid grid-cols-1 shadow-xl md:grid-cols-2 [&_article]:relative [&_article]:flex [&_article]:min-h-[330px] [&_article]:flex-col [&_article]:justify-end [&_article]:overflow-hidden [&_article]:p-8 [&_article>span]:absolute [&_article>span]:right-7 [&_article>span]:top-6 [&_article>span]:text-7xl [&_article>span]:font-bold [&_article>span]:opacity-10 [&_h3]:mb-4 [&_h3]:text-2xl lg:[&_h3]:text-3xl [&_h3]:leading-[1.2] [&_h3]:font-semibold"><article className="bg-[#063f46] text-white [&>p:last-child]:text-white/70"><span>01</span><p className="mb-4 text-xs font-semibold tracking-wider text-[#09a7a5]">TẦM NHÌN</p><h3>Dẫn đầu chuyển đổi số trong ngành xây dựng.</h3><p>Giúp mọi dự án tiếp cận quy trình làm việc thông minh, chính xác và bền vững trên quy mô toàn cầu.</p></article><article className="border border-[#dbe7e5] bg-[#eaf8f7] text-[#063f46] [&>p:last-child]:text-[#667775]"><span>02</span><p className="mb-4 text-xs font-semibold tracking-wider text-[#09a7a5]">SỨ MỆNH</p><h3>Biến đổi mới số thành giá trị có thể ứng dụng.</h3><p>Đưa công nghệ đến gần hơn và tạo tác động thực tiễn ở mọi giai đoạn vòng đời công trình.</p></article></div><div className="mt-6 grid grid-cols-1 border-l border-t border-[#dbe7e5] md:grid-cols-2 xl:grid-cols-4 [&>div]:border-b [&>div]:border-r [&>div]:border-[#dbe7e5] [&>div]:bg-[#f5fafa] [&>div]:p-6 [&>article]:border-b [&>article]:border-r [&>article]:border-[#dbe7e5] [&>article]:p-6 [&>article>span]:text-[#09a7a5] [&_h3]:text-xl [&_h3]:leading-[1.25] [&_h3]:font-semibold [&_h4]:mb-2 [&_h4]:mt-8 [&_h4]:font-semibold [&_article_p]:text-[16px] [&_article_p]:leading-6 [&_article_p]:text-[#667775]"><div><p className="mb-3 text-xs font-semibold uppercase tracking-wider text-[#087f7d]">GIÁ TRỊ CỐT LÕI</p><h3>Nền tảng cho mọi cam kết</h3></div>{coreValues.map((item, index) => <article key={item.title}><span>0{index + 1}</span><h4>{item.title}</h4><p>{item.text}</p></article>)}</div></div></section>
-    <section className="grid grid-cols-1 bg-[#f5fafa] lg:grid-cols-2"><div className="relative min-h-[500px] overflow-hidden lg:min-h-[520px] [&>img]:object-cover [&>div]:absolute [&>div]:bottom-10 [&>div]:left-8 [&>div]:z-[2] [&>div]:flex [&>div]:items-end [&>div]:gap-5 [&>div]:text-white [&_strong]:text-6xl [&_span]:border-l-2 [&_span]:border-[#09a7a5] [&_span]:pl-4 [&_span]:text-xs"><Image src="/images/service-bim.jpg" alt="Đội ngũ BIM4C phối hợp mô hình thông tin công trình" fill sizes="(max-width: 900px) 100vw, 46vw" /><div><strong>25+</strong><span>Khách hàng<br />tin tưởng</span></div></div><div className="flex flex-col justify-center px-5 py-16 md:px-10 lg:p-20 [&_h2]:text-4xl lg:[&_h2]:text-[48px] [&_h2]:leading-[1.1] [&_h2]:font-semibold [&_h2]:text-[#063f46]"><p className="mb-3 text-xs font-semibold uppercase tracking-wider text-[#087f7d]">VÌ SAO CHỌN BIM4C</p><h2>Năng lực tạo nên<br />sự khác biệt</h2><p className="my-6 max-w-[660px] text-[16px] leading-6 text-[#667775]">Chúng tôi không chỉ cung cấp công cụ. BIM4C xây dựng giải pháp phù hợp, chuyển giao năng lực và đồng hành đến hiệu quả cuối cùng.</p><div className="border-t border-[#dbe7e5] [&_article]:grid [&_article]:grid-cols-[44px_1fr] [&_article]:gap-4 [&_article]:border-b [&_article]:border-[#dbe7e5] [&_article]:py-5 [&_article>span]:text-[#09a7a5] [&_h3]:font-semibold [&_h3]:text-[#063f46] [&_article_p]:text-[16px] [&_article_p]:leading-6 [&_article_p]:text-[#667775]">{reasons.map((reason, index) => <article key={reason.title}><span>0{index + 1}</span><div><h3>{reason.title}</h3><p>{reason.text}</p></div></article>)}</div></div></section>
+    <PageHero eyebrow="GIỚI THIỆU BIM4C" title="Về chúng tôi" description="Ứng dụng BIM và công nghệ số vào những bài toán thực tế của ngành xây dựng." image="/images/about.jpg" />
+
+    <section id="company-overview" className="relative overflow-hidden bg-white py-16 lg:py-24">
+      <div className="pointer-events-none absolute -right-24 top-0 h-full w-[35%] -skew-x-[18deg] bg-[#eaf8f7]/65" aria-hidden="true" />
+      <div className="relative mx-auto grid w-[calc(100%_-_32px)] max-w-[1400px] gap-12 md:w-[calc(100%_-_64px)] lg:grid-cols-[minmax(0,1.35fr)_minmax(280px,.65fr)] lg:gap-24">
+        <div>
+          <p className="mb-5 flex items-center gap-3 text-xs font-semibold uppercase tracking-[.14em] text-[#087f7d]"><span className="h-px w-10 bg-[#09a7a5]" />BIM4C CONSTRUCTION</p>
+          <h1 className="max-w-[920px] text-4xl font-semibold leading-[1.08] tracking-[-.03em] text-[#09a7a5] sm:text-5xl lg:text-[58px]">Công nghệ phải giải quyết được việc thật.</h1>
+          <p className="mt-8 max-w-[760px] border-l-2 border-[#09a7a5] pl-5 text-lg leading-8 text-[#163b3a]">BIM4C xây dựng quy trình số cho thiết kế, thi công và vận hành — từ tổ chức dữ liệu đến phối hợp giữa những người trực tiếp làm dự án.</p>
+        </div>
+        <div className="self-end border-t border-[#09a7a5] pt-6">
+          <p className="mb-8 text-[16px] leading-7 text-[#667775]">Chúng tôi kết hợp BIM với AI, IoT và Digital Twin khi chúng tạo ra giá trị rõ ràng: ít sai sót hơn, phối hợp nhanh hơn và dữ liệu đáng tin cậy hơn.</p>
+          <dl className="flex gap-10">
+            <div><dt className="text-4xl font-bold text-[#09a7a5]">25+</dt><dd className="mt-1 text-xs text-[#667775]">Khách hàng</dd></div>
+            <div><dt className="text-4xl font-bold text-[#09a7a5]">150+</dt><dd className="mt-1 text-xs text-[#667775]">Học viên</dd></div>
+          </dl>
+        </div>
+      </div>
+    </section>
+
+    <section id="ways-of-working" className="relative overflow-hidden bg-[#063f46] py-16 text-white lg:py-24">
+      <div className="pointer-events-none absolute -right-20 -top-28 size-80 rotate-45 border border-white/10" aria-hidden="true" />
+      <div className="relative mx-auto grid w-[calc(100%_-_32px)] max-w-[1400px] gap-12 md:w-[calc(100%_-_64px)] lg:grid-cols-[.75fr_1.25fr] lg:gap-24">
+        <div>
+          <p className="mb-5 text-xs font-semibold uppercase tracking-[.14em] text-[#09a7a5]">CÁCH BIM4C LÀM VIỆC</p>
+          <h2 className="text-4xl font-semibold leading-[1.1] sm:text-5xl">Không bắt đầu từ phần mềm.</h2>
+          <p className="mt-6 max-w-md text-[16px] leading-7 text-white/65">Mỗi dự án bắt đầu bằng việc hiểu cách đội ngũ đang làm việc và điểm nào thực sự cần thay đổi.</p>
+        </div>
+        <div className="border-t border-white/25">
+          {workingPrinciples.map(([title, text]) => <article className="grid gap-2 border-b border-white/20 py-6 sm:grid-cols-[200px_1fr] sm:gap-8" key={title}><h3 className="font-semibold text-[#09a7a5]">{title}</h3><p className="leading-7 text-white/70">{text}</p></article>)}
+        </div>
+      </div>
+    </section>
+
+    <section id="technology" className="overflow-hidden bg-white py-16 lg:py-24">
+      <div className="mx-auto w-[calc(100%_-_32px)] max-w-[1400px] md:w-[calc(100%_-_64px)]">
+        <div className="mb-12 max-w-[820px]"><p className="mb-4 text-xs font-semibold uppercase tracking-[.14em] text-[#087f7d]">NỀN TẢNG CÔNG NGHỆ</p><h2 className="text-4xl font-semibold leading-[1.1] text-[#09a7a5] sm:text-5xl">Một nguồn dữ liệu xuyên suốt vòng đời công trình.</h2></div>
+        <div className="grid lg:grid-cols-[.9fr_1.1fr]">
+          <div className="relative flex min-h-[300px] flex-col justify-between overflow-hidden bg-[#09a7a5] p-8 text-white md:p-12">
+            <span className="text-xs font-semibold uppercase tracking-[.14em] text-white/70">Nền tảng chung</span>
+            <strong className="text-[clamp(88px,16vw,190px)] font-bold leading-[.75] tracking-[-.08em]">BIM</strong>
+            <span className="absolute -right-20 top-1/2 size-56 -translate-y-1/2 rotate-45 border border-white/20" aria-hidden="true" />
+          </div>
+          <div className="border-x border-t border-[#dbe7e5]">
+            {technologies.map(([title, text]) => <article className="grid gap-3 border-b border-[#dbe7e5] px-6 py-7 sm:grid-cols-[160px_1fr] sm:items-center sm:px-9" key={title}><h3 className="text-xl font-semibold text-[#09a7a5]">{title}</h3><p className="leading-7 text-[#667775]">{text}</p></article>)}
+            <div className="p-6 sm:p-9"><Link className="inline-flex min-h-12 items-center bg-[#09a7a5] px-6 text-sm font-semibold text-white transition hover:bg-[#087f7d]" href={ROUTES.contactEmail}>Trao đổi về bài toán của bạn <span className="ml-4">→</span></Link></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="vision" className="relative overflow-hidden border-y border-[#dbe7e5] bg-[#f5fafa] py-16 lg:py-24">
+      <div className="pointer-events-none absolute -right-28 top-0 h-full w-[34%] -skew-x-[18deg] bg-[#09a7a5]/[.055]" aria-hidden="true" />
+      <div className="pointer-events-none absolute -right-12 top-12 size-52 rotate-45 border border-[#09a7a5]/20" aria-hidden="true" />
+      <div className="pointer-events-none absolute right-[18%] top-0 h-full w-px -rotate-[18deg] bg-[#09a7a5]/15" aria-hidden="true" />
+      <div className="pointer-events-none absolute -bottom-12 -left-20 h-28 w-[38%] -skew-x-[28deg] bg-[#09a7a5]/10" aria-hidden="true" />
+      <div className="relative mx-auto w-[calc(100%_-_32px)] max-w-[1400px] md:w-[calc(100%_-_64px)]">
+        <p className="mb-10 flex items-center gap-3 text-xs font-semibold uppercase tracking-[.14em] text-[#087f7d]"><span className="h-px w-10 bg-[#09a7a5]" />ĐỊNH HƯỚNG BIM4C</p>
+        <div className="grid overflow-hidden border border-[#dbe7e5] bg-white/85 shadow-[0_18px_45px_rgb(6_63_70_/_6%)] backdrop-blur-sm lg:grid-cols-2">
+          <article className="relative overflow-hidden border-b border-[#dbe7e5] p-7 sm:p-10 lg:border-b-0 lg:border-r lg:p-14">
+            <span className="absolute -right-10 -top-14 h-28 w-24 -skew-x-[24deg] bg-[#09a7a5]/10" aria-hidden="true" />
+            <span className="mb-8 block h-1 w-16 -skew-x-[28deg] bg-[#09a7a5]" aria-hidden="true" />
+            <p className="mb-4 text-sm font-semibold text-[#09a7a5]">TẦM NHÌN</p>
+            <h2 className="relative max-w-[570px] text-3xl font-semibold leading-[1.25] text-[#163b3a] sm:text-4xl">Đưa cách làm việc dựa trên dữ liệu trở thành tiêu chuẩn trong ngành xây dựng.</h2>
+          </article>
+          <article className="relative overflow-hidden p-7 sm:p-10 lg:p-14">
+            <span className="absolute -bottom-12 -right-8 size-28 rotate-45 border border-[#09a7a5]/20" aria-hidden="true" />
+            <span className="mb-8 block h-1 w-16 -skew-x-[28deg] bg-[#09a7a5]" aria-hidden="true" />
+            <p className="mb-4 text-sm font-semibold text-[#09a7a5]">SỨ MỆNH</p>
+            <h2 className="relative max-w-[570px] text-3xl font-semibold leading-[1.25] text-[#163b3a] sm:text-4xl">Biến công nghệ phức tạp thành quy trình mà đội ngũ có thể sử dụng mỗi ngày.</h2>
+          </article>
+        </div>
+        <div className="mt-5 grid overflow-hidden border border-[#dbe7e5] bg-white text-sm font-semibold uppercase tracking-[.08em] text-[#09a7a5] sm:grid-cols-3">
+          <span className="relative border-b border-[#dbe7e5] px-6 py-5 before:absolute before:left-0 before:top-0 before:h-full before:w-1 before:-skew-x-[18deg] before:bg-[#09a7a5] sm:border-b-0 sm:border-r">Làm việc thông minh</span>
+          <span className="relative border-b border-[#dbe7e5] px-6 py-5 before:absolute before:left-0 before:top-0 before:h-full before:w-1 before:-skew-x-[18deg] before:bg-[#09a7a5]/55 sm:border-b-0 sm:border-r">Chính trực</span>
+          <span className="relative px-6 py-5 before:absolute before:left-0 before:top-0 before:h-full before:w-1 before:-skew-x-[18deg] before:bg-[#09a7a5]/30">Chân thành</span>
+        </div>
+      </div>
+    </section>
+
+    <section className="grid bg-white lg:grid-cols-[.8fr_1.2fr]">
+      <div className="relative min-h-[360px] overflow-hidden sm:min-h-[440px] lg:min-h-[560px]"><Image className="object-cover" src="/images/service-training.jpg" alt="Trần Ngọc Hiếu – Nhà sáng lập BIM4C" fill sizes="(max-width: 1023px) 100vw, 40vw" /></div>
+      <div className="relative flex flex-col justify-center overflow-hidden px-5 py-14 md:px-12 lg:p-20">
+        <span className="pointer-events-none absolute right-4 top-0 text-[180px] font-serif leading-none text-[#09a7a5]/10" aria-hidden="true">“</span>
+        <p className="mb-5 text-xs font-semibold uppercase tracking-[.14em] text-[#087f7d]">TỪ NGƯỜI SÁNG LẬP</p>
+        <blockquote className="relative max-w-[760px] text-3xl font-semibold leading-[1.35] text-[#09a7a5] sm:text-4xl">Công nghệ chỉ thật sự có ý nghĩa khi tạo ra giá trị cho con người.</blockquote>
+        <p className="mt-7 max-w-[680px] leading-7 text-[#667775]">Đó là nguyên tắc BIM4C dùng để lựa chọn công nghệ, xây dựng giải pháp và đồng hành cùng mỗi đội ngũ dự án.</p>
+        <div className="mt-9 border-t border-[#dbe7e5] pt-5"><strong className="block text-[#163b3a]">Trần Ngọc Hiếu</strong><span className="text-xs text-[#667775]">Nhà sáng lập BIM4C</span></div>
+      </div>
+    </section>
   </main>;
 }
