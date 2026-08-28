@@ -8,23 +8,49 @@
   --color-muted: #667775;
   --color-line: #dbe7e5;
   --color-surface: #f5fafa;
-  --text-micro: 0.625rem;
-  --text-micro--line-height: 1.4;
-  --text-label: 0.8125rem;
+  --text-micro: 0.9375rem;
+  --text-micro--line-height: 1.5;
+  --text-label: 0.9375rem;
   --text-label--line-height: 1.5;
   --text-body: 0.9375rem;
   --text-body--line-height: 1.7;
-  --text-card-title: 1.375rem;
+  --text-xs: 0.9375rem;
+  --text-xs--line-height: 1.5;
+  --text-sm: 0.9375rem;
+  --text-sm--line-height: 1.5;
+  --text-base: 0.9375rem;
+  --text-base--line-height: 1.65;
+  --text-lg: 0.9375rem;
+  --text-lg--line-height: 1.65;
+  --text-xl: 1.5rem;
+  --text-xl--line-height: 1.3;
+  --text-2xl: 1.5rem;
+  --text-2xl--line-height: 1.3;
+  --text-3xl: 2rem;
+  --text-3xl--line-height: 1.2;
+  --text-4xl: 2rem;
+  --text-4xl--line-height: 1.2;
+  --text-5xl: 2rem;
+  --text-5xl--line-height: 1.15;
+  --text-6xl: 2rem;
+  --text-6xl--line-height: 1.15;
+  --text-7xl: 2rem;
+  --text-7xl--line-height: 1.15;
+  --text-8xl: 2rem;
+  --text-8xl--line-height: 1.15;
+  --text-9xl: 2rem;
+  --text-9xl--line-height: 1.15;
+  --text-card-title: 1.5rem;
   --text-card-title--line-height: 1.3;
-  --text-subtitle: clamp(1.625rem, 2.5vw, 2.375rem);
+  --text-subtitle: 1.5rem;
   --text-subtitle--line-height: 1.2;
-  --text-section-title: clamp(2rem, 4vw, 3.25rem);
+  --text-section-title: 2rem;
   --text-section-title--line-height: 1.12;
-  --text-page-title: clamp(2.125rem, 4vw, 3.625rem);
+  --text-page-title: 2rem;
   --text-page-title--line-height: 1.08;
-  --text-display: clamp(2.5rem, 5.2vw, 4.875rem);
+  --text-display: 2rem;
   --text-display--line-height: 1.02;
-  --text-hero-index: clamp(15rem, 30vw, 32rem);
+  --text-hero-index: 2rem;
   --text-hero-index--line-height: 1;
 }
 
@@ -56,12 +82,43 @@ body {
   background: #ffffff;
   color: var(--ink);
   font-family: var(--font-sans), system-ui, sans-serif;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 400;
   font-synthesis: none;
   line-height: 1.65;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
+}
+
+button,
+input,
+select,
+textarea,
+small {
+  font-size: 15px;
+}
+
+/* Keep arbitrary legacy utilities inside the 36 / 24 / 15 typography scale. */
+.text-\[10px\],
+.text-\[11px\],
+.text-\[12px\],
+.text-\[13px\],
+.text-\[14px\],
+.text-\[15px\],
+.text-\[16px\],
+.text-\[18px\] {
+  font-size: 15px !important;
+}
+
+.text-\[24px\] {
+  font-size: 24px !important;
+}
+
+.text-\[32px\],
+.text-\[48px\],
+.text-\[58px\],
+.text-\[180px\] {
+  font-size: 32px !important;
 }
 
 ::selection {
@@ -88,6 +145,74 @@ body {
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes section-reveal {
+  from {
+    opacity: 0.18;
+    transform: translateY(28px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+:where([class*="transition"]) {
+  transition-duration: 1000ms !important;
+}
+
+.page-transition {
+  transition-duration: 1400ms !important;
+}
+
+[class*="content-enter"] {
+  animation-duration: 1200ms !important;
+}
+
+@supports (animation-timeline: view()) {
+  main section {
+    animation: section-reveal linear both;
+    animation-timeline: view();
+    animation-range: entry 0% entry 48%;
+  }
+}
+
+@media (hover: hover) {
+  :where(a, button, .group):hover,
+  :where(a, button, .group):hover * {
+    transition-duration: 1000ms !important;
+  }
+
+  #projects .group:hover *,
+  #projects .group:focus-within * {
+    transition-duration: 1700ms !important;
+  }
+
+  #projects .group:hover img,
+  #projects .group:focus-within img {
+    transform: scale(1.015) !important;
+  }
+
+  #project-list .group:hover *,
+  #project-list .group:focus-within * {
+    transition-duration: 1700ms !important;
+  }
+
+  #project-list .group:hover img,
+  #project-list .group:focus-within img {
+    transform: scale(1.015) !important;
+  }
+
+  #services .group:hover *,
+  #services .group:focus-within * {
+    transition-duration: 1700ms !important;
+  }
+
+  #services .group:hover img,
+  #services .group:focus-within img {
+    transform: scale(1.02) !important;
   }
 }
 
