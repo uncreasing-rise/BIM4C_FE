@@ -2,63 +2,19 @@ import Image from "next/image";
 import Link from "next/link";
 import { ROUTES } from "@/constants/routes";
 import type { ContentEntry } from "@/types/content";
-import styles from "./NewsDetail.module.css";
 
-function isoDate(value?: string): string | undefined {
-  if (!value) return undefined;
-  const match = value.match(/^(\d{1,2})[./-](\d{1,2})[./-](\d{4})$/);
-  return match ? `${match[3]}-${match[2].padStart(2, "0")}-${match[1].padStart(2, "0")}` : undefined;
-}
+function isoDate(value?: string): string | undefined { if (!value) return undefined; const match = value.match(/^(\d{1,2})[./-](\d{1,2})[./-](\d{4})$/); return match ? `${match[3]}-${match[2].padStart(2, "0")}-${match[1].padStart(2, "0")}` : undefined; }
 
 function SidebarCard({ item, video = false }: { item: ContentEntry; video?: boolean }) {
-  return <article className={styles.sidebarCard}>
-    <Link href={ROUTES.blogDetail(item.slug)} aria-label={`Xem ${item.title}`} />
-    <div className={styles.sidebarThumb}><Image src={item.image} alt="" fill sizes="150px" />{video && <span aria-hidden="true">▶</span>}</div>
-    <div><h3>{item.title}</h3>{item.meta && <time dateTime={isoDate(item.meta)}>{item.meta}</time>}</div>
-  </article>;
+  return <article className="group relative grid min-w-0 grid-cols-[130px_minmax(0,1fr)] gap-3 border-b border-[#dbe7e5] py-3.5 last:border-0 min-[1100px]:grid-cols-[140px_minmax(0,1fr)]"><Link className="absolute inset-0 z-[2]" href={ROUTES.blogDetail(item.slug)} aria-label={`Xem ${item.title}`} /><div className="relative aspect-video overflow-hidden bg-[#dbe7e5]"><Image className="object-cover transition-transform duration-300 group-hover:scale-[1.035]" src={item.image} alt="" fill sizes="150px" />{video && <span className="absolute left-1/2 top-1/2 grid size-[30px] -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-[#063f46]/90 text-micro text-white" aria-hidden="true">▶</span>}</div><div className="min-w-0"><h3 className="mb-2 line-clamp-2 overflow-wrap-anywhere text-sm font-bold leading-[1.4] text-[#063f46]">{item.title}</h3>{item.meta && <time className="text-xs text-[#667775]" dateTime={isoDate(item.meta)}>{item.meta}</time>}</div></article>;
 }
 
-function SidebarSection({ title, items, video = false }: { title: string; items: ContentEntry[]; video?: boolean }) {
-  if (!items.length) return null;
-  return <section className={styles.sidebarSection}><h2>{title}</h2><div>{items.map(item => <SidebarCard item={item} video={video} key={item.slug} />)}</div></section>;
-}
+function SidebarSection({ title, items, video = false }: { title: string; items: ContentEntry[]; video?: boolean }) { if (!items.length) return null; return <section className="min-w-0 bg-[#f5fafa] p-[18px] min-[1100px]:p-[22px]"><h2 className="mb-[18px] border-b-2 border-[#09a7a5] pb-3 text-card-title font-semibold uppercase leading-tight text-[#063f46]">{title}</h2><div className="grid">{items.map((item) => <SidebarCard item={item} video={video} key={item.slug} />)}</div></section>; }
 
 function ArticleContent({ entry }: { entry: ContentEntry }) {
-  return <div className={styles.articleContent}>
-    <p className={styles.standfirst}>{entry.description}</p>
-    <figure className={styles.articleFigure}>
-      <Image src={entry.image} alt={entry.title} width={1200} height={800} sizes="(max-width: 767px) calc(100vw - 32px), (max-width: 1100px) 68vw, 820px" />
-    </figure>
-    {entry.sections.map((section, index) => <section className={styles.articleSection} key={`${section.title}-${index}`}>
-      <h2>{section.title}</h2>
-      {section.body.split(/\n\s*\n/).filter(Boolean).map((paragraph, paragraphIndex) => <p key={paragraphIndex}>{paragraph}</p>)}
-      {section.unorderedList?.length ? <ul>{section.unorderedList.map(item => <li key={item}>{item}</li>)}</ul> : null}
-      {section.orderedList?.length ? <ol>{section.orderedList.map(item => <li key={item}>{item}</li>)}</ol> : null}
-      {section.quote && <blockquote className={styles.articleQuote}>{section.quote}</blockquote>}
-      {section.images?.length ? <div className={section.imageLayout === "grid" ? styles.imageGrid : styles.imageStack}>{section.images.map((image, imageIndex) => <figure className={styles.inlineFigure} key={`${image.url}-${imageIndex}`}><Image src={image.url} alt={image.alt} width={image.width ?? 1200} height={image.height ?? 800} sizes={section.imageLayout === "grid" ? "(max-width: 767px) 100vw, 410px" : "(max-width: 767px) 100vw, 820px"}/>{image.caption && <figcaption>{image.caption}</figcaption>}</figure>)}</div> : null}
-      {section.videoUrl && <div className={styles.videoEmbed}><a href={section.videoUrl} target="_blank" rel="noreferrer"><span>▶</span>Xem video liên quan</a></div>}
-    </section>)}
-    {entry.highlights.length > 0 && <blockquote className={styles.takeaway}><p>Những điểm chính</p><ul>{entry.highlights.map(item => <li key={item}>{item}</li>)}</ul></blockquote>}
-  </div>;
+  return <div className="pt-[22px] text-body leading-[1.65] md:pt-7 md:text-base md:leading-[1.68]"><p className="mb-[18px] font-semibold text-[#163b3a] md:mb-5">{entry.description}</p><figure className="my-[22px] md:my-[26px_30px]"><Image className="block h-auto w-full" src={entry.image} alt={entry.title} width={1200} height={800} sizes="(max-width: 767px) calc(100vw - 32px), (max-width: 1100px) 68vw, 820px" /></figure>{entry.sections.map((section, index) => <section className="mt-7 md:mt-[34px]" key={`${section.title}-${index}`}><h2 className="mb-4 text-card-title font-semibold leading-[1.3] text-[#063f46] md:text-card-title">{section.title}</h2>{section.body.split(/\n\s*\n/).filter(Boolean).map((paragraph, paragraphIndex) => <p className="mb-[18px] md:mb-5" key={paragraphIndex}>{paragraph}</p>)}{section.unorderedList?.length ? <ul className="mb-[22px] list-disc pl-6">{section.unorderedList.map((item) => <li className="my-[7px]" key={item}>{item}</li>)}</ul> : null}{section.orderedList?.length ? <ol className="mb-[22px] list-decimal pl-6">{section.orderedList.map((item) => <li className="my-[7px]" key={item}>{item}</li>)}</ol> : null}{section.quote && <blockquote className="my-[26px] border-l-4 border-[#09a7a5] py-1 pl-[18px] text-lg font-semibold leading-relaxed text-[#063f46] md:pl-6 md:text-xl">{section.quote}</blockquote>}{section.images?.length ? <div className={`my-[26px] grid gap-[22px] md:gap-6 ${section.imageLayout === "grid" ? "md:grid-cols-2 md:gap-3.5" : ""}`}>{section.images.map((image, imageIndex) => <figure className="m-0" key={`${image.url}-${imageIndex}`}><Image className="block h-auto w-full" src={image.url} alt={image.alt} width={image.width ?? 1200} height={image.height ?? 800} sizes={section.imageLayout === "grid" ? "(max-width: 767px) 100vw, 410px" : "(max-width: 767px) 100vw, 820px"}/>{image.caption && <figcaption className="mt-2 text-center text-xs italic leading-[1.45] text-[#667775] md:text-label">{image.caption}</figcaption>}</figure>)}</div> : null}{section.videoUrl && <div className="my-[26px]"><a className="flex min-h-[72px] items-center gap-3.5 bg-[#063f46] px-[22px] py-[18px] text-sm font-bold text-white" href={section.videoUrl} target="_blank" rel="noreferrer"><span className="grid size-[34px] place-items-center rounded-full bg-[#09a7a5] text-xs">▶</span>Xem video liên quan</a></div>}</section>)}{entry.highlights.length > 0 && <blockquote className="mt-[34px] border-l-4 border-[#09a7a5] bg-[#f5fafa] p-5 md:px-7 md:py-6"><p className="mb-2.5 font-bold text-[#063f46]">Những điểm chính</p><ul className="list-disc pl-[19px]">{entry.highlights.map((item) => <li className="my-1.5" key={item}>{item}</li>)}</ul></blockquote>}</div>;
 }
 
 export function NewsDetail({ entry, related, videos }: { entry: ContentEntry; related: ContentEntry[]; videos: ContentEntry[] }) {
-  return <div className={styles.page}>
-    <div className={styles.shell}>
-      <nav className={styles.breadcrumbs} aria-label="Breadcrumb">
-        <Link href={ROUTES.home}>Trang chủ</Link><span>/</span><Link href={ROUTES.blog}>Tin tức</Link><span>/</span><strong>{entry.title}</strong>
-      </nav>
-      <div className={styles.layout}>
-        <article className={styles.article}>
-          <header className={styles.articleHeader}><p>{entry.eyebrow}</p><h1>{entry.title}</h1>{entry.meta && <time dateTime={isoDate(entry.meta)}>{entry.meta}</time>}</header>
-          <ArticleContent entry={entry} />
-        </article>
-        <aside className={styles.sidebar} aria-label="Nội dung liên quan">
-          <SidebarSection title="Có thể bạn quan tâm" items={related.slice(0, 4)} />
-          <SidebarSection title="Video" items={videos.slice(0, 3)} video />
-        </aside>
-      </div>
-      {related.length > 0 && <section className={styles.moreNews}><header><div><p>TIN TỨC BIM4C</p><h2>Bài viết liên quan</h2></div><Link href={ROUTES.blog}>Xem tất cả →</Link></header><div>{related.slice(0, 3).map(item => <article key={item.slug}><Link href={ROUTES.blogDetail(item.slug)} aria-label={`Xem ${item.title}`} /><div><Image src={item.image} alt="" fill sizes="(max-width: 767px) 100vw, 33vw" /></div><p>{item.eyebrow}</p><h3>{item.title}</h3><time dateTime={isoDate(item.meta)}>{item.meta}</time></article>)}</div></section>}
-    </div>
-  </div>;
+  return <div className="bg-white py-6 text-[#163b3a] md:py-[38px_68px]"><div className="mx-auto w-[calc(100%_-_32px)] max-w-[1220px] md:w-[calc(100%_-_64px)]"><nav className="mb-[26px] flex min-w-0 items-start gap-2 text-xs leading-normal text-[#667775] md:mb-[38px] md:items-center md:text-xs" aria-label="Breadcrumb"><Link className="shrink-0 hover:text-[#087f7d]" href={ROUTES.home}>Trang chủ</Link><span>/</span><Link className="shrink-0 hover:text-[#087f7d]" href={ROUTES.blog}>Tin tức</Link><span>/</span><strong className="line-clamp-2 min-w-0 overflow-hidden font-semibold text-[#063f46] md:block md:truncate">{entry.title}</strong></nav><div className="grid min-w-0 grid-cols-1 items-start gap-8 min-[900px]:grid-cols-[minmax(0,1fr)_320px] min-[1100px]:grid-cols-[minmax(0,1fr)_360px] min-[1100px]:gap-11"><article className="min-w-0"><header className="border-b border-[#dbe7e5] pb-5 md:pb-[26px]"><p className="mb-2.5 text-xs font-semibold uppercase tracking-[.1em] text-[#087f7d]">{entry.eyebrow}</p><h1 className="max-w-[880px] overflow-wrap-anywhere text-2xl font-semibold uppercase leading-[1.2] tracking-[-.025em] text-[#063f46] md:text-section-title md:leading-[1.16]">{entry.title}</h1>{entry.meta && <time className="mt-[11px] block text-label text-[#667775] md:mt-3.5" dateTime={isoDate(entry.meta)}>{entry.meta}</time>}</header><ArticleContent entry={entry} /></article><aside className="mt-[18px] grid min-w-0 grid-cols-1 gap-5 min-[900px]:sticky min-[900px]:top-[94px] min-[900px]:mt-0 min-[900px]:gap-7" aria-label="Nội dung liên quan"><SidebarSection title="Có thể bạn quan tâm" items={related.slice(0, 4)} /><SidebarSection title="Video" items={videos.slice(0, 3)} video /></aside></div>{related.length > 0 && <section className="mt-[46px] border-t border-[#dbe7e5] pt-8 md:mt-[68px] md:pt-[42px]"><header className="mb-6 flex items-start justify-between gap-6 md:items-end"><div><p className="mb-1 text-micro font-semibold tracking-[.1em] text-[#087f7d]">TIN TỨC BIM4C</p><h2 className="text-2xl font-semibold text-[#063f46] md:text-3xl">Bài viết liên quan</h2></div><Link className="text-xs font-semibold text-[#087f7d]" href={ROUTES.blog}>Xem tất cả →</Link></header><div className="grid grid-cols-1 gap-7 md:grid-cols-3 md:gap-[22px]">{related.slice(0, 3).map((item) => <article className="group relative" key={item.slug}><Link className="absolute inset-0 z-[2]" href={ROUTES.blogDetail(item.slug)} aria-label={`Xem ${item.title}`} /><div className="relative mb-3.5 aspect-video overflow-hidden md:aspect-[16/10]"><Image className="object-cover transition-transform group-hover:scale-[1.025]" src={item.image} alt="" fill sizes="(max-width: 767px) 100vw, 33vw" /></div><p className="mb-1.5 text-micro font-semibold tracking-[.08em] text-[#087f7d]">{item.eyebrow}</p><h3 className="mb-2 text-lg font-semibold leading-[1.4] text-[#063f46]">{item.title}</h3><time className="text-xs text-[#667775]" dateTime={isoDate(item.meta)}>{item.meta}</time></article>)}</div></section>}</div></div>;
 }

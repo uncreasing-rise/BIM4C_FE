@@ -1,3 +1,0 @@
-import Image from "next/image";
-import Link from "next/link";
-export function Careers() { return <><section className="careers"><Image src="/images/about.jpg" alt="Đội ngũ BIM4C" fill sizes="100vw"/><div/><div className="career-copy"><p>PHÁT TRIỂN CÙNG BIM4C</p><h2>GIA NHẬP ĐỘI NGŨ<br/>CỦA CHÚNG TÔI</h2><Link href="#">CƠ HỘI NGHỀ NGHIỆP →</Link></div></section><section className="testimonial section"><div className="container"><span>“</span><blockquote>BIM4C đã chứng tỏ năng lực chuyên môn và tinh thần trách nhiệm của một tổng thầu thi công chuyên nghiệp.</blockquote><p>ĐỐI TÁC CHIẾN LƯỢC</p></div></section></>; }

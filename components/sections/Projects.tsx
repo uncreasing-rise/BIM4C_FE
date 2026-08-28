@@ -2,46 +2,56 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { PROJECT_CATEGORIES } from "@/features/projects/constants";
+import { useCallback, useRef, useState } from "react";
 import { ROUTES } from "@/constants/routes";
 import type { Project } from "@/features/projects/types/project";
-import styles from "./FeaturedProjects.module.css";
+import { HomepageSectionHeader } from "./HomepageSectionHeader";
+
+const desktopCardVisibility = ["hidden lg:block lg:h-[80%]", "hidden lg:block", "block", "hidden lg:block", "hidden lg:block lg:h-[80%]"];
 
 export function Projects({ projects }: { projects: Project[] }) {
   const [offset, setOffset] = useState(0);
-  const [motion, setMotion] = useState<"idle" | "entering">("idle");
-  const [direction, setDirection] = useState<"left" | "right">("left");
+  const [motion, setMotion] = useState<-1 | 0 | 1>(0);
   const touchStart = useRef(0);
-  const paused = useRef(false);
-  const locked = useRef(false);
-  const timers = useRef<number[]>([]);
-  const visible = Array.from({ length: 5 }, (_, index) => projects[(offset + index) % projects.length]);
-  const move = useCallback((step: number, visualDirection: "left" | "right" = step < 0 ? "left" : "right") => {
-    if (locked.current || projects.length < 2) return;
-    locked.current = true;
-    setDirection(visualDirection);
-    setOffset((value) => (value - step + projects.length) % projects.length);
-    setMotion("entering");
-    timers.current.push(window.setTimeout(() => { setMotion("idle"); locked.current = false; }, 1200));
-  }, [projects.length]);
-  useEffect(() => { if (!projects.length || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return; const activeTimers = timers.current; const timer = window.setInterval(() => { if (!paused.current) move(1); }, 14000); return () => { window.clearInterval(timer); activeTimers.forEach(window.clearTimeout); }; }, [move, projects.length]);
+  const categoryProjects = projects;
+  const visible = Array.from({ length: 5 }, (_, index) => categoryProjects[(offset + index) % categoryProjects.length]);
+  const move = useCallback((step: number) => {
+    if (categoryProjects.length < 2) return;
+    setOffset((current) => (current + step + categoryProjects.length) % categoryProjects.length);
+  }, [categoryProjects.length]);
+  const navigate = (step: -1 | 1) => {
+    if (motion || categoryProjects.length < 2) return;
+    setMotion(step);
+    window.setTimeout(() => move(step), 220);
+    window.setTimeout(() => setMotion(0), 520);
+  };
+
   if (!projects.length) return null;
-  return <section className={styles.section} id="projects">
-    <header className={styles.header}>
-      <div className={styles.eyebrow}>01 // PROJECTS</div>
-      <div className={styles.headingRow}><h2>DỰ ÁN NỔI BẬT</h2><Link className={styles.sectionLink} href={ROUTES.projects}>XEM TẤT CẢ <span>↗</span></Link></div>
-      <div className={styles.tabs} role="tablist" aria-label="Danh mục dự án">{PROJECT_CATEGORIES.slice(1).map((category, index) => <button type="button" role="tab" aria-selected={index === offset} className={index === offset ? styles.active : undefined} onClick={() => { if (index !== offset) move(index - offset); }} disabled={motion !== "idle"} key={category}>{category}</button>)}</div>
-    </header>
-    <div className={`${styles.stage} ${motion === "entering" ? styles.entering : ""} ${direction === "left" ? styles.directionLeft : styles.directionRight}`} onMouseEnter={() => { paused.current = true; }} onMouseLeave={() => { paused.current = false; }} onFocus={() => { paused.current = true; }} onBlur={() => { paused.current = false; }} onTouchStart={(event) => { paused.current = true; touchStart.current = event.touches[0].clientX; }} onTouchEnd={(event) => { paused.current = false; const distance = event.changedTouches[0].clientX - touchStart.current; if (Math.abs(distance) > 45) move(distance < 0 ? 1 : -1, distance < 0 ? "left" : "right"); }}>
-      {visible.map((project, index) => <article className={`${styles.card} ${styles[`card${index}`]}`} key={project.slug}>
-        {index > 0 && index < 4 && <Link className={styles.cardLink} href={ROUTES.projectDetail(project.slug)} aria-label={`Xem chi tiết dự án ${project.title}`} />}
-        <Image className={styles.image} src={project.image} alt={project.title} fill sizes={index === 2 ? "34vw" : "18vw"} />
-        <div className={styles.shade} />
-        <div className={styles.content}><h3>{project.title}</h3>{index > 0 && index < 4 && <div className={styles.meta}>{project.location && <span><b aria-hidden="true">⌖</b>{project.location}</span>}{project.year && <span><b aria-hidden="true">◷</b>{project.year}</span>}{project.category && <span><b aria-hidden="true">▦</b>{project.category}</span>}</div>}{index > 0 && index < 4 && <span className={styles.explore}>XEM CHI TIẾT <b>→</b></span>}</div>
+
+  return <section id="projects" aria-label="Dự án nổi bật" className="relative flex min-h-[calc(100svh-68px)] flex-col overflow-hidden border-b border-[#dbe7e5] bg-white py-16 lg:min-h-[calc(100svh-84px)] lg:py-24">
+    <div className="pointer-events-none absolute -right-24 top-0 h-[46%] w-[36%] skew-x-[-18deg] bg-[#eaf8f7]" aria-hidden="true" />
+    <div className="pointer-events-none absolute bottom-0 left-[12%] h-px w-52 -rotate-[18deg] bg-[#09a7a5]/35" aria-hidden="true" />
+    <div className="relative z-10 mx-auto w-[calc(100%_-_32px)] max-w-[1400px] md:w-[calc(100%_-_64px)]"><HomepageSectionHeader title="DỰ ÁN NỔI BẬT" action="XEM TẤT CẢ DỰ ÁN" href={ROUTES.projects}/></div>
+    <div className="relative mx-4 h-[520px] flex-none lg:h-[620px] lg:mx-0 lg:grid lg:grid-cols-[minmax(84px,.155fr)_repeat(3,minmax(0,1fr))_minmax(84px,.17fr)] lg:items-center lg:gap-[21px]" onTouchStart={(event) => { touchStart.current = event.touches[0].clientX; }} onTouchEnd={(event) => { const distance = event.changedTouches[0].clientX - touchStart.current; if (Math.abs(distance) > 45) navigate(distance < 0 ? 1 : -1); }}>
+      {visible.map((project, index) => <article style={{ transitionDelay: `${index * 35}ms` }} className={`group relative h-full min-w-0 transform-gpu overflow-hidden bg-[#667775] transition-[transform,opacity] duration-700 ease-[cubic-bezier(.22,1,.36,1)] motion-reduce:transition-none ${motion === -1 ? "translate-x-1.5 opacity-90" : motion === 1 ? "-translate-x-1.5 opacity-90" : "translate-x-0 opacity-100"} ${desktopCardVisibility[index]} ${index > 0 && index < 4 ? "min-h-[420px] lg:min-h-[560px]" : ""}`} key={`${project.slug}-${index}`}>
+        <Link className="absolute inset-0 block focus-visible:outline-2 focus-visible:outline-offset-[-3px] focus-visible:outline-white" href={ROUTES.projectDetail(project.slug)} aria-label={`Xem dự án ${project.title}`}>
+          <Image className="object-cover transition-transform duration-700 motion-reduce:transition-none group-hover:scale-[1.025]" src={project.image} alt={project.title} fill sizes={index === 0 || index === 4 ? "10vw" : "(max-width: 1023px) 100vw, 30vw"} />
+          <span className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/10 to-transparent transition-colors duration-500 group-hover:from-[#063f46]/95 group-hover:via-[#063f46]/35" />
+          <div className={`absolute inset-x-0 bottom-0 text-white ${index === 0 || index === 4 ? "p-4" : "p-5 lg:p-7"}`}>
+            <p className="mb-2 text-micro font-semibold uppercase tracking-[.12em] text-[#ffffff]">{project.category}</p>
+            <h3 className={`m-0 font-semibold uppercase leading-snug [text-shadow:0_1px_2px_rgb(0_0_0/.35)] ${index === 0 || index === 4 ? "whitespace-nowrap text-sm" : "text-lg lg:text-xl"}`}>{project.title}</h3>
+            <dl className={`grid overflow-hidden text-xs transition-[max-height,opacity,margin] duration-500 group-hover:mt-4 group-hover:max-h-52 group-hover:opacity-100 group-focus-within:mt-4 group-focus-within:max-h-52 group-focus-within:opacity-100 ${index === 0 || index === 4 ? "hidden" : "mt-4 max-h-52 opacity-100 lg:mt-0 lg:max-h-0 lg:opacity-0"}`}>
+              <div className="grid grid-cols-[62px_1fr] gap-2 border-t border-white/25 py-2"><dt className="font-semibold uppercase text-white/60">Năm</dt><dd>{project.year}</dd></div>
+              <div className="grid grid-cols-[62px_1fr] gap-2 border-t border-white/25 py-2"><dt className="font-semibold uppercase text-white/60">Vị trí</dt><dd className="line-clamp-2">{project.location}</dd></div>
+              <div className="grid grid-cols-[62px_1fr] gap-2 border-t border-white/25 py-2"><dt className="font-semibold uppercase text-white/60">Quy mô</dt><dd className="line-clamp-2">{project.scale ?? "Đang cập nhật"}</dd></div>
+              <div className="grid grid-cols-[62px_1fr] gap-2 border-t border-white/25 py-2"><dt className="font-semibold uppercase text-white/60">Tiến độ</dt><dd>{project.status}</dd></div>
+            </dl>
+            <span className="mt-5 inline-flex items-center gap-2 text-[14px] font-bold uppercase tracking-[.06em] text-white">XEM DỰ ÁN <b className="text-lg transition-transform duration-300 group-hover:translate-x-1">→</b></span>
+          </div>
+        </Link>
       </article>)}
-      <div className={styles.controls}><button className={styles.arrow} type="button" onClick={() => move(-1)} disabled={motion !== "idle"} aria-label="Dự án trước">‹</button><button className={styles.arrow} type="button" onClick={() => move(1)} disabled={motion !== "idle"} aria-label="Dự án tiếp theo">›</button></div>
+      <button className="absolute left-0 top-1/2 z-20 h-[50px] w-[50px] -translate-y-1/2 bg-transparent transition-transform hover:-translate-x-1 hover:-translate-y-1/2 disabled:opacity-50 lg:h-[54px] lg:w-[84px]" type="button" disabled={motion !== 0} onClick={() => navigate(-1)} aria-label="Dự án trước"><span aria-hidden="true" className="absolute left-5 top-1/2 h-4 w-4 -translate-y-1/2 rotate-[-135deg] border-r-4 border-t-4 border-white drop-shadow-md lg:left-9" /></button>
+      <button className="absolute right-0 top-1/2 z-20 h-[50px] w-[50px] -translate-y-1/2 bg-transparent transition-transform hover:translate-x-1 hover:-translate-y-1/2 disabled:opacity-50 lg:h-[54px] lg:w-[84px]" type="button" disabled={motion !== 0} onClick={() => navigate(1)} aria-label="Dự án tiếp theo"><span aria-hidden="true" className="absolute right-5 top-1/2 h-4 w-4 -translate-y-1/2 rotate-45 border-r-4 border-t-4 border-white drop-shadow-md lg:right-9" /></button>
     </div>
-    <div className={styles.progress}><span>{String(offset + 1).padStart(2, "0")}</span><i><b style={{ width: `${((offset + 1) / projects.length) * 100}%` }} /></i><span>{String(projects.length).padStart(2, "0")}</span></div>
   </section>;
 }

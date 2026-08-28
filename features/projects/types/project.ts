@@ -5,6 +5,10 @@ export interface Project extends ContentEntry {
   category: string;
   location: string;
   year: string;
+  investor?: string;
+  expectedCompletion?: string;
+  scale?: string;
+  contractPackage?: string;
   status: string;
 }
 
@@ -20,4 +24,3 @@ export interface ProjectQueryParams {
   sortOrder?: "asc" | "desc";
   signal?: AbortSignal;
 }
-

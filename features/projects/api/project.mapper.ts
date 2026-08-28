@@ -6,6 +6,10 @@ export interface ProjectDto extends ContentEntryDto {
   category: string | { name: string };
   location: string;
   year: string | number;
+  investor?: string | null;
+  expectedCompletion?: string | null;
+  scale?: string | null;
+  contractPackage?: string | null;
   status: string;
 }
 
@@ -29,6 +33,10 @@ export function mapProjectDto(dto: ProjectDto): Project {
     category,
     location: dto.location,
     year: String(dto.year),
+    investor: dto.investor ?? undefined,
+    expectedCompletion: dto.expectedCompletion ?? undefined,
+    scale: dto.scale ?? undefined,
+    contractPackage: dto.contractPackage ?? undefined,
     status: PROJECT_STATUS_LABELS[dto.status] ?? dto.status,
   };
 }

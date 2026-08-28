@@ -6,7 +6,7 @@ export interface AdminContent {
   id: string; type: AdminContentType; title: string; slug: string; image: string; status: AdminContentStatus;
   description: string; eyebrow: string; meta: string | null; highlights: string[]; sections: AdminContentBlock[];
   publishedAt: string | null; updatedAt: string; sortOrder: number; isFeatured?: boolean;
-  categoryId?: string | null; category?: AdminCategory | null; location?: string; year?: number; authorName?: string | null;
+  categoryId?: string | null; category?: AdminCategory | null; location?: string; year?: number; investor?: string | null; expectedCompletion?: string | null; scale?: string | null; contractPackage?: string | null; authorName?: string | null;
   images?: { id: string; url: string; alt: string; caption?: string | null; sortOrder: number }[];
   curriculum?: { id: string; title: string; description: string; sortOrder: number }[];
 }
