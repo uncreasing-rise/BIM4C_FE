@@ -13,10 +13,10 @@ function PartnerSet({ partners, duplicate = false }: { partners: StrategicPartne
 export function Partners({ partners }: { partners: StrategicPartner[] }) {
   if (partners.length === 0) return null;
 
-  return <section className="relative overflow-hidden bg-white py-16 lg:py-24" id="partners">
+  return <section className="home-section relative overflow-hidden bg-white" id="partners">
     <div className="pointer-events-none absolute -right-20 top-8 size-64 rotate-45 border border-[#09a7a5]/15" aria-hidden="true"/>
     <div className="pointer-events-none absolute -left-24 bottom-0 h-28 w-[38%] -skew-x-[24deg] bg-[#eaf8f7]/80" aria-hidden="true"/>
-    <div className="relative z-10 mx-auto w-[calc(100%_-_32px)] max-w-[1400px] md:w-[calc(100%_-_64px)]">
+    <div className="home-container relative z-10">
       <HomepageSectionHeader title="ĐỐI TÁC CHIẾN LƯỢC"/>
       <div className="@container overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_4%,black_96%,transparent)]" aria-label="Danh sách đối tác chiến lược">
         <div className="flex w-max motion-safe:animate-[partner-marquee_30s_linear_infinite] hover:[animation-play-state:paused]">

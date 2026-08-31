@@ -1,44 +1,53 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
+import { useState } from "react";
 import { ROUTES } from "@/constants/routes";
 import type { ContentEntry } from "@/types/content";
 import { HomepageSectionHeader } from "./HomepageSectionHeader";
-import { ScrollReveal } from "@/components/shared/ScrollReveal";
+import { HomepageSectionToolbar } from "./HomepageSectionToolbar";
+
+function OverlayCard({ post, className = "", compact = false }: { post: ContentEntry; className?: string; compact?: boolean }) {
+  return <article className={`group relative min-h-0 overflow-hidden bg-[#063f46] ${className}`}>
+    <Link className="absolute inset-0 z-20 focus-visible:outline-2 focus-visible:outline-offset-[-3px] focus-visible:outline-white" href={ROUTES.blogDetail(post.slug)} aria-label={`Xem ${post.title}`} />
+    <Image className="object-cover transition-transform group-hover:scale-[1.025]" src={post.image} alt="" fill sizes="(max-width: 1023px) 100vw, 34vw" />
+    <div className="absolute inset-0 bg-gradient-to-t from-[#063f46]/95 via-[#063f46]/10 to-transparent" />
+    <div className={`absolute inset-x-0 bottom-0 z-10 text-white ${compact ? "p-4" : "p-6"}`}>
+      <h3 className={`${compact ? "line-clamp-2 text-[16px]" : "line-clamp-3 text-[20px]"} font-bold uppercase leading-[1.3]`}>{post.title}</h3>
+      {!compact && post.meta ? <time className="mt-3 block text-xs font-medium">{post.meta}</time> : null}
+    </div>
+  </article>;
+}
+
+function ListCard({ post }: { post: ContentEntry }) {
+  return <article className="group relative grid min-h-0 grid-cols-[96px_1fr] gap-3 overflow-hidden border-b border-[#dbe7e5] py-1.5 last:border-0">
+    <Link className="absolute inset-0 z-20 focus-visible:outline-2 focus-visible:outline-[#09a7a5]" href={ROUTES.blogDetail(post.slug)} aria-label={`Xem ${post.title}`} />
+    <div className="relative min-h-0 overflow-hidden"><Image className="object-cover transition-transform group-hover:scale-[1.025]" src={post.image} alt="" fill sizes="96px" /></div>
+    <div className="min-w-0"><h3 className="line-clamp-2 text-[14px] font-bold uppercase leading-[1.3] text-[#063f46] group-hover:text-[#09a7a5]">{post.title}</h3>{post.meta ? <time className="mt-1 block text-[11px] text-[#667775]">{post.meta}</time> : null}</div>
+  </article>;
+}
 
 export function News({ posts }: { posts: ContentEntry[] }) {
-  const [featured, ...secondary] = posts.slice(0, 3);
+  const categories = ["Tất cả", ...Array.from(new Set(posts.map((post) => post.eyebrow).filter(Boolean)))];
+  const [category, setCategory] = useState("Tất cả");
+  const visible = (category === "Tất cả" ? posts : posts.filter((post) => post.eyebrow === category)).slice(0, 7);
 
-  return <section className="relative flex min-h-[calc(100svh-68px)] w-full items-center overflow-hidden bg-[linear-gradient(180deg,#ffffff_0%,#f5fafa_100%)] py-16 shadow-[inset_0_1px_0_rgb(6_63_70_/_7%)] lg:min-h-[calc(100svh-84px)] lg:py-24" id="news">
-    <div className="pointer-events-none absolute -right-16 top-24 h-64 w-64 rotate-45 border border-[#09a7a5]/15" aria-hidden="true" />
-    <div className="pointer-events-none absolute right-0 top-0 h-72 w-[30%] [clip-path:polygon(34%_0,100%_0,100%_100%,0_100%)] bg-[#eaf8f7]/75" aria-hidden="true" />
-    <div className="pointer-events-none absolute bottom-0 left-0 h-28 w-1/3 -skew-x-[24deg] bg-[#eaf8f7]/85" aria-hidden="true" />
-    <div className="pointer-events-none absolute bottom-20 left-[8%] h-px w-52 -rotate-[17deg] bg-[#09a7a5]/35" aria-hidden="true" />
-    <div className="pointer-events-none absolute right-[22%] top-16 h-20 w-20 rotate-45 border border-[#09a7a5]/15" aria-hidden="true" />
-    <div className="relative z-10 mx-auto w-[calc(100%_-_32px)] max-w-[1400px] md:w-[calc(100%_-_64px)]">
-      <HomepageSectionHeader title="TIN TỨC" action="XEM TẤT CẢ TIN TỨC" href={ROUTES.blog}/>
-      {featured ? <div className="grid gap-6 lg:grid-cols-[minmax(0,1.22fr)_minmax(360px,.78fr)] lg:gap-10">
-        <ScrollReveal className="h-full">
-          <article className="group relative min-h-[420px] overflow-hidden bg-[#063f46] md:min-h-[520px] lg:h-full">
-            <Link className="absolute inset-0 z-10 focus-visible:outline-2 focus-visible:outline-offset-[-3px] focus-visible:outline-white" href={ROUTES.blogDetail(featured.slug)} aria-label={`Xem ${featured.title}`}/>
-            <Image className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.035]" src={featured.image} alt="" fill sizes="(max-width:1023px) 100vw, 65vw"/>
-            <div className="absolute inset-0 bg-gradient-to-t from-[#063f46] via-[#063f46]/25 to-transparent"/>
-            <div className="absolute inset-x-0 bottom-0 p-6 text-white md:p-9">
-              <div className="mb-4 flex items-center gap-3 text-[13px] font-semibold uppercase tracking-[.08em] text-white/70"><span className="h-px w-9 bg-[#09a7a5]"/><time>{featured.meta}</time></div>
-              <h3 className="max-w-[760px] text-2xl font-semibold leading-[1.3] md:text-[32px]">{featured.title}</h3>
-              <span className="mt-6 inline-flex items-center gap-3 text-[16px] font-semibold">XEM THÊM <b className="text-xl transition-transform duration-300 group-hover:translate-x-1">→</b></span>
-            </div>
-          </article>
-        </ScrollReveal>
-        <div className="grid content-stretch divide-y divide-[#dbe7e5] border-y border-[#dbe7e5] bg-white">
-          {secondary.slice(0, 4).map((article, index) => <ScrollReveal className="h-full" delay={(index + 1) * 100} key={article.slug}>
-            <article className="group relative flex h-full min-h-[112px] items-center justify-between gap-5 px-5 py-5 transition-colors hover:bg-[#eaf8f7] lg:min-h-0 lg:px-6">
-              <Link className="absolute inset-0 z-10 focus-visible:outline-2 focus-visible:outline-offset-[-3px] focus-visible:outline-[#09a7a5]" href={ROUTES.blogDetail(article.slug)} aria-label={`Xem ${article.title}`}/>
-              <div><time className="mb-2 block text-[13px] font-semibold uppercase tracking-[.08em] text-[#087f7d]">{article.meta}</time><h3 className="max-w-[420px] text-[18px] font-semibold leading-[1.4] text-[#063f46] transition-colors group-hover:text-[#087f7d]">{article.title}</h3></div>
-              <span className="relative z-20 shrink-0 text-xl text-[#09a7a5] transition-transform duration-300 group-hover:translate-x-1" aria-hidden="true">→</span>
-            </article>
-          </ScrollReveal>)}
-        </div>
-      </div> : null}
+  if (!posts.length) return null;
+
+  return <section className="home-section relative overflow-hidden bg-white" id="news">
+    <div className="home-container relative z-10">
+      <HomepageSectionHeader title="TIN TỨC - SỰ KIỆN">
+        <HomepageSectionToolbar categories={categories} selected={category} onSelect={setCategory} ariaLabel="Danh mục tin tức" ctaHref={ROUTES.blog} ctaLabel="Xem tất cả tin tức" />
+      </HomepageSectionHeader>
+      {visible.length ? <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-12 lg:grid-rows-[276px_128px] lg:gap-x-5 lg:gap-y-3">
+        {visible[0] ? <OverlayCard post={visible[0]} className="h-[420px] md:col-span-2 lg:col-span-4 lg:row-span-2 lg:h-auto" /> : null}
+        {visible[1] ? <OverlayCard post={visible[1]} className="h-[240px] lg:col-span-4 lg:h-auto" /> : null}
+        {visible[2] ? <OverlayCard post={visible[2]} compact className="h-[240px] lg:col-span-2 lg:col-start-5 lg:row-start-2 lg:h-auto" /> : null}
+        {visible[3] ? <OverlayCard post={visible[3]} compact className="h-[240px] lg:col-span-2 lg:col-start-7 lg:row-start-2 lg:h-auto" /> : null}
+        {visible[4] ? <OverlayCard post={visible[4]} compact className="h-[240px] lg:col-span-4 lg:col-start-9 lg:row-start-1 lg:h-auto" /> : null}
+        {(visible[5] || visible[6]) ? <div className="grid h-[200px] min-h-0 grid-rows-2 overflow-hidden md:col-span-2 lg:col-span-4 lg:col-start-9 lg:row-start-2 lg:h-auto">{visible.slice(5, 7).map((post) => <ListCard post={post} key={post.slug} />)}</div> : null}
+      </div> : <p className="py-16 text-center text-[#667775]">Chưa có bài viết trong danh mục này.</p>}
     </div>
   </section>;
 }

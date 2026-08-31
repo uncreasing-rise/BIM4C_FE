@@ -2,7 +2,7 @@
 
 @theme {
   --color-primary: #09a7a5;
-  --color-primary-hover: #087f7d;
+  --color-primary-hover: #09a7a5;
   --color-primary-deep: #063f46;
   --color-ink: #163b3a;
   --color-muted: #667775;
@@ -56,7 +56,7 @@
 
 :root {
   --teal: #09a7a5;
-  --teal-hover: #087f7d;
+  --teal-hover: #09a7a5;
   --teal-text: #09a7a5;
   --teal-deep: #063f46;
   --teal-soft: #eaf8f7;
@@ -68,12 +68,60 @@
   --shadow-sm: 0 4px 14px rgb(6 63 70 / 7%);
   --shadow-md: 0 12px 26px rgb(6 63 70 / 10%);
   --page: 1280px;
-  --section-space: clamp(64px, 7vw, 96px);
+  --section-space: clamp(48px, 5vw, 64px);
+  --content-gap: clamp(16px, 1.6vw, 24px);
+}
+
+.home-section { padding-block: var(--section-space); }
+
+.button-primary,
+.button-secondary {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 10px 20px;
+  border: 1px solid var(--teal-hover);
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.25;
+  text-transform: none;
+  transition: color 200ms ease, background-color 200ms ease, border-color 200ms ease, transform 200ms ease, box-shadow 200ms ease;
+}
+
+.button-primary { background: var(--teal-hover); color: var(--white); }
+.button-primary:hover { background: var(--teal-deep); border-color: var(--teal-deep); transform: translateY(-2px); box-shadow: var(--shadow-sm); }
+.button-secondary { background: transparent; color: var(--teal-hover); }
+.button-secondary:hover,
+.button-secondary:focus-visible { background: var(--teal-hover); color: var(--white); transform: translateY(-2px); }
+
+@keyframes project-slide-next {
+  from { opacity: .72; transform: translate3d(22px, 0, 0) scale(.992); }
+  to { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+}
+
+@keyframes project-slide-previous {
+  from { opacity: .72; transform: translate3d(-22px, 0, 0) scale(.992); }
+  to { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+}
+
+.project-slide-next { animation: project-slide-next 480ms cubic-bezier(.22, 1, .36, 1) both; }
+.project-slide-previous { animation: project-slide-previous 480ms cubic-bezier(.22, 1, .36, 1) both; }
+
+.home-container {
+  width: calc(100% - 32px);
+  max-width: 1248px;
+  margin-inline: auto;
+}
+
+@media (min-width: 768px) {
+  .home-container { width: calc(100% - 64px); }
 }
 
 html {
   scroll-behavior: smooth;
-  font-family: var(--font-sans), system-ui, sans-serif;
+  font-family: Arial, sans-serif;
 }
 
 body {
@@ -81,7 +129,7 @@ body {
   overflow-x: hidden;
   background: #ffffff;
   color: var(--ink);
-  font-family: var(--font-sans), system-ui, sans-serif;
+  font-family: Arial, sans-serif;
   font-size: 15px;
   font-weight: 400;
   font-synthesis: none;
@@ -95,6 +143,7 @@ input,
 select,
 textarea,
 small {
+  font-family: Arial, sans-serif;
   font-size: 15px;
 }
 
@@ -160,7 +209,7 @@ small {
 }
 
 :where([class*="transition"]) {
-  transition-duration: 1000ms !important;
+  transition-duration: 180ms !important;
 }
 
 .page-transition {
@@ -168,7 +217,11 @@ small {
 }
 
 [class*="content-enter"] {
-  animation-duration: 1200ms !important;
+  animation-duration: 550ms !important;
+}
+
+.hero-slide-transition {
+  transition-duration: 500ms !important;
 }
 
 @supports (animation-timeline: view()) {
@@ -182,12 +235,12 @@ small {
 @media (hover: hover) {
   :where(a, button, .group):hover,
   :where(a, button, .group):hover * {
-    transition-duration: 1000ms !important;
+    transition-duration: 160ms !important;
   }
 
   #projects .group:hover *,
   #projects .group:focus-within * {
-    transition-duration: 1700ms !important;
+    transition-duration: 280ms !important;
   }
 
   #projects .group:hover img,
@@ -197,7 +250,7 @@ small {
 
   #project-list .group:hover *,
   #project-list .group:focus-within * {
-    transition-duration: 1700ms !important;
+    transition-duration: 280ms !important;
   }
 
   #project-list .group:hover img,
@@ -207,7 +260,7 @@ small {
 
   #services .group:hover *,
   #services .group:focus-within * {
-    transition-duration: 1700ms !important;
+    transition-duration: 160ms !important;
   }
 
   #services .group:hover img,

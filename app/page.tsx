@@ -10,6 +10,6 @@ import { getHomepageContent } from "@/features/homepage/queries";
 import { ScrollReveal } from "@/components/shared/ScrollReveal";
 
 export default async function Home() {
-  const [projects, services, posts,homepage] = await Promise.all([getProjects(), getServices(), getPosts({ limit: 5 }),getHomepageContent()]);
+  const [projects, services, posts,homepage] = await Promise.all([getProjects(), getServices(), getPosts({ limit: 7 }),getHomepageContent()]);
   return <><Hero slides={homepage.slides}/><ScrollReveal><Projects projects={projects}/></ScrollReveal><ScrollReveal><Company services={services}/></ScrollReveal><ScrollReveal><Partners partners={homepage.partners}/></ScrollReveal><ScrollReveal><News posts={posts}/></ScrollReveal></>;
 }
