@@ -13,7 +13,11 @@ import { canDeferBuildData } from "@/lib/config/build";
 export async function getServices(): Promise<ContentEntry[]> {
   if (env.useMockApi) return serviceEntries;
   try {
-    const response = await apiClient.get<ApiResponse<ContentEntryDto[]> | ContentEntryDto[]>(API_ENDPOINTS.services.list, { next: { revalidate: 600, tags: ["services"] } });
+    const response = await apiClient.get<
+      ApiResponse<ContentEntryDto[]> | ContentEntryDto[]
+    >(API_ENDPOINTS.services.list, {
+      next: { revalidate: 600, tags: ["services"] },
+    });
     return unwrapData(response).map(mapContentDto);
   } catch (error) {
     if (canDeferBuildData(error)) return [];
@@ -21,10 +25,17 @@ export async function getServices(): Promise<ContentEntry[]> {
   }
 }
 
-export async function getServiceBySlug(slug: string): Promise<ContentEntry | null> {
-  if (env.useMockApi) return serviceEntries.find(service => service.slug === slug) ?? null;
+export async function getServiceBySlug(
+  slug: string,
+): Promise<ContentEntry | null> {
+  if (env.useMockApi)
+    return serviceEntries.find((service) => service.slug === slug) ?? null;
   try {
-    const response = await apiClient.get<ApiResponse<ContentEntryDto> | ContentEntryDto>(API_ENDPOINTS.services.detail(slug), { next: { revalidate: 600, tags: ["services", `service:${slug}`] } });
+    const response = await apiClient.get<
+      ApiResponse<ContentEntryDto> | ContentEntryDto
+    >(API_ENDPOINTS.services.detail(slug), {
+      next: { revalidate: 600, tags: ["services", `service:${slug}`] },
+    });
     return mapContentDto(unwrapData(response));
   } catch (error) {
     if (isNotFoundError(error)) return null;

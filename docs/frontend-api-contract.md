@@ -25,7 +25,12 @@ This document describes what the frontend expects; it does not claim these endpo
   "eyebrow": "Category label",
   "meta": "Optional display metadata",
   "highlights": ["Highlight"],
-  "sections": [{ "title": "Section", "body": "Plain text or structured rich-text reference" }]
+  "sections": [
+    {
+      "title": "Section",
+      "body": "Plain text or structured rich-text reference"
+    }
+  ]
 }
 ```
 
@@ -63,7 +68,12 @@ Backend status values are mapped to frontend labels in `project.mapper.ts`.
 - `POST /course-registrations`
 
 ```json
-{ "courseId": "uuid", "name": "Nguyễn Văn A", "email": "a@example.com", "phone": "0900000000" }
+{
+  "courseId": "uuid",
+  "name": "Nguyễn Văn A",
+  "email": "a@example.com",
+  "phone": "0900000000"
+}
 ```
 
 ### Blog
@@ -76,7 +86,13 @@ Backend status values are mapped to frontend labels in `project.mapper.ts`.
 - `POST /contact`
 
 ```json
-{ "name": "Nguyễn Văn A", "email": "a@example.com", "phone": "0900000000", "company": "BIM4C", "message": "Nội dung liên hệ" }
+{
+  "name": "Nguyễn Văn A",
+  "email": "a@example.com",
+  "phone": "0900000000",
+  "company": "BIM4C",
+  "message": "Nội dung liên hệ"
+}
 ```
 
 ### Newsletter

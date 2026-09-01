@@ -1,5 +1,50 @@
 import type { PageResult } from "../types";
-export interface AdminRecord { id: string; name?: string; email: string; phone?: string; company?: string; message?: string; status?: string; isActive?: boolean; createdAt: string; course?: { title: string } }
-export type RecordKind = "contacts" | "course-registrations" | "newsletter/subscriptions";
-async function parse<T>(response: Response): Promise<T> { if (!response.ok) { const b = await response.json().catch(() => null) as { message?: string } | null; throw new Error(b?.message ?? "Yêu cầu thất bại"); } return response.status === 204 ? undefined as T : response.json() as Promise<T>; }
-export const adminRecordsApi = { list: async (kind: RecordKind, search: string, status: string, page: number) => parse<PageResult<AdminRecord>>(await fetch(`/api/admin/${kind}?page=${page}&search=${encodeURIComponent(search)}&status=${encodeURIComponent(status)}`, { cache: "no-store" })), update: async (kind: RecordKind, id: string, body: unknown) => parse<{ data: AdminRecord }>(await fetch(`/api/admin/${kind}/${id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) })), remove: async (kind: RecordKind, id: string) => parse<void>(await fetch(`/api/admin/${kind}/${id}`, { method: "DELETE" })) };
+export interface AdminRecord {
+  id: string;
+  name?: string;
+  email: string;
+  phone?: string;
+  company?: string;
+  message?: string;
+  status?: string;
+  isActive?: boolean;
+  createdAt: string;
+  course?: { title: string };
+}
+export type RecordKind =
+  "contacts" | "course-registrations" | "newsletter/subscriptions";
+async function parse<T>(response: Response): Promise<T> {
+  if (!response.ok) {
+    const b = (await response.json().catch(() => null)) as {
+      message?: string;
+    } | null;
+    throw new Error(b?.message ?? "Yêu cầu thất bại");
+  }
+  return response.status === 204
+    ? (undefined as T)
+    : (response.json() as Promise<T>);
+}
+export const adminRecordsApi = {
+  list: async (
+    kind: RecordKind,
+    search: string,
+    status: string,
+    page: number,
+  ) =>
+    parse<PageResult<AdminRecord>>(
+      await fetch(
+        `/api/admin/${kind}?page=${page}&search=${encodeURIComponent(search)}&status=${encodeURIComponent(status)}`,
+        { cache: "no-store" },
+      ),
+    ),
+  update: async (kind: RecordKind, id: string, body: unknown) =>
+    parse<{ data: AdminRecord }>(
+      await fetch(`/api/admin/${kind}/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      }),
+    ),
+  remove: async (kind: RecordKind, id: string) =>
+    parse<void>(await fetch(`/api/admin/${kind}/${id}`, { method: "DELETE" })),
+};

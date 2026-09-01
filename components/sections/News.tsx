@@ -10,9 +10,7 @@ import { HomepageSectionToolbar } from "./HomepageSectionToolbar";
 
 function label(value: string) {
   const text = value.trim().toLocaleLowerCase("vi-VN");
-  return text
-    ? text[0].toLocaleUpperCase("vi-VN") + text.slice(1)
-    : text;
+  return text ? text[0].toLocaleUpperCase("vi-VN") + text.slice(1) : text;
 }
 
 export function News({ posts }: { posts: ContentEntry[] }) {
@@ -24,9 +22,7 @@ export function News({ posts }: { posts: ContentEntry[] }) {
   const [category, setCategory] = useState(all);
 
   const visible = (
-    category === all
-      ? posts
-      : posts.filter((p) => p.eyebrow === category)
+    category === all ? posts : posts.filter((p) => p.eyebrow === category)
   ).slice(0, 4);
 
   if (!posts.length) return null;

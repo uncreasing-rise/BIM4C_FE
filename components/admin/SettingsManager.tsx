@@ -1,4 +1,87 @@
 "use client";
-import { FormEvent,useEffect,useState } from "react";
-type Settings={companyName:string;email:string;phone?:string;address?:string;socialLinks:Record<string,string>;defaultSeoTitle:string;defaultSeoDescription:string;defaultOgImage?:string};
-export function SettingsManager(){const[data,setData]=useState<Settings|null>(null);const[busy,setBusy]=useState(false);const[msg,setMsg]=useState('');useEffect(()=>{fetch('/api/admin/settings',{cache:'no-store'}).then(r=>r.json()).then(x=>setData(x.data)).catch(()=>setMsg('Không thể tải cài đặt'))},[]);async function save(e:FormEvent){e.preventDefault();if(!data)return;setBusy(true);setMsg('');const r=await fetch('/api/admin/settings',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});setBusy(false);setMsg(r.ok?'Đã lưu cài đặt.':((await r.json().catch(()=>null))?.message??'Không thể lưu'));}if(!data)return <p>Đang tải…</p>;const field=(key:keyof Settings,label:string,type='text')=><label>{label}<input type={type} value={String(data[key]??'')} onChange={e=>setData({...data,[key]:e.target.value})}/></label>;return <form className="grid gap-4 rounded-md border border-[#dbe7e5] bg-white p-5 shadow-sm [&_label]:grid [&_label]:gap-1.5 [&_input]:min-h-10 [&_input]:border [&_input]:border-[#dbe7e5] [&_input]:px-3 [&_textarea]:border [&_textarea]:border-[#dbe7e5] [&_textarea]:p-3" onSubmit={save}>{field('companyName','Tên công ty')}{field('email','Email','email')}{field('phone','Điện thoại')}{field('address','Địa chỉ')}{field('defaultSeoTitle','SEO title')}{field('defaultSeoDescription','SEO description')}{field('defaultOgImage','Ảnh OpenGraph','url')}<label>Liên kết xã hội (JSON)<textarea value={JSON.stringify(data.socialLinks,null,2)} onChange={e=>{try{setData({...data,socialLinks:JSON.parse(e.target.value)})}catch{}}}/></label>{msg&&<p className="mx-4 mt-3 flex justify-between bg-[#eaf8f7] px-3 py-2.5 text-xs text-[#09a7a5]">{msg}</p>}<button disabled={busy} className="inline-flex min-h-[42px] items-center justify-center gap-2 rounded bg-[#09a7a5] px-[18px] text-xs font-semibold text-white hover:bg-[#09a7a5] disabled:opacity-50">{busy?'Đang lưu…':'Lưu cài đặt'}</button></form>}
+import { FormEvent, useEffect, useState } from "react";
+type Settings = {
+  companyName: string;
+  email: string;
+  phone?: string;
+  address?: string;
+  socialLinks: Record<string, string>;
+  defaultSeoTitle: string;
+  defaultSeoDescription: string;
+  defaultOgImage?: string;
+};
+export function SettingsManager() {
+  const [data, setData] = useState<Settings | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState("");
+  useEffect(() => {
+    fetch("/api/admin/settings", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((x) => setData(x.data))
+      .catch(() => setMsg("Không thể tải cài đặt"));
+  }, []);
+  async function save(e: FormEvent) {
+    e.preventDefault();
+    if (!data) return;
+    setBusy(true);
+    setMsg("");
+    const r = await fetch("/api/admin/settings", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    setBusy(false);
+    setMsg(
+      r.ok
+        ? "Đã lưu cài đặt."
+        : ((await r.json().catch(() => null))?.message ?? "Không thể lưu"),
+    );
+  }
+  if (!data) return <p>Đang tải…</p>;
+  const field = (key: keyof Settings, label: string, type = "text") => (
+    <label>
+      {label}
+      <input
+        type={type}
+        value={String(data[key] ?? "")}
+        onChange={(e) => setData({ ...data, [key]: e.target.value })}
+      />
+    </label>
+  );
+  return (
+    <form
+      className="grid gap-4 rounded-md border border-[#dbe7e5] bg-white p-5 shadow-sm [&_label]:grid [&_label]:gap-1.5 [&_input]:min-h-10 [&_input]:border [&_input]:border-[#dbe7e5] [&_input]:px-3 [&_textarea]:border [&_textarea]:border-[#dbe7e5] [&_textarea]:p-3"
+      onSubmit={save}
+    >
+      {field("companyName", "Tên công ty")}
+      {field("email", "Email", "email")}
+      {field("phone", "Điện thoại")}
+      {field("address", "Địa chỉ")}
+      {field("defaultSeoTitle", "SEO title")}
+      {field("defaultSeoDescription", "SEO description")}
+      {field("defaultOgImage", "Ảnh OpenGraph", "url")}
+      <label>
+        Liên kết xã hội (JSON)
+        <textarea
+          value={JSON.stringify(data.socialLinks, null, 2)}
+          onChange={(e) => {
+            try {
+              setData({ ...data, socialLinks: JSON.parse(e.target.value) });
+            } catch {}
+          }}
+        />
+      </label>
+      {msg && (
+        <p className="mx-4 mt-3 flex justify-between bg-[#eaf8f7] px-3 py-2.5 text-xs text-[#09a7a5]">
+          {msg}
+        </p>
+      )}
+      <button
+        disabled={busy}
+        className="inline-flex min-h-[42px] items-center justify-center gap-2 rounded bg-[#09a7a5] px-[18px] text-xs font-semibold text-white hover:bg-[#09a7a5] disabled:opacity-50"
+      >
+        {busy ? "Đang lưu…" : "Lưu cài đặt"}
+      </button>
+    </form>
+  );
+}

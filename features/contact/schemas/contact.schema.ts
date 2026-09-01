@@ -19,4 +19,3 @@ export const newsletterSchema = z.object({
   email: z.email("Email không hợp lệ."),
   consent: z.literal(true, { error: "Bạn cần đồng ý nhận thông tin." }),
 });
-

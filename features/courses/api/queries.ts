@@ -13,7 +13,11 @@ import { canDeferBuildData } from "@/lib/config/build";
 export async function getCourses(): Promise<ContentEntry[]> {
   if (env.useMockApi) return courseEntries;
   try {
-    const response = await apiClient.get<ApiResponse<ContentEntryDto[]> | ContentEntryDto[]>(API_ENDPOINTS.courses.list, { next: { revalidate: 600, tags: ["courses"] } });
+    const response = await apiClient.get<
+      ApiResponse<ContentEntryDto[]> | ContentEntryDto[]
+    >(API_ENDPOINTS.courses.list, {
+      next: { revalidate: 600, tags: ["courses"] },
+    });
     return unwrapData(response).map(mapContentDto);
   } catch (error) {
     if (canDeferBuildData(error)) return [];
@@ -21,10 +25,17 @@ export async function getCourses(): Promise<ContentEntry[]> {
   }
 }
 
-export async function getCourseBySlug(slug: string): Promise<ContentEntry | null> {
-  if (env.useMockApi) return courseEntries.find(course => course.slug === slug) ?? null;
+export async function getCourseBySlug(
+  slug: string,
+): Promise<ContentEntry | null> {
+  if (env.useMockApi)
+    return courseEntries.find((course) => course.slug === slug) ?? null;
   try {
-    const response = await apiClient.get<ApiResponse<ContentEntryDto> | ContentEntryDto>(API_ENDPOINTS.courses.detail(slug), { next: { revalidate: 600, tags: ["courses", `course:${slug}`] } });
+    const response = await apiClient.get<
+      ApiResponse<ContentEntryDto> | ContentEntryDto
+    >(API_ENDPOINTS.courses.detail(slug), {
+      next: { revalidate: 600, tags: ["courses", `course:${slug}`] },
+    });
     return mapContentDto(unwrapData(response));
   } catch (error) {
     if (isNotFoundError(error)) return null;

@@ -26,12 +26,12 @@ npm start
 
 ## Environment variables
 
-| Variable | Mô tả |
-| --- | --- |
-| `NEXT_PUBLIC_API_URL` | Base URL Backend API, không có dấu `/` cuối |
-| `NEXT_PUBLIC_APP_URL` | Canonical URL frontend |
-| `NEXT_PUBLIC_CDN_URL` | Base URL media/CDN; để trống khi dùng asset nội bộ |
-| `NEXT_PUBLIC_USE_MOCK_API` | `true`: mock adapter, `false`: HTTP API |
+| Variable                   | Mô tả                                              |
+| -------------------------- | -------------------------------------------------- |
+| `NEXT_PUBLIC_API_URL`      | Base URL Backend API, không có dấu `/` cuối        |
+| `NEXT_PUBLIC_APP_URL`      | Canonical URL frontend                             |
+| `NEXT_PUBLIC_CDN_URL`      | Base URL media/CDN; để trống khi dùng asset nội bộ |
+| `NEXT_PUBLIC_USE_MOCK_API` | `true`: mock adapter, `false`: HTTP API            |
 
 Không đặt secret, DB credential hoặc private token trong biến `NEXT_PUBLIC_*` vì các giá trị này có thể xuất hiện trong client bundle.
 
@@ -74,4 +74,3 @@ Mock mode is enabled by default. Only feature query/mutation adapters may access
 - Mutations and future authenticated data: `no-store`.
 
 See [Frontend API contract](docs/frontend-api-contract.md) and [Backend handoff](docs/backend-handoff.md).
-

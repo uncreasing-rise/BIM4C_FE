@@ -7,4 +7,3 @@ export interface ContentQueryParams {
   sortOrder?: "asc" | "desc";
   signal?: AbortSignal;
 }
-

@@ -4,11 +4,96 @@ import { adminContentApi } from "@/features/admin/api/client";
 import type { AdminCategory, AdminContentType } from "@/features/admin/types";
 import { slugify } from "@/lib/utils/slug";
 
-export function CategoryManager({ type, onChange }: { type: AdminContentType; onChange: () => void }) {
-  const [items, setItems] = useState<AdminCategory[]>([]); const [name, setName] = useState(""); const [editing, setEditing] = useState<AdminCategory | null>(null); const [error, setError] = useState("");
-  const load = useCallback(async () => setItems((await adminContentApi.categories(type)).data), [type]);
-  useEffect(() => { const timer = window.setTimeout(() => void load(), 0); return () => window.clearTimeout(timer); }, [load]);
-  async function save() { try { if (editing) await adminContentApi.updateCategory(type, editing.id, { name, slug: editing.slug }); else await adminContentApi.createCategory(type, { name, slug: slugify(name) }); setName(""); setEditing(null); await load(); onChange(); } catch (e) { setError(e instanceof Error ? e.message : "Không thể lưu danh mục"); } }
-  async function remove(id: string) { if (!confirm("Xóa danh mục này?")) return; try { await adminContentApi.deleteCategory(type, id); await load(); onChange(); } catch (e) { setError(e instanceof Error ? e.message : "Không thể xóa danh mục"); } }
-  return <section className="overflow-hidden rounded-md border border-[#dbe7e5] bg-white shadow-sm"><header><h2>Danh mục</h2></header>{error && <div className="mx-4 mt-3 flex justify-between bg-[#eaf8f7] px-3 py-2.5 text-xs text-[#09a7a5]">{error}</div>}<div className="flex flex-wrap items-center gap-3 border-b border-[#dbe7e5] p-4 [&_label]:flex [&_label]:h-10 [&_label]:min-w-52 [&_label]:flex-1 [&_label]:items-center [&_label]:gap-2 [&_label]:border [&_label]:border-[#dbe7e5] [&_label]:px-3 [&_input]:min-w-0 [&_input]:flex-1 [&_input]:outline-none [&_select]:h-10 [&_select]:border [&_select]:border-[#dbe7e5] [&_select]:px-3 [&>button]:min-h-10 [&>button]:bg-[#09a7a5] [&>button]:px-4 [&>button]:text-white"><label><input value={name} onChange={e => setName(e.target.value)} placeholder="Tên danh mục"/></label><button disabled={!name.trim()} onClick={() => void save()}>{editing ? "Lưu" : "＋ Thêm"}</button></div><div className="grid gap-2 p-4 [&_article]:flex [&_article]:items-center [&_article]:gap-3 [&_article]:border [&_article]:border-[#dbe7e5] [&_article]:p-2.5 [&_article>div]:flex [&_article>div]:flex-1 [&_article>div]:flex-col [&_small]:text-[#667775] [&_button]:bg-[#eaf8f7] [&_button]:p-2">{items.map(item => <article key={item.id}><div><strong>{item.name}</strong><small>/{item.slug}</small></div><button onClick={() => { setEditing(item); setName(item.name); }}>Sửa</button><button onClick={() => void remove(item.id)}>Xóa</button></article>)}</div></section>;
+export function CategoryManager({
+  type,
+  onChange,
+}: {
+  type: AdminContentType;
+  onChange: () => void;
+}) {
+  const [items, setItems] = useState<AdminCategory[]>([]);
+  const [name, setName] = useState("");
+  const [editing, setEditing] = useState<AdminCategory | null>(null);
+  const [error, setError] = useState("");
+  const load = useCallback(
+    async () => setItems((await adminContentApi.categories(type)).data),
+    [type],
+  );
+  useEffect(() => {
+    const timer = window.setTimeout(() => void load(), 0);
+    return () => window.clearTimeout(timer);
+  }, [load]);
+  async function save() {
+    try {
+      if (editing)
+        await adminContentApi.updateCategory(type, editing.id, {
+          name,
+          slug: editing.slug,
+        });
+      else
+        await adminContentApi.createCategory(type, {
+          name,
+          slug: slugify(name),
+        });
+      setName("");
+      setEditing(null);
+      await load();
+      onChange();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Không thể lưu danh mục");
+    }
+  }
+  async function remove(id: string) {
+    if (!confirm("Xóa danh mục này?")) return;
+    try {
+      await adminContentApi.deleteCategory(type, id);
+      await load();
+      onChange();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Không thể xóa danh mục");
+    }
+  }
+  return (
+    <section className="overflow-hidden rounded-md border border-[#dbe7e5] bg-white shadow-sm">
+      <header>
+        <h2>Danh mục</h2>
+      </header>
+      {error && (
+        <div className="mx-4 mt-3 flex justify-between bg-[#eaf8f7] px-3 py-2.5 text-xs text-[#09a7a5]">
+          {error}
+        </div>
+      )}
+      <div className="flex flex-wrap items-center gap-3 border-b border-[#dbe7e5] p-4 [&_label]:flex [&_label]:h-10 [&_label]:min-w-52 [&_label]:flex-1 [&_label]:items-center [&_label]:gap-2 [&_label]:border [&_label]:border-[#dbe7e5] [&_label]:px-3 [&_input]:min-w-0 [&_input]:flex-1 [&_input]:outline-none [&_select]:h-10 [&_select]:border [&_select]:border-[#dbe7e5] [&_select]:px-3 [&>button]:min-h-10 [&>button]:bg-[#09a7a5] [&>button]:px-4 [&>button]:text-white">
+        <label>
+          <input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Tên danh mục"
+          />
+        </label>
+        <button disabled={!name.trim()} onClick={() => void save()}>
+          {editing ? "Lưu" : "＋ Thêm"}
+        </button>
+      </div>
+      <div className="grid gap-2 p-4 [&_article]:flex [&_article]:items-center [&_article]:gap-3 [&_article]:border [&_article]:border-[#dbe7e5] [&_article]:p-2.5 [&_article>div]:flex [&_article>div]:flex-1 [&_article>div]:flex-col [&_small]:text-[#667775] [&_button]:bg-[#eaf8f7] [&_button]:p-2">
+        {items.map((item) => (
+          <article key={item.id}>
+            <div>
+              <strong>{item.name}</strong>
+              <small>/{item.slug}</small>
+            </div>
+            <button
+              onClick={() => {
+                setEditing(item);
+                setName(item.name);
+              }}
+            >
+              Sửa
+            </button>
+            <button onClick={() => void remove(item.id)}>Xóa</button>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
 }

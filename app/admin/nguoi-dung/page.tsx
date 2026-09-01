@@ -1,1 +1,12 @@
-import{AdminShell}from'@/components/admin/AdminShell';import{UsersManager}from'@/components/admin/UsersManager';export default function Page(){return <AdminShell title="Người dùng" description="Quản lý tài khoản, vai trò và trạng thái."><UsersManager/></AdminShell>}
+import { AdminShell } from "@/components/admin/AdminShell";
+import { UsersManager } from "@/components/admin/UsersManager";
+export default function Page() {
+  return (
+    <AdminShell
+      title="Người dùng"
+      description="Quản lý tài khoản, vai trò và trạng thái."
+    >
+      <UsersManager />
+    </AdminShell>
+  );
+}

@@ -16,4 +16,3 @@ export interface RequestOptions extends Omit<RequestInit, "body" | "method"> {
   timeoutMs?: number;
   token?: string | null;
 }
-

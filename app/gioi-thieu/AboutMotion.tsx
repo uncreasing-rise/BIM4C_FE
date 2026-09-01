@@ -7,16 +7,25 @@ export function AboutMotion() {
     const root = document.querySelector<HTMLElement>(".about-page");
     if (!root) return;
 
-    const items = Array.from(root.querySelectorAll<HTMLElement>("[data-about-reveal]"));
-    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const items = Array.from(
+      root.querySelectorAll<HTMLElement>("[data-about-reveal]"),
+    );
+    const reduceMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
 
     root.classList.add("about-motion-ready");
     items.forEach((item) => {
       const siblings = item.parentElement
-        ? Array.from(item.parentElement.children).filter((child) => child.hasAttribute("data-about-reveal"))
+        ? Array.from(item.parentElement.children).filter((child) =>
+            child.hasAttribute("data-about-reveal"),
+          )
         : [];
       const index = siblings.indexOf(item);
-      item.style.setProperty("--about-reveal-delay", `${Math.max(0, index) * 70}ms`);
+      item.style.setProperty(
+        "--about-reveal-delay",
+        `${Math.max(0, index) * 70}ms`,
+      );
     });
 
     if (reduceMotion) {

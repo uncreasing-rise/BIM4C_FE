@@ -21,6 +21,7 @@ export const HEADER_MENUS = {
     { label: "Thiết kế", href: ROUTES.serviceDetail("thiet-ke") },
     { label: "Tư vấn giám sát", href: ROUTES.serviceDetail("tu-van-giam-sat") },
   ],
-  projects: ["Nhà cao tầng", "Nhà ở", "Công nghiệp", "Hạ tầng", "Cơ điện"].map(label => ({ label, href: ROUTES.projects })),
+  projects: ["Nhà cao tầng", "Nhà ở", "Công nghiệp", "Hạ tầng", "Cơ điện"].map(
+    (label) => ({ label, href: ROUTES.projects }),
+  ),
 } as const;
-

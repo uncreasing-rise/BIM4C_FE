@@ -1,4 +1,5 @@
-const normalizeUrl = (value: string | undefined) => value?.replace(/\/$/, "") || "";
+const normalizeUrl = (value: string | undefined) =>
+  value?.replace(/\/$/, "") || "";
 
 export const env = {
   apiUrl: normalizeUrl(process.env.NEXT_PUBLIC_API_URL),
@@ -9,7 +10,8 @@ export const env = {
 
 export function assertApiEnvironment(): void {
   if (!env.useMockApi && !env.apiUrl) {
-    throw new Error("NEXT_PUBLIC_API_URL is required when NEXT_PUBLIC_USE_MOCK_API=false.");
+    throw new Error(
+      "NEXT_PUBLIC_API_URL is required when NEXT_PUBLIC_USE_MOCK_API=false.",
+    );
   }
 }
-

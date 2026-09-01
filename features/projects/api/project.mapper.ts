@@ -23,9 +23,12 @@ const PROJECT_STATUS_LABELS: Record<string, string> = {
 
 export function mapProjectDto(dto: ProjectDto): Project {
   const content = mapContentDto(dto);
-  const category = typeof dto.category === "string" ? dto.category : dto.category?.name;
+  const category =
+    typeof dto.category === "string" ? dto.category : dto.category?.name;
   if (!category || !dto.location || dto.year == null || !dto.status) {
-    throw new Error("Invalid project API contract: category, location, year and status are required.");
+    throw new Error(
+      "Invalid project API contract: category, location, year and status are required.",
+    );
   }
   return {
     ...content,
