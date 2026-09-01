@@ -1,7 +1,9 @@
+"use client";
+
 import Link from "next/link";
 import { ArrowIcon } from "@/components/ui/ArrowIcon";
 
-type HomepageSectionToolbarProps = {
+type Props = {
   categories: readonly string[];
   selected: string;
   onSelect: (category: string) => void;
@@ -12,23 +14,51 @@ type HomepageSectionToolbarProps = {
 
 function sentenceCase(value: string) {
   const normalized = value.trim().toLocaleLowerCase("vi-VN");
-  return normalized ? normalized[0].toLocaleUpperCase("vi-VN") + normalized.slice(1) : normalized;
+  return normalized
+    ? normalized[0].toLocaleUpperCase("vi-VN") + normalized.slice(1)
+    : normalized;
 }
 
-export function HomepageSectionToolbar({ categories, selected, onSelect, ariaLabel, ctaHref, ctaLabel }: HomepageSectionToolbarProps) {
-  return <div className="grid w-full items-center gap-4 md:grid-cols-[1fr_auto_1fr]">
-    <span className="hidden md:block" aria-hidden="true" />
-    <nav className="flex max-w-full flex-wrap items-center justify-center gap-x-6 gap-y-1" aria-label={ariaLabel}>
-      {categories.map((item) => <button
-        type="button"
-        className={`min-h-10 border-b-2 px-1 text-[14px] font-semibold leading-none transition-colors ${selected === item ? "border-[#09a7a5] text-[#063f46]" : "border-transparent text-[#667775] hover:text-[#09a7a5]"}`}
-        aria-pressed={selected === item}
-        onClick={() => onSelect(item)}
-        key={item}
-      >{sentenceCase(item)}</button>)}
-    </nav>
-    <Link href={ctaHref} className="button-secondary group min-w-[184px] shrink-0 justify-self-center md:justify-self-end">
-      {ctaLabel}<ArrowIcon className="size-5 transition-transform group-hover:translate-x-1" />
-    </Link>
-  </div>;
+export function HomepageSectionToolbar({
+  categories,
+  selected,
+  onSelect,
+  ariaLabel,
+  ctaHref,
+  ctaLabel,
+}: Props) {
+  return (
+    <div className="flex w-full flex-col items-start justify-between gap-5 md:flex-row md:items-center">
+      <div
+        className="flex max-w-full gap-7 overflow-x-auto pb-1"
+        role="radiogroup"
+        aria-label={ariaLabel}
+      >
+        {categories.map((item) => (
+          <button
+            key={item}
+            type="button"
+            role="radio"
+            aria-checked={selected === item}
+            onClick={() => onSelect(item)}
+            className={`min-h-9 flex-none border-b-2 px-0 text-sm font-semibold transition-colors ${
+              selected === item
+                ? "border-[#09a7a5] text-[#09a7a5]"
+                : "border-transparent text-slate-500 hover:text-slate-900"
+            }`}
+          >
+            {sentenceCase(item)}
+          </button>
+        ))}
+      </div>
+
+      <Link
+        href={ctaHref}
+        className="btn-enterprise-outline group !h-9 !shrink-0 !px-4 !text-xs"
+      >
+        {ctaLabel}
+        <ArrowIcon className="size-3.5 transition-transform group-hover:translate-x-0.5" />
+      </Link>
+    </div>
+  );
 }
