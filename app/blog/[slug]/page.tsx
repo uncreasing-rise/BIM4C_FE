@@ -20,5 +20,5 @@ export default async function BlogDetail({ params }: { params: Promise<{ slug: s
   const candidates = posts.filter(post => post.slug !== slug);
   const videos = candidates.filter(post => post.eyebrow.trim().toUpperCase() === "VIDEO");
   const related = [...candidates.filter(post => post.eyebrow === entry.eyebrow), ...candidates.filter(post => post.eyebrow !== entry.eyebrow && post.eyebrow.trim().toUpperCase() !== "VIDEO")].filter((post, index, all) => all.findIndex(item => item.slug === post.slug) === index);
-  return <NewsDetail entry={entry} related={related} videos={videos}/>;
+  return <div className="public-news-detail"><NewsDetail entry={entry} related={related} videos={videos}/></div>;
 }

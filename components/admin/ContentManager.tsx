@@ -9,7 +9,7 @@ import { slugify } from "@/lib/utils/slug";
 import { CategoryManager } from "./CategoryManager";
 
 const statusLabels: Record<AdminContentStatus, string> = { DRAFT: "Bản nháp", PUBLISHED: "Đã xuất bản", ARCHIVED: "Đã lưu trữ", PLANNED: "Đã xuất bản", IN_PROGRESS: "Đã xuất bản", COMPLETED: "Đã xuất bản" };
-const empty = (type: AdminContentType): AdminContent => ({ id: "", type, title: "", slug: "", image: "/images/hero.jpg", status: "DRAFT", description: "", eyebrow: "", meta: "", highlights: [], sections: [{ title: "", body: "" }], publishedAt: null, updatedAt: new Date().toISOString(), sortOrder: 0, isFeatured: false, location: "", year: new Date().getFullYear(), categoryId: null, authorName: "" });
+const empty = (type: AdminContentType): AdminContent => ({ id: "", type, title: "", slug: "", image: "/images/news-project-coordination.webp", status: "DRAFT", description: "", eyebrow: "", meta: "", highlights: [], sections: [{ title: "", body: "" }], publishedAt: null, updatedAt: new Date().toISOString(), sortOrder: 0, isFeatured: false, location: "", year: new Date().getFullYear(), categoryId: null, authorName: "" });
 
 export function ContentManager({ contentType }: { contentType: AdminContentType }) {
   const params = useSearchParams(); const router = useRouter();

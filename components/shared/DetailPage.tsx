@@ -40,7 +40,7 @@ export function DetailPage({ entry, backHref, backLabel, kind = "service", relat
   const eyebrow = entry.meta ? `${entry.eyebrow} · ${entry.meta}` : entry.eyebrow;
   return <>
     <PageHero eyebrow={eyebrow} title={entry.title} description={entry.description} image={entry.image}/>
-    <article className="w-full bg-white py-16 lg:py-24">
+    <article className={`public-detail public-detail-${kind} w-full bg-white py-16 lg:py-24`}>
       <div className="mx-auto mb-14 grid w-[calc(100%_-_32px)] max-w-[1440px] gap-6 border-b border-[#dbe7e5] pb-10 md:w-[calc(100%_-_48px)] md:grid-cols-[1fr_auto] md:items-end lg:w-[calc(100%_-_80px)]">
         <p className="m-0 max-w-[900px] text-subtitle font-medium leading-relaxed text-[#063f46]">{copy.kicker}</p>
         <div className="flex gap-3 text-xs font-semibold uppercase tracking-wider text-[#667775]"><span>BIM4C</span><span>·</span><span>{entry.meta ?? "Chuyên môn & thực tiễn"}</span></div>

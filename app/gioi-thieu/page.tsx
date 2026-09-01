@@ -1,114 +1,343 @@
 import type { Metadata } from "next";
 import Image from "next/image";
+import Link from "next/link";
+import { ROUTES } from "@/constants/routes";
+import styles from "./AboutSections.module.css";
+import { AboutMotion } from "./AboutMotion";
 import { PageHero } from "@/components/shared/PageHero";
 
 export const metadata: Metadata = {
-  title: "Giới thiệu công ty | BIM4C",
-  description: "BIM4C tiên phong chuyển đổi số xây dựng với BIM, AI, IoT và Digital Twin.",
+  title: "Giới thiệu | BIM4C Construction",
+  description:
+    "BIM4C tiên phong chuyển đổi số xây dựng với BIM, AI, IoT và Digital Twin — giải pháp hiệu quả, bền vững cho mọi công trình.",
 };
 
-const workingPrinciples = [
-  ["Hiểu đúng bài toán", "Bắt đầu từ quy trình, con người và mục tiêu thực tế của từng dự án."],
-  ["Thiết kế vừa đủ", "Chọn công nghệ phù hợp thay vì áp dụng một mô hình chung cho mọi tổ chức."],
-  ["Làm cùng đội ngũ", "Triển khai, kiểm chứng và chuyển giao ngay trong công việc hằng ngày."],
-  ["Đo bằng kết quả", "Theo dõi sai sót, thời gian phối hợp và chất lượng dữ liệu sau triển khai."],
+const stats = [
+  ["25+", "Khách hàng tin tưởng"],
+  ["150+", "Học viên BIM4C"],
+  ["120+", "Đối tác đồng hành"],
+  ["96%", "Dự án đúng cam kết"],
 ] as const;
 
-const technologies = [
-  ["AI", "Phân tích dữ liệu và nhận diện rủi ro sớm."],
-  ["IoT", "Kết nối dữ liệu hiện trường theo thời gian thực."],
-  ["Digital Twin", "Mô phỏng tài sản trong suốt vòng đời vận hành."],
+const missionPoints = [
+  "Thúc đẩy tăng trưởng bền vững và phát triển xanh",
+  "Đổi mới vì tương lai phát triển",
+  "Tiếp cận lấy khách hàng làm trung tâm",
+  "Xây dựng cộng đồng vững mạnh hơn",
+] as const;
+
+const visionPoints = [
+  "Kiến trúc hiện đại đầy cảm hứng",
+  "Xây dựng bền vững tiên phong",
+  "Trao quyền cộng đồng qua đổi mới",
+  "Dẫn đầu tương lai giải pháp xây dựng",
+] as const;
+
+const historyPoints = [
+  "Những khởi đầu khiêm tốn",
+  "Cột mốc và thành tựu",
+  "Xây dựng di sản niềm tin",
+  "Định hình tương lai, bắt nguồn từ quá khứ",
+] as const;
+
+const coreValues = [
+  { number: "01", title: "Tinh thần doanh nhân", description: "Với mỗi dự án, chúng tôi cam kết mang đến chất lượng vượt trội, an toàn tuyệt đối và bàn giao đúng hẹn." },
+  { number: "02", title: "Tôn trọng & Nhân văn", description: "Chúng tôi làm việc với sự thấu hiểu và tinh thần đồng đội; đối xử công bằng, tử tế và tôn trọng năng lực của mỗi người." },
+  { number: "03", title: "Chính trực", description: "Chúng tôi cam kết hoạt động với sự trung thực, trách nhiệm và minh bạch trong mọi quyết định." },
+  { number: "04", title: "Tâm huyết", description: "Chúng tôi truyền cảm hứng, tạo động lực và cùng nhau biến ý tưởng thành những giá trị thực tiễn." },
+  { number: "05", title: "Chu đáo", description: "Chúng tôi thấu hiểu và nỗ lực mang đến những lợi ích có thật cho khách hàng, đối tác và cộng đồng." },
+  { number: "06", title: "Can đảm để bứt phá", description: "Chúng tôi sẵn sàng đương đầu thử thách, chấp nhận rủi ro để phá vỡ giới hạn và tạo nên sự vượt trội." },
+  { number: "07", title: "Không ngừng cải tiến", description: "Chúng tôi luôn ứng dụng công nghệ hiện đại, không ngừng tìm kiếm các ý tưởng đột phá để phát triển." },
+  { number: "08", title: "Khách hàng là trọng tâm", description: "Chúng tôi đặt lợi ích của khách hàng làm trọng tâm trong mọi quyết định và hoạt động kinh doanh." },
+  { number: "09", title: "Bền vững", description: "Chúng tôi hoạt động với trách nhiệm bảo vệ môi trường và phát triển bền vững vì thế hệ tương lai." },
+] as const;
+
+const teamMembers = [
+  { name: "Nguyen Minh Anh", role: "BIM Director", image: "/images/news-bim-training.webp" },
+  { name: "Tran Quoc Bao", role: "Project Manager", image: "/images/news-site-safety.webp" },
+  { name: "Le Hoang Nam", role: "Lead BIM Engineer", image: "/images/service-consulting.jpg" },
+  { name: "Pham Khanh Linh", role: "Điều phối BIM", image: "/images/service-design.jpg" },
+] as const;
+
+const testimonials = [
+  {
+    name: "Sophia H.",
+    role: "Kỹ sư",
+    rating: 5,
+    text: "Công việc hoàn thành ngôi nhà mới của tôi thật tuyệt vời! Nhóm có chuyên môn cao, từ khâu lên kế hoạch đến thực thi — kết quả thật đẹp và không gian rộng rãi. Năm sao!",
+    avatar: "/images/service-design.jpg",
+  },
+  {
+    name: "Jidan D.",
+    role: "Kiến trúc sư",
+    rating: 5,
+    text: "Văn phòng của chúng tôi vượt quá mọi kỳ vọng! Đội ngũ cực kỳ chuyên nghiệp, tận tâm. Họ xử lý mọi thách thức với sự dễ dàng và bàn giao kết quả tuyệt vời. Chúng tôi giờ có không gian làm việc đầy cảm hứng.",
+    avatar: "/images/service-bim.jpg",
+  },
+  {
+    name: "Thomas G.",
+    role: "Quản lý dự án",
+    rating: 5,
+    text: "Chúng tôi thuê họ cải tạo cảnh quan sân nhà — kết quả thật ấn tượng! Đội ngũ chuyên nghiệp và sáng tạo, biến không gian thành khu vườn xanh tươi. Công việc của họ đã nâng cao đáng kể vẻ đẹp tổng thể.",
+    avatar: "/images/news-bim-training.webp",
+  },
 ] as const;
 
 export default function AboutPage() {
-  return <main>
-    <PageHero eyebrow="Giới thiệu BIM4C" title="Về chúng tôi" description="Ứng dụng BIM và công nghệ số vào những bài toán thực tế của ngành xây dựng." image="/images/about.jpg" />
+  return (
+    <main className="about-page">
+      <AboutMotion />
+      {/* ── HERO ── */}
+      <PageHero eyebrow="BIM4C" title="Giới thiệu" description="Tiên phong chuyển đổi số xây dựng bằng BIM, dữ liệu và tinh thần hợp tác." image="/images/service-consulting.jpg" />
 
-    <section id="company-overview" className="relative overflow-hidden bg-white py-16 lg:py-24">
-      <div className="pointer-events-none absolute -right-24 top-0 h-full w-[35%] -skew-x-[18deg] bg-[#eaf8f7]/65" aria-hidden="true" />
-      <div className="relative mx-auto grid w-[calc(100%_-_32px)] max-w-[1400px] gap-12 md:w-[calc(100%_-_64px)] lg:grid-cols-[minmax(0,1.35fr)_minmax(280px,.65fr)] lg:gap-24">
+      {/* ── TAGLINE STRIP ── */}
+      <section className="about-tagline">
+        <div className="about-wrap">
+          <p>
+            Dữ liệu rõ ràng, phối hợp hiệu quả và công trình bền vững — đó là cách BIM4C biến công nghệ thành giá trị thực tế.
+          </p>
+        </div>
+      </section>
+
+      {/* ── STATS ── */}
+      <section className="about-stats">
+        <div className="about-wrap">
+          {stats.map(([value, label]) => (
+            <div key={label} className="about-stat-item">
+              <strong>{value}</strong>
+              <span>{label}</span>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ── MISSION ── */}
+      <section className="about-company-overview about-wrap" data-reveal="true">
         <div>
-          <p className="mb-5 flex items-center gap-3 text-xs font-semibold uppercase tracking-[.14em] text-[#09a7a5]"><span className="h-px w-10 bg-[#09a7a5]" />BIM4C CONSTRUCTION</p>
-          <h1 className="max-w-[920px] text-4xl font-semibold leading-[1.08] tracking-[-.03em] text-[#09a7a5]">Công nghệ phải giải quyết được việc thật.</h1>
-          <p className="mt-8 max-w-[760px] border-l-2 border-[#09a7a5] pl-5 text-lg leading-8 text-[#163b3a]">BIM4C xây dựng quy trình số cho thiết kế, thi công và vận hành — từ tổ chức dữ liệu đến phối hợp giữa những người trực tiếp làm dự án.</p>
+          <p className="about-kicker">Giới thiệu công ty</p>
+          <h2>BIM4C – Tiên phong trong chuyển đổi số xây dựng</h2>
+          <p>Chúng tôi ứng dụng Mô hình Thông tin Công trình (BIM) kết hợp AI, IoT và Digital Twin để tối ưu thiết kế, thi công và vận hành. Giải pháp của BIM4C giúp giảm sai sót, tiết kiệm chi phí – thời gian, đồng thời tạo môi trường hợp tác minh bạch, bền vững.</p>
         </div>
-        <div className="self-end border-t border-[#09a7a5] pt-6">
-          <p className="mb-8 text-[16px] leading-7 text-[#667775]">Chúng tôi kết hợp BIM với AI, IoT và Digital Twin khi chúng tạo ra giá trị rõ ràng: ít sai sót hơn, phối hợp nhanh hơn và dữ liệu đáng tin cậy hơn.</p>
-          <dl className="flex gap-10">
-            <div><dt className="text-4xl font-bold text-[#09a7a5]">25+</dt><dd className="mt-1 text-xs text-[#667775]">Khách hàng</dd></div>
-            <div><dt className="text-4xl font-bold text-[#09a7a5]">150+</dt><dd className="mt-1 text-xs text-[#667775]">Học viên</dd></div>
-          </dl>
-        </div>
-      </div>
-    </section>
+        <div className="about-overview-stats"><strong>25<span>+</span></strong><small>Khách hàng tin tưởng</small><strong>150<span>+</span></strong><small>Học viên BIM4C</small></div>
+      </section>
 
-    <section id="ways-of-working" className="relative overflow-hidden bg-[#063f46] py-16 text-white lg:py-24">
-      <div className="pointer-events-none absolute -right-20 -top-28 size-80 rotate-45 border border-white/10" aria-hidden="true" />
-      <div className="relative mx-auto grid w-[calc(100%_-_32px)] max-w-[1400px] gap-12 md:w-[calc(100%_-_64px)] lg:grid-cols-[.75fr_1.25fr] lg:gap-24">
-        <div>
-          <p className="mb-5 text-xs font-semibold uppercase tracking-[.14em] text-[#09a7a5]">CÁCH BIM4C LÀM VIỆC</p>
-          <h2 className="text-4xl font-semibold leading-[1.1] sm:text-5xl">Không bắt đầu từ phần mềm.</h2>
-          <p className="mt-6 max-w-md text-[16px] leading-7 text-white/65">Mỗi dự án bắt đầu bằng việc hiểu cách đội ngũ đang làm việc và điểm nào thực sự cần thay đổi.</p>
-        </div>
-        <div className="border-t border-white/25">
-          {workingPrinciples.map(([title, text]) => <article className="grid gap-2 border-b border-white/20 py-6 sm:grid-cols-[200px_1fr] sm:gap-8" key={title}><h3 className="font-semibold text-[#09a7a5]">{title}</h3><p className="leading-7 text-white/70">{text}</p></article>)}
-        </div>
-      </div>
-    </section>
-
-    <section id="technology" className="bg-white py-16 lg:py-24">
-      <div className="mx-auto w-[calc(100%_-_32px)] max-w-[1400px] md:w-[calc(100%_-_64px)]">
-        <header className="mb-12 grid gap-5 lg:grid-cols-[.8fr_1.2fr] lg:items-end lg:gap-20">
-          <div><p className="mb-4 text-xs font-semibold uppercase tracking-[.14em] text-[#09a7a5]">NỀN TẢNG CÔNG NGHỆ</p><h2 className="text-4xl font-semibold leading-[1.1] text-[#09a7a5]">BIM là lõi dữ liệu.</h2></div>
-          <p className="max-w-[700px] text-[15px] leading-7 text-[#667775]">Mọi thông tin công trình được tổ chức trong BIM. AI, IoT và Digital Twin sử dụng nguồn dữ liệu đó để phân tích, cập nhật hiện trường và mô phỏng vận hành.</p>
+      <section className={styles.coreValues} data-about-reveal="section">
+        <header className={styles.sectionHeading}>
+          <h2>Giá trị cốt lõi</h2>
         </header>
-        <div className="relative overflow-hidden border border-[#dbe7e5] bg-[#f5fafa] bg-[linear-gradient(rgb(9_167_165_/.055)_1px,transparent_1px),linear-gradient(90deg,rgb(9_167_165_/.055)_1px,transparent_1px)] [background-size:32px_32px] [clip-path:polygon(0_0,calc(100%_-_18px)_0,100%_18px,100%_100%,18px_100%,0_calc(100%_-_18px))] px-5 py-8 md:px-10 md:py-10">
-          <span className="absolute left-5 top-4 font-mono text-xs text-[#09a7a5]/45" aria-hidden="true">SYS / BIM4C / CORE</span>
-          <span className="absolute right-5 top-4 flex items-center gap-2 font-mono text-xs text-[#09a7a5]/45" aria-hidden="true"><i className="size-1.5 bg-[#09a7a5]" />DATA FLOW</span>
-          <div className="relative z-10 mx-auto mt-7 flex min-h-28 max-w-[340px] items-center justify-between overflow-hidden bg-[#09a7a5] px-7 text-white [clip-path:polygon(0_0,calc(100%_-_16px)_0,100%_16px,100%_100%,16px_100%,0_calc(100%_-_16px))]"><div><span className="text-xs uppercase tracking-[.12em] text-white/70">Dữ liệu trung tâm</span><strong className="mt-1 block text-4xl">BIM</strong></div><span className="size-16 rotate-45 border border-white/25" aria-hidden="true" /></div>
-          <div className="mx-auto hidden h-10 w-px bg-[#09a7a5]/50 sm:block" aria-hidden="true" />
-          <div className="relative grid gap-3 sm:grid-cols-3 sm:gap-0 sm:border-t sm:border-[#09a7a5]/50 sm:pt-10">
-            {technologies.map(([title, text], index) => <article className="relative border border-[#dbe7e5] bg-white p-6 [clip-path:polygon(0_0,calc(100%_-_12px)_0,100%_12px,100%_100%,0_100%)] sm:mx-2 sm:before:absolute sm:before:-top-10 sm:before:left-1/2 sm:before:h-10 sm:before:w-px sm:before:bg-[#09a7a5]/50" key={title}><span className="mb-5 block font-mono text-xs text-[#667775]/55">NODE / 0{index + 1}</span><h3 className="mb-3 text-xl font-semibold text-[#09a7a5]">{title}</h3><p className="leading-6 text-[#667775]">{text}</p></article>)}
+        <div className={styles.valuesGrid}>
+          {coreValues.map((value) => (
+            <article key={value.number} data-about-reveal="item">
+              <strong>{value.number}</strong>
+              <h3>{value.title}</h3>
+              <p>{value.description}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section className={styles.letter} data-about-reveal="section">
+        <div className={styles.letterContent}>
+          <header className={styles.letterHeading}>
+            <h2>Thông điệp từ Ban Lãnh đạo</h2>
+          </header>
+          <div className={styles.letterBody}><p>Thưa các quý khách hàng và đối tác,</p><p>BIM4C được thành lập với một niềm tin rõ ràng: công nghệ chỉ thật sự tạo ra giá trị khi giúp con người phối hợp tốt hơn và đưa ra quyết định chính xác hơn. Chúng tôi là đơn vị tiên phong trong lĩnh vực tư vấn xây dựng, thúc đẩy chuyển đổi số thông qua công nghệ BIM.</p><p>Trên hành trình phía trước, BIM4C cam kết giữ vững tinh thần đổi mới, nâng cao hiệu quả dự án và đồng hành trách nhiệm cùng chủ đầu tư, tư vấn và nhà thầu. Mỗi công trình là một cơ hội để chúng tôi tạo dựng niềm tin, chuẩn hóa dữ liệu và đóng góp vào một ngành xây dựng minh bạch, bền vững hơn.</p><p>Trân trọng,</p></div>
+          <div className={styles.signature}><span>Trần Ngọc Hiếu</span><small>Nhà sáng lập &amp; Tổng Giám đốc BIM4C</small></div>
+        </div>
+        <div className={styles.letterVisual}><Image src="/images/news-bim-training.webp" alt="" fill sizes="(max-width: 767px) 100vw, 390px" /></div>
+      </section>
+
+      <section className="about-mission about-split" data-about-reveal="section">
+        <div className="about-split-image">
+          <Image
+            src="/images/service-bim.jpg"
+            alt=""
+            fill
+            sizes="(max-width: 767px) 100vw, 48vw"
+          />
+        </div>
+        <div className="about-split-content">
+          <h2>Sứ mệnh</h2>
+          <p>
+            Cung cấp dịch vụ xây dựng xuất sắc vượt quá kỳ vọng khách hàng thông qua đổi mới, chất lượng và tính bền vững. Chúng tôi xây dựng không chỉ những công trình mà còn xây dựng mối quan hệ lâu dài và di sản xuất sắc. Sự cống hiến của chúng tôi cho sự chính trực và xuất sắc thúc đẩy xây dựng mối quan hệ lâu bền và di sản tin cậy.
+          </p>
+          <ul className="about-checklist">
+            {missionPoints.map((point) => (
+              <li key={point}>
+                <span className="about-check">✓</span>
+                {point}
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+
+      {/* ── VISION ── */}
+      <section className="about-vision about-split about-split-reverse" data-about-reveal="section">
+        <div className="about-split-content">
+          <h2>Tầm nhìn</h2>
+          <p>
+            Tại BIM4C, tầm nhìn của chúng tôi là tái định hình ngành xây dựng thông qua đổi mới, bền vững và sự xuất sắc. Chúng tôi nỗ lực tạo ra những không gian không chỉ nâng cao chất lượng cuộc sống cộng đồng mà còn đóng góp tích cực cho môi trường. Bằng cách áp dụng công nghệ tiên tiến, chúng tôi hướng đến xây dựng một thế giới nơi những công trình truyền cảm hứng và chuyển hóa cuộc sống.
+          </p>
+          <ul className="about-checklist">
+            {visionPoints.map((point) => (
+              <li key={point}>
+                <span className="about-check">✓</span>
+                {point}
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div className="about-split-image">
+          <Image
+            src="/images/service-consulting.jpg"
+            alt=""
+            fill
+            sizes="(max-width: 767px) 100vw, 48vw"
+          />
+        </div>
+      </section>
+
+      {/* ── HISTORY ── */}
+      <section className="about-history about-split">
+        <div className="about-split-image">
+          <Image
+            src="/images/news-bim-training.webp"
+            alt="Lịch sử hình thành và phát triển BIM4C"
+            fill
+            sizes="(max-width: 767px) 100vw, 48vw"
+          />
+        </div>
+        <div className="about-split-content">
+          <p className="about-kicker">Lịch sử chúng tôi</p>
+          <h2>Lịch sử</h2>
+          <p>
+            Được thành lập dựa trên cam kết về chất lượng và đổi mới, BIM4C bắt đầu là một đội nhỏ với tầm nhìn lớn. Qua nhiều năm, chúng tôi đã trở thành đơn vị tin cậy trong ngành xây dựng, được thúc đẩy bởi niềm đam mê và sự cống hiến cho sự xuất sắc. Lịch sử của chúng tôi là nền tảng của tương lai, truyền cảm hứng để không ngừng vươn lên.
+          </p>
+          <ul className="about-checklist">
+            {historyPoints.map((point) => (
+              <li key={point}>
+                <span className="about-check">✓</span>
+                {point}
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+
+      {/* ── HOW WE DO WORK ── */}
+      <section className="about-process-header" data-about-reveal="section">
+        <div className="about-wrap about-center">
+          <h2>Quy trình triển khai BIM4C</h2>
+          <p>
+            Chúng tôi theo phương pháp cộng tác và minh bạch, đảm bảo giao tiếp rõ ràng và thực thi chuyên nghiệp tại mỗi giai đoạn dự án. Từ ý tưởng ban đầu đến bàn giao hoàn thiện.
+          </p>
+        </div>
+      </section>
+
+      {/* ── PROCESS BANNER (video/ảnh full-width) ── */}
+      <section className="about-process-banner" data-about-reveal="media">
+        <Image
+          src="/images/news-project-coordination.webp"
+          alt="Công trình BIM4C đang thi công"
+          fill
+          sizes="100vw"
+        />
+        <div className="about-process-overlay" />
+        <button className="about-play-btn" aria-label="Xem video quy trình làm việc của BIM4C">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M8 5v14l11-7z" />
+          </svg>
+        </button>
+      </section>
+
+      {/* ── TEAM ── */}
+      <section className="about-team" data-about-reveal="section">
+        <div className="about-wrap">
+          <div className="about-team-header">
+            <div>
+              <p className="about-kicker">Đội ngũ chuyên gia</p>
+              <h2>Đội ngũ BIM4C vững chuyên môn</h2>
+              <p>
+                Thành công của chúng tôi được xây dựng trên sự cống hiến và chuyên môn của những con người, cùng làm việc để biến mọi ý tưởng thành hiện thực.
+              </p>
+            </div>
+            <Link className="about-btn" href={ROUTES.projects}>
+              Khám phá tất cả
+            </Link>
+          </div>
+          <div className="about-team-grid">
+            {teamMembers.map((member) => (
+              <article key={member.name} className="about-team-card" data-about-reveal="item">
+                <div className="about-team-avatar">
+                  <Image
+                    src={member.image}
+                    alt={member.name}
+                    fill
+                    sizes="(max-width: 767px) 50vw, 25vw"
+                  />
+                  <div className="about-team-social">
+                    <span>in</span>
+                    <span>tw</span>
+                  </div>
+                </div>
+                <h3>{member.name}</h3>
+                <p>{member.role}</p>
+              </article>
+            ))}
           </div>
         </div>
-      </div>
-    </section>
+      </section>
 
-    <section id="vision" className="relative overflow-hidden bg-[#063f46] py-16 text-white lg:py-24">
-      <div className="pointer-events-none absolute -right-36 top-0 h-full w-[42%] -skew-x-[20deg] bg-[#09a7a5]/15" aria-hidden="true" />
-      <div className="pointer-events-none absolute right-[18%] top-0 h-full w-px -rotate-[20deg] bg-white/15" aria-hidden="true" />
-      <div className="pointer-events-none absolute -bottom-20 -left-24 h-40 w-[38%] -skew-x-[28deg] border-r border-t border-[#09a7a5]/40" aria-hidden="true" />
-      <div className="relative mx-auto w-[calc(100%_-_32px)] max-w-[1400px] md:w-[calc(100%_-_64px)]">
-        <p className="mb-9 flex items-center gap-3 text-xs font-semibold uppercase tracking-[.14em] text-[#09a7a5]"><span className="h-px w-10 bg-[#09a7a5]" />ĐỊNH HƯỚNG BIM4C</p>
-        <ol className="relative ml-3 max-w-[1080px] border-l border-[#09a7a5]/55">
-          <li className="relative grid gap-4 border-b border-white/20 py-8 pl-10 md:grid-cols-[190px_1fr] md:gap-12 md:py-10 md:pl-14">
-            <span className="absolute -left-2.5 top-10 size-5 rotate-45 border-2 border-[#09a7a5] bg-[#063f46] md:top-12" aria-hidden="true" />
-            <div><span className="mb-2 block text-xs font-semibold text-white/40">01</span><h2 className="text-xl font-semibold text-[#09a7a5]">Tầm nhìn</h2></div>
-            <p className="max-w-[760px] bg-white/[.055] px-6 py-5 text-2xl font-semibold leading-[1.35] [clip-path:polygon(0_0,calc(100%_-_14px)_0,100%_14px,100%_100%,0_100%)]">Đưa cách làm việc dựa trên dữ liệu trở thành tiêu chuẩn trong ngành xây dựng.</p>
-          </li>
-          <li className="relative grid gap-4 border-b border-white/20 py-8 pl-10 md:grid-cols-[190px_1fr] md:gap-12 md:py-10 md:pl-14">
-            <span className="absolute -left-2.5 top-10 size-5 rotate-45 border-2 border-[#09a7a5] bg-[#063f46] md:top-12" aria-hidden="true" />
-            <div><span className="mb-2 block text-xs font-semibold text-white/40">02</span><h2 className="text-xl font-semibold text-[#09a7a5]">Sứ mệnh</h2></div>
-            <p className="max-w-[760px] bg-white/[.055] px-6 py-5 text-2xl font-semibold leading-[1.35] [clip-path:polygon(0_0,calc(100%_-_14px)_0,100%_14px,100%_100%,0_100%)] md:ml-8">Biến công nghệ phức tạp thành quy trình mà đội ngũ có thể sử dụng mỗi ngày.</p>
-          </li>
-          <li className="relative grid gap-5 py-8 pl-10 md:grid-cols-[190px_1fr] md:gap-12 md:py-10 md:pl-14">
-            <span className="absolute -left-2.5 top-10 size-5 rotate-45 border-2 border-[#09a7a5] bg-[#063f46] md:top-12" aria-hidden="true" />
-            <div><span className="mb-2 block text-xs font-semibold text-white/40">03</span><h2 className="text-xl font-semibold text-[#09a7a5]">Giá trị cốt lõi</h2></div>
-            <div className="grid gap-3 sm:grid-cols-3 md:ml-16"><span className="border-l-2 border-[#09a7a5] bg-white/[.06] px-5 py-4 [clip-path:polygon(0_0,calc(100%_-_10px)_0,100%_10px,100%_100%,0_100%)] font-semibold">Làm việc thông minh</span><span className="border-l-2 border-[#09a7a5]/65 bg-white/[.06] px-5 py-4 [clip-path:polygon(0_0,calc(100%_-_10px)_0,100%_10px,100%_100%,0_100%)] font-semibold">Chính trực</span><span className="border-l-2 border-[#09a7a5]/35 bg-white/[.06] px-5 py-4 [clip-path:polygon(0_0,calc(100%_-_10px)_0,100%_10px,100%_100%,0_100%)] font-semibold">Chân thành</span></div>
-          </li>
-        </ol>
-      </div>
-    </section>
+      {/* ── TESTIMONIALS ── */}
+      <section className="about-testimonials" data-about-reveal="section">
+        <div className="about-wrap">
+          <div className="about-center">
+            <h2>Khách hàng nói gì về chúng tôi</h2>
+            <p>
+              Khách hàng luôn tin tưởng vào sự tin cậy, chú ý đến từng chi tiết và cam kết bàn giao đúng hạn, đúng ngân sách. Hãy nghe họ nói lên những điều làm nên sự khác biệt.
+            </p>
+          </div>
+          <div className="about-testimonials-grid">
+            {testimonials.map((t) => (
+              <article key={t.name} className="about-testimonial-card" data-about-reveal="item">
+                <div className="about-testimonial-header">
+                  <div className="about-testimonial-avatar">
+                    <Image src={t.avatar} alt="" fill sizes="56px" />
+                  </div>
+                  <div>
+                    <strong>{t.name}</strong>
+                    <span>{t.role}</span>
+                  </div>
+                  <div className="about-stars">
+                    {"★".repeat(t.rating)}
+                  </div>
+                </div>
+                <p>{t.text}</p>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
 
-    <section className="grid overflow-hidden bg-white lg:grid-cols-[.82fr_1.18fr]">
-      <div className="relative z-10 min-h-[360px] overflow-hidden sm:min-h-[440px] lg:min-h-[560px] lg:[clip-path:polygon(0_0,92%_0,100%_100%,0_100%)]"><Image className="object-cover" src="/images/service-training.jpg" alt="Trần Ngọc Hiếu – Nhà sáng lập BIM4C" fill sizes="(max-width: 1023px) 100vw, 42vw" /></div>
-      <div className="relative flex flex-col justify-center overflow-hidden px-5 py-14 md:px-12 lg:-ml-[4%] lg:pl-[14%] lg:pr-20">
-        <span className="pointer-events-none absolute right-4 top-0 text-[180px] font-serif leading-none text-[#09a7a5]/10" aria-hidden="true">“</span>
-        <p className="mb-5 text-xs font-semibold uppercase tracking-[.14em] text-[#09a7a5]">TỪ NGƯỜI SÁNG LẬP</p>
-        <blockquote className="relative max-w-[760px] text-3xl font-semibold leading-[1.35] text-[#09a7a5] sm:text-4xl">Công nghệ chỉ thật sự có ý nghĩa khi tạo ra giá trị cho con người.</blockquote>
-        <p className="mt-7 max-w-[680px] leading-7 text-[#667775]">Đó là nguyên tắc BIM4C dùng để lựa chọn công nghệ, xây dựng giải pháp và đồng hành cùng mỗi đội ngũ dự án.</p>
-        <div className="mt-9 border-t border-[#dbe7e5] pt-5"><strong className="block text-[#163b3a]">Trần Ngọc Hiếu</strong><span className="text-xs text-[#667775]">Nhà sáng lập BIM4C</span></div>
-      </div>
-    </section>
-  </main>;
+      {/* ── CTA NEWSLETTER ── */}
+      <section className="about-why about-wrap" data-about-reveal="section">
+        <div><p className="about-kicker">Vì sao chọn BIM4C</p><h2>Năng lực vững chắc cho mọi dự án.</h2></div>
+        <ul className="about-checklist"><li><span className="about-check">✓</span>Chuyên môn sâu và tùy biến giải pháp BIM theo đặc thù từng dự án.</li><li><span className="about-check">✓</span>Hiệu suất cao, công nghệ tiên tiến và liên tục cập nhật xu hướng BIM.</li><li><span className="about-check">✓</span>Đối tác chiến lược, hỗ trợ chuyên nghiệp vì thành công dài hạn.</li></ul>
+      </section>
+
+      <section className="about-cta" data-about-reveal="section">
+        <div className="about-cta-inner">
+          <h2>Hãy tạo nên Không gian lý tưởng của bạn</h2>
+          <p>
+            Cùng nhau, chúng tôi sẽ thiết kế và xây dựng một không gian phản ánh hoàn hảo tầm nhìn, nhu cầu và lối sống của bạn. Từ ý tưởng đến hoàn thiện, chúng tôi luôn ở đây để biến giấc mơ thành không gian thực tế.
+          </p>
+          <form className="about-cta-form">
+            <input type="email" name="email" placeholder="Nhập email của bạn" aria-label="Địa chỉ email" />
+            <button type="submit">Đăng ký</button>
+          </form>
+        </div>
+      </section>
+    </main>
+  );
 }

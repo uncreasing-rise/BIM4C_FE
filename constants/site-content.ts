@@ -8,7 +8,7 @@ export const companyStats: { value: string; label: string; icon: IconName }[] = 
 ];
 
 export const heroSlides = [
-  { image: "/images/hero.jpg", eyebrow: "BIM4C CONSTRUCTION", title: ["KIẾN TẠO", "GIÁ TRỊ BỀN VỮNG"] },
+  { image: "/images/news-project-coordination.webp", eyebrow: "BIM4C CONSTRUCTION", title: ["KIẾN TẠO", "GIÁ TRỊ BỀN VỮNG"] },
   { image: "/images/project-lumi.jpg", eyebrow: "DỰ ÁN TIÊU BIỂU", title: ["CHẤT LƯỢNG", "TẠO NÊN UY TÍN"] },
   { image: "/images/project-matrix.jpg", eyebrow: "CÔNG NGHỆ BIM", title: ["CHUYỂN ĐỔI SỐ", "NGÀNH XÂY DỰNG"] },
 ] as const;
@@ -23,7 +23,7 @@ export const strategicPartners = [
 ] as const;
 
 export const governanceMembers = [
-  { title: "Chủ tịch Hội đồng quản trị", label: "Hội đồng quản trị", image: "/images/about.jpg" },
-  { title: "Tổng Giám đốc", label: "Ban điều hành", image: "/images/service-training.jpg" },
+  { title: "Chủ tịch Hội đồng quản trị", label: "Hội đồng quản trị", image: "/images/news-bim-training.webp" },
+  { title: "Tổng Giám đốc", label: "Ban điều hành", image: "/images/news-site-safety.webp" },
   { title: "Giám đốc chuyên môn BIM", label: "Khối chuyên môn", image: "/images/service-bim.jpg" },
 ] as const;

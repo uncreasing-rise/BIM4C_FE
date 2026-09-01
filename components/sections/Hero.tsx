@@ -13,7 +13,7 @@ export function Hero({ slides }: { slides: HeroSlide[] }) {
   const touch = useRef(0);
   const wheelDistance = useRef(0);
   const wheelLocked = useRef(false);
-  const items = slides.length ? slides : [{ id: "fallback", eyebrow: "BIM4C Construction", title: "Dữ liệu tốt hơn. Công trình tốt hơn.", image: "/images/hero.jpg", alt: "Dự án BIM4C", sortOrder: 0, isActive: true }];
+  const items = slides.length ? slides : [{ id: "fallback", eyebrow: "BIM4C Construction", title: "Dữ liệu tốt hơn. Công trình tốt hơn.", image: "/images/news-project-coordination.webp", alt: "Đội ngũ BIM4C tại công trường", sortOrder: 0, isActive: true }];
   const move = (step: number) => setActive(value => (value + step + items.length) % items.length);
 
   useEffect(() => { if (items.length < 2 || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return; const timer = window.setTimeout(() => setActive(value => (value + 1) % items.length), 6500); return () => window.clearTimeout(timer); }, [active, items.length]);
