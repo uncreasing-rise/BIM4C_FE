@@ -12,6 +12,7 @@ import type {
   AdminContentType,
 } from "@/features/admin/types";
 import { slugify } from "@/lib/utils/slug";
+import { scrollToPageTop } from "@/lib/utils/scroll";
 import { CategoryManager } from "./CategoryManager";
 import { ContentBlockEditor } from "./ContentBlockEditor";
 import { MediaPicker } from "./MediaPicker";
@@ -479,12 +480,22 @@ export function ContentManager({
             Trang {page}/{totalPages}
           </span>
           <div>
-            <button disabled={page <= 1} onClick={() => setPage((x) => x - 1)} aria-label="Trang trước">
+            <button
+              disabled={page <= 1}
+              onClick={() => {
+                setPage((x) => x - 1);
+                scrollToPageTop();
+              }}
+              aria-label="Trang trước"
+            >
               ←
             </button>
             <button
               disabled={page >= totalPages}
-              onClick={() => setPage((x) => x + 1)}
+              onClick={() => {
+                setPage((x) => x + 1);
+                scrollToPageTop();
+              }}
               aria-label="Trang sau"
             >
               →

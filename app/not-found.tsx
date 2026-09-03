@@ -1,6 +1,9 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { ROUTES } from "@/constants/routes";
 import { Button } from "@/components/ui/button";
+
+export const metadata: Metadata = { title: "Không tìm thấy trang", robots: { index: false, follow: false } };
 
 export default function NotFound() {
   return (

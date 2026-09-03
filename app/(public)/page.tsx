@@ -3,12 +3,9 @@ import Link from "next/link";
 import {
   ArrowRight,
   Boxes,
-  Building2,
   ChartNoAxesCombined,
   CheckCircle2,
-  GraduationCap,
   ScanLine,
-  UsersRound,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -37,27 +34,6 @@ const capabilities = [
   },
 ] as const;
 
-const impactStats = [
-  {
-    icon: Building2,
-    value: "180+",
-    label: "Dự án",
-    description: "Đã triển khai đa quy mô trên toàn quốc",
-  },
-  {
-    icon: UsersRound,
-    value: "1.000+",
-    label: "Chuyên gia",
-    description: "Kết nối trong hệ sinh thái xây dựng số",
-  },
-  {
-    icon: GraduationCap,
-    value: "9.000+",
-    label: "Học viên",
-    description: "Được đào tạo bằng bài toán thực chiến",
-  },
-] as const;
-
 export default async function Home() {
   const [projects, services, posts] = await Promise.all([
     getProjects(),
@@ -66,7 +42,10 @@ export default async function Home() {
   ]);
   return (
     <main>
-      <section className="relative isolate min-h-svh overflow-hidden bg-[#0b1220] text-white">
+      <section
+        data-home-section="hero"
+        className="relative isolate min-h-svh overflow-hidden bg-brand-ink text-white"
+      >
         <Image
           data-motion="parallax"
           src="/images/news-project-coordination.webp"
@@ -76,7 +55,7 @@ export default async function Home() {
           sizes="100vw"
           className="-z-20 object-cover opacity-45"
         />
-        <div className="absolute inset-0 -z-10 bg-[linear-gradient(90deg,rgba(7,15,28,.98)_0%,rgba(7,15,28,.82)_53%,rgba(7,15,28,.26)_100%)]" />
+        <div className="absolute inset-0 -z-10 bg-[linear-gradient(90deg,rgba(4,24,31,.98)_0%,rgba(4,24,31,.84)_53%,rgba(4,24,31,.3)_100%)]" />
         <div className="absolute inset-0 -z-10 opacity-20 [background-image:linear-gradient(rgba(255,255,255,.12)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.12)_1px,transparent_1px)] [background-size:72px_72px]" />
         <div className="site-container grid min-h-svh items-end gap-12 py-16 pt-28 md:items-center md:py-24 md:pt-28 lg:grid-cols-[1fr_20rem]">
           <div className="max-w-4xl" data-motion="hero">
@@ -131,61 +110,10 @@ export default async function Home() {
         </div>
       </section>
 
-      <section className="bg-background py-20 lg:py-24">
-        <div className="site-container">
-          <div className="grid gap-6 border-b pb-8 md:grid-cols-[.8fr_1.2fr] md:items-end">
-            <div>
-              <p className="eyebrow">Dấu ấn BIM4C</p>
-              <h2 className="text-3xl font-semibold tracking-[-.04em] sm:text-4xl">
-                Năng lực được tạo nên từ trải nghiệm thực tế.
-              </h2>
-            </div>
-            <p className="max-w-xl text-sm leading-7 text-muted-foreground md:justify-self-end">
-              Mỗi con số đại diện cho một hành trình hợp tác, chia sẻ tri thức
-              và giải quyết những bài toán xây dựng phức tạp.
-            </p>
-          </div>
-          <div className="mt-8 grid gap-4 md:grid-cols-3">
-            {impactStats.map(
-              ({ icon: Icon, value, label, description }, index) => (
-                <CardContent
-                  className="group relative overflow-hidden rounded-2xl border bg-card p-6 transition-all duration-300 hover:-translate-y-1 hover:border-primary/30 hover:shadow-xl hover:shadow-black/5 md:p-7"
-                  key={label}
-                >
-                  <div className="absolute -right-8 -top-8 size-28 rounded-full bg-primary/5 transition-transform duration-500 group-hover:scale-125" />
-                  <div className="relative flex items-start justify-between">
-                    <span className="grid size-11 place-items-center rounded-xl bg-foreground text-background">
-                      <Icon className="size-5" />
-                    </span>
-                    <span className="text-[10px] font-semibold tracking-[.16em] text-muted-foreground">
-                      0{index + 1}
-                    </span>
-                  </div>
-                  <div className="relative mt-10 flex items-end gap-3">
-                    <strong className="text-5xl font-semibold leading-none tracking-[-.06em] lg:text-6xl">
-                      {value}
-                    </strong>
-                    <span className="pb-1 text-sm font-semibold text-primary">
-                      {label}
-                    </span>
-                  </div>
-                  <div className="mt-6 h-px bg-border">
-                    <div
-                      className="h-px bg-primary transition-all duration-500 group-hover:w-full"
-                      style={{ width: `${34 + index * 22}%` }}
-                    />
-                  </div>
-                  <p className="relative mt-4 max-w-60 text-xs leading-5 text-muted-foreground">
-                    {description}
-                  </p>
-                </CardContent>
-              ),
-            )}
-          </div>
-        </div>
-      </section>
-
-      <section className="mx-auto w-[calc(100%_-_2rem)] max-w-7xl py-20 md:w-[calc(100%_-_3rem)] lg:py-28">
+      <section
+        data-home-section="capabilities"
+        className="mx-auto w-[calc(100%_-_2rem)] max-w-7xl py-20 md:w-[calc(100%_-_3rem)] lg:py-28"
+      >
         <div className="grid gap-12 lg:grid-cols-[.8fr_1.2fr] lg:items-end">
           <div data-motion="reveal">
             <p className="eyebrow">Năng lực cốt lõi</p>
@@ -224,7 +152,10 @@ export default async function Home() {
         </div>
       </section>
 
-      <section className="bg-zinc-950 py-16 text-white lg:flex lg:min-h-svh lg:items-center lg:py-12">
+      <section
+        data-home-section="services"
+        className="bg-brand-ink py-16 text-white lg:flex lg:min-h-svh lg:items-center lg:py-12"
+      >
         <div className="mx-auto w-[calc(100%_-_2rem)] max-w-7xl md:w-[calc(100%_-_3rem)]">
           <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
             <div>
@@ -291,7 +222,10 @@ export default async function Home() {
         </div>
       </section>
 
-      <section className="mx-auto w-[calc(100%_-_2rem)] max-w-7xl py-20 md:w-[calc(100%_-_3rem)] lg:py-28">
+      <section
+        data-home-section="projects"
+        className="mx-auto w-[calc(100%_-_2rem)] max-w-7xl py-20 md:w-[calc(100%_-_3rem)] lg:py-28"
+      >
         <div className="flex items-end justify-between gap-6">
           <div>
             <Badge variant="outline" className="mb-4">
@@ -418,7 +352,10 @@ export default async function Home() {
 
       <Partners />
 
-      <section className="border-y bg-muted/40 py-16 lg:py-20">
+      <section
+        data-home-section="news"
+        className="border-y bg-muted/40 py-16 lg:py-20"
+      >
         <div className="mx-auto w-[calc(100%_-_2rem)] max-w-7xl md:w-[calc(100%_-_3rem)]">
           <Badge variant="outline" className="mb-4">
             BIM Insights
@@ -509,7 +446,10 @@ export default async function Home() {
         </div>
       </section>
 
-      <section className="mx-auto w-[calc(100%_-_2rem)] max-w-7xl py-20 md:w-[calc(100%_-_3rem)] lg:py-28">
+      <section
+        data-home-section="cta"
+        className="mx-auto w-[calc(100%_-_2rem)] max-w-7xl py-20 md:w-[calc(100%_-_3rem)] lg:py-28"
+      >
         <div className="overflow-hidden rounded-3xl bg-primary px-6 py-14 text-primary-foreground sm:px-12 lg:flex lg:items-center lg:justify-between lg:px-16">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[.14em] opacity-75">

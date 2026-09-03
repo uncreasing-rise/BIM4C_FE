@@ -9,7 +9,7 @@ const partners = [
 
 export function Partners({ compact = false }: { compact?: boolean }) {
   return (
-    <section className="relative overflow-hidden bg-[#0b1220] text-white">
+    <section className="relative overflow-hidden bg-brand-ink text-white">
       <div className="absolute -left-32 top-1/2 size-80 -translate-y-1/2 rounded-full bg-primary/10 blur-3xl" />
       <div
         className={`site-container relative ${compact ? "py-14" : "py-20 lg:py-24"}`}

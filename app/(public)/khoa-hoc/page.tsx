@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
+import { listingMetadata, normalizedPageRedirect, type ListingSearchParams } from "@/lib/seo/listing";
+import { ROUTES } from "@/constants/routes";
 import { PageHero } from "@/components/shared/PageHero";
 import { CourseExplorer } from "@/components/courses/CourseExplorer";
 import { getCourses } from "@/features/courses/api/queries";
 
-export const metadata: Metadata = {
-  title: "Đào tạo | BIM4C",
-  description:
-    "Chương trình đào tạo BIM thực chiến dành cho kỹ sư và doanh nghiệp.",
-};
+const description = "Chương trình đào tạo BIM thực chiến dành cho kỹ sư và doanh nghiệp.";
+export async function generateMetadata({ searchParams }: { searchParams: Promise<ListingSearchParams> }): Promise<Metadata> { return listingMetadata("Đào tạo", description, ROUTES.courses, await searchParams); }
 const learningValues = [
   [
     "Thực hành từ dự án",
@@ -23,8 +23,9 @@ const learningValues = [
   ],
 ] as const;
 
-export default async function CoursesPage() {
+export default async function CoursesPage({ searchParams }: { searchParams: Promise<ListingSearchParams> }) {
   const courses = await getCourses();
+  const destination = normalizedPageRedirect(ROUTES.courses, await searchParams, courses.length, 6); if (destination) redirect(destination);
   return (
     <main>
       <PageHero

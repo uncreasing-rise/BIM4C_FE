@@ -1,6 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
+import Link from "next/link";
 import { ChevronLeft, ChevronRight, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,6 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { scrollToElementTop } from "@/lib/utils/scroll";
 
 export function CatalogCategories({
   ariaLabel,
@@ -37,7 +39,7 @@ export function CatalogCategories({
           className={cn(
             "h-10 shrink-0 rounded-full border px-4 text-muted-foreground shadow-none hover:border-primary/30 hover:bg-primary/5 hover:text-primary",
             value === item &&
-              "border-primary bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground",
+              "border-primary bg-primary text-primary-foreground hover:bg-primary-hover hover:text-primary-foreground",
           )}
           aria-pressed={value === item}
           onClick={() => onChange(item)}
@@ -119,14 +121,19 @@ export function CatalogPagination({
   ariaLabel,
   page,
   pages,
-  onChange,
+  pathname,
 }: {
   ariaLabel: string;
   page: number;
   pages: number;
-  onChange: (page: number) => void;
+  pathname: string;
 }) {
   if (pages <= 1) return null;
+
+  const changePage = (trigger: HTMLElement) => {
+    scrollToElementTop(trigger.closest("section"));
+  };
+  const href = (number: number) => number === 1 ? pathname : `${pathname}?page=${number}`;
 
   const pageItems = Array.from(
     { length: pages },
@@ -141,15 +148,13 @@ export function CatalogPagination({
       className="mt-12 flex justify-center gap-2 border-t pt-8"
       aria-label={ariaLabel}
     >
-      <Button
+      <Button asChild
         variant="outline"
         size="icon"
         className="rounded-full"
         aria-label="Trang trước"
-        disabled={page === 1}
-        onClick={() => onChange(page - 1)}
       >
-        <ChevronLeft />
+        <Link aria-disabled={page === 1} tabIndex={page === 1 ? -1 : undefined} href={href(Math.max(1, page - 1))} scroll={false} onClick={(event) => changePage(event.currentTarget)}><ChevronLeft /></Link>
       </Button>
       {pageItems.map((number, index) => (
         <span className="contents" key={number}>
@@ -158,27 +163,24 @@ export function CatalogPagination({
               …
             </span>
           )}
-          <Button
+          <Button asChild
             variant={page === number ? "default" : "outline"}
             size="icon"
             className="rounded-full"
             aria-label={`Trang ${number}`}
             aria-current={page === number ? "page" : undefined}
-            onClick={() => onChange(number)}
           >
-            {number}
+            <Link href={href(number)} scroll={false} onClick={(event) => changePage(event.currentTarget)}>{number}</Link>
           </Button>
         </span>
       ))}
-      <Button
+      <Button asChild
         variant="outline"
         size="icon"
         className="rounded-full"
         aria-label="Trang sau"
-        disabled={page === pages}
-        onClick={() => onChange(page + 1)}
       >
-        <ChevronRight />
+        <Link aria-disabled={page === pages} tabIndex={page === pages ? -1 : undefined} href={href(Math.min(pages, page + 1))} scroll={false} onClick={(event) => changePage(event.currentTarget)}><ChevronRight /></Link>
       </Button>
     </nav>
   );

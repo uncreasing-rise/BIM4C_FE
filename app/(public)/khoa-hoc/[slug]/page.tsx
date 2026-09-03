@@ -15,9 +15,8 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const entry = await getCourseBySlug((await params).slug);
-  return entry
-    ? getContentMetadata(entry, ROUTES.courseDetail(entry.slug))
-    : {};
+  if (!entry) notFound();
+  return getContentMetadata(entry, ROUTES.courseDetail(entry.slug));
 }
 export default async function CourseDetail({
   params,

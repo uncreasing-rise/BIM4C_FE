@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { PageHero } from "@/components/shared/PageHero";
 import { getLegalDocument, legalDocuments } from "@/constants/legal-content";
 import { ROUTES } from "@/constants/routes";
+import { pageMetadata } from "@/lib/seo/listing";
 
 export function generateStaticParams() {
   return legalDocuments.map(({ slug }) => ({ slug }));
@@ -15,9 +16,8 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const document = getLegalDocument((await params).slug);
-  return document
-    ? { title: `${document.title} | BIM4C`, description: document.summary }
-    : {};
+  if (!document) notFound();
+  return pageMetadata(document.title, document.summary, ROUTES.legalDetail(document.slug));
 }
 
 export default async function LegalDetailPage({

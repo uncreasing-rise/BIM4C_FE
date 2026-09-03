@@ -6,8 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { registerCourse } from "../api/mutations";
 import { getZodFieldErrors } from "../utils/zod-errors";
+import Link from "next/link";
+import { ROUTES } from "@/constants/routes";
 
-type CourseField = "name" | "phone" | "email";
+type CourseField = "name" | "phone" | "email" | "consent";
 
 export function CourseRegistrationForm({
   courseId,
@@ -36,6 +38,7 @@ export function CourseRegistrationForm({
         name: String(data.get("name") ?? ""),
         email: String(data.get("email") ?? ""),
         phone: String(data.get("phone") ?? ""),
+        consent: data.get("consent") === "on",
       });
       form.reset();
       setStatus("success");
@@ -79,6 +82,11 @@ export function CourseRegistrationForm({
         />
         {fieldErrors.name && <p id="course-registration-name-error" className="text-xs text-red-100" role="alert">{fieldErrors.name}</p>}
       </label>
+      <label className="flex items-start gap-3 text-xs leading-5 text-white/75" htmlFor="course-registration-consent">
+        <input id="course-registration-consent" name="consent" type="checkbox" required className="mt-1 size-4 accent-primary" aria-invalid={Boolean(fieldErrors.consent)} aria-describedby={fieldErrors.consent ? "course-registration-consent-error" : undefined} />
+        <span>Tôi đã đọc và đồng ý với <Link className="text-primary underline" href={ROUTES.legalDetail("chinh-sach-bao-mat")} target="_blank">Chính sách bảo mật</Link> và việc xử lý dữ liệu cá nhân.</span>
+      </label>
+      {fieldErrors.consent && <p id="course-registration-consent-error" className="text-xs text-red-100" role="alert">{fieldErrors.consent}</p>}
       <label className={labelClass} htmlFor="course-registration-phone">
         <span className="text-xs font-semibold uppercase tracking-[.06em] text-white/70">
           Số điện thoại *

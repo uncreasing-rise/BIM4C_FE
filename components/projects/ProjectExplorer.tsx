@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
 import { EmptyState } from "@/components/ui/EmptyState";
 import {
@@ -19,6 +20,7 @@ import {
 } from "@/features/projects/constants";
 import { filterProjects } from "@/features/projects/selectors/filter-projects";
 import type { Project } from "@/features/projects/types/project";
+import { parsePage } from "@/lib/seo/listing";
 
 export function ProjectExplorer({ projects }: { projects: Project[] }) {
   const [category, setCategory] = useState(ALL_PROJECT_FILTER);
@@ -26,10 +28,12 @@ export function ProjectExplorer({ projects }: { projects: Project[] }) {
   const [location, setLocation] = useState(ALL_PROJECT_FILTER);
   const [year, setYear] = useState(ALL_PROJECT_FILTER);
   const [status, setStatus] = useState(ALL_PROJECT_FILTER);
-  const [page, setPage] = useState(1);
+  const router = useRouter();
+  const page = parsePage(useSearchParams().get("page"));
+  const resetPage = () => router.replace(ROUTES.projects, { scroll: false });
   const update = (setter: (value: string) => void, value: string) => {
     setter(value);
-    setPage(1);
+    resetPage();
   };
   const filtered = useMemo(
     () =>
@@ -53,7 +57,7 @@ export function ProjectExplorer({ projects }: { projects: Project[] }) {
     setLocation(ALL_PROJECT_FILTER);
     setYear(ALL_PROJECT_FILTER);
     setStatus(ALL_PROJECT_FILTER);
-    setPage(1);
+    resetPage();
   };
 
   return (
@@ -181,7 +185,7 @@ export function ProjectExplorer({ projects }: { projects: Project[] }) {
           ariaLabel="Phân trang dự án"
           page={page}
           pages={pages}
-          onChange={setPage}
+          pathname={ROUTES.projects}
         />
       </div>
     </section>

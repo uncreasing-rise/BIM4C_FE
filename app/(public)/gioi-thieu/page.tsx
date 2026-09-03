@@ -8,12 +8,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ROUTES } from "@/constants/routes";
 import { Partners } from "@/components/sections/Partners";
+import { pageMetadata } from "@/lib/seo/listing";
 
-export const metadata: Metadata = {
-  title: "Giới thiệu | BIM4C Construction",
-  description:
-    "BIM4C tiên phong chuyển đổi số xây dựng với BIM, AI, IoT và Digital Twin.",
-};
+export const metadata: Metadata = pageMetadata("Giới thiệu", "BIM4C tiên phong chuyển đổi số xây dựng với BIM, AI, IoT và Digital Twin.", ROUTES.about);
 
 const values = [
   [
@@ -55,25 +52,25 @@ export default function AboutPage() {
         variant="about"
       />
 
-      <section className="border-b bg-muted/40">
-        <div className="mx-auto grid w-[calc(100%_-_2rem)] max-w-7xl grid-cols-2 md:w-[calc(100%_-_3rem)] md:grid-cols-4">
+      <section className="border-y border-border bg-muted/45 py-8 lg:py-10">
+        <div className="mx-auto grid w-[calc(100%_-_2rem)] max-w-7xl grid-cols-2 gap-3 rounded-[2rem] border border-border/70 bg-card p-3 shadow-[0_24px_70px_-50px_rgba(7,31,39,.38)] md:w-[calc(100%_-_3rem)] md:grid-cols-4">
           {[
             ["25+", "Khách hàng"],
             ["180+", "Dự án"],
             ["120+", "Đối tác"],
             ["96%", "Đúng cam kết"],
           ].map(([value, label]) => (
-            <div
-              className="border-r p-6 text-center last:border-r-0 md:p-9"
+            <article
+              className="group flex min-h-36 flex-col items-center justify-center rounded-2xl px-4 py-6 text-center transition-colors duration-300 hover:bg-primary/8 md:min-h-40"
               key={label}
             >
-              <strong className="text-3xl font-semibold md:text-4xl">
+              <strong className="whitespace-nowrap text-4xl font-semibold leading-none tracking-[-.06em] text-primary sm:text-5xl lg:text-6xl">
                 {value}
               </strong>
-              <span className="mt-2 block text-sm text-muted-foreground">
+              <span className="mt-3 text-xs font-semibold uppercase tracking-[.12em] text-foreground/70">
                 {label}
               </span>
-            </div>
+            </article>
           ))}
         </div>
       </section>
@@ -121,7 +118,7 @@ export default function AboutPage() {
               sizes="(max-width:1023px) 100vw, 40vw"
               className="object-cover"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#0b1220]/70 via-transparent to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-brand-ink/70 via-transparent to-transparent" />
             <div className="absolute inset-x-0 bottom-0 p-7 text-white">
               <p className="font-semibold">Ban Giám đốc BIM4C</p>
               <p className="mt-1 text-sm text-white/65">
@@ -156,7 +153,7 @@ export default function AboutPage() {
         </div>
       </section>
 
-      <section className="relative overflow-hidden bg-[#0b1220] py-20 text-white lg:py-28">
+      <section className="relative overflow-hidden bg-brand-ink py-20 text-white lg:py-28">
         <div className="absolute inset-0 opacity-10 [background-image:linear-gradient(rgba(255,255,255,.15)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.15)_1px,transparent_1px)] [background-size:64px_64px]" />
         <div className="site-container relative">
           <p className="eyebrow">Giá trị cốt lõi</p>
@@ -166,7 +163,7 @@ export default function AboutPage() {
           <div className="mt-12 grid gap-px overflow-hidden rounded-3xl bg-white/10 md:grid-cols-2">
             {values.map(([number, title, text]) => (
               <article
-                className="group bg-[#0b1220]/90 p-7 transition-colors hover:bg-white/[.06] md:p-10"
+                className="group bg-brand-ink/90 p-7 transition-colors hover:bg-white/[.06] md:p-10"
                 key={number}
               >
                 <div className="flex items-center justify-between">
@@ -212,7 +209,7 @@ export default function AboutPage() {
         </div>
       </section>
 
-      <section className="bg-muted/40 py-20 lg:py-28">
+      <section data-about-section="team" className="bg-muted/40 py-20 lg:py-28">
         <div className="mx-auto w-[calc(100%_-_2rem)] max-w-7xl md:w-[calc(100%_-_3rem)]">
           <Badge variant="outline" className="mb-4">
             Đội ngũ
@@ -220,21 +217,29 @@ export default function AboutPage() {
           <h2 className="text-4xl font-semibold tracking-[-.04em] sm:text-5xl">
             Chuyên gia cùng một mục tiêu.
           </h2>
-          <div className="mt-12 grid grid-cols-2 gap-4 lg:grid-cols-4">
-            {team.map(([name, role, image]) => (
-              <Card className="overflow-hidden p-0 shadow-none" key={name}>
-                <div className="relative aspect-[4/5]">
+          <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            {team.map(([name, role, image], index) => (
+              <Card
+                data-team-card
+                className="group overflow-hidden rounded-3xl border-0 bg-brand-ink p-0 text-white shadow-xl shadow-brand-ink/10"
+                key={name}
+              >
+                <div className="relative aspect-[4/5] overflow-hidden">
                   <Image
                     src={image}
-                    alt={name}
+                    alt=""
                     fill
                     sizes="(max-width:767px) 50vw, 25vw"
-                    className="object-cover"
+                    className="object-cover saturate-[.75] transition duration-700 group-hover:scale-105 group-hover:saturate-100"
                   />
+                  <div className="absolute inset-0 bg-gradient-to-t from-brand-ink via-transparent to-transparent" />
+                  <span className="absolute right-5 top-5 text-xs font-semibold tracking-[.18em] text-white/60">
+                    0{index + 1}
+                  </span>
                 </div>
-                <CardHeader>
-                  <CardTitle className="text-lg">{name}</CardTitle>
-                  <CardContent className="p-0 text-sm text-muted-foreground">
+                <CardHeader className="relative -mt-12 p-6 pt-0">
+                  <CardTitle className="text-xl text-white">{name}</CardTitle>
+                  <CardContent className="mt-2 border-t border-white/15 p-0 pt-3 text-sm text-primary">
                     {role}
                   </CardContent>
                 </CardHeader>

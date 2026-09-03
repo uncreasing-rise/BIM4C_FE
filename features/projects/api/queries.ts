@@ -47,3 +47,12 @@ export async function getProjectBySlug(slug: string): Promise<Project | null> {
     throw error;
   }
 }
+
+export async function getAllProjects(): Promise<Project[]> {
+  const results: Project[] = [];
+  for (let page = 1; ; page += 1) {
+    const batch = await getProjects({ page, limit: 100 });
+    results.push(...batch);
+    if (batch.length < 100) return results;
+  }
+}

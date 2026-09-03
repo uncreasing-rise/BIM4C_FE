@@ -10,6 +10,11 @@ export interface AdminRecord {
   isActive?: boolean;
   createdAt: string;
   course?: { title: string };
+  consent?: boolean;
+  consentGiven?: boolean | null;
+  consentAt?: string | null;
+  privacyPolicyVersion?: string | null;
+  consentSource?: string | null;
 }
 export type RecordKind =
   "contacts" | "course-registrations" | "newsletter/subscriptions";

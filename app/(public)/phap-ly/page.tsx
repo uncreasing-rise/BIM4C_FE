@@ -3,12 +3,9 @@ import Link from "next/link";
 import { PageHero } from "@/components/shared/PageHero";
 import { legalDocuments } from "@/constants/legal-content";
 import { ROUTES } from "@/constants/routes";
+import { pageMetadata } from "@/lib/seo/listing";
 
-export const metadata: Metadata = {
-  title: "Pháp lý | BIM4C",
-  description:
-    "Chính sách bảo mật, điều khoản sử dụng và quy định bảo vệ dữ liệu cá nhân của BIM4C.",
-};
+export const metadata: Metadata = pageMetadata("Pháp lý", "Chính sách bảo mật, điều khoản sử dụng và quy định bảo vệ dữ liệu cá nhân của BIM4C.", ROUTES.legal);
 
 export default function LegalPage() {
   return (

@@ -13,7 +13,7 @@ import type { ContentEntry } from "@/types/content";
 import { canDeferBuildData } from "@/lib/config/build";
 
 export async function getPosts(
-  params: ContentQueryParams = {},
+  params: ContentQueryParams & { strict?: boolean } = {},
 ): Promise<ContentEntry[]> {
   if (env.useMockApi) return blogEntries;
   const endpoint = withQueryParams(API_ENDPOINTS.posts.list, {
@@ -33,7 +33,7 @@ export async function getPosts(
     });
     return unwrapData(response).map(mapContentDto);
   } catch (error) {
-    if (canDeferBuildData(error)) return [];
+    if (!params.strict && canDeferBuildData(error)) return [];
     throw error;
   }
 }
@@ -53,5 +53,14 @@ export async function getPostBySlug(
   } catch (error) {
     if (isNotFoundError(error)) return null;
     throw error;
+  }
+}
+
+export async function getAllPosts(options: { strict?: boolean } = {}): Promise<ContentEntry[]> {
+  const results: ContentEntry[] = [];
+  for (let page = 1; ; page += 1) {
+    const batch = await getPosts({ page, limit: 100, strict: options.strict });
+    results.push(...batch);
+    if (batch.length < 100) return results;
   }
 }

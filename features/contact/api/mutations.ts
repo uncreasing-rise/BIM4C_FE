@@ -12,6 +12,7 @@ import type {
   MutationResult,
   NewsletterSubscriptionInput,
 } from "../types/mutations";
+import { PRIVACY_POLICY_VERSION } from "@/constants/legal-content";
 
 function parseMutationResult(response: unknown): MutationResult {
   if (
@@ -38,7 +39,7 @@ export async function submitContactForm(
 ): Promise<MutationResult> {
   const payload = contactSchema.parse(input);
   return parseMutationResult(
-    await apiClient.post<unknown>(API_ENDPOINTS.contact.submit, payload, {
+    await apiClient.post<unknown>(API_ENDPOINTS.contact.submit, { ...payload, privacyPolicyVersion: PRIVACY_POLICY_VERSION }, {
       signal,
       cache: "no-store",
     }),
@@ -53,7 +54,7 @@ export async function registerCourse(
   return parseMutationResult(
     await apiClient.post<unknown>(
       API_ENDPOINTS.courseRegistrations.create,
-      payload,
+      { ...payload, privacyPolicyVersion: PRIVACY_POLICY_VERSION },
       { signal, cache: "no-store" },
     ),
   );
@@ -65,7 +66,7 @@ export async function subscribeNewsletter(
 ): Promise<MutationResult> {
   const payload = newsletterSchema.parse(input);
   return parseMutationResult(
-    await apiClient.post<unknown>(API_ENDPOINTS.newsletter.subscribe, payload, {
+    await apiClient.post<unknown>(API_ENDPOINTS.newsletter.subscribe, { ...payload, privacyPolicyVersion: PRIVACY_POLICY_VERSION }, {
       signal,
       cache: "no-store",
     }),

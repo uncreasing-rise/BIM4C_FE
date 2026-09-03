@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
 import {
   CatalogCategories,
@@ -14,26 +15,28 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ROUTES } from "@/constants/routes";
 import type { ContentEntry } from "@/types/content";
+import { parsePage } from "@/lib/seo/listing";
 
 const pageSize = 6;
+const courseCategory = (course: ContentEntry) =>
+  course.category?.trim() || course.eyebrow.split("·")[0].trim();
 
 export function CourseExplorer({ courses }: { courses: ContentEntry[] }) {
   const categories = useMemo(
-    () => [
-      "Tất cả",
-      ...new Set(courses.map((course) => course.eyebrow).filter(Boolean)),
-    ],
+    () => ["Tất cả", ...new Set(courses.map(courseCategory).filter(Boolean))],
     [courses],
   );
   const [category, setCategory] = useState("Tất cả");
   const [query, setQuery] = useState("");
-  const [page, setPage] = useState(1);
+  const router = useRouter();
+  const page = parsePage(useSearchParams().get("page"));
+  const resetPage = () => router.replace(ROUTES.courses, { scroll: false });
   const [selectedSlug, setSelectedSlug] = useState(courses[0]?.slug ?? "");
   const filtered = useMemo(
     () =>
       courses.filter(
         (course) =>
-          (category === "Tất cả" || course.eyebrow === category) &&
+          (category === "Tất cả" || courseCategory(course) === category) &&
           (!query ||
             `${course.title} ${course.description}`
               .toLocaleLowerCase("vi")
@@ -70,7 +73,7 @@ export function CourseExplorer({ courses }: { courses: ContentEntry[] }) {
           value={category}
           onChange={(value) => {
             setCategory(value);
-            setPage(1);
+            resetPage();
           }}
         />
         <CatalogFilterBar>
@@ -80,7 +83,7 @@ export function CourseExplorer({ courses }: { courses: ContentEntry[] }) {
             value={query}
             onChange={(value) => {
               setQuery(value);
-              setPage(1);
+              resetPage();
             }}
           />
         </CatalogFilterBar>
@@ -110,20 +113,20 @@ export function CourseExplorer({ courses }: { courses: ContentEntry[] }) {
                 </button>
               ))}
             </div>
-            <div className="overflow-hidden rounded-3xl bg-[#0b1220] text-white lg:sticky lg:top-28">
+            <div className="overflow-hidden rounded-3xl bg-brand-ink text-white lg:sticky lg:top-28">
               <div className="relative aspect-[16/8]">
                 <Image
                   src={selected.image}
-                  alt=""
+                  alt={selected.title}
                   fill
                   sizes="(max-width:1023px) 100vw, 60vw"
                   className="object-cover"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#0b1220] to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-brand-ink to-transparent" />
               </div>
               <div className="p-7 md:p-9">
                 <Badge className="bg-white/10 text-white">
-                  {selected.eyebrow}
+                  {courseCategory(selected)}
                 </Badge>
                 <h3 className="mt-4 text-3xl font-semibold tracking-[-.04em] md:text-4xl">
                   {selected.title}
@@ -160,7 +163,7 @@ export function CourseExplorer({ courses }: { courses: ContentEntry[] }) {
           ariaLabel="Phân trang khóa học"
           page={page}
           pages={pages}
-          onChange={setPage}
+          pathname={ROUTES.courses}
         />
       </div>
     </section>

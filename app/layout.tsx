@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { env } from "@/lib/config/env";
+import { DEFAULT_DESCRIPTION, DEFAULT_SOCIAL_IMAGE, DEFAULT_TITLE, SITE_NAME } from "@/lib/seo/site";
 import "./globals.css";
 import { Geist } from "next/font/google";
 import { cn } from "@/lib/utils";
@@ -7,16 +8,21 @@ import { cn } from "@/lib/utils";
 const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
 export const metadata: Metadata = {
-  metadataBase: env.appUrl ? new URL(env.appUrl) : undefined,
-  title: "BIM4C Construction | Chuyển đổi số xây dựng",
-  description:
-    "BIM4C tiên phong ứng dụng BIM trong thiết kế, thi công và quản lý dự án xây dựng tại Việt Nam.",
+  metadataBase: new URL(env.appUrl),
+  title: { default: DEFAULT_TITLE, template: `%s | ${SITE_NAME}` },
+  description: DEFAULT_DESCRIPTION,
+  applicationName: SITE_NAME,
+  authors: [{ name: SITE_NAME }], creator: SITE_NAME, publisher: SITE_NAME,
+  alternates: { canonical: "/" },
+  robots: { index: true, follow: true },
   openGraph: {
-    title: "BIM4C Construction",
-    description: "Kiến tạo nền tảng vững chắc cho tương lai xây dựng.",
+    title: DEFAULT_TITLE, description: DEFAULT_DESCRIPTION, siteName: SITE_NAME,
     type: "website",
     locale: "vi_VN",
+    url: "/", images: [{ url: DEFAULT_SOCIAL_IMAGE, alt: "BIM4C Construction" }],
   },
+  twitter: { card: "summary_large_image", title: DEFAULT_TITLE, description: DEFAULT_DESCRIPTION, images: [DEFAULT_SOCIAL_IMAGE] },
+  verification: { google: env.googleSiteVerification || undefined, other: env.bingSiteVerification ? { "msvalidate.01": env.bingSiteVerification } : undefined },
 };
 
 export default function RootLayout({

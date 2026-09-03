@@ -2,7 +2,9 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
+import { parsePage } from "@/lib/seo/listing";
 import {
   CatalogCategories,
   CatalogFilterBar,
@@ -13,7 +15,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { ROUTES } from "@/constants/routes";
 import type { ContentEntry } from "@/types/content";
 
-const pageSize = 9;
+const pageSize = 5;
 const publishedAt = (meta?: string) => {
   if (!meta) return 0;
   const match = meta.match(/(\d{1,2})[./-](\d{1,2})[./-](\d{4})/);
@@ -38,7 +40,9 @@ export function BlogExplorer({ posts }: { posts: ContentEntry[] }) {
   );
   const [category, setCategory] = useState("Tất cả");
   const [query, setQuery] = useState("");
-  const [page, setPage] = useState(1);
+  const router = useRouter();
+  const page = parsePage(useSearchParams().get("page"));
+  const resetPage = () => router.replace(ROUTES.blog, { scroll: false });
   const filtered = useMemo(
     () =>
       sortedPosts.filter(
@@ -76,7 +80,7 @@ export function BlogExplorer({ posts }: { posts: ContentEntry[] }) {
           formatLabel={naturalCase}
           onChange={(value) => {
             setCategory(value);
-            setPage(1);
+            resetPage();
           }}
         />
         <CatalogFilterBar>
@@ -86,7 +90,7 @@ export function BlogExplorer({ posts }: { posts: ContentEntry[] }) {
             value={query}
             onChange={(value) => {
               setQuery(value);
-              setPage(1);
+              resetPage();
             }}
           />
         </CatalogFilterBar>
@@ -102,7 +106,7 @@ export function BlogExplorer({ posts }: { posts: ContentEntry[] }) {
               <article
                 className={
                   index === 0
-                    ? "group relative flex min-w-0 flex-col border-b pb-8 lg:row-span-[8]"
+                    ? "group relative flex min-w-0 flex-col border-b pb-8 lg:row-span-4"
                     : "group relative grid min-w-0 grid-cols-[8rem_1fr] gap-5 border-b py-6 lg:col-start-2"
                 }
                 key={item.slug}
@@ -177,7 +181,7 @@ export function BlogExplorer({ posts }: { posts: ContentEntry[] }) {
           ariaLabel="Phân trang tin tức"
           page={page}
           pages={pages}
-          onChange={setPage}
+          pathname={ROUTES.blog}
         />
       </div>
     </section>

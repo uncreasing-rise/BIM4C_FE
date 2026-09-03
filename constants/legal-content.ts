@@ -1,3 +1,5 @@
+import { CONTACT_EMAIL } from "./routes";
+
 export interface LegalSection {
   title: string;
   paragraphs: string[];
@@ -58,7 +60,7 @@ export const legalDocuments: LegalDocument[] = [
       {
         title: "Liên hệ",
         paragraphs: [
-          "Mọi câu hỏi liên quan đến quyền riêng tư có thể gửi tới info@bim4c.vn. BIM4C sẽ tiếp nhận và phản hồi trong thời gian hợp lý.",
+          `Mọi câu hỏi liên quan đến quyền riêng tư có thể gửi tới ${CONTACT_EMAIL}. BIM4C sẽ tiếp nhận và phản hồi trong thời gian hợp lý.`,
         ],
       },
     ],
@@ -159,7 +161,7 @@ export const legalDocuments: LegalDocument[] = [
       {
         title: "Tiếp nhận yêu cầu",
         paragraphs: [
-          "Gửi yêu cầu tới info@bim4c.vn, kèm thông tin giúp xác minh danh tính và nội dung cần xử lý. BIM4C có thể yêu cầu bổ sung thông tin hợp lý để bảo vệ dữ liệu khỏi yêu cầu giả mạo.",
+          `Gửi yêu cầu tới ${CONTACT_EMAIL}, kèm thông tin giúp xác minh danh tính và nội dung cần xử lý. BIM4C có thể yêu cầu bổ sung thông tin hợp lý để bảo vệ dữ liệu khỏi yêu cầu giả mạo.`,
         ],
       },
     ],
@@ -168,3 +170,6 @@ export const legalDocuments: LegalDocument[] = [
 
 export const getLegalDocument = (slug: string) =>
   legalDocuments.find((document) => document.slug === slug);
+
+export const PRIVACY_POLICY_SLUG = "chinh-sach-bao-mat";
+export const PRIVACY_POLICY_VERSION = legalDocuments.find(({ slug }) => slug === PRIVACY_POLICY_SLUG)?.updatedAt ?? "";

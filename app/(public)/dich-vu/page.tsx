@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
+import { listingMetadata, normalizedPageRedirect, type ListingSearchParams } from "@/lib/seo/listing";
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -7,14 +9,12 @@ import { ROUTES } from "@/constants/routes";
 import { getServices } from "@/features/services/api/queries";
 import { ServiceExplorer } from "@/components/services/ServiceExplorer";
 
-export const metadata: Metadata = {
-  title: "Dịch vụ | BIM4C",
-  description:
-    "Các dịch vụ tư vấn BIM, thiết kế, đào tạo và giám sát của BIM4C.",
-};
+const description = "Các dịch vụ tư vấn BIM, thiết kế, đào tạo và giám sát của BIM4C.";
+export async function generateMetadata({ searchParams }: { searchParams: Promise<ListingSearchParams> }): Promise<Metadata> { return listingMetadata("Dịch vụ", description, ROUTES.services, await searchParams); }
 
-export default async function ServicesPage() {
+export default async function ServicesPage({ searchParams }: { searchParams: Promise<ListingSearchParams> }) {
   const services = await getServices();
+  const destination = normalizedPageRedirect(ROUTES.services, await searchParams, services.length, 4); if (destination) redirect(destination);
   return (
     <main>
       <PageHero
@@ -24,7 +24,7 @@ export default async function ServicesPage() {
         image="/images/service-design.jpg"
       />
       <ServiceExplorer services={services} />
-      <section className="bg-[#0b1220] py-20 text-white">
+      <section className="bg-brand-ink py-20 text-white">
         <div className="site-container flex flex-col gap-7 md:flex-row md:items-center md:justify-between">
           <div>
             <p className="eyebrow">Bắt đầu cùng BIM4C</p>

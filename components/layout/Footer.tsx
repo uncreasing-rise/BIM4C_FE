@@ -1,15 +1,12 @@
 import Link from "next/link";
 import { ArrowUpRight, Mail, MapPin, Phone } from "lucide-react";
 import { MAIN_NAVIGATION } from "@/constants/navigation";
-import { ROUTES } from "@/constants/routes";
+import { CONTACT_EMAIL, ROUTES } from "@/constants/routes";
 import { NewsletterForm } from "@/features/contact/components/NewsletterForm";
 
 export function Footer() {
   return (
-    <footer
-      className="relative overflow-hidden border-t bg-[#0b1220] text-zinc-100"
-      id="contact"
-    >
+    <footer className="relative overflow-hidden border-t border-white/10 bg-brand-ink text-zinc-100">
       <div className="pointer-events-none absolute -right-40 -top-40 size-96 rounded-full bg-primary/10 blur-3xl" />
       <div className="site-container grid gap-12 py-16 lg:grid-cols-[1.3fr_.7fr_1fr] lg:py-24">
         <div>
@@ -30,7 +27,7 @@ export function Footer() {
             </p>
             <p className="flex gap-3">
               <Mail className="size-4 text-primary" />
-              hello@bim4c.vn
+              {CONTACT_EMAIL}
             </p>
             <p className="flex gap-3">
               <Phone className="size-4 text-primary" />

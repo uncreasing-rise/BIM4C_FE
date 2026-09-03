@@ -9,6 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { subscribeNewsletter } from "../api/mutations";
 import { getZodFieldErrors } from "../utils/zod-errors";
+import Link from "next/link";
+import { ROUTES } from "@/constants/routes";
 
 type FormStatus = "idle" | "submitting" | "success" | "error";
 type NewsletterField = "email" | "consent";
@@ -102,7 +104,7 @@ export function NewsletterForm() {
           onCheckedChange={(checked) => setConsent(checked === true)}
           aria-invalid={Boolean(fieldErrors.consent)}
           aria-describedby={fieldErrors.consent ? "newsletter-consent-error" : undefined}
-        /> Tôi đồng ý nhận thông tin từ BIM4C.
+        /> <span>Tôi đồng ý nhận thông tin từ BIM4C và với việc xử lý dữ liệu cá nhân theo <Link className="text-primary underline" href={ROUTES.legalDetail("chinh-sach-bao-mat")} target="_blank">Chính sách bảo mật</Link>.</span>
       </Label>
       {fieldErrors.consent && <p id="newsletter-consent-error" className="mt-2 text-xs text-red-200" role="alert">{fieldErrors.consent}</p>}
       {message && (

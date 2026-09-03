@@ -20,6 +20,9 @@ function mediaPatterns(): NonNullable<NextConfig["images"]>["remotePatterns"] {
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  // Keep metadata blocking so redirects/notFound raised during metadata generation
+  // preserve their HTTP semantics for crawlers as well as browsers.
+  htmlLimitedBots: /.*/,
   allowedDevOrigins: ["192.168.1.12"],
   images: {
     remotePatterns: mediaPatterns(),

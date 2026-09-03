@@ -45,7 +45,7 @@ export function Header() {
             className={cn(
               "relative grid size-10 place-items-center overflow-hidden rounded-xl text-sm font-black after:absolute after:inset-x-0 after:bottom-0 after:h-1 after:bg-primary",
               overHero
-                ? "bg-white text-[#0b1220]"
+                ? "bg-white text-brand-ink"
                 : "bg-foreground text-background",
             )}
           >
@@ -85,7 +85,7 @@ export function Header() {
                   : "text-muted-foreground hover:bg-background hover:text-foreground",
                 pathname.startsWith(item.href) &&
                   (overHero
-                    ? "bg-white text-[#0b1220] hover:bg-white hover:text-[#0b1220]"
+                    ? "bg-white text-brand-ink hover:bg-white hover:text-brand-ink"
                     : "bg-foreground text-background shadow-sm hover:bg-foreground hover:text-background"),
               )}
             >
@@ -97,7 +97,7 @@ export function Header() {
           asChild
           className={cn(
             "hidden rounded-full px-5 lg:inline-flex",
-            overHero && "bg-white text-[#0b1220] shadow-none hover:bg-white/90",
+            overHero && "bg-white text-brand-ink shadow-none hover:bg-white/90",
           )}
         >
           <Link href={ROUTES.contact}>

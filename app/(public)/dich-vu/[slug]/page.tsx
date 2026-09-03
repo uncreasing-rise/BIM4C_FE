@@ -15,9 +15,8 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const entry = await getServiceBySlug((await params).slug);
-  return entry
-    ? getContentMetadata(entry, ROUTES.serviceDetail(entry.slug))
-    : {};
+  if (!entry) notFound();
+  return getContentMetadata(entry, ROUTES.serviceDetail(entry.slug));
 }
 export default async function ServiceDetail({
   params,

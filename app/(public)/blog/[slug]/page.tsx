@@ -16,7 +16,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug } = await params;
   const entry = await getPostBySlug(slug);
-  if (!entry) return {};
+  if (!entry) notFound();
   return getContentMetadata(entry, ROUTES.blogDetail(slug));
 }
 export default async function BlogDetail({

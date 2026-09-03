@@ -1,3 +1,5 @@
+export const CONTACT_EMAIL = "info@bim4c.vn";
+
 export const ROUTES = {
   home: "/",
   about: "/gioi-thieu",
@@ -11,6 +13,6 @@ export const ROUTES = {
   blogDetail: (slug: string) => `/blog/${slug}`,
   legal: "/phap-ly",
   legalDetail: (slug: string) => `/phap-ly/${slug}`,
-  contact: "#contact",
-  contactEmail: "mailto:info@bim4c.vn",
+  contact: "/lien-he",
+  contactEmail: `mailto:${CONTACT_EMAIL}`,
 } as const;

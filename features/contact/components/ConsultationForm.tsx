@@ -7,8 +7,10 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { submitContactForm } from "../api/mutations";
 import { getZodFieldErrors } from "../utils/zod-errors";
+import Link from "next/link";
+import { ROUTES } from "@/constants/routes";
 
-type ContactField = "name" | "phone" | "email" | "company" | "message";
+type ContactField = "name" | "phone" | "email" | "company" | "message" | "consent";
 
 export function ConsultationForm({
   compact = false,
@@ -39,6 +41,7 @@ export function ConsultationForm({
         phone: String(data.get("phone") ?? ""),
         company: String(data.get("company") ?? ""),
         message: `${subject ? `${subject}\n\n` : ""}${String(data.get("message") ?? "")}`,
+        consent: data.get("consent") === "on",
       });
       form.reset();
       setStatus("success");
@@ -61,11 +64,11 @@ export function ConsultationForm({
     }
   }
 
-  const labelClass = "grid gap-[7px]";
+  const labelClass = "grid gap-2";
   const captionClass =
-    "text-xs font-semibold uppercase tracking-[.06em] text-white/70";
+    "text-[11px] font-semibold uppercase tracking-[.1em] text-white/65";
   const inputClass =
-    "h-12 w-full border border-white/25 bg-background/[.07] px-[13px] text-[16px] text-white outline-none transition focus:border-white focus:bg-background/10";
+    "h-12 w-full rounded-xl border border-white/15 bg-white/[.06] px-4 text-[15px] text-white shadow-none outline-none transition placeholder:text-white/30 hover:border-white/25 focus-visible:border-primary focus-visible:bg-white/[.09] focus-visible:ring-3 focus-visible:ring-primary/15";
   return (
     <form className="grid grid-cols-1 gap-[18px]" onSubmit={submit} noValidate>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -76,6 +79,7 @@ export function ConsultationForm({
             className={inputClass}
             name="name"
             autoComplete="name"
+            placeholder="Nguyễn Văn A"
             required
             aria-invalid={Boolean(fieldErrors.name)}
             aria-describedby={fieldErrors.name ? "consultation-name-error" : undefined}
@@ -90,6 +94,7 @@ export function ConsultationForm({
             name="phone"
             type="tel"
             autoComplete="tel"
+            placeholder="090 000 0000"
             aria-invalid={Boolean(fieldErrors.phone)}
             aria-describedby={fieldErrors.phone ? "consultation-phone-error" : undefined}
           />
@@ -103,6 +108,7 @@ export function ConsultationForm({
             name="email"
             type="email"
             autoComplete="email"
+            placeholder="name@company.com"
             required
             aria-invalid={Boolean(fieldErrors.email)}
             aria-describedby={fieldErrors.email ? "consultation-email-error" : undefined}
@@ -117,6 +123,7 @@ export function ConsultationForm({
               className={inputClass}
               name="company"
               autoComplete="organization"
+              placeholder="Tên doanh nghiệp"
               aria-invalid={Boolean(fieldErrors.company)}
               aria-describedby={fieldErrors.company ? "consultation-company-error" : undefined}
             />
@@ -128,7 +135,7 @@ export function ConsultationForm({
         <span className={captionClass}>Nội dung cần tư vấn *</span>
         <Textarea
           id="consultation-message"
-          className="w-full resize-y border border-white/25 bg-background/[.07] p-[13px] text-white outline-none transition placeholder:text-white/45 focus:border-white focus:bg-background/10"
+          className="min-h-32 w-full resize-y rounded-xl border border-white/15 bg-white/[.06] p-4 text-[15px] leading-6 text-white shadow-none outline-none transition placeholder:text-white/30 hover:border-white/25 focus-visible:border-primary focus-visible:bg-white/[.09] focus-visible:ring-3 focus-visible:ring-primary/15"
           name="message"
           rows={compact ? 3 : 4}
           required
@@ -138,16 +145,23 @@ export function ConsultationForm({
         />
         {fieldErrors.message && <p id="consultation-message-error" className="text-xs text-red-100" role="alert">{fieldErrors.message}</p>}
       </label>
-      <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center">
+      <label className="flex items-start gap-3 text-xs leading-5 text-white/75" htmlFor="consultation-consent">
+        <input id="consultation-consent" name="consent" type="checkbox" required className="mt-1 size-4 accent-primary" aria-invalid={Boolean(fieldErrors.consent)} aria-describedby={fieldErrors.consent ? "consultation-consent-error" : undefined} />
+        <span>Tôi đã đọc và đồng ý với <Link className="text-primary underline" href={ROUTES.legalDetail("chinh-sach-bao-mat")} target="_blank">Chính sách bảo mật</Link> và việc xử lý dữ liệu cá nhân.</span>
+      </label>
+      {fieldErrors.consent && <p id="consultation-consent-error" className="text-xs text-red-100" role="alert">{fieldErrors.consent}</p>}
+      <div className="flex flex-col items-start gap-4 border-t border-white/10 pt-6 sm:flex-row sm:items-center sm:justify-between">
         <Button
           type="submit"
+          size="lg"
+          className="min-w-48 rounded-full"
           disabled={status === "sending"}
         >
           {status === "sending" ? "Đang gửi…" : "Gửi yêu cầu tư vấn"}
           <span>→</span>
         </Button>
-        <small className="text-xs text-white/55">
-          BIM4C sẽ liên hệ trong thời gian sớm nhất.
+        <small className="max-w-56 text-xs leading-5 text-white/45">
+          BIM4C chỉ sử dụng thông tin để liên hệ tư vấn.
         </small>
       </div>
       {message && (

@@ -5,6 +5,7 @@ import {
   type AdminRecord,
   type RecordKind,
 } from "@/features/admin/api/records";
+import { scrollToPageTop } from "@/lib/utils/scroll";
 export function RecordsManager({ kind }: { kind: RecordKind }) {
   const newsletter = kind === "newsletter/subscriptions";
   const [items, setItems] = useState<AdminRecord[]>([]);
@@ -102,6 +103,7 @@ export function RecordsManager({ kind }: { kind: RecordKind }) {
               <th>NỘI DUNG / KHÓA HỌC</th>
               <th>TRẠNG THÁI</th>
               <th>NGÀY</th>
+              <th>ĐỒNG Ý</th>
               <th />
             </tr>
           </thead>
@@ -160,6 +162,12 @@ export function RecordsManager({ kind }: { kind: RecordKind }) {
                   )}
                 </td>
                 <td>
+                  <span title={item.consentAt ?? undefined}>
+                    {(item.consentGiven ?? item.consent) === true ? "Đã đồng ý" : "Không có bằng chứng"}
+                    <small>{item.privacyPolicyVersion ? `CS ${item.privacyPolicyVersion}` : "Lịch sử/không rõ"}</small>
+                  </span>
+                </td>
+                <td>
                   <button disabled={busy} onClick={() => void remove(item)} aria-label={`Xóa bản ghi ${item.email}`}>
                     ⌫
                   </button>
@@ -170,13 +178,27 @@ export function RecordsManager({ kind }: { kind: RecordKind }) {
         </table>
       </div>
       <footer className="flex items-center justify-between border-t border-border px-4 py-3 text-xs text-muted-foreground [&_button]:size-9 [&_button]:border [&_button]:border-border">
-        <button disabled={page <= 1} onClick={() => setPage((x) => x - 1)} aria-label="Trang trước">
+        <button
+          disabled={page <= 1}
+          onClick={() => {
+            setPage((x) => x - 1);
+            scrollToPageTop();
+          }}
+          aria-label="Trang trước"
+        >
           ←
         </button>
         <span>
           Trang {page}/{pages}
         </span>
-        <button disabled={page >= pages} onClick={() => setPage((x) => x + 1)} aria-label="Trang sau">
+        <button
+          disabled={page >= pages}
+          onClick={() => {
+            setPage((x) => x + 1);
+            scrollToPageTop();
+          }}
+          aria-label="Trang sau"
+        >
           →
         </button>
       </footer>

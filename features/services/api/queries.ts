@@ -10,7 +10,7 @@ import { serviceEntries } from "@/mocks/content";
 import type { ContentEntry } from "@/types/content";
 import { canDeferBuildData } from "@/lib/config/build";
 
-export async function getServices(): Promise<ContentEntry[]> {
+export async function getServices(options: { strict?: boolean } = {}): Promise<ContentEntry[]> {
   if (env.useMockApi) return serviceEntries;
   try {
     const response = await apiClient.get<
@@ -20,7 +20,7 @@ export async function getServices(): Promise<ContentEntry[]> {
     });
     return unwrapData(response).map(mapContentDto);
   } catch (error) {
-    if (canDeferBuildData(error)) return [];
+    if (!options.strict && canDeferBuildData(error)) return [];
     throw error;
   }
 }
