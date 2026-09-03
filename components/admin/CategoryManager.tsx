@@ -54,16 +54,16 @@ export function CategoryManager({
     }
   }
   return (
-    <section className="overflow-hidden rounded-md border border-[#dbe7e5] bg-white shadow-sm">
+    <section className="overflow-hidden rounded-md border border-border bg-background shadow-sm">
       <header>
         <h2>Danh mục</h2>
       </header>
       {error && (
-        <div className="mx-4 mt-3 flex justify-between bg-[#eaf8f7] px-3 py-2.5 text-xs text-[#09a7a5]">
+        <div className="mx-4 mt-3 flex justify-between bg-primary/10 px-3 py-2.5 text-xs text-primary">
           {error}
         </div>
       )}
-      <div className="flex flex-wrap items-center gap-3 border-b border-[#dbe7e5] p-4 [&_label]:flex [&_label]:h-10 [&_label]:min-w-52 [&_label]:flex-1 [&_label]:items-center [&_label]:gap-2 [&_label]:border [&_label]:border-[#dbe7e5] [&_label]:px-3 [&_input]:min-w-0 [&_input]:flex-1 [&_input]:outline-none [&_select]:h-10 [&_select]:border [&_select]:border-[#dbe7e5] [&_select]:px-3 [&>button]:min-h-10 [&>button]:bg-[#09a7a5] [&>button]:px-4 [&>button]:text-white">
+      <div className="flex flex-wrap items-center gap-3 border-b border-border p-4 [&_label]:flex [&_label]:h-10 [&_label]:min-w-52 [&_label]:flex-1 [&_label]:items-center [&_label]:gap-2 [&_label]:border [&_label]:border-border [&_label]:px-3 [&_input]:min-w-0 [&_input]:flex-1 [&_input]:outline-none [&_select]:h-10 [&_select]:border [&_select]:border-border [&_select]:px-3 [&>button]:min-h-10 [&>button]:bg-primary [&>button]:px-4 [&>button]:text-white">
         <label>
           <input
             value={name}
@@ -75,7 +75,7 @@ export function CategoryManager({
           {editing ? "Lưu" : "＋ Thêm"}
         </button>
       </div>
-      <div className="grid gap-2 p-4 [&_article]:flex [&_article]:items-center [&_article]:gap-3 [&_article]:border [&_article]:border-[#dbe7e5] [&_article]:p-2.5 [&_article>div]:flex [&_article>div]:flex-1 [&_article>div]:flex-col [&_small]:text-[#667775] [&_button]:bg-[#eaf8f7] [&_button]:p-2">
+      <div className="grid gap-2 p-4 [&_article]:flex [&_article]:items-center [&_article]:gap-3 [&_article]:border [&_article]:border-border [&_article]:p-2.5 [&_article>div]:flex [&_article>div]:flex-1 [&_article>div]:flex-col [&_small]:text-muted-foreground [&_button]:bg-primary/10 [&_button]:p-2">
         {items.map((item) => (
           <article key={item.id}>
             <div>

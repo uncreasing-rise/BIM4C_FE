@@ -35,13 +35,13 @@ export function Dashboard() {
   }, []);
   if (error)
     return (
-      <section className="overflow-hidden rounded-md border border-[#dbe7e5] bg-white p-12 text-center text-label text-[#667775] shadow-sm">
+      <section className="overflow-hidden rounded-md border border-border bg-background p-12 text-center text-sm text-muted-foreground shadow-sm">
         <p>{error}</p>
       </section>
     );
   if (!stats)
     return (
-      <section className="overflow-hidden rounded-md border border-[#dbe7e5] bg-white p-12 text-center text-label text-[#667775] shadow-sm">
+      <section className="overflow-hidden rounded-md border border-border bg-background p-12 text-center text-sm text-muted-foreground shadow-sm">
         <p>Đang tải dữ liệu…</p>
       </section>
     );
@@ -62,7 +62,7 @@ export function Dashboard() {
     stats.registrations.reduce((n, x) => n + x._count, 0);
   return (
     <>
-      <section className="mb-5 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4 [&_article]:flex [&_article]:min-h-[132px] [&_article]:justify-between [&_article]:rounded-md [&_article]:border [&_article]:border-[#dbe7e5] [&_article]:bg-white [&_article]:p-[22px] [&_article]:shadow-sm [&_article>div]:flex [&_article>div]:flex-col [&_article_span]:text-xs [&_article_span]:text-[#667775] [&_article_strong]:my-2 [&_article_strong]:text-2xl [&_article_strong]:text-[#163b3a] [&_article_small]:text-micro [&_article_small]:text-[#667775] [&_article_i]:grid [&_article_i]:size-[38px] [&_article_i]:place-items-center [&_article_i]:rounded-md [&_article_i]:bg-[#eaf8f7] [&_article_i]:not-italic [&_article_i]:text-[#09a7a5]">
+      <section className="mb-5 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4 [&_article]:flex [&_article]:min-h-[132px] [&_article]:justify-between [&_article]:rounded-md [&_article]:border [&_article]:border-border [&_article]:bg-background [&_article]:p-[22px] [&_article]:shadow-sm [&_article>div]:flex [&_article>div]:flex-col [&_article_span]:text-xs [&_article_span]:text-muted-foreground [&_article_strong]:my-2 [&_article_strong]:text-2xl [&_article_strong]:text-foreground [&_article_small]:text-xs [&_article_small]:text-muted-foreground [&_article_i]:grid [&_article_i]:size-[38px] [&_article_i]:place-items-center [&_article_i]:rounded-md [&_article_i]:bg-primary/10 [&_article_i]:not-italic [&_article_i]:text-primary">
         <article>
           <div>
             <span>Tổng nội dung</span>
@@ -98,14 +98,14 @@ export function Dashboard() {
           <i>↗</i>
         </article>
       </section>
-      <section className="overflow-hidden rounded-md border border-[#dbe7e5] bg-white shadow-sm">
+      <section className="overflow-hidden rounded-md border border-border bg-background shadow-sm">
         <header>
           <div>
             <h2>Nội dung gần đây</h2>
             <p>Cập nhật thật từ cơ sở dữ liệu</p>
           </div>
         </header>
-        <div className="w-full overflow-x-auto [&_table]:min-w-full [&_table]:border-collapse [&_th]:h-10 [&_th]:border-b [&_th]:border-[#dbe7e5] [&_th]:bg-[#f5fafa] [&_th]:px-4 [&_th]:text-left [&_th]:text-xs [&_td]:h-16 [&_td]:border-b [&_td]:border-[#dbe7e5] [&_td]:px-4 [&_td]:text-label [&_td]:text-[#667775] [&_td_img]:h-[38px] [&_td_img]:w-[54px] [&_td_img]:object-cover">
+        <div className="w-full overflow-x-auto [&_table]:min-w-full [&_table]:border-collapse [&_th]:h-10 [&_th]:border-b [&_th]:border-border [&_th]:bg-muted [&_th]:px-4 [&_th]:text-left [&_th]:text-xs [&_td]:h-16 [&_td]:border-b [&_td]:border-border [&_td]:px-4 [&_td]:text-sm [&_td]:text-muted-foreground [&_td_img]:h-[38px] [&_td_img]:w-[54px] [&_td_img]:object-cover">
           <table>
             <thead>
               <tr>
@@ -128,7 +128,7 @@ export function Dashboard() {
                   </td>
                   <td>{label[item.type]}</td>
                   <td>
-                    <span className="inline-flex rounded-full bg-[#eaf8f7] px-2 py-1 text-micro font-semibold text-[#09a7a5]">
+                    <span className="inline-flex rounded-full bg-primary/10 px-2 py-1 text-xs font-semibold text-primary">
                       {item.status}
                     </span>
                   </td>

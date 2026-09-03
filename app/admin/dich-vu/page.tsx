@@ -11,8 +11,9 @@ export default function Page() {
       description="Quản lý danh mục và nội dung các dịch vụ BIM4C."
       action={
         <Link
-          className="inline-flex min-h-[42px] items-center justify-center gap-2 rounded bg-[#09a7a5] px-[18px] text-xs font-semibold text-white transition hover:bg-[#09a7a5]"
+          className="inline-flex min-h-[42px] items-center justify-center gap-2 rounded bg-primary px-[18px] text-xs font-semibold text-white transition hover:bg-primary"
           href="/admin/dich-vu?create=1"
+          prefetch={false}
         >
           <span>＋</span> Tạo dịch vụ
         </Link>

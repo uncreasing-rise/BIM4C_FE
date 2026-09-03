@@ -5,12 +5,12 @@ export function LoadingState({
 }) {
   return (
     <div
-      className="flex min-h-48 items-center justify-center gap-3 text-sm text-[#667775]"
+      className="flex min-h-48 items-center justify-center gap-3 text-sm text-muted-foreground"
       role="status"
       aria-live="polite"
     >
       <span
-        className="size-5 animate-spin rounded-full border-2 border-[#dbe7e5] border-t-[#09a7a5]"
+        className="size-5 animate-spin rounded-full border-2 border-border border-t-primary"
         aria-hidden="true"
       />
       <span>{label}</span>

@@ -12,32 +12,91 @@ type Settings = {
 };
 export function SettingsManager() {
   const [data, setData] = useState<Settings | null>(null);
+  const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState("");
+  const [socialLinksJson, setSocialLinksJson] = useState("");
+  const [socialLinksError, setSocialLinksError] = useState("");
   useEffect(() => {
-    fetch("/api/admin/settings", { cache: "no-store" })
-      .then((r) => r.json())
-      .then((x) => setData(x.data))
-      .catch(() => setMsg("Không thể tải cài đặt"));
+    const controller = new AbortController();
+    async function load() {
+      setLoading(true);
+      try {
+        const response = await fetch("/api/admin/settings", {
+          cache: "no-store",
+          signal: controller.signal,
+        });
+        const body = (await response.json().catch(() => null)) as {
+          data?: Settings;
+          message?: string;
+        } | null;
+        if (!response.ok || !body?.data) {
+          throw new Error(body?.message ?? "Không thể tải cài đặt");
+        }
+        setData(body.data);
+        setSocialLinksJson(JSON.stringify(body.data.socialLinks, null, 2));
+        setMsg("");
+      } catch (error) {
+        if (!controller.signal.aborted) {
+          setMsg(
+            error instanceof Error
+              ? error.message
+              : "Không thể tải cài đặt",
+          );
+        }
+      } finally {
+        if (!controller.signal.aborted) setLoading(false);
+      }
+    }
+    void load();
+    return () => controller.abort();
   }, []);
   async function save(e: FormEvent) {
     e.preventDefault();
     if (!data) return;
+    let socialLinks: Record<string, string>;
+    try {
+      const parsed: unknown = JSON.parse(socialLinksJson);
+      if (
+        !parsed ||
+        typeof parsed !== "object" ||
+        Array.isArray(parsed) ||
+        Object.values(parsed).some((value) => typeof value !== "string")
+      ) {
+        throw new Error("invalid shape");
+      }
+      socialLinks = parsed as Record<string, string>;
+      setSocialLinksError("");
+    } catch {
+      setSocialLinksError(
+        "Hãy nhập JSON hợp lệ theo dạng { \"tenMang\": \"https://...\" }.",
+      );
+      return;
+    }
     setBusy(true);
     setMsg("");
-    const r = await fetch("/api/admin/settings", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-    });
-    setBusy(false);
-    setMsg(
-      r.ok
-        ? "Đã lưu cài đặt."
-        : ((await r.json().catch(() => null))?.message ?? "Không thể lưu"),
-    );
+    try {
+      const response = await fetch("/api/admin/settings", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...data, socialLinks }),
+      });
+      const body = (await response.json().catch(() => null)) as {
+        message?: string;
+      } | null;
+      setMsg(
+        response.ok
+          ? "Đã lưu cài đặt."
+          : (body?.message ?? "Không thể lưu"),
+      );
+    } catch {
+      setMsg("Không thể kết nối đến máy chủ.");
+    } finally {
+      setBusy(false);
+    }
   }
-  if (!data) return <p>Đang tải…</p>;
+  if (loading) return <p>Đang tải…</p>;
+  if (!data) return <p role="alert">{msg || "Không thể tải cài đặt"}</p>;
   const field = (key: keyof Settings, label: string, type = "text") => (
     <label>
       {label}
@@ -50,7 +109,7 @@ export function SettingsManager() {
   );
   return (
     <form
-      className="grid gap-4 rounded-md border border-[#dbe7e5] bg-white p-5 shadow-sm [&_label]:grid [&_label]:gap-1.5 [&_input]:min-h-10 [&_input]:border [&_input]:border-[#dbe7e5] [&_input]:px-3 [&_textarea]:border [&_textarea]:border-[#dbe7e5] [&_textarea]:p-3"
+      className="grid gap-4 rounded-md border border-border bg-background p-5 shadow-sm [&_label]:grid [&_label]:gap-1.5 [&_input]:min-h-10 [&_input]:border [&_input]:border-border [&_input]:px-3 [&_textarea]:border [&_textarea]:border-border [&_textarea]:p-3"
       onSubmit={save}
     >
       {field("companyName", "Tên công ty")}
@@ -63,22 +122,36 @@ export function SettingsManager() {
       <label>
         Liên kết xã hội (JSON)
         <textarea
-          value={JSON.stringify(data.socialLinks, null, 2)}
+          value={socialLinksJson}
+          aria-invalid={Boolean(socialLinksError)}
+          aria-describedby={socialLinksError ? "social-links-error" : undefined}
           onChange={(e) => {
+            setSocialLinksJson(e.target.value);
             try {
-              setData({ ...data, socialLinks: JSON.parse(e.target.value) });
-            } catch {}
+              const parsed: unknown = JSON.parse(e.target.value);
+              if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+                throw new Error("invalid shape");
+              }
+              setSocialLinksError("");
+            } catch {
+              setSocialLinksError("JSON chưa hợp lệ.");
+            }
           }}
         />
+        {socialLinksError && (
+          <span id="social-links-error" className="text-xs text-destructive" role="alert">
+            {socialLinksError}
+          </span>
+        )}
       </label>
       {msg && (
-        <p className="mx-4 mt-3 flex justify-between bg-[#eaf8f7] px-3 py-2.5 text-xs text-[#09a7a5]">
+        <p className="mx-4 mt-3 flex justify-between bg-primary/10 px-3 py-2.5 text-xs text-primary">
           {msg}
         </p>
       )}
       <button
         disabled={busy}
-        className="inline-flex min-h-[42px] items-center justify-center gap-2 rounded bg-[#09a7a5] px-[18px] text-xs font-semibold text-white hover:bg-[#09a7a5] disabled:opacity-50"
+        className="inline-flex min-h-[42px] items-center justify-center gap-2 rounded bg-primary px-[18px] text-xs font-semibold text-white hover:bg-primary disabled:opacity-50"
       >
         {busy ? "Đang lưu…" : "Lưu cài đặt"}
       </button>

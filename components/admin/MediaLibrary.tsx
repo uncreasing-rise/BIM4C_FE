@@ -10,18 +10,24 @@ export function MediaLibrary() {
   const [feedback, setFeedback] = useState("");
   const [busy, setBusy] = useState(false);
   const input = useRef<HTMLInputElement>(null);
-  const load = useCallback(async () => {
+  const load = useCallback(async (signal?: AbortSignal) => {
     try {
-      setItems((await adminMediaApi.list(search)).data);
+      const result = await adminMediaApi.list(search, signal);
+      if (!signal?.aborted) setItems(result.data);
     } catch (error) {
+      if (signal?.aborted) return;
       setFeedback(
         error instanceof Error ? error.message : "Không thể tải media",
       );
     }
   }, [search]);
   useEffect(() => {
-    const timer = window.setTimeout(() => void load(), 250);
-    return () => window.clearTimeout(timer);
+    const controller = new AbortController();
+    const timer = window.setTimeout(() => void load(controller.signal), 250);
+    return () => {
+      window.clearTimeout(timer);
+      controller.abort();
+    };
   }, [load]);
   async function upload(file?: File) {
     if (!file || busy) return;
@@ -71,14 +77,14 @@ export function MediaLibrary() {
     }
   }
   return (
-    <section className="overflow-hidden rounded-md border border-[#dbe7e5] bg-white shadow-sm">
+    <section className="overflow-hidden rounded-md border border-border bg-background shadow-sm">
       {feedback && (
-        <div className="mx-4 mt-3 flex justify-between bg-[#eaf8f7] px-3 py-2.5 text-xs text-[#09a7a5]">
+        <div className="mx-4 mt-3 flex justify-between bg-primary/10 px-3 py-2.5 text-xs text-primary">
           {feedback}
-          <button onClick={() => setFeedback("")}>×</button>
+          <button onClick={() => setFeedback("")} aria-label="Đóng thông báo">×</button>
         </div>
       )}
-      <div className="flex flex-wrap items-center gap-3 border-b border-[#dbe7e5] p-4 [&_label]:flex [&_label]:h-10 [&_label]:flex-1 [&_label]:items-center [&_label]:border [&_label]:border-[#dbe7e5] [&_label]:px-3 [&_input]:flex-1 [&_input]:outline-none [&>button]:min-h-10 [&>button]:bg-[#09a7a5] [&>button]:px-4 [&>button]:text-white">
+      <div className="flex flex-wrap items-center gap-3 border-b border-border p-4 [&_label]:flex [&_label]:h-10 [&_label]:flex-1 [&_label]:items-center [&_label]:border [&_label]:border-border [&_label]:px-3 [&_input]:flex-1 [&_input]:outline-none [&>button]:min-h-10 [&>button]:bg-primary [&>button]:px-4 [&>button]:text-white">
         <label>
           <span>⌕</span>
           <input
@@ -99,12 +105,12 @@ export function MediaLibrary() {
         </button>
       </div>
       <div className="grid min-w-0 grid-cols-1 lg:grid-cols-[1fr_320px]">
-        <div className="grid min-w-0 grid-cols-2 gap-3 p-4 md:grid-cols-3 xl:grid-cols-4 [&>button]:min-w-0 [&>button]:border [&>button]:border-[#dbe7e5] [&>button]:bg-white [&>button]:p-2 [&>button>span]:relative [&>button>span]:block [&>button>span]:aspect-square [&_img]:object-cover [&_strong]:block [&_strong]:truncate [&_strong]:text-xs [&_small]:text-micro [&_small]:text-[#667775]">
+        <div className="grid min-w-0 grid-cols-2 gap-3 p-4 md:grid-cols-3 xl:grid-cols-4 [&>button]:min-w-0 [&>button]:border [&>button]:border-border [&>button]:bg-background [&>button]:p-2 [&>button>span]:relative [&>button>span]:block [&>button>span]:aspect-square [&_img]:object-cover [&_strong]:block [&_strong]:truncate [&_strong]:text-xs [&_small]:text-xs [&_small]:text-muted-foreground">
           {items.map((item) => (
             <button
               className={
                 selected?.id === item.id
-                  ? "border-[#09a7a5] ring-2 ring-[#09a7a5]/20"
+                  ? "border-primary ring-2 ring-primary/20"
                   : ""
               }
               onClick={() => setSelected(item)}
@@ -121,8 +127,8 @@ export function MediaLibrary() {
           ))}
         </div>
         {selected && (
-          <aside className="relative border-l border-[#dbe7e5] p-4 [&>div]:relative [&>div]:aspect-square [&_img]:object-contain [&_h3]:mt-3 [&_h3]:text-sm [&_label]:grid [&_label]:gap-1 [&_input]:border [&_input]:border-[#dbe7e5] [&_input]:p-2">
-            <button onClick={() => setSelected(null)}>×</button>
+          <aside className="relative border-l border-border p-4 [&>div]:relative [&>div]:aspect-square [&_img]:object-contain [&_h3]:mt-3 [&_h3]:text-sm [&_label]:grid [&_label]:gap-1 [&_input]:border [&_input]:border-border [&_input]:p-2">
+            <button onClick={() => setSelected(null)} aria-label="Đóng chi tiết media">×</button>
             <div>
               <Image
                 src={selected.url}
@@ -161,7 +167,7 @@ export function MediaLibrary() {
             </label>
             <button
               disabled={busy}
-              className="inline-flex min-h-[42px] items-center justify-center gap-2 rounded bg-[#09a7a5] px-[18px] text-xs font-semibold text-white hover:bg-[#09a7a5] disabled:opacity-50"
+              className="inline-flex min-h-[42px] items-center justify-center gap-2 rounded bg-primary px-[18px] text-xs font-semibold text-white hover:bg-primary disabled:opacity-50"
               onClick={() => void saveAlt()}
             >
               Lưu mô tả

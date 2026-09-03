@@ -22,18 +22,23 @@ export function UsersManager() {
     [error, setError] = useState(""),
     [busy, setBusy] = useState(false),
     [show, setShow] = useState(false);
-  const load = useCallback(async () => {
+  const load = useCallback(async (signal?: AbortSignal) => {
     try {
-      setItems((await api(`?search=${encodeURIComponent(search)}`)).data);
+      const result = await api(`?search=${encodeURIComponent(search)}`, { signal });
+      if (!signal?.aborted) setItems(result.data);
     } catch (e) {
+      if (signal?.aborted) return;
       setError(e instanceof Error ? e.message : "Không thể tải");
     }
   }, [search]);
   useEffect(() => {
-    api(`?search=${encodeURIComponent(search)}`)
-      .then((x) => setItems(x.data))
-      .catch((e) => setError(e instanceof Error ? e.message : "Không thể tải"));
-  }, [search]);
+    const controller = new AbortController();
+    const timer = window.setTimeout(() => void load(controller.signal), 0);
+    return () => {
+      window.clearTimeout(timer);
+      controller.abort();
+    };
+  }, [load]);
   async function create(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setBusy(true);
@@ -74,8 +79,8 @@ export function UsersManager() {
     }
   }
   return (
-    <section className="overflow-hidden rounded-md border border-[#dbe7e5] bg-white shadow-sm">
-      <div className="flex flex-wrap items-center gap-3 border-b border-[#dbe7e5] p-4 [&_label]:flex [&_label]:h-10 [&_label]:min-w-52 [&_label]:flex-1 [&_label]:items-center [&_label]:gap-2 [&_label]:border [&_label]:border-[#dbe7e5] [&_label]:px-3 [&_input]:min-w-0 [&_input]:flex-1 [&_input]:outline-none [&_select]:h-10 [&_select]:border [&_select]:border-[#dbe7e5] [&_select]:px-3 [&>button]:min-h-10 [&>button]:bg-[#09a7a5] [&>button]:px-4 [&>button]:text-white">
+    <section className="overflow-hidden rounded-md border border-border bg-background shadow-sm">
+      <div className="flex flex-wrap items-center gap-3 border-b border-border p-4 [&_label]:flex [&_label]:h-10 [&_label]:min-w-52 [&_label]:flex-1 [&_label]:items-center [&_label]:gap-2 [&_label]:border [&_label]:border-border [&_label]:px-3 [&_input]:min-w-0 [&_input]:flex-1 [&_input]:outline-none [&_select]:h-10 [&_select]:border [&_select]:border-border [&_select]:px-3 [&>button]:min-h-10 [&>button]:bg-primary [&>button]:px-4 [&>button]:text-white">
         <label>
           <input
             placeholder="Tìm tên hoặc email"
@@ -84,7 +89,7 @@ export function UsersManager() {
           />
         </label>
         <button
-          className="inline-flex min-h-[42px] items-center justify-center gap-2 rounded bg-[#09a7a5] px-[18px] text-xs font-semibold text-white hover:bg-[#09a7a5] disabled:opacity-50"
+          className="inline-flex min-h-[42px] items-center justify-center gap-2 rounded bg-primary px-[18px] text-xs font-semibold text-white hover:bg-primary disabled:opacity-50"
           onClick={() => setShow(!show)}
         >
           Tạo tài khoản
@@ -93,7 +98,7 @@ export function UsersManager() {
       {show && (
         <form
           onSubmit={create}
-          className="m-4 grid gap-3 rounded-md border border-[#dbe7e5] bg-[#f5fafa] p-4 [&_label]:grid [&_label]:gap-1 [&_input]:min-h-10 [&_input]:border [&_input]:border-[#dbe7e5] [&_input]:px-3 [&_select]:min-h-10 [&_select]:border [&_select]:border-[#dbe7e5] [&_select]:px-3 [&_textarea]:border [&_textarea]:border-[#dbe7e5] [&_textarea]:p-3"
+          className="m-4 grid gap-3 rounded-md border border-border bg-muted p-4 [&_label]:grid [&_label]:gap-1 [&_input]:min-h-10 [&_input]:border [&_input]:border-border [&_input]:px-3 [&_select]:min-h-10 [&_select]:border [&_select]:border-border [&_select]:px-3 [&_textarea]:border [&_textarea]:border-border [&_textarea]:p-3"
         >
           <input name="name" required minLength={2} placeholder="Họ tên" />
           <input name="email" required type="email" placeholder="Email" />
@@ -111,18 +116,18 @@ export function UsersManager() {
           </select>
           <button
             disabled={busy}
-            className="inline-flex min-h-[42px] items-center justify-center gap-2 rounded bg-[#09a7a5] px-[18px] text-xs font-semibold text-white hover:bg-[#09a7a5] disabled:opacity-50"
+            className="inline-flex min-h-[42px] items-center justify-center gap-2 rounded bg-primary px-[18px] text-xs font-semibold text-white hover:bg-primary disabled:opacity-50"
           >
             {busy ? "Đang lưu…" : "Lưu"}
           </button>
         </form>
       )}
       {error && (
-        <p className="mx-4 mt-3 flex justify-between bg-[#eaf8f7] px-3 py-2.5 text-xs text-[#09a7a5]">
+        <p className="mx-4 mt-3 flex justify-between bg-primary/10 px-3 py-2.5 text-xs text-primary">
           {error}
         </p>
       )}
-      <div className="w-full overflow-x-auto [&_table]:min-w-full [&_table]:border-collapse [&_th]:h-10 [&_th]:border-b [&_th]:border-[#dbe7e5] [&_th]:bg-[#f5fafa] [&_th]:px-4 [&_th]:text-left [&_th]:text-xs [&_td]:h-16 [&_td]:border-b [&_td]:border-[#dbe7e5] [&_td]:px-4 [&_td]:text-label [&_td]:text-[#667775] [&_td_img]:h-[38px] [&_td_img]:w-[54px] [&_td_img]:object-cover">
+      <div className="w-full overflow-x-auto [&_table]:min-w-full [&_table]:border-collapse [&_th]:h-10 [&_th]:border-b [&_th]:border-border [&_th]:bg-muted [&_th]:px-4 [&_th]:text-left [&_th]:text-xs [&_td]:h-16 [&_td]:border-b [&_td]:border-border [&_td]:px-4 [&_td]:text-sm [&_td]:text-muted-foreground [&_td_img]:h-[38px] [&_td_img]:w-[54px] [&_td_img]:object-cover">
         <table>
           <thead>
             <tr>

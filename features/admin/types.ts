@@ -1,3 +1,5 @@
+import type { ContentBlock } from "@/features/shared/schemas/content-block.schema";
+
 export type AdminContentType = "Dự án" | "Tin tức" | "Khóa học" | "Dịch vụ";
 export type AdminContentStatus =
   "DRAFT" | "PUBLISHED" | "ARCHIVED" | "PLANNED" | "IN_PROGRESS" | "COMPLETED";
@@ -48,6 +50,17 @@ export interface AdminContent {
     description: string;
     sortOrder: number;
   }[];
+  contentBlocks?: ContentBlock[];
+  seoTitle?: string | null;
+  seoDescription?: string | null;
+  seoImage?: string | null;
+  canonicalUrl?: string | null;
+  relatedIds?: string[];
+  duration?: string | null;
+  level?: string | null;
+  price?: string | null;
+  instructor?: string | null;
+  learningOutcomes?: string[];
 }
 export interface PageMeta {
   page: number;

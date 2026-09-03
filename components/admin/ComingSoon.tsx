@@ -1,4 +1,5 @@
 import { AdminShell } from "./AdminShell";
+import { Button } from "@/components/ui/button";
 export function ComingSoon({
   title,
   description,
@@ -8,16 +9,16 @@ export function ComingSoon({
 }) {
   return (
     <AdminShell title={title} description={description}>
-      <section className="rounded-md border border-[#dbe7e5] bg-white p-12 text-center shadow-sm [&>span]:text-4xl [&_h2]:my-4 [&_h2]:text-xl [&_p]:mb-5 [&_p]:text-[#667775]">
+      <section className="rounded-md border border-border bg-background p-12 text-center shadow-sm [&>span]:text-4xl [&_h2]:my-4 [&_h2]:text-xl [&_p]:mb-5 [&_p]:text-muted-foreground">
         <span>◇</span>
         <h2>Giao diện đang được chuẩn bị</h2>
         <p>
           Module này thuộc hệ thống quản trị và sẽ được hoàn thiện ở vòng UI
           tiếp theo.
         </p>
-        <button className="inline-flex min-h-[42px] items-center justify-center gap-2 rounded bg-[#09a7a5] px-[18px] text-xs font-semibold text-white hover:bg-[#09a7a5] disabled:opacity-50">
+        <Button>
           Nhận thông báo khi hoàn tất
-        </button>
+        </Button>
       </section>
     </AdminShell>
   );

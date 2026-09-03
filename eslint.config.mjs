@@ -5,5 +5,5 @@ import nextTs from "eslint-config-next/typescript";
 export default defineConfig([
   ...nextVitals,
   ...nextTs,
-  globalIgnores([".next/**", "stitch_bim4c_corporate_web_redesign/**"]),
+  globalIgnores([".next/**", ".qa/**", "stitch_bim4c_corporate_web_redesign/**"]),
 ]);

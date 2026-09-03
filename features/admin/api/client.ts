@@ -41,8 +41,11 @@ export const adminContentApi = {
   list: (
     type: AdminContentType,
     query: Record<string, string | number | undefined>,
+    signal?: AbortSignal,
   ) =>
-    request<PageResult<AdminContent>>(`${domain[type]}?${queryString(query)}`),
+    request<PageResult<AdminContent>>(`${domain[type]}?${queryString(query)}`, {
+      signal,
+    }),
   create: (type: AdminContentType, body: unknown) =>
     request<{ data: AdminContent }>(domain[type], {
       method: "POST",
@@ -64,10 +67,11 @@ export const adminContentApi = {
       method: "POST",
       body: JSON.stringify({ ids, action }),
     }),
-  categories: (type: AdminContentType) =>
+  categories: (type: AdminContentType, signal?: AbortSignal) =>
     type === "Dự án" || type === "Tin tức"
       ? request<{ data: AdminCategory[] }>(
           type === "Dự án" ? "project-categories" : "post-categories",
+          { signal },
         )
       : Promise.resolve({ data: [] }),
   createCategory: (
@@ -102,6 +106,8 @@ export const adminContentApi = {
     }),
   deleteProjectImage: (projectId: string, id: string) =>
     request<void>(`projects/${projectId}/images/${id}`, { method: "DELETE" }),
+  updateProjectImage: (projectId: string, id: string, body: { alt?: string; caption?: string | null; sortOrder?: number }) =>
+    request<{ data: { id: string } }>(`projects/${projectId}/images/${id}`, { method: "PATCH", body: JSON.stringify(body) }),
   addCourseSection: (
     courseId: string,
     body: { title: string; description: string; sortOrder: number },
@@ -112,4 +118,6 @@ export const adminContentApi = {
     }),
   deleteCourseSection: (courseId: string, id: string) =>
     request<void>(`courses/${courseId}/sections/${id}`, { method: "DELETE" }),
+  updateCourseSection: (courseId: string, id: string, body: { title?: string; description?: string; sortOrder?: number }) =>
+    request<{ data: { id: string } }>(`courses/${courseId}/sections/${id}`, { method: "PATCH", body: JSON.stringify(body) }),
 };

@@ -11,8 +11,9 @@ export default function Page() {
       description="Quản lý bài viết, sự kiện và các cập nhật của BIM4C."
       action={
         <Link
-          className="inline-flex min-h-[42px] items-center justify-center gap-2 rounded bg-[#09a7a5] px-[18px] text-xs font-semibold text-white transition hover:bg-[#09a7a5]"
+          className="inline-flex min-h-[42px] items-center justify-center gap-2 rounded bg-primary px-[18px] text-xs font-semibold text-white transition hover:bg-primary"
           href="/admin/tin-tuc?create=1"
+          prefetch={false}
         >
           <span>＋</span> Tạo tin tức
         </Link>

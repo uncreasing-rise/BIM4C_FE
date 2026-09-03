@@ -14,18 +14,24 @@ export function RecordsManager({ kind }: { kind: RecordKind }) {
   const [pages, setPages] = useState(1);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const load = useCallback(async () => {
+  const load = useCallback(async (signal?: AbortSignal) => {
     try {
-      const result = await adminRecordsApi.list(kind, search, status, page);
+      const result = await adminRecordsApi.list(kind, search, status, page, signal);
+      if (signal?.aborted) return;
       setItems(result.data);
       setPages(result.meta.totalPages || 1);
     } catch (e) {
+      if (signal?.aborted) return;
       setError(e instanceof Error ? e.message : "Không thể tải dữ liệu");
     }
   }, [kind, page, search, status]);
   useEffect(() => {
-    const t = window.setTimeout(() => void load(), 250);
-    return () => clearTimeout(t);
+    const controller = new AbortController();
+    const t = window.setTimeout(() => void load(controller.signal), 250);
+    return () => {
+      clearTimeout(t);
+      controller.abort();
+    };
   }, [load]);
   async function update(item: AdminRecord, value: string) {
     setBusy(true);
@@ -55,8 +61,8 @@ export function RecordsManager({ kind }: { kind: RecordKind }) {
     }
   }
   return (
-    <section className="overflow-hidden rounded-md border border-[#dbe7e5] bg-white shadow-sm">
-      <div className="flex flex-wrap items-center gap-3 border-b border-[#dbe7e5] p-4 [&_label]:flex [&_label]:h-10 [&_label]:min-w-52 [&_label]:flex-1 [&_label]:items-center [&_label]:gap-2 [&_label]:border [&_label]:border-[#dbe7e5] [&_label]:px-3 [&_input]:min-w-0 [&_input]:flex-1 [&_input]:outline-none [&_select]:h-10 [&_select]:border [&_select]:border-[#dbe7e5] [&_select]:px-3 [&>button]:min-h-10 [&>button]:bg-[#09a7a5] [&>button]:px-4 [&>button]:text-white">
+    <section className="overflow-hidden rounded-md border border-border bg-background shadow-sm">
+      <div className="flex flex-wrap items-center gap-3 border-b border-border p-4 [&_label]:flex [&_label]:h-10 [&_label]:min-w-52 [&_label]:flex-1 [&_label]:items-center [&_label]:gap-2 [&_label]:border [&_label]:border-border [&_label]:px-3 [&_input]:min-w-0 [&_input]:flex-1 [&_input]:outline-none [&_select]:h-10 [&_select]:border [&_select]:border-border [&_select]:px-3 [&>button]:min-h-10 [&>button]:bg-primary [&>button]:px-4 [&>button]:text-white">
         <label>
           <span>⌕</span>
           <input
@@ -83,11 +89,11 @@ export function RecordsManager({ kind }: { kind: RecordKind }) {
         </select>
       </div>
       {error && (
-        <div className="mx-4 mt-3 flex justify-between bg-[#eaf8f7] px-3 py-2.5 text-xs text-[#09a7a5]">
+        <div className="mx-4 mt-3 flex justify-between bg-primary/10 px-3 py-2.5 text-xs text-primary">
           {error}
         </div>
       )}
-      <div className="w-full overflow-x-auto [&_table]:min-w-full [&_table]:border-collapse [&_th]:h-10 [&_th]:border-b [&_th]:border-[#dbe7e5] [&_th]:bg-[#f5fafa] [&_th]:px-4 [&_th]:text-left [&_th]:text-xs [&_td]:h-16 [&_td]:border-b [&_td]:border-[#dbe7e5] [&_td]:px-4 [&_td]:text-label [&_td]:text-[#667775] [&_td_img]:h-[38px] [&_td_img]:w-[54px] [&_td_img]:object-cover">
+      <div className="w-full overflow-x-auto [&_table]:min-w-full [&_table]:border-collapse [&_th]:h-10 [&_th]:border-b [&_th]:border-border [&_th]:bg-muted [&_th]:px-4 [&_th]:text-left [&_th]:text-xs [&_td]:h-16 [&_td]:border-b [&_td]:border-border [&_td]:px-4 [&_td]:text-sm [&_td]:text-muted-foreground [&_td_img]:h-[38px] [&_td_img]:w-[54px] [&_td_img]:object-cover">
         <table>
           <thead>
             <tr>
@@ -154,7 +160,7 @@ export function RecordsManager({ kind }: { kind: RecordKind }) {
                   )}
                 </td>
                 <td>
-                  <button disabled={busy} onClick={() => void remove(item)}>
+                  <button disabled={busy} onClick={() => void remove(item)} aria-label={`Xóa bản ghi ${item.email}`}>
                     ⌫
                   </button>
                 </td>
@@ -163,14 +169,14 @@ export function RecordsManager({ kind }: { kind: RecordKind }) {
           </tbody>
         </table>
       </div>
-      <footer className="flex items-center justify-between border-t border-[#dbe7e5] px-4 py-3 text-xs text-[#667775] [&_button]:size-9 [&_button]:border [&_button]:border-[#dbe7e5]">
-        <button disabled={page <= 1} onClick={() => setPage((x) => x - 1)}>
+      <footer className="flex items-center justify-between border-t border-border px-4 py-3 text-xs text-muted-foreground [&_button]:size-9 [&_button]:border [&_button]:border-border">
+        <button disabled={page <= 1} onClick={() => setPage((x) => x - 1)} aria-label="Trang trước">
           ←
         </button>
         <span>
           Trang {page}/{pages}
         </span>
-        <button disabled={page >= pages} onClick={() => setPage((x) => x + 1)}>
+        <button disabled={page >= pages} onClick={() => setPage((x) => x + 1)} aria-label="Trang sau">
           →
         </button>
       </footer>

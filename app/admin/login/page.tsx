@@ -1,6 +1,11 @@
 "use client";
 import { FormEvent, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 export default function AdminLogin() {
   const router = useRouter();
@@ -36,38 +41,29 @@ export default function AdminLogin() {
     }
   }
   return (
-    <main className="grid min-h-screen place-items-center bg-[radial-gradient(circle_at_18%_16%,rgba(9,167,165,.26),transparent_30%),#063f46] p-4 sm:p-6">
-      <form
-        onSubmit={submit}
-        className="grid min-w-0 w-[calc(100vw-32px)] max-w-[440px] gap-[18px] rounded-md border border-white/10 bg-white p-6 shadow-2xl sm:w-full sm:p-8"
-      >
-        <div className="flex flex-col border-b border-[#dbe7e5] pb-5">
-          <span className="text-3xl font-bold text-[#163b3a]">
-            BIM<span className="text-[#09a7a5]">4C</span>
+    <main className="grid min-h-screen place-items-center bg-foreground p-4 sm:p-6">
+      <Card className="w-full max-w-md shadow-2xl">
+        <CardHeader className="border-b">
+        <div className="flex flex-col">
+          <span className="text-3xl font-bold text-foreground">
+            BIM<span className="text-primary">4C</span>
           </span>
-          <small className="mt-1 text-micro font-semibold tracking-[.18em] text-[#667775]">
+          <small className="mt-1 text-xs font-semibold tracking-[.18em] text-muted-foreground">
             ADMIN CMS
           </small>
-        </div>
-        <h1 className="mb-0 text-2xl font-semibold text-[#163b3a]">
-          Đăng nhập quản trị
-        </h1>
-        <label className="grid min-w-0 gap-1.5 text-label font-medium text-[#667775]">
-          Email
-          <input
-            className="min-h-11 min-w-0 w-full rounded border border-[#dbe7e5] px-3 outline-none transition focus:border-[#09a7a5] focus:ring-2 focus:ring-[#09a7a5]/10"
+        </div><CardTitle className="mt-5 text-2xl">Đăng nhập quản trị</CardTitle></CardHeader>
+        <CardContent><form onSubmit={submit} className="grid gap-5">
+        <div className="grid gap-2"><Label htmlFor="admin-email">Email</Label><Input
+            id="admin-email"
             autoComplete="username"
             type="email"
             required
             maxLength={254}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-          />
-        </label>
-        <label className="grid min-w-0 gap-1.5 text-label font-medium text-[#667775]">
-          Mật khẩu
-          <input
-            className="min-h-11 min-w-0 w-full rounded border border-[#dbe7e5] px-3 outline-none transition focus:border-[#09a7a5] focus:ring-2 focus:ring-[#09a7a5]/10"
+          /></div>
+        <div className="grid gap-2"><Label htmlFor="admin-password">Mật khẩu</Label><Input
+            id="admin-password"
             autoComplete="current-password"
             type="password"
             required
@@ -75,24 +71,17 @@ export default function AdminLogin() {
             maxLength={128}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-          />
-        </label>
+          /></div>
         {error && (
-          <p
-            role="alert"
-            className="m-0 rounded bg-red-50 px-3 py-2.5 text-xs text-red-700"
-          >
-            {error}
-          </p>
+          <Alert variant="destructive"><AlertDescription>{error}</AlertDescription></Alert>
         )}
-        <button
-          className="inline-flex min-h-11 items-center justify-center rounded bg-[#09a7a5] px-5 text-label font-semibold text-white transition hover:bg-[#09a7a5] disabled:cursor-wait disabled:opacity-50"
+        <Button
           disabled={busy}
           type="submit"
         >
           {busy ? "Đang đăng nhập…" : "Đăng nhập"}
-        </button>
-      </form>
+        </Button>
+      </form></CardContent></Card>
     </main>
   );
 }

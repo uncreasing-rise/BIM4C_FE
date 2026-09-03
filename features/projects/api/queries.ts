@@ -8,7 +8,6 @@ import type { ApiResponse } from "@/lib/api/types";
 import { mockProjects } from "./project.mock";
 import { mapProjectDto, type ProjectDto } from "./project.mapper";
 import type { Project, ProjectQueryParams } from "../types/project";
-import { canDeferBuildData } from "@/lib/config/build";
 
 export async function getProjects(
   params: ProjectQueryParams = {},
@@ -25,18 +24,13 @@ export async function getProjects(
     sortBy: params.sortBy,
     sortOrder: params.sortOrder,
   });
-  try {
-    const response = await apiClient.get<
-      ApiResponse<ProjectDto[]> | ProjectDto[]
-    >(endpoint, {
-      signal: params.signal,
-      next: { revalidate: 300, tags: ["projects"] },
-    });
-    return unwrapData(response).map(mapProjectDto);
-  } catch (error) {
-    if (canDeferBuildData(error)) return [];
-    throw error;
-  }
+  const response = await apiClient.get<
+    ApiResponse<ProjectDto[]> | ProjectDto[]
+  >(endpoint, {
+    signal: params.signal,
+    next: { revalidate: 300, tags: ["projects"] },
+  });
+  return unwrapData(response).map(mapProjectDto);
 }
 
 export async function getProjectBySlug(slug: string): Promise<Project | null> {

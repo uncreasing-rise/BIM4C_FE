@@ -30,11 +30,12 @@ export const adminRecordsApi = {
     search: string,
     status: string,
     page: number,
+    signal?: AbortSignal,
   ) =>
     parse<PageResult<AdminRecord>>(
       await fetch(
         `/api/admin/${kind}?page=${page}&search=${encodeURIComponent(search)}&status=${encodeURIComponent(status)}`,
-        { cache: "no-store" },
+        { cache: "no-store", signal },
       ),
     ),
   update: async (kind: RecordKind, id: string, body: unknown) =>

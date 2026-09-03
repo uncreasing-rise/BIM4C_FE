@@ -22,11 +22,11 @@ export function AuditLogManager() {
       .catch((e) => setError(e.message));
   }, []);
   return (
-    <section className="overflow-hidden rounded-md border border-[#dbe7e5] bg-white shadow-sm">
-      <p className="mx-4 mt-3 flex justify-between bg-[#eaf8f7] px-3 py-2.5 text-xs text-[#09a7a5]">
+    <section className="overflow-hidden rounded-md border border-border bg-background shadow-sm">
+      <p className="mx-4 mt-3 flex justify-between bg-primary/10 px-3 py-2.5 text-xs text-primary">
         {error}
       </p>
-      <div className="w-full overflow-x-auto [&_table]:min-w-full [&_table]:border-collapse [&_th]:h-10 [&_th]:border-b [&_th]:border-[#dbe7e5] [&_th]:bg-[#f5fafa] [&_th]:px-4 [&_th]:text-left [&_th]:text-xs [&_td]:h-16 [&_td]:border-b [&_td]:border-[#dbe7e5] [&_td]:px-4 [&_td]:text-label [&_td]:text-[#667775] [&_td_img]:h-[38px] [&_td_img]:w-[54px] [&_td_img]:object-cover">
+      <div className="w-full overflow-x-auto [&_table]:min-w-full [&_table]:border-collapse [&_th]:h-10 [&_th]:border-b [&_th]:border-border [&_th]:bg-muted [&_th]:px-4 [&_th]:text-left [&_th]:text-xs [&_td]:h-16 [&_td]:border-b [&_td]:border-border [&_td]:px-4 [&_td]:text-sm [&_td]:text-muted-foreground [&_td_img]:h-[38px] [&_td_img]:w-[54px] [&_td_img]:object-cover">
         <table>
           <thead>
             <tr>

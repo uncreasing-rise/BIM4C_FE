@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
-import { SiteChrome } from "@/components/layout/SiteChrome";
 import { env } from "@/lib/config/env";
 import "./globals.css";
+import { Geist } from "next/font/google";
+import { cn } from "@/lib/utils";
+
+const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
 export const metadata: Metadata = {
   metadataBase: env.appUrl ? new URL(env.appUrl) : undefined,
@@ -20,9 +23,9 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="vi" data-scroll-behavior="smooth">
+    <html lang="vi" data-scroll-behavior="smooth" className={cn("font-sans", geist.variable)}>
       <body suppressHydrationWarning>
-        <SiteChrome>{children}</SiteChrome>
+        {children}
       </body>
     </html>
   );

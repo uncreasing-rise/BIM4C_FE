@@ -1,99 +1,145 @@
 "use client";
-
 import Link from "next/link";
+import { ArrowUpRight, Menu } from "lucide-react";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
+import { MAIN_NAVIGATION } from "@/constants/navigation";
 import { ROUTES } from "@/constants/routes";
+import { Button } from "@/components/ui/button";
+import {
+  Sheet,
+  SheetClose,
+  SheetContent,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import { cn } from "@/lib/utils";
 
 export function Header() {
   const pathname = usePathname();
+  const [overHero, setOverHero] = useState(true);
 
-  const navItems = [
-    { label: "Giải Pháp", href: ROUTES.services },
-    { label: "Dự Án", href: ROUTES.projects },
-    { label: "Năng Lực", href: ROUTES.about },
-    { label: "Đào Tạo", href: ROUTES.courses },
-    { label: "Tin Tức", href: ROUTES.blog },
-  ];
+  useEffect(() => {
+    const updateHeader = () => setOverHero(window.scrollY < 72);
+    updateHeader();
+    window.addEventListener("scroll", updateHeader, { passive: true });
+    return () => window.removeEventListener("scroll", updateHeader);
+  }, [pathname]);
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-slate-950 text-white">
-      {/* Top bar */}
-      <div className="border-b border-slate-800/80 bg-slate-950 text-[11px] text-slate-400">
-        <div className="enterprise-container flex h-9 items-center justify-between">
-          <div className="flex items-center gap-5">
-            <span className="flex items-center gap-2">
-              <span className="h-1.5 w-1.5 rounded-full bg-[#09a7a5]" />
-              ISO 19650-1 &amp; 19650-2 CERTIFIED
-            </span>
-            <span className="hidden text-slate-700 sm:inline">|</span>
-            <span className="hidden sm:inline tracking-wide">
-              GLOBAL BIM &amp; VDC CONSULTING
-            </span>
-          </div>
-          <div className="flex items-center gap-5">
-            <Link
-              href={ROUTES.about}
-              className="hidden transition-colors hover:text-white sm:inline"
+    <header
+      className={cn(
+        "fixed inset-x-0 top-0 z-50 transition-all duration-500",
+        overHero
+          ? "border-transparent bg-transparent text-white"
+          : "border-b border-black/5 bg-background/85 text-foreground shadow-sm backdrop-blur-2xl supports-[backdrop-filter]:bg-background/75",
+      )}
+    >
+      <div className="site-container flex h-20 items-center justify-between">
+        <Link
+          href={ROUTES.home}
+          className="flex items-center gap-3"
+          aria-label="BIM4C — Trang chủ"
+        >
+          <span
+            className={cn(
+              "relative grid size-10 place-items-center overflow-hidden rounded-xl text-sm font-black after:absolute after:inset-x-0 after:bottom-0 after:h-1 after:bg-primary",
+              overHero
+                ? "bg-white text-[#0b1220]"
+                : "bg-foreground text-background",
+            )}
+          >
+            B4
+          </span>
+          <span className="leading-none">
+            <strong className="block text-[15px] tracking-[.16em]">
+              BIM4C
+            </strong>
+            <small
+              className={cn(
+                "mt-1.5 block text-[8px] font-semibold uppercase tracking-[.22em]",
+                overHero ? "text-white/60" : "text-muted-foreground",
+              )}
             >
-              Tải Hồ Sơ Năng Lực
+              Digital Construction
+            </small>
+          </span>
+        </Link>
+        <nav
+          className={cn(
+            "hidden items-center gap-1 rounded-full border p-1 backdrop-blur-md lg:flex",
+            overHero
+              ? "border-white/15 bg-black/15"
+              : "border-border/70 bg-white/60",
+          )}
+          aria-label="Điều hướng chính"
+        >
+          {MAIN_NAVIGATION.map((item) => (
+            <Link
+              href={item.href}
+              key={item.href}
+              className={cn(
+                "rounded-full px-4 py-2 text-[13px] font-semibold transition-all",
+                overHero
+                  ? "text-white/75 hover:bg-white/10 hover:text-white"
+                  : "text-muted-foreground hover:bg-background hover:text-foreground",
+                pathname.startsWith(item.href) &&
+                  (overHero
+                    ? "bg-white text-[#0b1220] hover:bg-white hover:text-[#0b1220]"
+                    : "bg-foreground text-background shadow-sm hover:bg-foreground hover:text-background"),
+              )}
+            >
+              {item.label}
             </Link>
-            <span className="hidden text-slate-700 sm:inline">|</span>
-            <div className="flex items-center gap-1.5 font-mono text-[11px]">
-              <span className="text-[#09a7a5]">VN</span>
-              <span>+84 (0) 28 3900 8888</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Main nav */}
-      <div className="border-b border-slate-800/60 bg-slate-950/95 backdrop-blur-md">
-        <div className="enterprise-container flex h-[68px] items-center justify-between">
-          {/* Logo */}
-          <Link href={ROUTES.home} className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded bg-[#09a7a5] text-lg font-bold text-white">
-              B
-            </div>
-            <div className="flex flex-col leading-none">
-              <span className="text-[17px] font-extrabold tracking-wider text-white">
-                BIM4C <span className="text-[#09a7a5]">GROUP</span>
-              </span>
-              <span className="tech-spec mt-0.5 text-[9px] text-slate-500">
-                Enterprise BIM Solutions
-              </span>
-            </div>
+          ))}
+        </nav>
+        <Button
+          asChild
+          className={cn(
+            "hidden rounded-full px-5 lg:inline-flex",
+            overHero && "bg-white text-[#0b1220] shadow-none hover:bg-white/90",
+          )}
+        >
+          <Link href={ROUTES.contact}>
+            Nhận tư vấn <ArrowUpRight />
           </Link>
-
-          {/* Desktop nav */}
-          <nav className="hidden items-center gap-8 lg:flex">
-            {navItems.map((item) => {
-              const active = pathname.startsWith(item.href);
-              return (
-                <Link
-                  key={item.label}
-                  href={item.href}
-                  className={`text-[13px] font-semibold tracking-wide transition-colors ${
-                    active
-                      ? "text-[#09a7a5]"
-                      : "text-slate-300 hover:text-white"
-                  }`}
-                >
-                  {item.label}
-                </Link>
-              );
-            })}
-          </nav>
-
-          {/* CTA */}
-          <div className="hidden lg:block">
-            <Link
-              href={ROUTES.contact}
-              className="btn-enterprise-primary !h-10 !px-5 !text-xs"
+        </Button>
+        <Sheet key={pathname}>
+          <SheetTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className={cn(
+                "size-11 lg:hidden",
+                overHero && "text-white hover:bg-white/10 hover:text-white",
+              )}
+              aria-label="Mở menu"
             >
-              Yêu Cầu Tư Vấn B2B
-            </Link>
-          </div>
-        </div>
+              <Menu />
+            </Button>
+          </SheetTrigger>
+          <SheetContent className="p-6">
+            <SheetTitle className="mb-8 text-left">BIM4C</SheetTitle>
+            <nav className="grid gap-2">
+              {MAIN_NAVIGATION.map((item) => (
+                <SheetClose asChild key={item.href}>
+                  <Button
+                    asChild
+                    variant="ghost"
+                    className="min-h-11 justify-start text-base"
+                  >
+                    <Link href={item.href}>{item.label}</Link>
+                  </Button>
+                </SheetClose>
+              ))}
+              <SheetClose asChild>
+                <Button asChild className="mt-4 min-h-11">
+                  <Link href={ROUTES.contact}>Nhận tư vấn</Link>
+                </Button>
+              </SheetClose>
+            </nav>
+          </SheetContent>
+        </Sheet>
       </div>
     </header>
   );

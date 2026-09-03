@@ -22,10 +22,11 @@ async function parse<T>(response: Response): Promise<T> {
     : ((await response.json()) as T);
 }
 export const adminMediaApi = {
-  list: async (search = "") =>
+  list: async (search = "", signal?: AbortSignal) =>
     parse<PageResult<AdminMedia>>(
       await fetch(`/api/admin/media?search=${encodeURIComponent(search)}`, {
         cache: "no-store",
+        signal,
       }),
     ),
   upload: async (file: File, alt: string) => {
