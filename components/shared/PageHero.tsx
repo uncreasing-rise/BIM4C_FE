@@ -33,23 +33,26 @@ export function PageHero({
   return (
     <section
       className={cn(
-        "relative isolate flex min-h-[38svh] items-end overflow-hidden bg-brand-ink pt-20 text-white md:min-h-[42svh] lg:min-h-[44svh]",
+        "technical-grid relative isolate flex min-h-72 items-end overflow-hidden bg-brand-ink pt-24 text-white md:min-h-80",
       )}
     >
       <Image
-        className="-z-20 object-cover opacity-50"
+        className={cn(
+          "-z-20 object-cover opacity-55",
+          isAbout ? "object-center" : "object-right",
+        )}
         data-motion="parallax"
         src={image}
         alt=""
         fill
         priority
-        sizes={isAbout ? "(max-width: 767px) 100vw, 44vw" : "100vw"}
+        sizes="100vw"
       />
-      <div className="absolute inset-0 -z-10 bg-[linear-gradient(90deg,rgba(4,24,31,.98)_0%,rgba(4,24,31,.74)_52%,rgba(4,24,31,.22)_100%)]" />
+      <div className="absolute inset-0 -z-10 bg-[linear-gradient(90deg,rgba(4,24,31,.98)_0%,rgba(4,24,31,.82)_48%,rgba(4,24,31,.15)_100%)]" />
       <div className="absolute inset-0 -z-10 opacity-20 [background-image:linear-gradient(rgba(255,255,255,.13)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.13)_1px,transparent_1px)] [background-size:64px_64px]" />
       <div className="site-container min-w-0 py-8 md:py-10" data-motion="hero">
         <nav
-          className="mb-5 flex gap-2 text-xs text-zinc-400"
+          className="mb-5 flex min-w-0 gap-2 text-xs text-zinc-300"
           aria-label="Breadcrumb"
         >
           {(
@@ -61,7 +64,10 @@ export function PageHero({
             <span className="contents" key={`${item.label}-${index}`}>
               {index > 0 && <span aria-hidden>/</span>}
               {item.href ? (
-                <Link className="text-primary hover:underline" href={item.href}>
+                <Link
+                  className="shrink-0 text-teal-200 hover:underline"
+                  href={item.href}
+                >
                   {item.label}
                 </Link>
               ) : (

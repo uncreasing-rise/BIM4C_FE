@@ -1,6 +1,8 @@
 import { mapContentDto } from "@/features/shared/mappers/content.mapper";
 import type { ContentEntryDto } from "@/features/shared/types/content-dto";
 import type { Project } from "../types/project";
+import { englishContent } from "@/lib/content/english-content";
+import { toEnglishLabel } from "@/lib/utils/public-labels";
 
 export interface ProjectDto extends ContentEntryDto {
   category: string | { name: string };
@@ -30,7 +32,7 @@ export function mapProjectDto(dto: ProjectDto): Project {
       "Invalid project API contract: category, location, year and status are required.",
     );
   }
-  return {
+  return englishContent({
     ...content,
     id: dto.id ?? undefined,
     category,
@@ -40,6 +42,6 @@ export function mapProjectDto(dto: ProjectDto): Project {
     expectedCompletion: dto.expectedCompletion ?? undefined,
     scale: dto.scale ?? undefined,
     contractPackage: dto.contractPackage ?? undefined,
-    status: PROJECT_STATUS_LABELS[dto.status] ?? dto.status,
-  };
+    status: toEnglishLabel(PROJECT_STATUS_LABELS[dto.status] ?? dto.status),
+  });
 }

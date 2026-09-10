@@ -19,7 +19,7 @@ export function ErrorState({
       <AlertDescription className="my-3">{message}</AlertDescription>
       {onRetry && (
         <Button type="button" onClick={onRetry}>
-          Thử lại
+          Try again
         </Button>
       )}
     </Alert>

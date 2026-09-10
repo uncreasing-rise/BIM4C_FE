@@ -20,15 +20,15 @@ export function ConsultationSection() {
       <div className="site-container relative grid gap-12 lg:grid-cols-[.82fr_1.18fr] lg:items-start lg:gap-20">
         <div data-consultation-copy className="lg:sticky lg:top-28">
           <p className="eyebrow">Talk to BIM4C</p>
-          <h2 className="max-w-xl text-balance text-4xl font-semibold leading-[1.04] tracking-[-.05em] sm:text-5xl lg:text-6xl">
-            Start with a clearer project conversation.
-          </h2>
+          <h1 className="max-w-xl text-balance text-4xl font-semibold leading-[1.08] tracking-[-.04em] sm:text-5xl lg:text-6xl">
+            Let’s talk about your project.
+          </h1>
           <p className="mt-6 max-w-xl text-base leading-8 text-white/60">
             Tell us about your challenge. We will help clarify the scope,
             priorities and next steps.
           </p>
 
-          <ul className="mt-9 grid gap-4 border-t border-white/10 pt-7">
+          <ul className="mt-9 hidden gap-4 border-t border-white/10 pt-7 lg:grid">
             {commitments.map((item) => (
               <li
                 className="flex items-center gap-3 text-sm text-white/75"
@@ -64,11 +64,12 @@ export function ConsultationSection() {
             <div>
               <p className="text-xl font-semibold">Project enquiry</p>
               <p className="mt-2 text-sm text-white/65">
-                Fields marked * are required. We usually reply within one business day.
+                Fields marked * are required. We usually reply within one
+                business day.
               </p>
             </div>
             <span className="hidden items-center gap-2 rounded-full border border-primary/25 bg-primary/10 px-3 py-1.5 text-xs text-primary sm:flex">
-              <Clock3 className="size-3.5" /> Phản hồi sớm
+              <Clock3 className="size-3.5" /> 1 business day
             </span>
           </div>
           <ConsultationForm />

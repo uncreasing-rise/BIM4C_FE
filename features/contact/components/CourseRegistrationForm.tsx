@@ -62,11 +62,16 @@ export function CourseRegistrationForm({
   }
   const labelClass = "grid gap-[7px]";
   const inputClass =
-    "h-[46px] w-full border border-white/25 bg-background/[.07] px-[13px] text-white outline-none focus:border-white focus:bg-background/10";
+    "h-[46px] w-full border border-white/25 bg-background/[.07] px-[13px] text-base text-white outline-none focus:border-white focus:bg-background/10";
   return (
-    <form className="grid gap-[18px]" onSubmit={submit} noValidate>
+    <form
+      className="grid gap-[18px]"
+      onSubmit={submit}
+      noValidate
+      aria-busy={status === "sending"}
+    >
       <h3 className="text-2xl font-semibold text-white">
-        Register for this programme
+        Enquire about this programme
       </h3>
       <p className="text-white/70">{courseTitle}</p>
       <label className={labelClass} htmlFor="course-registration-name">
@@ -94,44 +99,7 @@ export function CourseRegistrationForm({
           </p>
         )}
       </label>
-      <label
-        className="flex items-start gap-3 text-xs leading-5 text-white/75"
-        htmlFor="course-registration-consent"
-      >
-        <input
-          id="course-registration-consent"
-          name="consent"
-          type="checkbox"
-          required
-          className="mt-1 size-4 accent-primary"
-          aria-invalid={Boolean(fieldErrors.consent)}
-          aria-describedby={
-            fieldErrors.consent
-              ? "course-registration-consent-error"
-              : undefined
-          }
-        />
-        <span>
-          I have read and agree to the{" "}
-          <Link
-            className="text-primary underline"
-            href={ROUTES.legalDetail("chinh-sach-bao-mat")}
-            target="_blank"
-          >
-            Privacy Policy
-          </Link>{" "}
-          and the processing of my personal data.
-        </span>
-      </label>
-      {fieldErrors.consent && (
-        <p
-          id="course-registration-consent-error"
-          className="text-xs text-red-100"
-          role="alert"
-        >
-          {fieldErrors.consent}
-        </p>
-      )}
+
       <label className={labelClass} htmlFor="course-registration-phone">
         <span className="text-xs font-semibold uppercase tracking-[.06em] text-white/70">
           Phone number *
@@ -184,10 +152,56 @@ export function CourseRegistrationForm({
           </p>
         )}
       </label>
-      <Button type="submit" disabled={status === "sending"}>
-        {status === "sending" ? "Sending…" : "Register now"}
+      <label
+        className="flex items-start gap-3 text-xs leading-5 text-white/75"
+        htmlFor="course-registration-consent"
+      >
+        <input
+          id="course-registration-consent"
+          name="consent"
+          type="checkbox"
+          required
+          className="mt-1 size-4 accent-primary"
+          aria-invalid={Boolean(fieldErrors.consent)}
+          aria-describedby={
+            fieldErrors.consent
+              ? "course-registration-consent-error"
+              : undefined
+          }
+        />
+        <span>
+          I have read and agree to the{" "}
+          <Link
+            className="text-primary underline"
+            href={ROUTES.legalDetail("chinh-sach-bao-mat")}
+            target="_blank"
+          >
+            Privacy Policy
+          </Link>{" "}
+          and the processing of my personal data.
+        </span>
+      </label>
+      {fieldErrors.consent && (
+        <p
+          id="course-registration-consent-error"
+          className="text-xs text-red-100"
+          role="alert"
+        >
+          {fieldErrors.consent}
+        </p>
+      )}
+      <Button
+        className="min-h-12 w-full rounded-xl"
+        type="submit"
+        disabled={status === "sending"}
+      >
+        {status === "sending" ? "Sending…" : "Request programme details"}
         <span className="ml-[18px]">→</span>
       </Button>
+      <p className="text-xs leading-5 text-white/75">
+        We will contact you with availability, tuition and the next steps.
+        Submitting this form does not confirm a place.
+      </p>
       {message && (
         <p
           className={`m-0 px-[11px] py-[9px] text-xs ${status === "success" ? "bg-emerald-300/15 text-emerald-100" : "bg-red-300/15 text-red-100"}`}

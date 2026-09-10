@@ -1,4 +1,5 @@
 import type { ContentEntry } from "@/types/content";
+import { englishContent } from "@/lib/content/english-content";
 import {
   blogEntries as rawBlogEntries,
   courseEntries as rawCourseEntries,
@@ -40,8 +41,16 @@ function enrich(entries: ContentEntry[]): ContentEntry[] {
   }));
 }
 
-export const serviceEntries = normalizeImages(enrich(rawServiceEntries));
-export const projectEntries = normalizeImages(enrich(rawProjectEntries));
-export const courseEntries = normalizeImages(enrich(rawCourseEntries));
-export const blogEntries = normalizeImages(enrich(rawBlogEntries));
+export const serviceEntries = normalizeImages(enrich(rawServiceEntries)).map(
+  englishContent,
+);
+export const projectEntries = normalizeImages(enrich(rawProjectEntries)).map(
+  englishContent,
+);
+export const courseEntries = normalizeImages(enrich(rawCourseEntries)).map(
+  englishContent,
+);
+export const blogEntries = normalizeImages(enrich(rawBlogEntries)).map(
+  englishContent,
+);
 export type { ContentEntry, ContentSection } from "@/types/content";

@@ -17,8 +17,8 @@ export function Footer() {
             BIM<span className="text-primary">4C</span>
           </Link>
           <p className="mt-5 max-w-md text-sm leading-7 text-zinc-400">
-            Kết nối con người, quy trình và dữ liệu để kiến tạo những công trình
-            chính xác, hiệu quả và bền vững.
+            Connecting people, processes and project data for better design,
+            construction and asset management.
           </p>
           <div className="mt-8 space-y-3 text-sm text-zinc-400">
             <p className="flex gap-3">
@@ -27,11 +27,21 @@ export function Footer() {
             </p>
             <p className="flex gap-3">
               <Mail className="size-4 text-primary" />
-              {CONTACT_EMAIL}
+              <a
+                className="underline-offset-4 hover:text-white hover:underline"
+                href={ROUTES.contactEmail}
+              >
+                {CONTACT_EMAIL}
+              </a>
             </p>
             <p className="flex gap-3">
               <Phone className="size-4 text-primary" />
-              +84 28 7300 4068
+              <a
+                className="underline-offset-4 hover:text-white hover:underline"
+                href="tel:+842873004068"
+              >
+                +84 28 7300 4068
+              </a>
             </p>
           </div>
         </div>

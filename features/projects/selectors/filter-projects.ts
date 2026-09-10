@@ -1,6 +1,13 @@
 import type { Project, ProjectQueryParams } from "../types/project";
 
-const ALL = "Tất cả";
+import { ALL_PROJECT_FILTER } from "../constants";
+import { toEnglishLabel } from "@/lib/utils/public-labels";
+
+const matches = (value: string, filter?: string) =>
+  !filter ||
+  filter === ALL_PROJECT_FILTER ||
+  filter === "Tất cả" ||
+  toEnglishLabel(value) === toEnglishLabel(filter);
 
 export function filterProjects(
   projects: Project[],
@@ -9,19 +16,11 @@ export function filterProjects(
   const normalizedSearch = filters.search?.trim().toLocaleLowerCase("vi") ?? "";
   return projects.filter(
     (project) =>
-      (!filters.category ||
-        filters.category === ALL ||
-        project.category === filters.category) &&
+      matches(project.category, filters.category) &&
       (!normalizedSearch ||
         project.title.toLocaleLowerCase("vi").includes(normalizedSearch)) &&
-      (!filters.location ||
-        filters.location === ALL ||
-        project.location === filters.location) &&
-      (!filters.year ||
-        filters.year === ALL ||
-        project.year === filters.year) &&
-      (!filters.status ||
-        filters.status === ALL ||
-        project.status === filters.status),
+      matches(project.location, filters.location) &&
+      matches(project.year, filters.year) &&
+      matches(project.status, filters.status),
   );
 }

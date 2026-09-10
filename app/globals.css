@@ -11,13 +11,13 @@
   --card-foreground: #0c252b;
   --popover: #ffffff;
   --popover-foreground: #0c252b;
-  --primary: rgb(9 167 165);
-  --primary-hover: #078d8b;
+  --primary: #087e7d;
+  --primary-hover: #066766;
   --primary-foreground: #ffffff;
   --secondary: #dff2f0;
   --secondary-foreground: #123b40;
   --muted: #edf5f4;
-  --muted-foreground: #587076;
+  --muted-foreground: #4b646b;
   --accent: #c9ece8;
   --accent-foreground: #075b5b;
   --destructive: oklch(0.58 0.24 27);
@@ -141,7 +141,7 @@
   }
 
   .eyebrow {
-    @apply mb-4 inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-[.18em] text-primary;
+    @apply mb-4 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[.14em] text-primary;
   }
 
   .eyebrow::before {
@@ -151,6 +151,32 @@
 
   .display-title {
     @apply text-balance text-4xl font-semibold leading-[1.02] tracking-[-.05em] sm:text-5xl lg:text-6xl;
+  }
+
+  .section-title {
+    @apply max-w-2xl text-balance text-3xl font-semibold leading-[1.12] tracking-[-.035em] md:text-[2.5rem];
+  }
+
+  .technical-grid {
+    background-image:
+      linear-gradient(rgb(255 255 255 / 4%) 1px, transparent 1px),
+      linear-gradient(90deg, rgb(255 255 255 / 4%) 1px, transparent 1px);
+    background-size: 48px 48px;
+  }
+
+  /* Dark surfaces need a brighter ink, while action backgrounds stay dark enough for white text. */
+  .bg-brand-ink .text-primary,
+  .bg-brand-ink .eyebrow,
+  .bg-brand-ink-soft .text-primary {
+    color: #51d4ca;
+  }
+
+  .bg-brand-ink .placeholder\:text-white\/30::placeholder {
+    color: rgb(255 255 255 / 65%);
+  }
+
+  .public-site main {
+    scroll-margin-top: 6rem;
   }
 
   :where(button, a, input, textarea, select):focus-visible {

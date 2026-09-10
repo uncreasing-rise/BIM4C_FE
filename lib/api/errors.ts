@@ -1,13 +1,17 @@
 import type { ApiErrorPayload } from "./types";
 
 const STATUS_MESSAGES: Record<number, string> = {
-  400: "Yêu cầu không hợp lệ.",
-  401: "Bạn cần đăng nhập để tiếp tục.",
-  403: "Bạn không có quyền thực hiện thao tác này.",
-  404: "Không tìm thấy dữ liệu yêu cầu.",
-  409: "Dữ liệu đang bị xung đột.",
-  422: "Dữ liệu chưa hợp lệ.",
-  500: "Máy chủ đang gặp sự cố. Vui lòng thử lại sau.",
+  400: "Please check your request and try again.",
+  401: "Please sign in to continue.",
+  403: "You do not have permission to perform this action.",
+  404: "The requested information could not be found.",
+  409: "This information has changed. Please refresh and try again.",
+  429: "Too many attempts. Please wait a moment and try again.",
+  422: "Please check the information you entered.",
+  500: "The service is temporarily unavailable. Please try again shortly.",
+  502: "The service is temporarily unavailable. Please try again shortly.",
+  503: "The service is temporarily unavailable. Please try again shortly.",
+  504: "The request timed out. Please try again shortly.",
 };
 
 export class ApiError extends Error {
@@ -35,9 +39,11 @@ export async function createApiError(response: Response): Promise<ApiError> {
   }
   return new ApiError(
     response.status,
-    payload.message ||
+    (typeof payload.message === "string" && !/[À-ỹĐđ]/u.test(payload.message)
+      ? payload.message
+      : undefined) ||
       STATUS_MESSAGES[response.status] ||
-      "Có lỗi xảy ra khi kết nối máy chủ.",
+      "We could not complete your request. Please try again.",
     payload.code,
     payload.errors,
   );
@@ -48,8 +54,12 @@ export function normalizeRequestError(error: unknown): ApiError {
   if (error instanceof DOMException && error.name === "AbortError")
     return new ApiError(
       408,
-      "Yêu cầu đã quá thời gian chờ.",
+      "The request timed out. Please check your connection and try again.",
       "REQUEST_TIMEOUT",
     );
-  return new ApiError(0, "Không thể kết nối đến máy chủ.", "NETWORK_ERROR");
+  return new ApiError(
+    0,
+    "Unable to connect. Please check your connection and try again.",
+    "NETWORK_ERROR",
+  );
 }

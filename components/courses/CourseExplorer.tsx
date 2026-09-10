@@ -2,16 +2,16 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
-import { useMemo, useState } from "react";
+import { ArrowUpRight, Clock3 } from "lucide-react";
+import { useMemo } from "react";
 import {
   CatalogCategories,
   CatalogFilterBar,
   CatalogPagination,
   CatalogSearch,
 } from "@/components/shared/CatalogControls";
+import { useCatalogFilters } from "@/components/shared/useCatalogFilters";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ROUTES } from "@/constants/routes";
 import type { ContentEntry } from "@/types/content";
@@ -20,160 +20,158 @@ import { toEnglishLabel } from "@/lib/utils/public-labels";
 
 const pageSize = 6;
 const courseCategory = (course: ContentEntry) =>
-  course.category?.trim() || course.eyebrow.split("·")[0].trim();
+  toEnglishLabel(
+    course.category?.trim() || course.eyebrow.split("·")[0].trim(),
+  );
 
 export function CourseExplorer({ courses }: { courses: ContentEntry[] }) {
+  const { searchParams, query, setQuery, update, reset, pending } =
+    useCatalogFilters();
+  const category = toEnglishLabel(searchParams.get("category") ?? "All");
   const categories = useMemo(
     () => ["All", ...new Set(courses.map(courseCategory).filter(Boolean))],
     [courses],
   );
-  const searchParams = useSearchParams();
-  const [category, setCategory] = useState(
-    searchParams.get("category") ?? "All",
-  );
-  const [query, setQuery] = useState(searchParams.get("q") ?? "");
-  const router = useRouter();
-  const page = parsePage(searchParams.get("page"));
-  const updateUrl = (key: string, value: string) => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.delete("page");
-    if (!value || value === "All") params.delete(key);
-    else params.set(key, value);
-    const queryString = params.toString();
-    router.replace(`${ROUTES.courses}${queryString ? `?${queryString}` : ""}`, {
-      scroll: false,
-    });
-  };
-  const [selectedSlug, setSelectedSlug] = useState(courses[0]?.slug ?? "");
   const filtered = useMemo(
     () =>
       courses.filter(
         (course) =>
           (category === "All" || courseCategory(course) === category) &&
-          (!query ||
-            `${course.title} ${course.description}`
-              .toLocaleLowerCase("vi")
-              .includes(query.toLocaleLowerCase("vi"))),
+          [course.title, course.description, ...course.highlights]
+            .join(" ")
+            .toLowerCase()
+            .includes(query.trim().toLowerCase()),
       ),
     [courses, category, query],
   );
   const pages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const page = Math.min(parsePage(searchParams.get("page")), pages);
   const visible = filtered.slice((page - 1) * pageSize, page * pageSize);
-  const selected =
-    visible.find((course) => course.slug === selectedSlug) ?? visible[0];
 
   return (
     <section
-      className="bg-background text-foreground"
-      aria-label="Các chương trình đào tạo"
+      className="bg-background py-12 lg:py-16"
+      aria-label="Training programmes"
+      aria-busy={pending}
     >
-      <div className="site-container py-20 lg:py-24">
-        <header className="mb-8 grid gap-4 border-b pb-8 md:grid-cols-[.8fr_1.2fr] md:items-end">
+      <div className="site-container">
+        <header className="mb-6 flex flex-col justify-between gap-4 border-b pb-6 md:flex-row md:items-end">
           <div>
-            <p className="eyebrow">Training programmes</p>
-            <h2 className="text-3xl font-semibold tracking-[-.04em] md:text-5xl">
-              Skills you can apply immediately
+            <p className="eyebrow">BIM4C Academy</p>
+            <h2 className="text-3xl font-semibold tracking-tight md:text-4xl">
+              Find your next skill
             </h2>
           </div>
-          <p className="max-w-xl leading-7 text-muted-foreground md:justify-self-end">
-            Choose a programme that matches your role and development goals.
+          <p className="max-w-lg text-base leading-7 text-muted-foreground">
+            Compare programmes, explore the learning outcomes and find the right
+            level for your role.
           </p>
         </header>
         <CatalogCategories
-          ariaLabel="Academy categories"
+          ariaLabel="Programme categories"
           items={categories}
           value={category}
-          formatLabel={toEnglishLabel}
-          onChange={(value) => {
-            setCategory(value);
-            updateUrl("category", value);
-          }}
+          onChange={(value) => update("category", value)}
         />
         <CatalogFilterBar>
           <CatalogSearch
-            label="Search courses"
-            placeholder="Search programmes"
+            label="Search programmes"
+            placeholder="Search by skill, tool or programme"
             value={query}
-            onChange={(value) => {
-              setQuery(value);
-              updateUrl("q", value);
-            }}
+            onChange={setQuery}
           />
         </CatalogFilterBar>
-        <p className="mb-5 text-[12px] text-muted-foreground">
-          <strong className="font-semibold text-foreground">
-            {filtered.length}
-          </strong>{" "}
-          matching programmes
-        </p>
-        {selected && (
-          <div className="grid gap-8 lg:grid-cols-[.7fr_1.3fr] lg:items-start">
-            <div className="border-t" aria-label="Programme selection">
-              {visible.map((course, index) => (
-                <button
-                  type="button"
-                  onClick={() => setSelectedSlug(course.slug)}
-                  className={`flex w-full items-center gap-4 border-b px-2 py-5 text-left transition-colors ${selected.slug === course.slug ? "bg-foreground text-background" : "hover:bg-muted"}`}
-                  key={course.slug}
-                >
-                  <span
-                    className={`text-xs font-semibold ${selected.slug === course.slug ? "text-primary" : "text-muted-foreground"}`}
-                  >
-                    0{index + 1}
-                  </span>
-                  <span className="flex-1 font-semibold">{course.title}</span>
-                  <span aria-hidden>→</span>
-                </button>
-              ))}
-            </div>
-            <div className="overflow-hidden rounded-3xl bg-brand-ink text-white lg:sticky lg:top-28">
-              <div className="relative aspect-[16/8]">
-                <Image
-                  src={selected.image}
-                  alt={selected.title}
-                  fill
-                  sizes="(max-width:1023px) 100vw, 60vw"
-                  className="object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-brand-ink to-transparent" />
-              </div>
-              <div className="p-7 md:p-9">
-                <Badge className="bg-white/10 text-white">
-                  {toEnglishLabel(courseCategory(selected))}
-                </Badge>
-                <h3 className="mt-4 text-3xl font-semibold tracking-[-.04em] md:text-4xl">
-                  {selected.title}
-                </h3>
-                <p className="mt-4 max-w-2xl leading-7 text-zinc-400">
-                  {selected.description}
-                </p>
-                <div className="mt-7 flex flex-wrap gap-2">
-                  {selected.highlights.map((item) => (
-                    <span
-                      className="rounded-full border border-white/15 px-3 py-1.5 text-xs"
-                      key={item}
-                    >
-                      {item}
-                    </span>
-                  ))}
+        <div className="mb-6 flex items-center justify-between gap-4">
+          <p role="status" className="text-sm text-muted-foreground">
+            <strong className="text-foreground">{filtered.length}</strong>{" "}
+            {filtered.length === 1 ? "programme" : "programmes"}
+          </p>
+          {(query || category !== "All") && (
+            <Button variant="ghost" onClick={reset}>
+              Clear filters
+            </Button>
+          )}
+        </div>
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {visible.map((course) => {
+            const duration =
+              course.duration || course.eyebrow.split("·")[1]?.trim();
+            return (
+              <article
+                key={course.slug}
+                className="group relative grid min-w-0 grid-cols-[5.5rem_minmax(0,1fr)] overflow-hidden rounded-xl border bg-card transition-shadow hover:shadow-lg focus-within:ring-2 focus-within:ring-primary md:flex md:flex-col"
+              >
+                <div className="relative ml-4 mt-5 aspect-square self-start overflow-hidden rounded-lg bg-muted md:ml-0 md:mt-0 md:aspect-[16/9] md:w-full md:rounded-none">
+                  <Image
+                    src={course.image}
+                    alt=""
+                    fill
+                    sizes="(max-width:767px) 88px, (max-width:1023px) 50vw, 33vw"
+                    className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+                  />
                 </div>
-                <Button asChild className="mt-8 rounded-full">
-                  <Link href={ROUTES.courseDetail(selected.slug)}>
-                    View programme →
-                  </Link>
-                </Button>
-              </div>
-            </div>
-          </div>
-        )}
-        {filtered.length === 0 && (
+                <div className="flex min-w-0 flex-1 flex-col p-4 md:p-6">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-primary">
+                    {courseCategory(course)}
+                  </p>
+                  <h3 className="mt-2 text-xl font-semibold leading-tight tracking-tight md:mt-3 md:text-2xl">
+                    <Link
+                      className="after:absolute after:inset-0 after:content-['']"
+                      href={ROUTES.courseDetail(course.slug)}
+                    >
+                      {course.title}
+                    </Link>
+                  </h3>
+                  <p className="mt-3 line-clamp-2 flex-1 text-sm leading-6 text-muted-foreground md:line-clamp-none md:leading-7">
+                    {course.description}
+                  </p>
+                  <dl className="mt-5 grid gap-2 border-t pt-4 text-sm">
+                    {duration && (
+                      <div className="flex items-center gap-2">
+                        <dt className="flex items-center gap-2 text-muted-foreground">
+                          <Clock3 className="size-4" />
+                          Duration
+                        </dt>
+                        <dd className="ml-auto font-medium">{duration}</dd>
+                      </div>
+                    )}
+                    {course.level && (
+                      <div className="flex justify-between gap-3">
+                        <dt className="text-muted-foreground">Level</dt>
+                        <dd>{course.level}</dd>
+                      </div>
+                    )}
+                    {course.price && (
+                      <div className="flex justify-between gap-3">
+                        <dt className="text-muted-foreground">Tuition</dt>
+                        <dd>{course.price}</dd>
+                      </div>
+                    )}
+                  </dl>
+                  <span className="mt-5 flex min-h-11 items-center justify-between text-sm font-semibold text-primary">
+                    Explore programme <ArrowUpRight className="size-5" />
+                  </span>
+                </div>
+              </article>
+            );
+          })}
+        </div>
+        {!visible.length && (
           <EmptyState
-            title="No programmes found"
-            description="Try a different keyword or category."
+            title={
+              courses.length
+                ? "No programmes match your search"
+                : "New programmes are being prepared"
+            }
+            description={
+              courses.length
+                ? "Try another skill or clear the filters."
+                : "Contact our team to discuss training for your organization."
+            }
           />
         )}
         <CatalogPagination
-          ariaLabel="Academy pagination"
+          ariaLabel="Programme pagination"
           page={page}
           pages={pages}
           pathname={ROUTES.courses}

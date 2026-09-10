@@ -47,7 +47,7 @@ async function request<T>(
     if (!contentType.includes("application/json")) {
       throw new ApiError(
         502,
-        "Máy chủ trả về định dạng phản hồi không hợp lệ.",
+        "We received an unexpected response. Please try again.",
         "INVALID_RESPONSE",
       );
     }
@@ -56,7 +56,7 @@ async function request<T>(
     } catch {
       throw new ApiError(
         502,
-        "Máy chủ trả về JSON không hợp lệ.",
+        "We could not read the response. Please try again.",
         "INVALID_JSON",
       );
     }
@@ -66,7 +66,7 @@ async function request<T>(
       error.name === "AbortError" &&
       options.signal?.aborted
     ) {
-      throw new ApiError(499, "Yêu cầu đã bị hủy.", "REQUEST_ABORTED");
+      throw new ApiError(499, "The request was cancelled.", "REQUEST_ABORTED");
     }
     throw normalizeRequestError(error);
   } finally {

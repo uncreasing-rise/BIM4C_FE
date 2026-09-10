@@ -66,13 +66,19 @@ export function ConsultationForm({
   }
 
   const labelClass = "grid gap-2";
-  const captionClass =
-    "text-[11px] font-semibold uppercase tracking-[.1em] text-white/65";
+  const captionClass = "text-xs font-medium text-white/85";
   const inputClass =
-    "h-12 w-full rounded-xl border border-white/15 bg-white/[.06] px-4 text-[15px] text-white shadow-none outline-none transition placeholder:text-white/30 hover:border-white/25 focus-visible:border-primary focus-visible:bg-white/[.09] focus-visible:ring-3 focus-visible:ring-primary/15";
+    "h-12 w-full min-w-0 rounded-xl border border-white/30 bg-white/[.06] px-4 text-base text-white shadow-none outline-none transition placeholder:text-white/65 hover:border-white/50 focus-visible:border-white focus-visible:ring-3 focus-visible:ring-white/30";
   return (
-    <form className="grid grid-cols-1 gap-[18px]" onSubmit={submit} noValidate>
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+    <form
+      className="grid min-w-0 grid-cols-1 gap-[18px]"
+      onSubmit={submit}
+      noValidate
+      aria-busy={status === "sending"}
+    >
+      <div
+        className={`grid min-w-0 grid-cols-1 gap-4 ${compact ? "" : "sm:grid-cols-2"}`}
+      >
         <label className={labelClass} htmlFor="consultation-name">
           <span className={captionClass}>Full name *</span>
           <Input
@@ -80,7 +86,7 @@ export function ConsultationForm({
             className={inputClass}
             name="name"
             autoComplete="name"
-            placeholder="Nguyễn Văn A"
+            placeholder="Your full name"
             required
             aria-invalid={Boolean(fieldErrors.name)}
             aria-describedby={
@@ -98,7 +104,7 @@ export function ConsultationForm({
           )}
         </label>
         <label className={labelClass} htmlFor="consultation-phone">
-          <span className={captionClass}>Phone number</span>
+          <span className={captionClass}>Phone number (optional)</span>
           <Input
             id="consultation-phone"
             className={inputClass}
@@ -148,13 +154,13 @@ export function ConsultationForm({
         </label>
         {!compact && (
           <label className={labelClass} htmlFor="consultation-company">
-            <span className={captionClass}>Company</span>
+            <span className={captionClass}>Company (optional)</span>
             <Input
               id="consultation-company"
               className={inputClass}
               name="company"
               autoComplete="organization"
-              placeholder="Tên doanh nghiệp"
+              placeholder="Your organization"
               aria-invalid={Boolean(fieldErrors.company)}
               aria-describedby={
                 fieldErrors.company ? "consultation-company-error" : undefined
@@ -176,11 +182,11 @@ export function ConsultationForm({
         <span className={captionClass}>How can we help? *</span>
         <Textarea
           id="consultation-message"
-          className="min-h-32 w-full resize-y rounded-xl border border-white/15 bg-white/[.06] p-4 text-[15px] leading-6 text-white shadow-none outline-none transition placeholder:text-white/30 hover:border-white/25 focus-visible:border-primary focus-visible:bg-white/[.09] focus-visible:ring-3 focus-visible:ring-primary/15"
+          className="min-h-32 w-full min-w-0 resize-y rounded-xl border border-white/30 bg-white/[.06] p-4 text-base leading-6 text-white shadow-none outline-none transition placeholder:text-white/65 hover:border-white/50 focus-visible:border-white focus-visible:ring-3 focus-visible:ring-white/30"
           name="message"
           rows={compact ? 3 : 4}
           required
-          placeholder="Briefly describe your project or challenge"
+          placeholder="What are you working on, and where would you like our help?"
           aria-invalid={Boolean(fieldErrors.message)}
           aria-describedby={
             fieldErrors.message ? "consultation-message-error" : undefined
@@ -232,17 +238,19 @@ export function ConsultationForm({
           {fieldErrors.consent}
         </p>
       )}
-      <div className="flex flex-col items-start gap-4 border-t border-white/10 pt-6 sm:flex-row sm:items-center sm:justify-between">
+      <div
+        className={`flex flex-col gap-4 border-t border-white/10 pt-5 ${compact ? "" : "sm:items-start"}`}
+      >
         <Button
           type="submit"
           size="lg"
-          className="min-w-48 rounded-full"
+          className={`min-h-12 max-w-full rounded-full ${compact ? "w-full" : "w-full sm:w-auto"}`}
           disabled={status === "sending"}
         >
           {status === "sending" ? "Sending…" : "Send project enquiry"}
           <span>→</span>
         </Button>
-        <small className="max-w-56 text-xs leading-5 text-white/45">
+        <small className="text-xs leading-5 text-white/75">
           BIM4C only uses this information to respond to your enquiry.
         </small>
       </div>

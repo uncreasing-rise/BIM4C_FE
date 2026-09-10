@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useEffect, useId, useRef, useState, type FormEvent } from "react";
 import { z } from "zod";
 import { ApiError } from "@/lib/api/errors";
 import { Button } from "@/components/ui/button";
@@ -16,6 +16,7 @@ type FormStatus = "idle" | "submitting" | "success" | "error";
 type NewsletterField = "email" | "consent";
 
 export function NewsletterForm() {
+  const formId = useId();
   const [status, setStatus] = useState<FormStatus>("idle");
   const [message, setMessage] = useState("");
   const [consent, setConsent] = useState(false);
@@ -54,9 +55,9 @@ export function NewsletterForm() {
         setFieldErrors(getZodFieldErrors<NewsletterField>(error));
         const field = error.issues[0]?.path[0];
         if (field === "email")
-          document.getElementById("newsletter-email")?.focus();
+          document.getElementById(`${formId}-newsletter-email`)?.focus();
         if (field === "consent")
-          document.getElementById("newsletter-consent")?.focus();
+          document.getElementById(`${formId}-newsletter-consent`)?.focus();
         return;
       }
       setMessage(
@@ -70,14 +71,21 @@ export function NewsletterForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} noValidate>
-      <Label className="mb-2 block text-xs" htmlFor="newsletter-email">
+    <form
+      onSubmit={handleSubmit}
+      noValidate
+      aria-busy={status === "submitting"}
+    >
+      <Label
+        className="mb-2 block text-xs"
+        htmlFor={`${formId}-newsletter-email`}
+      >
         Your email
       </Label>
       <div className="flex">
         <Input
-          className="h-[46px] min-w-0 w-full border border-r-0 border-white/40 bg-transparent px-3 text-white outline-none placeholder:text-white/50 focus:border-white"
-          id="newsletter-email"
+          className="h-[46px] min-w-0 w-full border border-r-0 border-white/40 bg-transparent px-3 text-base text-white outline-none placeholder:text-white/65 focus:border-white"
+          id={`${formId}-newsletter-email`}
           name="email"
           type="email"
           autoComplete="email"
@@ -85,7 +93,7 @@ export function NewsletterForm() {
           required
           aria-invalid={Boolean(fieldErrors.email)}
           aria-describedby={
-            fieldErrors.email ? "newsletter-email-error" : undefined
+            fieldErrors.email ? `${formId}-newsletter-email-error` : undefined
           }
         />
         <Button
@@ -99,7 +107,7 @@ export function NewsletterForm() {
       </div>
       {fieldErrors.email && (
         <p
-          id="newsletter-email-error"
+          id={`${formId}-newsletter-email-error`}
           className="mt-2 text-xs text-red-200"
           role="alert"
         >
@@ -108,10 +116,10 @@ export function NewsletterForm() {
       )}
       <Label
         className="mt-3 flex items-start gap-2 text-xs leading-normal text-white/70"
-        htmlFor="newsletter-consent"
+        htmlFor={`${formId}-newsletter-consent`}
       >
         <Checkbox
-          id="newsletter-consent"
+          id={`${formId}-newsletter-consent`}
           className="mt-0.5"
           name="consent"
           required
@@ -119,7 +127,9 @@ export function NewsletterForm() {
           onCheckedChange={(checked) => setConsent(checked === true)}
           aria-invalid={Boolean(fieldErrors.consent)}
           aria-describedby={
-            fieldErrors.consent ? "newsletter-consent-error" : undefined
+            fieldErrors.consent
+              ? `${formId}-newsletter-consent-error`
+              : undefined
           }
         />{" "}
         <span>
@@ -137,7 +147,7 @@ export function NewsletterForm() {
       </Label>
       {fieldErrors.consent && (
         <p
-          id="newsletter-consent-error"
+          id={`${formId}-newsletter-consent-error`}
           className="mt-2 text-xs text-red-200"
           role="alert"
         >

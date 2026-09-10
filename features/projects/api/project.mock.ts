@@ -1,5 +1,7 @@
 import { projectEntries } from "@/mocks/content";
 import type { Project } from "../types/project";
+import { englishContent } from "@/lib/content/english-content";
+import { toEnglishLabel } from "@/lib/utils/public-labels";
 
 const projectMetadata: Record<
   string,
@@ -67,12 +69,16 @@ const projectMetadata: Record<
   },
 };
 
-export const mockProjects: Project[] = projectEntries.map((project) => ({
-  ...project,
-  ...(projectMetadata[project.slug] ?? {
-    category: "Khác",
-    location: "",
-    year: "",
-    status: "",
-  }),
-}));
+export const mockProjects: Project[] = projectEntries
+  .map((project) => ({
+    ...project,
+    ...(projectMetadata[project.slug] ?? {
+      category: "Khác",
+      location: "",
+      year: "",
+      status: "",
+    }),
+  }))
+  .map((project) =>
+    englishContent({ ...project, status: toEnglishLabel(project.status) }),
+  );

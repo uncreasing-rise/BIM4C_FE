@@ -20,10 +20,22 @@ export function Header() {
   const [overHero, setOverHero] = useState(true);
 
   useEffect(() => {
-    const updateHeader = () => setOverHero(window.scrollY < 72);
+    const updateHeader = () =>
+      setOverHero(
+        window.scrollY < 72 &&
+          Boolean(
+            document.querySelector("main > section:first-child.bg-brand-ink"),
+          ),
+      );
     updateHeader();
     window.addEventListener("scroll", updateHeader, { passive: true });
-    return () => window.removeEventListener("scroll", updateHeader);
+    const observer = new MutationObserver(updateHeader);
+    const main = document.getElementById("main-content");
+    if (main) observer.observe(main, { childList: true, subtree: true });
+    return () => {
+      window.removeEventListener("scroll", updateHeader);
+      observer.disconnect();
+    };
   }, [pathname]);
 
   return (
@@ -57,7 +69,7 @@ export function Header() {
             </strong>
             <small
               className={cn(
-                "mt-1.5 block text-[8px] font-semibold uppercase tracking-[.22em]",
+                "mt-1.5 block text-[9px] font-semibold uppercase tracking-[.14em]",
                 overHero ? "text-white/60" : "text-muted-foreground",
               )}
             >
@@ -72,12 +84,17 @@ export function Header() {
               ? "border-white/15 bg-black/15"
               : "border-border/70 bg-white/60",
           )}
-          aria-label="Điều hướng chính"
+          aria-label="Main navigation"
         >
           {MAIN_NAVIGATION.map((item) => (
             <Link
               href={item.href}
               key={item.href}
+              aria-current={
+                pathname === item.href || pathname.startsWith(`${item.href}/`)
+                  ? "page"
+                  : undefined
+              }
               className={cn(
                 "rounded-full px-4 py-2 text-[13px] font-semibold transition-all",
                 overHero
@@ -130,7 +147,18 @@ export function Header() {
                     variant="ghost"
                     className="min-h-11 justify-start text-base"
                   >
-                    <Link href={item.href}>{item.label}</Link>
+                    <Link
+                      href={item.href}
+                      aria-current={
+                        pathname === item.href ||
+                        pathname.startsWith(`${item.href}/`)
+                          ? "page"
+                          : undefined
+                      }
+                      className="aria-[current=page]:bg-muted aria-[current=page]:text-primary"
+                    >
+                      {item.label}
+                    </Link>
                   </Button>
                 </SheetClose>
               ))}

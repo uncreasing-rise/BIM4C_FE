@@ -2,8 +2,8 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
+import { useCatalogFilters } from "@/components/shared/useCatalogFilters";
 import { EmptyState } from "@/components/ui/EmptyState";
 import {
   CatalogCategories,
@@ -24,40 +24,12 @@ import { parsePage } from "@/lib/seo/listing";
 import { toEnglishLabel } from "@/lib/utils/public-labels";
 
 export function ProjectExplorer({ projects }: { projects: Project[] }) {
-  const searchParams = useSearchParams();
-  const [category, setCategory] = useState(
-    searchParams.get("category") ?? ALL_PROJECT_FILTER,
-  );
-  const [query, setQuery] = useState(searchParams.get("q") ?? "");
-  const [location, setLocation] = useState(
-    searchParams.get("location") ?? ALL_PROJECT_FILTER,
-  );
-  const [year, setYear] = useState(
-    searchParams.get("year") ?? ALL_PROJECT_FILTER,
-  );
-  const [status, setStatus] = useState(
-    searchParams.get("status") ?? ALL_PROJECT_FILTER,
-  );
-  const router = useRouter();
-  const page = parsePage(searchParams.get("page"));
-  const updateUrl = (key: string, value: string) => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.delete("page");
-    if (!value || value === ALL_PROJECT_FILTER) params.delete(key);
-    else params.set(key, value);
-    const query = params.toString();
-    router.replace(`${ROUTES.projects}${query ? `?${query}` : ""}`, {
-      scroll: false,
-    });
-  };
-  const update = (
-    setter: (value: string) => void,
-    key: string,
-    value: string,
-  ) => {
-    setter(value);
-    updateUrl(key, value);
-  };
+  const { searchParams, query, setQuery, update, reset, pending } =
+    useCatalogFilters();
+  const category = searchParams.get("category") ?? ALL_PROJECT_FILTER;
+  const location = searchParams.get("location") ?? ALL_PROJECT_FILTER;
+  const year = searchParams.get("year") ?? ALL_PROJECT_FILTER;
+  const status = searchParams.get("status") ?? ALL_PROJECT_FILTER;
   const filtered = useMemo(
     () =>
       filterProjects(projects, {
@@ -70,6 +42,7 @@ export function ProjectExplorer({ projects }: { projects: Project[] }) {
     [projects, category, query, location, year, status],
   );
   const pages = Math.max(1, Math.ceil(filtered.length / PROJECT_PAGE_SIZE));
+  const page = Math.min(parsePage(searchParams.get("page")), pages);
   const visible = filtered.slice(
     (page - 1) * PROJECT_PAGE_SIZE,
     page * PROJECT_PAGE_SIZE,
@@ -81,23 +54,19 @@ export function ProjectExplorer({ projects }: { projects: Project[] }) {
     year !== ALL_PROJECT_FILTER ||
     status !== ALL_PROJECT_FILTER,
   );
-  const reset = () => {
-    setCategory(ALL_PROJECT_FILTER);
-    setQuery("");
-    setLocation(ALL_PROJECT_FILTER);
-    setYear(ALL_PROJECT_FILTER);
-    setStatus(ALL_PROJECT_FILTER);
-    router.replace(ROUTES.projects, { scroll: false });
-  };
 
   return (
-    <section className="bg-background py-20 lg:py-24" id="project-list">
+    <section
+      className="bg-background py-12 lg:py-16"
+      id="project-list"
+      aria-busy={pending}
+    >
       <div className="site-container">
         <header className="mb-8 grid gap-4 border-b pb-8 md:grid-cols-[.8fr_1.2fr] md:items-end">
           <div>
             <p className="eyebrow">Project catalogue</p>
-            <h2 className="text-3xl font-semibold tracking-[-.04em] md:text-5xl">
-              Capability, proven in every project
+            <h2 className="text-3xl font-semibold tracking-[-.035em] md:text-4xl">
+              Find a project like yours
             </h2>
           </div>
           <p className="max-w-xl text-sm leading-7 text-muted-foreground md:justify-self-end">
@@ -109,34 +78,36 @@ export function ProjectExplorer({ projects }: { projects: Project[] }) {
           items={PROJECT_CATEGORIES}
           value={category}
           formatLabel={toEnglishLabel}
-          onChange={(value) => update(setCategory, "category", value)}
+          onChange={(value) => update("category", value)}
         />
         <CatalogFilterBar>
           <CatalogSearch
             label="Project name"
             placeholder="Search projects"
             value={query}
-            onChange={(value) => update(setQuery, "q", value)}
+            onChange={setQuery}
           />
           <CatalogSelect
             label="Location"
             value={location}
             values={[...new Set(projects.map((item) => item.location))]}
-            onChange={(value) => update(setLocation, "location", value)}
+            onChange={(value) => update("location", value)}
             formatLabel={toEnglishLabel}
           />
           <CatalogSelect
             label="Year"
             value={year}
-            values={[...new Set(projects.map((item) => item.year))]}
-            onChange={(value) => update(setYear, "year", value)}
+            values={[...new Set(projects.map((item) => item.year))]
+              .sort()
+              .reverse()}
+            onChange={(value) => update("year", value)}
             formatLabel={toEnglishLabel}
           />
           <CatalogSelect
             label="Delivery status"
             value={status}
             values={[...new Set(projects.map((item) => item.status))]}
-            onChange={(value) => update(setStatus, "status", value)}
+            onChange={(value) => update("status", value)}
             formatLabel={toEnglishLabel}
           />
         </CatalogFilterBar>
@@ -146,13 +117,21 @@ export function ProjectExplorer({ projects }: { projects: Project[] }) {
             role="status"
             aria-live="polite"
           >
-            <strong className="font-semibold text-foreground">
-              {filtered.length}
-            </strong>{" "}
-            matching projects
+            {filtered.length ? (
+              <>
+                Showing {(page - 1) * PROJECT_PAGE_SIZE + 1}–
+                {Math.min(page * PROJECT_PAGE_SIZE, filtered.length)} of{" "}
+                <strong className="font-semibold text-foreground">
+                  {filtered.length}
+                </strong>{" "}
+                projects
+              </>
+            ) : (
+              "0 matching projects"
+            )}
           </p>
           <button
-            className="rounded-md px-2 py-1 text-[12px] font-semibold text-primary transition hover:bg-primary/10 disabled:pointer-events-none disabled:opacity-40"
+            className="min-h-11 rounded-md px-3 py-2 text-sm font-semibold text-primary transition hover:bg-primary/10 disabled:pointer-events-none disabled:opacity-40"
             type="button"
             onClick={reset}
             disabled={!hasFilters}
@@ -161,10 +140,10 @@ export function ProjectExplorer({ projects }: { projects: Project[] }) {
             Reset filters
           </button>
         </div>
-        <div className="border-t">
-          {visible.map((project, index) => (
+        <div className="grid gap-6 md:grid-cols-2">
+          {visible.map((project) => (
             <article
-              className="group relative grid gap-7 border-b py-8 lg:grid-cols-[1.15fr_.85fr] lg:items-center lg:gap-14 lg:py-12"
+              className="group relative flex min-w-0 flex-col overflow-hidden rounded-xl border bg-card transition-shadow hover:shadow-lg"
               key={project.slug}
             >
               <Link
@@ -172,52 +151,65 @@ export function ProjectExplorer({ projects }: { projects: Project[] }) {
                 href={ROUTES.projectDetail(project.slug)}
                 aria-label={`View ${project.title}`}
               />
-              <div
-                className={`relative aspect-[16/9] overflow-hidden rounded-2xl bg-muted ${index % 2 ? "lg:order-2" : ""}`}
-              >
+              <div className="relative aspect-[16/8] overflow-hidden bg-muted">
                 <Image
                   className="object-cover transition-transform duration-700 group-hover:scale-[1.04]"
                   src={project.image}
                   alt={project.title}
                   fill
-                  sizes="(max-width:767px) 100vw, (max-width:1279px) 50vw, 33vw"
+                  sizes="(max-width:767px) 100vw, 50vw"
                 />
               </div>
-              <div className={index % 2 ? "lg:order-1" : ""}>
-                <p className="mb-2.5 text-[10px] font-semibold uppercase tracking-[.1em] text-primary">
+              <div className="flex flex-1 flex-col p-5 sm:p-6">
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-primary">
                   {toEnglishLabel(project.category)}
                 </p>
-                <h3 className="text-3xl font-semibold leading-tight tracking-[-.04em] md:text-4xl">
+                <h3 className="text-2xl font-semibold leading-tight tracking-tight">
                   {project.title}
                 </h3>
-                <p className="mt-4 line-clamp-3 text-sm leading-7 text-muted-foreground">
+                <p className="mt-3 line-clamp-2 text-sm leading-7 text-muted-foreground">
                   {project.description}
                 </p>
-                <dl className="mt-5 grid gap-2 border-t pt-4 text-[13px] text-muted-foreground">
-                  <div className="flex justify-between gap-4">
+                <dl className="mt-5 grid grid-cols-2 gap-3 border-y py-4 text-sm text-muted-foreground">
+                  <div>
                     <dt>Year</dt>
                     <dd className="font-medium text-foreground">
                       {project.year}
                     </dd>
                   </div>
-                  <div className="flex justify-between gap-4">
+                  <div>
                     <dt>Location</dt>
-                    <dd className="line-clamp-1 text-right font-medium text-foreground">
+                    <dd className="line-clamp-1 font-medium text-foreground">
                       {project.location}
                     </dd>
                   </div>
                 </dl>
-                <span className="mt-auto pt-5 text-[13px] font-semibold text-primary">
-                  Explore project →
-                </span>
+                <div className="mt-auto flex items-center justify-between gap-3 pt-4">
+                  <span className="rounded-md bg-muted px-2 py-1 text-xs font-medium text-muted-foreground">
+                    {project.status}
+                  </span>
+                  <span className="text-sm font-semibold text-primary">
+                    Explore project →
+                  </span>
+                </div>
               </div>
             </article>
           ))}
           {visible.length === 0 && (
-            <EmptyState
-              title="No projects found"
-              description="Try a different search or reset the filters."
-            />
+            <div className="md:col-span-2">
+              <EmptyState
+                title={
+                  hasFilters
+                    ? "No projects match your filters"
+                    : "Projects are being prepared"
+                }
+                description={
+                  hasFilters
+                    ? "Try a broader search or clear the filters to see all projects."
+                    : "Contact our team to discuss relevant experience for your project."
+                }
+              />
+            </div>
           )}
         </div>
         <CatalogPagination

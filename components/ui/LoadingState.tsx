@@ -1,5 +1,5 @@
 export function LoadingState({
-  label = "Đang tải dữ liệu",
+  label = "Loading information",
 }: {
   label?: string;
 }) {
@@ -19,7 +19,7 @@ export function LoadingState({
 }
 
 export function CatalogLoadingState({
-  label = "Đang tải nội dung BIM4C",
+  label = "Loading BIM4C content",
 }: {
   label?: string;
 }) {

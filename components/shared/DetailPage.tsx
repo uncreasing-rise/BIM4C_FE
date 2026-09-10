@@ -118,15 +118,18 @@ export function DetailPage({
           ["Location", entry.location],
           ["Scale", entry.scale],
           ["Contract package", entry.contractPackage],
-          ["Completion", entry.expectedCompletion ?? entry.year],
+          [
+            entry.expectedCompletion ? "Expected completion" : "Project year",
+            entry.expectedCompletion ?? entry.year,
+          ],
           ["Status", entry.status],
         ].filter((item): item is [string, string] => Boolean(item[1]))
       : [];
   const courseProfile =
     kind === "course"
       ? [
-          ["Duration", entry.duration],
-          ["Level", entry.level],
+          ["Duration", entry.duration || entry.eyebrow.split("·")[1]?.trim()],
+          ["Level", entry.level || entry.eyebrow.split("·")[0]?.trim()],
           ["Price", entry.price],
           ["Instructor", entry.instructor],
         ].filter((item): item is [string, string] => Boolean(item[1]))
@@ -154,9 +157,9 @@ export function DetailPage({
           href: index < breadcrumbItems.length - 1 ? item.path : undefined,
         }))}
       />
-      <article className="bg-background py-16 lg:py-24">
+      <article className="bg-background py-8 lg:py-12">
         <div className="site-container">
-          <div className="mb-12 flex flex-wrap items-center justify-between gap-4 border-b pb-6">
+          <div className="mb-7 flex flex-wrap items-center justify-between gap-3 border-b pb-5">
             <Button asChild variant="ghost" className="px-0">
               <Link href={backHref}>
                 <ArrowLeft /> {backLabel}
@@ -166,7 +169,7 @@ export function DetailPage({
               <p className="flex flex-wrap gap-x-4 text-sm text-muted-foreground">
                 {entry.publishedAt && (
                   <time dateTime={entry.publishedAt}>
-                    {new Intl.DateTimeFormat("vi-VN", {
+                    {new Intl.DateTimeFormat("en-GB", {
                       dateStyle: "long",
                       timeZone: "UTC",
                     }).format(new Date(entry.publishedAt))}
@@ -183,11 +186,61 @@ export function DetailPage({
               </p>
             )}
           </div>
+          {projectProfile.length > 0 && (
+            <dl className="mb-8 grid grid-cols-2 gap-x-6 gap-y-4 rounded-xl border bg-card p-5 md:grid-cols-3">
+              {projectProfile.map(([label, value]) => (
+                <div key={label}>
+                  <dt className="text-xs font-medium text-muted-foreground">
+                    {label}
+                  </dt>
+                  <dd className="mt-1 text-sm font-semibold leading-6">
+                    {value}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+          )}
+          <div className="mb-8 flex flex-wrap items-center justify-between gap-4 rounded-xl border bg-muted/50 p-4">
+            <nav aria-label="On this page" className="min-w-0 flex-1">
+              <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                On this page
+              </p>
+              <ul className="flex flex-wrap gap-x-5 gap-y-2">
+                {blocks
+                  .filter(
+                    (block) => block.type === "rich-text" && block.heading,
+                  )
+                  .map((block) => (
+                    <li key={block.id}>
+                      <a
+                        className="inline-block py-1 text-sm font-medium text-primary underline-offset-4 hover:underline"
+                        href={`#block-${block.id}`}
+                      >
+                        {block.type === "rich-text" ? block.heading : ""}
+                      </a>
+                    </li>
+                  ))}
+              </ul>
+            </nav>
+            {kind !== "article" && (
+              <Button asChild className="shrink-0">
+                <a href="#detail-enquiry">
+                  {kind === "course"
+                    ? "Enquire about this programme"
+                    : "Discuss your project"}{" "}
+                  <ArrowUpRight />
+                </a>
+              </Button>
+            )}
+          </div>
           <div className="grid items-start gap-12 lg:grid-cols-[minmax(0,1fr)_22rem] lg:gap-16">
             <div className="min-w-0">
               <ContentBlockRenderer blocks={blocks} />
             </div>
-            <Card className="gap-0 overflow-hidden rounded-3xl bg-brand-ink p-0 text-white ring-0 lg:sticky lg:top-28">
+            <Card
+              id="detail-enquiry"
+              className="scroll-mt-28 gap-0 overflow-hidden rounded-2xl bg-brand-ink p-0 text-white ring-0"
+            >
               <CardHeader className="border-b border-white/10 p-6">
                 <Badge className="mb-3 w-fit bg-white/10 text-white">
                   {uiLabels[kind].aside}
@@ -197,23 +250,6 @@ export function DetailPage({
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-6">
-                {projectProfile.length > 0 && (
-                  <dl className="mb-6">
-                    {projectProfile.map(([label, value]) => (
-                      <div
-                        className="border-b border-white/10 py-3"
-                        key={label}
-                      >
-                        <dt className="text-[10px] font-semibold uppercase tracking-wider text-white/45">
-                          {label}
-                        </dt>
-                        <dd className="mt-1 text-sm leading-6 text-white/85">
-                          {value}
-                        </dd>
-                      </div>
-                    ))}
-                  </dl>
-                )}
                 {courseProfile.length > 0 && (
                   <dl className="mb-6">
                     {courseProfile.map(([label, value]) => (
@@ -221,7 +257,7 @@ export function DetailPage({
                         className="border-b border-white/10 py-3"
                         key={label}
                       >
-                        <dt className="text-[10px] font-semibold uppercase tracking-wider text-white/45">
+                        <dt className="text-xs font-medium text-white/75">
                           {label}
                         </dt>
                         <dd className="mt-1 text-sm leading-6 text-white/85">

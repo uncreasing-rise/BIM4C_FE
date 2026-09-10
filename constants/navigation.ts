@@ -5,7 +5,7 @@ export const MAIN_NAVIGATION = [
   { label: "Solutions", href: ROUTES.services },
   { label: "Projects", href: ROUTES.projects },
   { label: "Academy", href: ROUTES.courses },
-  { label: "Blog", href: ROUTES.blog },
+  { label: "Insights", href: ROUTES.blog },
 ] as const;
 
 export const HEADER_MENUS = {

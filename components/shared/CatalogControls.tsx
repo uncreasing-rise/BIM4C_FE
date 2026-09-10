@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { ChevronLeft, ChevronRight, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,14 +31,14 @@ export function CatalogCategories({
 }) {
   return (
     <nav
-      className="flex max-w-full items-center gap-2 overflow-x-auto py-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      className="flex max-w-full items-center gap-2 overflow-x-auto pb-3 pt-2 [scrollbar-width:thin] [scrollbar-color:var(--border)_transparent]"
       aria-label={ariaLabel}
     >
       {items.map((item) => (
         <Button
           variant="ghost"
           className={cn(
-            "h-10 shrink-0 rounded-full border px-4 text-muted-foreground shadow-none hover:border-primary/30 hover:bg-primary/5 hover:text-primary",
+            "min-h-11 shrink-0 rounded-full border px-4 text-muted-foreground shadow-none hover:border-primary/30 hover:bg-primary/5 hover:text-primary",
             value === item &&
               "border-primary bg-primary text-primary-foreground hover:bg-primary-hover hover:text-primary-foreground",
           )}
@@ -100,22 +101,30 @@ export function CatalogSelect({
   formatLabel?: (item: string) => string;
 }) {
   return (
-    <Select value={value} onValueChange={onChange}>
-      <SelectTrigger
-        className="h-12! w-full rounded-xl border-0 bg-muted/55 px-4 shadow-none"
-        aria-label={label}
+    <div className="min-w-0 rounded-xl bg-muted/55 px-3 pb-1.5 pt-2">
+      <span
+        aria-hidden="true"
+        className="block text-xs font-medium text-muted-foreground"
       >
-        <SelectValue placeholder={label} />
-      </SelectTrigger>
-      <SelectContent>
-        <SelectItem value="All">All</SelectItem>
-        {values.map((item) => (
-          <SelectItem value={item} key={item}>
-            {formatLabel(item)}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
+        {label}
+      </span>
+      <Select value={value} onValueChange={onChange}>
+        <SelectTrigger
+          className="h-9! w-full rounded-lg border-0 bg-transparent px-0 shadow-none"
+          aria-label={label}
+        >
+          <SelectValue placeholder={label} />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="All">All</SelectItem>
+          {values.map((item) => (
+            <SelectItem value={item} key={item}>
+              {formatLabel(item)}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
   );
 }
 
@@ -130,13 +139,18 @@ export function CatalogPagination({
   pages: number;
   pathname: string;
 }) {
+  const searchParams = useSearchParams();
   if (pages <= 1) return null;
 
   const changePage = (trigger: HTMLElement) => {
     scrollToElementTop(trigger.closest("section"));
   };
-  const href = (number: number) =>
-    number === 1 ? pathname : `${pathname}?page=${number}`;
+  const href = (number: number) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (number === 1) params.delete("page");
+    else params.set("page", String(number));
+    return `${pathname}${params.size ? `?${params}` : ""}`;
+  };
 
   const pageItems = Array.from(
     { length: pages },
@@ -155,15 +169,18 @@ export function CatalogPagination({
         asChild
         variant="outline"
         size="icon"
-        className="rounded-full"
-      aria-label={page === 1 ? "Already on the first page" : "Previous page"}
+        className="size-11 rounded-full aria-disabled:pointer-events-none aria-disabled:opacity-40"
+        aria-label={page === 1 ? "Already on the first page" : "Previous page"}
       >
         <Link
           aria-disabled={page === 1}
           tabIndex={page === 1 ? -1 : undefined}
           href={href(Math.max(1, page - 1))}
           scroll={false}
-          onClick={(event) => changePage(event.currentTarget)}
+          onClick={(event) => {
+            if (page === 1) event.preventDefault();
+            else changePage(event.currentTarget);
+          }}
         >
           <ChevronLeft />
         </Link>
@@ -179,7 +196,7 @@ export function CatalogPagination({
             asChild
             variant={page === number ? "default" : "outline"}
             size="icon"
-            className="rounded-full"
+            className="size-11 rounded-full"
             aria-label={`Page ${number}`}
             aria-current={page === number ? "page" : undefined}
           >
@@ -197,15 +214,18 @@ export function CatalogPagination({
         asChild
         variant="outline"
         size="icon"
-        className="rounded-full"
-      aria-label={page === pages ? "Already on the last page" : "Next page"}
+        className="size-11 rounded-full aria-disabled:pointer-events-none aria-disabled:opacity-40"
+        aria-label={page === pages ? "Already on the last page" : "Next page"}
       >
         <Link
           aria-disabled={page === pages}
           tabIndex={page === pages ? -1 : undefined}
           href={href(Math.min(pages, page + 1))}
           scroll={false}
-          onClick={(event) => changePage(event.currentTarget)}
+          onClick={(event) => {
+            if (page === pages) event.preventDefault();
+            else changePage(event.currentTarget);
+          }}
         >
           <ChevronRight />
         </Link>

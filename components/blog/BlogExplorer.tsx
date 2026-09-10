@@ -2,8 +2,8 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
+import { useCatalogFilters } from "@/components/shared/useCatalogFilters";
 import { parsePage } from "@/lib/seo/listing";
 import {
   CatalogCategories,
@@ -36,23 +36,9 @@ export function BlogExplorer({ posts }: { posts: ContentEntry[] }) {
     () => ["All", ...new Set(sortedPosts.map((item) => item.eyebrow))],
     [sortedPosts],
   );
-  const searchParams = useSearchParams();
-  const [category, setCategory] = useState(
-    searchParams.get("category") ?? "All",
-  );
-  const [query, setQuery] = useState(searchParams.get("q") ?? "");
-  const router = useRouter();
-  const page = parsePage(searchParams.get("page"));
-  const updateUrl = (key: string, value: string) => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.delete("page");
-    if (!value || value === "All") params.delete(key);
-    else params.set(key, value);
-    const queryString = params.toString();
-    router.replace(`${ROUTES.blog}${queryString ? `?${queryString}` : ""}`, {
-      scroll: false,
-    });
-  };
+  const { searchParams, query, setQuery, update, reset, pending } =
+    useCatalogFilters();
+  const category = searchParams.get("category") ?? "All";
   const filtered = useMemo(
     () =>
       sortedPosts.filter(
@@ -66,16 +52,17 @@ export function BlogExplorer({ posts }: { posts: ContentEntry[] }) {
     [sortedPosts, category, query],
   );
   const pages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const page = Math.min(parsePage(searchParams.get("page")), pages);
   const visible = filtered.slice((page - 1) * pageSize, page * pageSize);
 
   return (
-    <section className="bg-background py-20 lg:py-24">
+    <section className="bg-background py-12 lg:py-16" aria-busy={pending}>
       <div className="site-container">
         <header className="mb-8 grid gap-4 border-b pb-8 md:grid-cols-[.8fr_1.2fr] md:items-end">
           <div>
-            <p className="eyebrow">Tin tức &amp; sự kiện</p>
+            <p className="eyebrow">News &amp; insights</p>
             <h2 className="text-3xl font-semibold tracking-[-.04em] md:text-5xl">
-              Những câu chuyện về xây dựng số
+              Practical perspectives on digital construction
             </h2>
           </div>
           <p className="max-w-xl text-sm leading-7 text-muted-foreground md:justify-self-end">
@@ -89,8 +76,7 @@ export function BlogExplorer({ posts }: { posts: ContentEntry[] }) {
           value={category}
           formatLabel={naturalCase}
           onChange={(value) => {
-            setCategory(value);
-            updateUrl("category", value);
+            update("category", value);
           }}
         />
         <CatalogFilterBar>
@@ -98,13 +84,18 @@ export function BlogExplorer({ posts }: { posts: ContentEntry[] }) {
             label="Search insights"
             placeholder="Search insights"
             value={query}
-            onChange={(value) => {
-              setQuery(value);
-              updateUrl("q", value);
-            }}
+            onChange={setQuery}
           />
         </CatalogFilterBar>
-        <p className="mb-5 text-[12px] text-muted-foreground">
+        {(query || category !== "All") && (
+          <button
+            className="mb-4 min-h-11 rounded-lg px-3 text-sm font-semibold text-primary hover:bg-muted"
+            onClick={reset}
+          >
+            Clear filters
+          </button>
+        )}
+        <p role="status" className="mb-5 text-sm text-muted-foreground">
           <strong className="font-semibold text-foreground">
             {filtered.length}
           </strong>{" "}
@@ -117,7 +108,7 @@ export function BlogExplorer({ posts }: { posts: ContentEntry[] }) {
                 className={
                   index === 0
                     ? "group relative flex min-w-0 flex-col border-b pb-8 lg:row-span-4"
-                    : "group relative grid min-w-0 grid-cols-[8rem_1fr] gap-5 border-b py-6 lg:col-start-2"
+                    : "group relative grid min-w-0 grid-cols-[5rem_minmax(0,1fr)] gap-4 border-b py-6 sm:grid-cols-[8rem_minmax(0,1fr)] lg:col-start-2"
                 }
                 key={item.slug}
               >

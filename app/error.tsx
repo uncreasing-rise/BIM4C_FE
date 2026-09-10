@@ -3,16 +3,16 @@
 import { ErrorState } from "@/components/ui/ErrorState";
 
 export default function GlobalError({
-  reset,
+  retry,
 }: {
   error: Error & { digest?: string };
-  reset: () => void;
+  retry: () => void;
 }) {
   return (
-    <main className="mx-auto my-16 w-[calc(100%_-_32px)] max-w-[1220px]">
+    <main className="site-container pb-16 pt-32">
       <ErrorState
         message="This content is temporarily unavailable. Please try again."
-        onRetry={reset}
+        onRetry={retry}
       />
     </main>
   );

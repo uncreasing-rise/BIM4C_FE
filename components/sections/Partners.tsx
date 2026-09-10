@@ -1,8 +1,4 @@
-"use client";
-
 import Image from "next/image";
-import { Pause, Play } from "lucide-react";
-import { useState } from "react";
 
 const partners = [
   ["Masterise Homes", "/images/partners/transparent/masterise.png"],
@@ -12,73 +8,40 @@ const partners = [
 ] as const;
 
 export function Partners({ compact = false }: { compact?: boolean }) {
-  const [paused, setPaused] = useState(false);
   return (
-    <section className="relative overflow-hidden bg-brand-ink text-white">
-      <div className="absolute -left-32 top-1/2 size-80 -translate-y-1/2 rounded-full bg-primary/10 blur-3xl" />
+    <section className="bg-brand-ink text-white" aria-label="Selected partners">
       <div
-        className={`site-container relative ${compact ? "py-14" : "py-20 lg:py-24"}`}
+        className={
+          compact ? "site-container py-12" : "site-container py-16 lg:py-20"
+        }
       >
-        <div className="grid gap-12 lg:grid-cols-[.78fr_1.22fr] lg:items-center lg:gap-20">
-          <div data-motion="reveal">
+        <div className="grid gap-8 lg:grid-cols-[.8fr_1.2fr] lg:items-center lg:gap-16">
+          <div>
             <p className="eyebrow">Selected partners</p>
-            <h2 className="max-w-xl text-balance text-4xl font-semibold leading-[1.05] tracking-[-.05em] sm:text-5xl">
-              Shared ambition. Long-term value.
+            <h2 className="text-3xl font-semibold leading-tight tracking-tight sm:text-4xl">
+              Built on collaboration.
             </h2>
-            <p className="mt-6 max-w-lg text-sm leading-7 text-zinc-400">
-              BIM4C works with leading owners and contractors to turn project
-              data into measurable quality, progress and performance.
+            <p className="mt-4 max-w-lg text-base leading-7 text-zinc-300">
+              Working with project owners and contractors to connect expertise,
+              information and delivery.
             </p>
-            <div className="mt-9 flex items-end gap-4 border-t border-white/10 pt-6">
-              <strong className="text-5xl font-semibold tracking-[-.05em] text-primary">
-                120+
-              </strong>
-              <span className="max-w-32 pb-1 text-xs font-medium uppercase leading-5 tracking-[.12em] text-zinc-500">
-                Trusted clients &amp; partners
-              </span>
-            </div>
           </div>
-          <div className="partner-marquee py-3" data-motion="reveal">
-            <div
-              className="partner-track"
-              style={{ animationPlayState: paused ? "paused" : "running" }}
-              onMouseEnter={() => setPaused(true)}
-              onMouseLeave={() => setPaused(false)}
-              onFocus={() => setPaused(true)}
-              onBlur={() => setPaused(false)}
-            >
-              {[...partners, ...partners].map(([name, src], index) => (
-                <div
-                  className="group grid h-36 w-56 shrink-0 place-items-center rounded-2xl border border-white/10 bg-white/[.06] p-7 transition-colors hover:border-primary/40 hover:bg-white/10 sm:w-64"
-                  key={`${name}-${index}`}
-                  aria-hidden={index >= partners.length}
-                >
-                  <Image
-                    className="max-h-16 w-auto max-w-[85%] object-contain opacity-80 transition-all duration-500 group-hover:scale-105 group-hover:opacity-100"
-                    src={src}
-                    alt={index < partners.length ? name : ""}
-                    width={200}
-                    height={80}
-                  />
-                </div>
-              ))}
-            </div>
-            <div className="mt-4 flex items-center justify-center gap-3 text-[10px] font-medium uppercase tracking-[.16em] text-zinc-500">
-              <button
-                type="button"
-                className="inline-flex min-h-9 items-center gap-2 rounded-full border border-white/15 px-3 transition hover:border-primary hover:text-white"
-                onClick={() => setPaused((value) => !value)}
-                aria-pressed={paused}
+          <ul className="grid grid-cols-2 gap-3">
+            {partners.map(([name, src]) => (
+              <li
+                key={name}
+                className="grid min-h-28 place-items-center rounded-xl border border-white/15 bg-white/[.06] p-5"
               >
-                {paused ? (
-                  <Play className="size-3" />
-                ) : (
-                  <Pause className="size-3" />
-                )}
-                {paused ? "Play partners" : "Pause partners"}
-              </button>
-            </div>
-          </div>
+                <Image
+                  src={src}
+                  alt={name}
+                  width={200}
+                  height={80}
+                  className="h-14 w-full max-w-40 object-contain"
+                />
+              </li>
+            ))}
+          </ul>
         </div>
       </div>
     </section>

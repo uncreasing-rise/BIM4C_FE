@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { listingMetadata, normalizedPageRedirect, type ListingSearchParams } from "@/lib/seo/listing";
+import {
+  listingMetadata,
+  normalizedPageRedirect,
+  type ListingSearchParams,
+} from "@/lib/seo/listing";
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -9,12 +13,34 @@ import { ROUTES } from "@/constants/routes";
 import { getServices } from "@/features/services/api/queries";
 import { ServiceExplorer } from "@/components/services/ServiceExplorer";
 
-const description = "BIM consulting, design, training and construction advisory solutions from BIM4C.";
-export async function generateMetadata({ searchParams }: { searchParams: Promise<ListingSearchParams> }): Promise<Metadata> { return listingMetadata("Solutions", description, ROUTES.services, await searchParams); }
+const description =
+  "BIM consulting, design, training and construction advisory solutions from BIM4C.";
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<ListingSearchParams>;
+}): Promise<Metadata> {
+  return listingMetadata(
+    "Solutions",
+    description,
+    ROUTES.services,
+    await searchParams,
+  );
+}
 
-export default async function ServicesPage({ searchParams }: { searchParams: Promise<ListingSearchParams> }) {
+export default async function ServicesPage({
+  searchParams,
+}: {
+  searchParams: Promise<ListingSearchParams>;
+}) {
   const services = await getServices();
-  const destination = normalizedPageRedirect(ROUTES.services, await searchParams, services.length, 4); if (destination) redirect(destination);
+  const destination = normalizedPageRedirect(
+    ROUTES.services,
+    await searchParams,
+    services.length,
+    6,
+  );
+  if (destination) redirect(destination);
   return (
     <main>
       <PageHero

@@ -2,9 +2,9 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowUpRight, Check } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
+import { useCatalogFilters } from "@/components/shared/useCatalogFilters";
 import {
   CatalogCategories,
   CatalogFilterBar,
@@ -17,7 +17,7 @@ import type { ContentEntry } from "@/types/content";
 import { parsePage } from "@/lib/seo/listing";
 import { toEnglishLabel } from "@/lib/utils/public-labels";
 
-const pageSize = 4;
+const pageSize = 6;
 
 export function ServiceExplorer({ services }: { services: ContentEntry[] }) {
   const categories = useMemo(
@@ -29,24 +29,9 @@ export function ServiceExplorer({ services }: { services: ContentEntry[] }) {
     ],
     [services],
   );
-  const searchParams = useSearchParams();
-  const [category, setCategory] = useState(
-    searchParams.get("category") ?? "All",
-  );
-  const [query, setQuery] = useState(searchParams.get("q") ?? "");
-  const router = useRouter();
-  const page = parsePage(searchParams.get("page"));
-  const updateUrl = (key: string, value: string) => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.delete("page");
-    if (!value || value === "All") params.delete(key);
-    else params.set(key, value);
-    const queryString = params.toString();
-    router.replace(
-      `${ROUTES.services}${queryString ? `?${queryString}` : ""}`,
-      { scroll: false },
-    );
-  };
+  const { searchParams, query, setQuery, update, reset, pending } =
+    useCatalogFilters();
+  const category = searchParams.get("category") ?? "All";
   const filtered = useMemo(() => {
     const normalizedQuery = query.trim().toLocaleLowerCase("vi");
     return services.filter((service) => {
@@ -61,43 +46,50 @@ export function ServiceExplorer({ services }: { services: ContentEntry[] }) {
     });
   }, [category, query, services]);
   const pages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const page = Math.min(parsePage(searchParams.get("page")), pages);
   const visible = filtered.slice((page - 1) * pageSize, page * pageSize);
 
   return (
-    <section className="py-20 lg:py-28" id="service-list">
-      <div className="site-container grid gap-12 lg:grid-cols-[.78fr_1.22fr] lg:gap-16">
-        <header className="self-start lg:sticky lg:top-28">
-          <p className="eyebrow">Solution catalogue</p>
-          <h2 className="text-balance text-4xl font-semibold leading-[1.06] tracking-[-.05em] sm:text-5xl">
-            Đúng giải pháp. Đúng thời điểm.
-          </h2>
-          <p className="mt-6 max-w-lg text-base leading-7 text-muted-foreground">
-            BIM4C kết hợp chuyên môn xây dựng, quy trình số và năng lực triển
-            khai để giải quyết bài toán riêng của từng tổ chức.
+    <section className="py-12 lg:py-16" id="service-list" aria-busy={pending}>
+      <div className="site-container">
+        <header className="mb-7 flex flex-col justify-between gap-4 border-b pb-6 md:flex-row md:items-end">
+          <div>
+            <p className="eyebrow">Solution catalogue</p>
+            <h2 className="section-title">Expertise that fits your project.</h2>
+          </div>
+          <p className="max-w-md text-sm leading-7 text-muted-foreground">
+            From BIM strategy to coordinated models and asset information, find
+            support that fits your project stage and your team.
           </p>
         </header>
         <div>
-          <CatalogCategories
-            ariaLabel="Solution categories"
-            items={categories}
-            value={category}
-            formatLabel={toEnglishLabel}
-            onChange={(value) => {
-              setCategory(value);
-              updateUrl("category", value);
-            }}
-          />
+          {categories.length > 2 && (
+            <CatalogCategories
+              ariaLabel="Solution categories"
+              items={categories}
+              value={category}
+              formatLabel={toEnglishLabel}
+              onChange={(value) => {
+                update("category", value);
+              }}
+            />
+          )}
           <CatalogFilterBar>
             <CatalogSearch
               label="Search solutions"
               placeholder="Search by name, goal or capability"
               value={query}
-              onChange={(value) => {
-                setQuery(value);
-                updateUrl("q", value);
-              }}
+              onChange={setQuery}
             />
           </CatalogFilterBar>
+          {(query || category !== "All") && (
+            <button
+              className="mb-4 min-h-11 rounded-lg px-3 text-sm font-semibold text-primary hover:bg-muted"
+              onClick={reset}
+            >
+              Clear filters
+            </button>
+          )}
           <p
             className="mb-5 text-xs text-muted-foreground"
             role="status"
@@ -109,18 +101,18 @@ export function ServiceExplorer({ services }: { services: ContentEntry[] }) {
             matching solutions
           </p>
           {visible.length ? (
-            <div className="border-t">
+            <div className="grid gap-6 md:grid-cols-2">
               {visible.map((service, index) => (
                 <article
-                  className="group relative grid gap-6 border-b py-7 sm:grid-cols-[12rem_1fr] sm:items-center lg:grid-cols-[14rem_1fr]"
+                  className="group relative overflow-hidden rounded-xl border bg-card transition-shadow hover:shadow-lg"
                   key={service.slug}
                 >
-                  <div className="relative aspect-[4/3] overflow-hidden rounded-2xl">
+                  <div className="relative aspect-[16/7] overflow-hidden bg-muted">
                     <Image
                       src={service.image}
                       alt={service.title}
                       fill
-                      sizes="(max-width:639px) 100vw, 224px"
+                      sizes="(max-width:767px) 100vw, 50vw"
                       className="object-cover transition-transform duration-700 group-hover:scale-105"
                     />
                     <span className="absolute left-4 top-4 rounded-full bg-black/45 px-3 py-1 text-xs font-semibold text-white backdrop-blur">
@@ -130,7 +122,7 @@ export function ServiceExplorer({ services }: { services: ContentEntry[] }) {
                       )}
                     </span>
                   </div>
-                  <div>
+                  <div className="p-6">
                     <p className="text-xs font-semibold uppercase tracking-[.16em] text-primary">
                       BIM4C solution
                     </p>
