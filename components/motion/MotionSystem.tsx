@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useLayoutEffect } from "react";
 import { usePathname } from "next/navigation";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -9,26 +9,18 @@ gsap.registerPlugin(ScrollTrigger);
 
 export function MotionSystem() {
   const pathname = usePathname();
-  useEffect(() => {
+  useLayoutEffect(() => {
     const root = document.getElementById("main-content");
     if (!root) return;
-    let cancelled = false;
-    let context: gsap.Context | undefined;
-    let media: gsap.MatchMedia | undefined;
-    const startupTimer = window.setTimeout(() => {
-        if (cancelled) return;
-        const motionMedia = gsap.matchMedia();
-        media = motionMedia;
-        const cleanups: Array<() => void> = [];
-        context = gsap.context(() => {
+    const motionMedia = gsap.matchMedia();
+    const cleanups: Array<() => void> = [];
+    const context = gsap.context(() => {
       motionMedia.add("(prefers-reduced-motion: reduce)", () => {
         gsap.set(root.querySelectorAll("[data-motion]"), { clearProps: "all" });
       });
       motionMedia.add("(prefers-reduced-motion: no-preference)", () => {
-        const main = root.querySelector("main");
         const hero = root.querySelector<HTMLElement>("[data-motion='hero']");
         const heroItems = hero ? hero.querySelectorAll<HTMLElement>(":scope > *") : [];
-        if (main) gsap.fromTo(main, { y: 8 }, { y: 0, duration: 0.45, ease: "power2.out", clearProps: "transform" });
         if (heroItems.length) gsap.fromTo(heroItems, { y: 16 }, { y: 0, duration: 0.55, stagger: 0.06, delay: 0.04, ease: "power2.out", clearProps: "transform" });
         root.querySelectorAll<HTMLElement>("[data-motion='parallax']").forEach((element) => gsap.fromTo(element, { scale: 1.03, yPercent: -1 }, { scale: 1, yPercent: 1, ease: "none", scrollTrigger: { trigger: element, start: "top bottom", end: "bottom top", scrub: 1.2 } }));
         root.querySelectorAll<HTMLElement>("[data-motion='reveal']").forEach((element) => gsap.fromTo(element, { y: 18 }, { y: 0, duration: 0.55, ease: "power2.out", clearProps: "transform", scrollTrigger: { trigger: element, start: "top 86%", once: true } }));
@@ -48,14 +40,11 @@ export function MotionSystem() {
           cleanups.push(() => { element.removeEventListener("pointermove", move); element.removeEventListener("pointerleave", leave); });
         });
       });
-        }, root);
-        context.add(() => cleanups.forEach((cleanup) => cleanup()));
-    }, 500);
+    }, root);
+    context.add(() => cleanups.forEach((cleanup) => cleanup()));
     return () => {
-      cancelled = true;
-      window.clearTimeout(startupTimer);
       context?.revert();
-      media?.revert();
+      motionMedia.revert();
     };
   }, [pathname]);
   return null;

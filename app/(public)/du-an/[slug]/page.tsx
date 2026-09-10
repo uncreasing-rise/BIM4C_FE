@@ -26,7 +26,7 @@ export default async function ProjectDetail({
   const { slug } = await params;
   const [entry, projects] = await Promise.all([
     getProjectBySlug(slug),
-    getProjects(),
+    getProjects({ limit: 6 }),
   ]);
   if (!entry) notFound();
   return (

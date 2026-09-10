@@ -14,10 +14,10 @@ import { DeliveryProcess } from "@/components/sections/DeliveryProcess";
 
 export default async function Home() {
   const [projects, services, posts, courses] = await Promise.all([
-    getProjects(),
-    getServices(),
+    getProjects({ limit: 3 }),
+    getServices({ limit: 6 }),
     getPosts({ limit: 3 }),
-    getCourses(),
+    getCourses({ limit: 3 }),
   ]);
   const featured =
     projects.find((project) => project.category === "High-rise") ?? projects[0];

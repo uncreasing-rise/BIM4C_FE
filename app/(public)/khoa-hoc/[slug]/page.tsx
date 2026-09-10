@@ -26,7 +26,7 @@ export default async function CourseDetail({
   const { slug } = await params;
   const [entry, courses] = await Promise.all([
     getCourseBySlug(slug),
-    getCourses(),
+    getCourses({ limit: 6 }),
   ]);
   if (!entry) notFound();
   return (

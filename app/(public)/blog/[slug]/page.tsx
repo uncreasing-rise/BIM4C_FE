@@ -25,7 +25,10 @@ export default async function BlogDetail({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const [entry, posts] = await Promise.all([getPostBySlug(slug), getPosts()]);
+  const [entry, posts] = await Promise.all([
+    getPostBySlug(slug),
+    getPosts({ limit: 6 }),
+  ]);
   if (!entry) notFound();
   const candidates = posts.filter((post) => post.slug !== slug);
   const related = selectRelatedContent(entry, candidates);

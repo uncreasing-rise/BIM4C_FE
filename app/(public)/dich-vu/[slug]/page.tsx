@@ -24,7 +24,10 @@ export default async function ServiceDetail({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const [entry, services] = await Promise.all([getServiceBySlug(slug), getServices()]);
+  const [entry, services] = await Promise.all([
+    getServiceBySlug(slug),
+    getServices({ limit: 6 }),
+  ]);
   if (!entry) notFound();
   return (
     <main>

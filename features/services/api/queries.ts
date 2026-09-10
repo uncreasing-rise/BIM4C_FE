@@ -15,13 +15,13 @@ import type { PageResult } from "@/features/shared/types/pagination";
 import type { ContentQueryParams } from "@/features/shared/types/query";
 
 export async function getServices(
-  options: { strict?: boolean } = {},
+  options: { strict?: boolean; limit?: number } = {},
 ): Promise<ContentEntry[]> {
   if (env.useMockApi) return serviceEntries;
   try {
     const response = await apiClient.get<
       ApiResponse<ContentEntryDto[]> | ContentEntryDto[]
-    >(API_ENDPOINTS.services.list, {
+    >(withQueryParams(API_ENDPOINTS.services.list, { limit: options.limit }), {
       next: { revalidate: 600, tags: ["services"] },
     });
     return unwrapPage<ContentEntryDto>(response).items.map(mapContentDto);

@@ -15,13 +15,13 @@ import type { PageResult } from "@/features/shared/types/pagination";
 import type { ContentQueryParams } from "@/features/shared/types/query";
 
 export async function getCourses(
-  options: { strict?: boolean } = {},
+  options: { strict?: boolean; limit?: number } = {},
 ): Promise<ContentEntry[]> {
   if (env.useMockApi) return courseEntries;
   try {
     const response = await apiClient.get<
       ApiResponse<ContentEntryDto[]> | ContentEntryDto[]
-    >(API_ENDPOINTS.courses.list, {
+    >(withQueryParams(API_ENDPOINTS.courses.list, { limit: options.limit }), {
       next: { revalidate: 600, tags: ["courses"] },
     });
     return unwrapPage<ContentEntryDto>(response).items.map(mapContentDto);
