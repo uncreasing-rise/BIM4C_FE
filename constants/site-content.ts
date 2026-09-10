@@ -15,12 +15,12 @@ export const heroSlides = [
     title: ["KIẾN TẠO", "GIÁ TRỊ BỀN VỮNG"],
   },
   {
-    image: "/images/project-lumi.jpg",
+    image: "/images/news-project-coordination.webp",
     eyebrow: "DỰ ÁN TIÊU BIỂU",
     title: ["CHẤT LƯỢNG", "TẠO NÊN UY TÍN"],
   },
   {
-    image: "/images/project-matrix.jpg",
+    image: "/images/news-digital-twin.webp",
     eyebrow: "CÔNG NGHỆ BIM",
     title: ["CHUYỂN ĐỔI SỐ", "NGÀNH XÂY DỰNG"],
   },

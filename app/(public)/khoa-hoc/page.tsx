@@ -1,13 +1,29 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { listingMetadata, normalizedPageRedirect, type ListingSearchParams } from "@/lib/seo/listing";
+import {
+  listingMetadata,
+  normalizedPageRedirect,
+  type ListingSearchParams,
+} from "@/lib/seo/listing";
 import { ROUTES } from "@/constants/routes";
 import { PageHero } from "@/components/shared/PageHero";
 import { CourseExplorer } from "@/components/courses/CourseExplorer";
-import { getCourses } from "@/features/courses/api/queries";
+import { getCoursesPage } from "@/features/courses/api/queries";
 
-const description = "Practical BIM training for engineers, project teams and organizations.";
-export async function generateMetadata({ searchParams }: { searchParams: Promise<ListingSearchParams> }): Promise<Metadata> { return listingMetadata("Academy", description, ROUTES.courses, await searchParams); }
+const description =
+  "Practical BIM training for engineers, project teams and organizations.";
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<ListingSearchParams>;
+}): Promise<Metadata> {
+  return listingMetadata(
+    "Academy",
+    description,
+    ROUTES.courses,
+    await searchParams,
+  );
+}
 const learningValues = [
   [
     "Project-based practice",
@@ -23,9 +39,28 @@ const learningValues = [
   ],
 ] as const;
 
-export default async function CoursesPage({ searchParams }: { searchParams: Promise<ListingSearchParams> }) {
-  const courses = await getCourses();
-  const destination = normalizedPageRedirect(ROUTES.courses, await searchParams, courses.length, 6); if (destination) redirect(destination);
+export default async function CoursesPage({
+  searchParams,
+}: {
+  searchParams: Promise<ListingSearchParams>;
+}) {
+  const params = await searchParams;
+  const coursesPage = await getCoursesPage({
+    page: Number(params.page ?? 1),
+    limit: 6,
+    search: typeof params.q === "string" ? params.q : undefined,
+    category:
+      typeof params.category === "string" && params.category !== "All"
+        ? params.category
+        : undefined,
+  });
+  const destination = normalizedPageRedirect(
+    ROUTES.courses,
+    params,
+    coursesPage.meta.total,
+    6,
+  );
+  if (destination) redirect(destination);
   return (
     <main>
       <PageHero
@@ -34,7 +69,7 @@ export default async function CoursesPage({ searchParams }: { searchParams: Prom
         description="Practical BIM programmes shaped by real project delivery experience."
         image="/images/news-bim-training.webp"
       />
-      <CourseExplorer courses={courses} />
+      <CourseExplorer courses={coursesPage.items} meta={coursesPage.meta} />
       <section className="bg-muted py-14 text-foreground lg:py-16">
         <div className="mx-auto grid w-[calc(100%_-_32px)] max-w-[1200px] gap-9 md:w-[calc(100%_-_48px)] lg:grid-cols-[.7fr_1.3fr] lg:gap-20">
           <header>
@@ -57,7 +92,9 @@ export default async function CoursesPage({ searchParams }: { searchParams: Prom
                 <h3 className="text-[17px] font-semibold text-foreground">
                   {title}
                 </h3>
-                <p className="text-[14px] leading-[1.65] text-muted-foreground">{text}</p>
+                <p className="text-[14px] leading-[1.65] text-muted-foreground">
+                  {text}
+                </p>
               </article>
             ))}
           </div>

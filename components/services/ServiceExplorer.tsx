@@ -3,7 +3,6 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowUpRight, Check } from "lucide-react";
-import { useMemo } from "react";
 import { useCatalogFilters } from "@/components/shared/useCatalogFilters";
 import {
   CatalogCategories,
@@ -14,40 +13,28 @@ import {
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ROUTES } from "@/constants/routes";
 import type { ContentEntry } from "@/types/content";
-import { parsePage } from "@/lib/seo/listing";
 import { toEnglishLabel } from "@/lib/utils/public-labels";
+import type { PageMeta } from "@/features/shared/types/pagination";
 
 const pageSize = 6;
 
-export function ServiceExplorer({ services }: { services: ContentEntry[] }) {
-  const categories = useMemo(
-    () => [
-      "All",
-      ...new Set(
-        services.map((service) => service.category || service.eyebrow),
-      ),
-    ],
-    [services],
-  );
+export function ServiceExplorer({
+  services,
+  meta,
+}: {
+  services: ContentEntry[];
+  meta: PageMeta;
+}) {
+  const categories = [
+    "All",
+    ...new Set(services.map((service) => service.category || service.eyebrow)),
+  ];
   const { searchParams, query, setQuery, update, reset, pending } =
     useCatalogFilters();
   const category = searchParams.get("category") ?? "All";
-  const filtered = useMemo(() => {
-    const normalizedQuery = query.trim().toLocaleLowerCase("vi");
-    return services.filter((service) => {
-      const serviceCategory = service.category || service.eyebrow;
-      return (
-        (category === "All" || serviceCategory === category) &&
-        (!normalizedQuery ||
-          `${service.title} ${service.description} ${service.highlights.join(" ")}`
-            .toLocaleLowerCase("vi")
-            .includes(normalizedQuery))
-      );
-    });
-  }, [category, query, services]);
-  const pages = Math.max(1, Math.ceil(filtered.length / pageSize));
-  const page = Math.min(parsePage(searchParams.get("page")), pages);
-  const visible = filtered.slice((page - 1) * pageSize, page * pageSize);
+  const pages = meta.totalPages;
+  const page = meta.page;
+  const visible = services;
 
   return (
     <section className="py-12 lg:py-16" id="service-list" aria-busy={pending}>
@@ -96,7 +83,7 @@ export function ServiceExplorer({ services }: { services: ContentEntry[] }) {
             aria-live="polite"
           >
             <strong className="font-semibold text-foreground">
-              {filtered.length}
+              {meta.total}
             </strong>{" "}
             matching solutions
           </p>

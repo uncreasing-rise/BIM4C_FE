@@ -72,7 +72,7 @@ export const serviceEntries: ContentEntry[] = [
     slug: "tu-van-giam-sat",
     title: "Tư vấn giám sát",
     eyebrow: "DỊCH VỤ BIM4C",
-    image: "/images/service-consulting.jpg",
+    image: "/images/news-site-safety.webp",
     description:
       "Kiểm soát an toàn, chất lượng và tiến độ bằng quy trình minh bạch và dữ liệu cập nhật.",
     highlights: [
@@ -148,7 +148,7 @@ export const projectEntries: ContentEntry[] = [
     slug: "lumi-hanoi",
     title: "Lumi Hanoi",
     eyebrow: "DỰ ÁN CAO TẦNG",
-    image: "/images/project-lumi.jpg",
+    image: "/images/news-project-coordination.webp",
     description:
       "Tổ hợp căn hộ hiện đại được triển khai với tiêu chuẩn cao về chất lượng, an toàn và tiến độ.",
     meta: "HÀ NỘI · 2025",
@@ -168,7 +168,7 @@ export const projectEntries: ContentEntry[] = [
     slug: "the-matrix-one-giai-doan-2",
     title: "The Matrix One - Giai đoạn 2",
     eyebrow: "DỰ ÁN CAO TẦNG",
-    image: "/images/project-matrix.jpg",
+    image: "/images/news-digital-twin.webp",
     description:
       "Công trình biểu tượng với yêu cầu khắt khe về kỹ thuật, thẩm mỹ và quản lý tiến độ.",
     meta: "HÀ NỘI · 2026",
@@ -188,7 +188,7 @@ export const projectEntries: ContentEntry[] = [
     slug: "elysian",
     title: "Elysian",
     eyebrow: "DỰ ÁN CAO TẦNG",
-    image: "/images/project-elysian.jpg",
+    image: "/images/news-site-safety.webp",
     description:
       "Không gian sống xanh được phát triển với giải pháp kỹ thuật đồng bộ và quản trị dự án hiện đại.",
     meta: "TP. HỒ CHÍ MINH · 2025",
@@ -208,7 +208,7 @@ export const projectEntries: ContentEntry[] = [
     slug: "tt-avio",
     title: "TT Avio",
     eyebrow: "DỰ ÁN NHÀ Ở",
-    image: "/images/hero.jpg",
+    image: "/images/news-project-coordination.webp",
     description:
       "Dự án nhà ở được quản lý bằng quy trình phối hợp số và tiêu chuẩn chất lượng nhất quán.",
     meta: "BÌNH DƯƠNG · 2026",
@@ -228,7 +228,7 @@ export const projectEntries: ContentEntry[] = [
     slug: "central-park-residences",
     title: "Central Park Residences",
     eyebrow: "DỰ ÁN ĐÔ THỊ",
-    image: "/images/about.jpg",
+    image: "/images/news-project-coordination.webp",
     description:
       "Tổ hợp đô thị quy mô lớn được triển khai với tư duy xây dựng bền vững.",
     meta: "NGHỆ AN · 2025",
@@ -361,7 +361,7 @@ export const courseEntries: ContentEntry[] = [
     slug: "bim-management",
     title: "BIM Management",
     eyebrow: "QUẢN LÝ · 6 TUẦN",
-    image: "/images/service-consulting.jpg",
+    image: "/images/news-site-safety.webp",
     description:
       "Thiết lập chiến lược BIM và đo lường hiệu quả triển khai cho doanh nghiệp.",
     highlights: ["BEP & EIR", "Quản trị thay đổi", "Đo lường hiệu quả"],

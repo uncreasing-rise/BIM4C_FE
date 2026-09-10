@@ -5,7 +5,11 @@ import { withQueryParams } from "@/lib/api/query-params";
 import type { ApiResponse } from "@/lib/api/types";
 import { env } from "@/lib/config/env";
 import { mapContentDto } from "@/features/shared/mappers/content.mapper";
-import { unwrapData } from "@/features/shared/mappers/response.mapper";
+import {
+  unwrapData,
+  unwrapPage,
+} from "@/features/shared/mappers/response.mapper";
+import type { PageResult } from "@/features/shared/types/pagination";
 import type { ContentEntryDto } from "@/features/shared/types/content-dto";
 import type { ContentQueryParams } from "@/features/shared/types/query";
 import { blogEntries } from "@/mocks/content";
@@ -31,7 +35,11 @@ export async function getPosts(
       signal: params.signal,
       next: { revalidate: 300, tags: ["posts"] },
     });
-    return unwrapData(response).map(mapContentDto);
+    return unwrapPage<ContentEntryDto>(
+      response,
+      params.page,
+      params.limit,
+    ).items.map(mapContentDto);
   } catch (error) {
     if (!params.strict && canDeferBuildData(error)) return [];
     throw error;
@@ -56,7 +64,54 @@ export async function getPostBySlug(
   }
 }
 
-export async function getAllPosts(options: { strict?: boolean } = {}): Promise<ContentEntry[]> {
+export async function getPostsPage(
+  params: ContentQueryParams & { strict?: boolean } = {},
+): Promise<PageResult<ContentEntry>> {
+  const page = params.page ?? 1;
+  const limit = params.limit ?? 5;
+  if (env.useMockApi) {
+    const filtered = blogEntries.filter(
+      (post) =>
+        (!params.search ||
+          `${post.title} ${post.description}`
+            .toLowerCase()
+            .includes(params.search.toLowerCase())) &&
+        (!params.category || post.eyebrow === params.category),
+    );
+    const totalPages = Math.max(1, Math.ceil(filtered.length / limit));
+    const safePage = Math.min(page, totalPages);
+    return {
+      items: filtered.slice((safePage - 1) * limit, safePage * limit),
+      meta: { page: safePage, limit, total: filtered.length, totalPages },
+    };
+  }
+  const endpoint = withQueryParams(API_ENDPOINTS.posts.list, {
+    page,
+    limit,
+    search: params.search,
+    category: params.category,
+    sortBy: params.sortBy,
+    sortOrder: params.sortOrder,
+  });
+  try {
+    const response = await apiClient.get<
+      ApiResponse<ContentEntryDto[]> | ContentEntryDto[]
+    >(endpoint, {
+      signal: params.signal,
+      next: { revalidate: 300, tags: ["posts"] },
+    });
+    const result = unwrapPage<ContentEntryDto>(response, page, limit);
+    return { ...result, items: result.items.map(mapContentDto) };
+  } catch (error) {
+    if (!params.strict && canDeferBuildData(error))
+      return { items: [], meta: { page, limit, total: 0, totalPages: 1 } };
+    throw error;
+  }
+}
+
+export async function getAllPosts(
+  options: { strict?: boolean } = {},
+): Promise<ContentEntry[]> {
   const results: ContentEntry[] = [];
   for (let page = 1; ; page += 1) {
     const batch = await getPosts({ page, limit: 100, strict: options.strict });

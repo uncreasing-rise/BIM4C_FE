@@ -2,9 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useMemo } from "react";
 import { useCatalogFilters } from "@/components/shared/useCatalogFilters";
-import { parsePage } from "@/lib/seo/listing";
 import {
   CatalogCategories,
   CatalogFilterBar,
@@ -15,45 +13,24 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { ROUTES } from "@/constants/routes";
 import type { ContentEntry } from "@/types/content";
 import { toEnglishLabel } from "@/lib/utils/public-labels";
+import type { PageMeta } from "@/features/shared/types/pagination";
 
-const pageSize = 5;
-const publishedAt = (meta?: string) => {
-  if (!meta) return 0;
-  const match = meta.match(/(\d{1,2})[./-](\d{1,2})[./-](\d{4})/);
-  if (match)
-    return Date.UTC(Number(match[3]), Number(match[2]) - 1, Number(match[1]));
-  const parsed = Date.parse(meta);
-  return Number.isNaN(parsed) ? 0 : parsed;
-};
 const naturalCase = (value: string) => toEnglishLabel(value);
 
-export function BlogExplorer({ posts }: { posts: ContentEntry[] }) {
-  const sortedPosts = useMemo(
-    () => [...posts].sort((a, b) => publishedAt(b.meta) - publishedAt(a.meta)),
-    [posts],
-  );
-  const categories = useMemo(
-    () => ["All", ...new Set(sortedPosts.map((item) => item.eyebrow))],
-    [sortedPosts],
-  );
+export function BlogExplorer({
+  posts,
+  meta,
+}: {
+  posts: ContentEntry[];
+  meta: PageMeta;
+}) {
+  const categories = ["All", ...new Set(posts.map((item) => item.eyebrow))];
   const { searchParams, query, setQuery, update, reset, pending } =
     useCatalogFilters();
   const category = searchParams.get("category") ?? "All";
-  const filtered = useMemo(
-    () =>
-      sortedPosts.filter(
-        (item) =>
-          (category === "All" || item.eyebrow === category) &&
-          (!query ||
-            (item.title + " " + item.description)
-              .toLocaleLowerCase("vi")
-              .includes(query.toLocaleLowerCase("vi"))),
-      ),
-    [sortedPosts, category, query],
-  );
-  const pages = Math.max(1, Math.ceil(filtered.length / pageSize));
-  const page = Math.min(parsePage(searchParams.get("page")), pages);
-  const visible = filtered.slice((page - 1) * pageSize, page * pageSize);
+  const pages = meta.totalPages;
+  const page = meta.page;
+  const visible = posts;
 
   return (
     <section className="bg-background py-12 lg:py-16" aria-busy={pending}>
@@ -97,7 +74,7 @@ export function BlogExplorer({ posts }: { posts: ContentEntry[] }) {
         )}
         <p role="status" className="mb-5 text-sm text-muted-foreground">
           <strong className="font-semibold text-foreground">
-            {filtered.length}
+            {meta.total}
           </strong>{" "}
           matching articles
         </p>

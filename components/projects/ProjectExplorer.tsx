@@ -1,7 +1,6 @@
 "use client";
 
 import { ProjectRow } from "@/components/projects/ProjectRow";
-import { useMemo } from "react";
 import { useCatalogFilters } from "@/components/shared/useCatalogFilters";
 import { EmptyState } from "@/components/ui/EmptyState";
 import {
@@ -17,35 +16,26 @@ import {
   PROJECT_CATEGORIES,
   PROJECT_PAGE_SIZE,
 } from "@/features/projects/constants";
-import { filterProjects } from "@/features/projects/selectors/filter-projects";
 import type { Project } from "@/features/projects/types/project";
-import { parsePage } from "@/lib/seo/listing";
 import { toEnglishLabel } from "@/lib/utils/public-labels";
+import type { PageMeta } from "@/features/shared/types/pagination";
 
-export function ProjectExplorer({ projects }: { projects: Project[] }) {
+export function ProjectExplorer({
+  projects,
+  meta,
+}: {
+  projects: Project[];
+  meta: PageMeta;
+}) {
   const { searchParams, query, setQuery, update, reset, pending } =
     useCatalogFilters();
   const category = searchParams.get("category") ?? ALL_PROJECT_FILTER;
   const location = searchParams.get("location") ?? ALL_PROJECT_FILTER;
   const year = searchParams.get("year") ?? ALL_PROJECT_FILTER;
   const status = searchParams.get("status") ?? ALL_PROJECT_FILTER;
-  const filtered = useMemo(
-    () =>
-      filterProjects(projects, {
-        category,
-        search: query,
-        location,
-        year,
-        status,
-      }),
-    [projects, category, query, location, year, status],
-  );
-  const pages = Math.max(1, Math.ceil(filtered.length / PROJECT_PAGE_SIZE));
-  const page = Math.min(parsePage(searchParams.get("page")), pages);
-  const visible = filtered.slice(
-    (page - 1) * PROJECT_PAGE_SIZE,
-    page * PROJECT_PAGE_SIZE,
-  );
+  const pages = meta.totalPages;
+  const page = meta.page;
+  const visible = projects;
   const hasFilters = Boolean(
     query ||
     category !== ALL_PROJECT_FILTER ||
@@ -116,12 +106,12 @@ export function ProjectExplorer({ projects }: { projects: Project[] }) {
             role="status"
             aria-live="polite"
           >
-            {filtered.length ? (
+            {meta.total ? (
               <>
                 Showing {(page - 1) * PROJECT_PAGE_SIZE + 1}–
-                {Math.min(page * PROJECT_PAGE_SIZE, filtered.length)} of{" "}
+                {Math.min(page * PROJECT_PAGE_SIZE, meta.total)} of{" "}
                 <strong className="font-semibold text-foreground">
-                  {filtered.length}
+                  {meta.total}
                 </strong>{" "}
                 projects
               </>

@@ -10,7 +10,7 @@ import { ArrowUpRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PageHero } from "@/components/shared/PageHero";
 import { ROUTES } from "@/constants/routes";
-import { getServices } from "@/features/services/api/queries";
+import { getServicesPage } from "@/features/services/api/queries";
 import { ServiceExplorer } from "@/components/services/ServiceExplorer";
 import { ServiceGuide } from "@/components/services/ServiceGuide";
 import { ServiceFaq } from "@/components/services/ServiceFaq";
@@ -35,11 +35,20 @@ export default async function ServicesPage({
 }: {
   searchParams: Promise<ListingSearchParams>;
 }) {
-  const services = await getServices();
+  const params = await searchParams;
+  const servicesPage = await getServicesPage({
+    page: Number(params.page ?? 1),
+    limit: 6,
+    search: typeof params.q === "string" ? params.q : undefined,
+    category:
+      typeof params.category === "string" && params.category !== "All"
+        ? params.category
+        : undefined,
+  });
   const destination = normalizedPageRedirect(
     ROUTES.services,
-    await searchParams,
-    services.length,
+    params,
+    servicesPage.meta.total,
     6,
   );
   if (destination) redirect(destination);
@@ -49,12 +58,15 @@ export default async function ServicesPage({
         eyebrow="BIM4C capabilities"
         title="Solutions for the full project lifecycle"
         description="From strategy and design coordination to digital handover, every solution is built around a measurable outcome."
-        image="/images/service-design.jpg"
+        image="/images/news-digital-twin.webp"
       />
       <ServiceGuide
-        services={services.map(({ slug, title }) => ({ slug, title }))}
+        services={servicesPage.items.map(({ slug, title }) => ({
+          slug,
+          title,
+        }))}
       />
-      <ServiceExplorer services={services} />
+      <ServiceExplorer services={servicesPage.items} meta={servicesPage.meta} />
       <ServiceFaq />
       <section className="bg-brand-ink py-20 text-white">
         <div className="site-container flex flex-col gap-7 md:flex-row md:items-center md:justify-between">

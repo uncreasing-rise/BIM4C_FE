@@ -20,7 +20,7 @@ export function PageHero({
   variant = "default",
   breadcrumbs,
 }: PageHeroProps) {
-  const isAbout = variant === "about" || image === "/images/about.jpg";
+  const isAbout = variant === "about";
   const naturalEyebrow = toEnglishLabel(
     eyebrow === eyebrow.toLocaleUpperCase("vi-VN")
       ? eyebrow

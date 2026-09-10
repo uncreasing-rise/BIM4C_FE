@@ -9,7 +9,7 @@ import { getPosts } from "@/features/blog/api/queries";
 import { getCourses } from "@/features/courses/api/queries";
 import { Partners } from "@/components/sections/Partners";
 import { ExpertiseStrip } from "@/components/sections/ExpertiseStrip";
-import { ProjectRow } from "@/components/projects/ProjectRow";
+import { ProjectCarousel } from "@/components/projects/ProjectCarousel";
 import { DeliveryProcess } from "@/components/sections/DeliveryProcess";
 
 export default async function Home() {
@@ -264,16 +264,7 @@ export default async function Home() {
               All projects <ArrowUpRight className="size-4" />
             </Link>
           </header>
-          <div className="border-t border-white/20">
-            {projects.slice(0, 3).map((project, index) => (
-              <ProjectRow
-                key={project.slug}
-                project={project}
-                number={index + 1}
-                dark
-              />
-            ))}
-          </div>
+          <ProjectCarousel projects={projects.slice(0, 3)} />
         </div>
       </section>
 

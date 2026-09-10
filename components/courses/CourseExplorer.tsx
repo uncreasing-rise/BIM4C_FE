@@ -3,7 +3,6 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowUpRight, Clock3 } from "lucide-react";
-import { useMemo } from "react";
 import {
   CatalogCategories,
   CatalogFilterBar,
@@ -15,8 +14,8 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { Button } from "@/components/ui/button";
 import { ROUTES } from "@/constants/routes";
 import type { ContentEntry } from "@/types/content";
-import { parsePage } from "@/lib/seo/listing";
 import { toEnglishLabel } from "@/lib/utils/public-labels";
+import type { PageMeta } from "@/features/shared/types/pagination";
 
 const pageSize = 6;
 const courseCategory = (course: ContentEntry) =>
@@ -24,29 +23,23 @@ const courseCategory = (course: ContentEntry) =>
     course.category?.trim() || course.eyebrow.split("·")[0].trim(),
   );
 
-export function CourseExplorer({ courses }: { courses: ContentEntry[] }) {
+export function CourseExplorer({
+  courses,
+  meta,
+}: {
+  courses: ContentEntry[];
+  meta: PageMeta;
+}) {
   const { searchParams, query, setQuery, update, reset, pending } =
     useCatalogFilters();
   const category = toEnglishLabel(searchParams.get("category") ?? "All");
-  const categories = useMemo(
-    () => ["All", ...new Set(courses.map(courseCategory).filter(Boolean))],
-    [courses],
-  );
-  const filtered = useMemo(
-    () =>
-      courses.filter(
-        (course) =>
-          (category === "All" || courseCategory(course) === category) &&
-          [course.title, course.description, ...course.highlights]
-            .join(" ")
-            .toLowerCase()
-            .includes(query.trim().toLowerCase()),
-      ),
-    [courses, category, query],
-  );
-  const pages = Math.max(1, Math.ceil(filtered.length / pageSize));
-  const page = Math.min(parsePage(searchParams.get("page")), pages);
-  const visible = filtered.slice((page - 1) * pageSize, page * pageSize);
+  const categories = [
+    "All",
+    ...new Set(courses.map(courseCategory).filter(Boolean)),
+  ];
+  const pages = meta.totalPages;
+  const page = meta.page;
+  const visible = courses;
 
   return (
     <section
@@ -83,8 +76,8 @@ export function CourseExplorer({ courses }: { courses: ContentEntry[] }) {
         </CatalogFilterBar>
         <div className="mb-6 flex items-center justify-between gap-4">
           <p role="status" className="text-sm text-muted-foreground">
-            <strong className="text-foreground">{filtered.length}</strong>{" "}
-            {filtered.length === 1 ? "programme" : "programmes"}
+            <strong className="text-foreground">{meta.total}</strong>{" "}
+            {meta.total === 1 ? "programme" : "programmes"}
           </p>
           {(query || category !== "All") && (
             <Button variant="ghost" onClick={reset}>
@@ -159,12 +152,12 @@ export function CourseExplorer({ courses }: { courses: ContentEntry[] }) {
         {!visible.length && (
           <EmptyState
             title={
-              courses.length
+              meta.total
                 ? "No programmes match your search"
                 : "New programmes are being prepared"
             }
             description={
-              courses.length
+              meta.total
                 ? "Try another skill or clear the filters."
                 : "Contact our team to discuss training for your organization."
             }

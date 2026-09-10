@@ -14,13 +14,13 @@ function normalizeImages(entries: ContentEntry[]): ContentEntry[] {
   return entries.map((entry) => ({
     ...entry,
     image:
-      entry.image === "/images/about.jpg"
+      /(?:about\.jpg|hero\.jpg|project-(?:lumi|matrix|elysian)\.jpg)/iu.test(
+        entry.image,
+      )
         ? "/images/news-project-coordination.webp"
-        : entry.image === "/images/hero.jpg"
-          ? "/images/news-project-coordination.webp"
-          : entry.image === "/images/service-training.jpg"
-            ? "/images/news-bim-training.webp"
-            : entry.image,
+        : entry.image === "/images/service-training.jpg"
+          ? "/images/news-bim-training.webp"
+          : entry.image,
   }));
 }
 

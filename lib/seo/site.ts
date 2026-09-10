@@ -5,7 +5,7 @@ export const DEFAULT_TITLE =
   "BIM4C Construction | Digital delivery with clarity";
 export const DEFAULT_DESCRIPTION =
   "BIM4C helps construction teams coordinate design, delivery and asset data with confidence.";
-export const DEFAULT_SOCIAL_IMAGE = "/images/hero.jpg";
+export const DEFAULT_SOCIAL_IMAGE = "/images/news-project-coordination.webp";
 export const canonicalOrigin = env.appUrl;
 
 export function absoluteUrl(pathname = "/"): string {
