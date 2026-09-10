@@ -3,9 +3,9 @@ import { ConsultationForm } from "@/features/contact/components/ConsultationForm
 import { CONTACT_EMAIL, ROUTES } from "@/constants/routes";
 
 const commitments = [
-  "Trao đổi trực tiếp cùng chuyên gia BIM",
-  "Đề xuất theo đúng quy mô và giai đoạn dự án",
-  "Bảo mật thông tin doanh nghiệp",
+  "Speak directly with a BIM specialist",
+  "A proposal matched to your project stage and scale",
+  "Your business information stays confidential",
 ] as const;
 
 export function ConsultationSection() {
@@ -19,13 +19,13 @@ export function ConsultationSection() {
       <div className="pointer-events-none absolute -right-40 -top-48 size-[32rem] rounded-full bg-primary/10 blur-3xl" />
       <div className="site-container relative grid gap-12 lg:grid-cols-[.82fr_1.18fr] lg:items-start lg:gap-20">
         <div data-consultation-copy className="lg:sticky lg:top-28">
-          <p className="eyebrow">Nhận tư vấn</p>
+          <p className="eyebrow">Talk to BIM4C</p>
           <h2 className="max-w-xl text-balance text-4xl font-semibold leading-[1.04] tracking-[-.05em] sm:text-5xl lg:text-6xl">
-            Bắt đầu bằng một cuộc trao đổi rõ ràng.
+            Start with a clearer project conversation.
           </h2>
           <p className="mt-6 max-w-xl text-base leading-8 text-white/60">
-            Chia sẻ bài toán của bạn. BIM4C sẽ cùng phân tích nhu cầu, phạm vi
-            và lộ trình triển khai phù hợp.
+            Tell us about your challenge. We will help clarify the scope,
+            priorities and next steps.
           </p>
 
           <ul className="mt-9 grid gap-4 border-t border-white/10 pt-7">
@@ -62,9 +62,9 @@ export function ConsultationSection() {
         >
           <div className="mb-7 flex items-start justify-between gap-6 border-b border-white/10 pb-6">
             <div>
-              <p className="text-xl font-semibold">Thông tin tư vấn</p>
-              <p className="mt-2 text-sm text-white/50">
-                Các trường có dấu * là bắt buộc.
+              <p className="text-xl font-semibold">Project enquiry</p>
+              <p className="mt-2 text-sm text-white/65">
+                Fields marked * are required. We usually reply within one business day.
               </p>
             </div>
             <span className="hidden items-center gap-2 rounded-full border border-primary/25 bg-primary/10 px-3 py-1.5 text-xs text-primary sm:flex">

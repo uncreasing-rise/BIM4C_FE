@@ -36,7 +36,7 @@ export default async function ProjectDetail({
         kind="project"
         related={selectRelatedContent(entry, projects)}
         backHref={ROUTES.projects}
-        backLabel="Tất cả dự án"
+        backLabel="All projects"
       />
     </main>
   );

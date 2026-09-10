@@ -21,19 +21,42 @@ import {
 import { filterProjects } from "@/features/projects/selectors/filter-projects";
 import type { Project } from "@/features/projects/types/project";
 import { parsePage } from "@/lib/seo/listing";
+import { toEnglishLabel } from "@/lib/utils/public-labels";
 
 export function ProjectExplorer({ projects }: { projects: Project[] }) {
-  const [category, setCategory] = useState(ALL_PROJECT_FILTER);
-  const [query, setQuery] = useState("");
-  const [location, setLocation] = useState(ALL_PROJECT_FILTER);
-  const [year, setYear] = useState(ALL_PROJECT_FILTER);
-  const [status, setStatus] = useState(ALL_PROJECT_FILTER);
+  const searchParams = useSearchParams();
+  const [category, setCategory] = useState(
+    searchParams.get("category") ?? ALL_PROJECT_FILTER,
+  );
+  const [query, setQuery] = useState(searchParams.get("q") ?? "");
+  const [location, setLocation] = useState(
+    searchParams.get("location") ?? ALL_PROJECT_FILTER,
+  );
+  const [year, setYear] = useState(
+    searchParams.get("year") ?? ALL_PROJECT_FILTER,
+  );
+  const [status, setStatus] = useState(
+    searchParams.get("status") ?? ALL_PROJECT_FILTER,
+  );
   const router = useRouter();
-  const page = parsePage(useSearchParams().get("page"));
-  const resetPage = () => router.replace(ROUTES.projects, { scroll: false });
-  const update = (setter: (value: string) => void, value: string) => {
+  const page = parsePage(searchParams.get("page"));
+  const updateUrl = (key: string, value: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("page");
+    if (!value || value === ALL_PROJECT_FILTER) params.delete(key);
+    else params.set(key, value);
+    const query = params.toString();
+    router.replace(`${ROUTES.projects}${query ? `?${query}` : ""}`, {
+      scroll: false,
+    });
+  };
+  const update = (
+    setter: (value: string) => void,
+    key: string,
+    value: string,
+  ) => {
     setter(value);
-    resetPage();
+    updateUrl(key, value);
   };
   const filtered = useMemo(
     () =>
@@ -51,13 +74,20 @@ export function ProjectExplorer({ projects }: { projects: Project[] }) {
     (page - 1) * PROJECT_PAGE_SIZE,
     page * PROJECT_PAGE_SIZE,
   );
+  const hasFilters = Boolean(
+    query ||
+    category !== ALL_PROJECT_FILTER ||
+    location !== ALL_PROJECT_FILTER ||
+    year !== ALL_PROJECT_FILTER ||
+    status !== ALL_PROJECT_FILTER,
+  );
   const reset = () => {
     setCategory(ALL_PROJECT_FILTER);
     setQuery("");
     setLocation(ALL_PROJECT_FILTER);
     setYear(ALL_PROJECT_FILTER);
     setStatus(ALL_PROJECT_FILTER);
-    resetPage();
+    router.replace(ROUTES.projects, { scroll: false });
   };
 
   return (
@@ -65,61 +95,70 @@ export function ProjectExplorer({ projects }: { projects: Project[] }) {
       <div className="site-container">
         <header className="mb-8 grid gap-4 border-b pb-8 md:grid-cols-[.8fr_1.2fr] md:items-end">
           <div>
-            <p className="eyebrow">Danh mục dự án</p>
+            <p className="eyebrow">Project catalogue</p>
             <h2 className="text-3xl font-semibold tracking-[-.04em] md:text-5xl">
-              Năng lực qua từng công trình
+              Capability, proven in every project
             </h2>
           </div>
           <p className="max-w-xl text-sm leading-7 text-muted-foreground md:justify-self-end">
-            Tìm kiếm dự án theo loại hình, vị trí, thời gian và trạng thái triển
-            khai.
+            Browse projects by type, location, year and delivery status.
           </p>
         </header>
         <CatalogCategories
-          ariaLabel="Loại dự án"
+          ariaLabel="Project type"
           items={PROJECT_CATEGORIES}
           value={category}
-          onChange={(value) => update(setCategory, value)}
+          formatLabel={toEnglishLabel}
+          onChange={(value) => update(setCategory, "category", value)}
         />
         <CatalogFilterBar>
           <CatalogSearch
-            label="Tên dự án"
-            placeholder="Tìm tên dự án"
+            label="Project name"
+            placeholder="Search projects"
             value={query}
-            onChange={(value) => update(setQuery, value)}
+            onChange={(value) => update(setQuery, "q", value)}
           />
           <CatalogSelect
-            label="Vị trí"
+            label="Location"
             value={location}
             values={[...new Set(projects.map((item) => item.location))]}
-            onChange={(value) => update(setLocation, value)}
+            onChange={(value) => update(setLocation, "location", value)}
+            formatLabel={toEnglishLabel}
           />
           <CatalogSelect
-            label="Thời gian"
+            label="Year"
             value={year}
             values={[...new Set(projects.map((item) => item.year))]}
-            onChange={(value) => update(setYear, value)}
+            onChange={(value) => update(setYear, "year", value)}
+            formatLabel={toEnglishLabel}
           />
           <CatalogSelect
-            label="Tiến độ"
+            label="Delivery status"
             value={status}
             values={[...new Set(projects.map((item) => item.status))]}
-            onChange={(value) => update(setStatus, value)}
+            onChange={(value) => update(setStatus, "status", value)}
+            formatLabel={toEnglishLabel}
           />
         </CatalogFilterBar>
         <div className="mb-6 flex items-center justify-between gap-4">
-          <p className="m-0 text-[12px] text-muted-foreground">
+          <p
+            className="m-0 text-[12px] text-muted-foreground"
+            role="status"
+            aria-live="polite"
+          >
             <strong className="font-semibold text-foreground">
               {filtered.length}
             </strong>{" "}
-            dự án phù hợp
+            matching projects
           </p>
           <button
-            className="text-[12px] font-semibold text-primary"
+            className="rounded-md px-2 py-1 text-[12px] font-semibold text-primary transition hover:bg-primary/10 disabled:pointer-events-none disabled:opacity-40"
             type="button"
             onClick={reset}
+            disabled={!hasFilters}
+            aria-label="Clear all project filters"
           >
-            Đặt lại
+            Reset filters
           </button>
         </div>
         <div className="border-t">
@@ -131,7 +170,7 @@ export function ProjectExplorer({ projects }: { projects: Project[] }) {
               <Link
                 className="absolute inset-0 z-10 rounded-[14px] focus-visible:outline-2 focus-visible:outline-offset-[-3px] focus-visible:outline-primary"
                 href={ROUTES.projectDetail(project.slug)}
-                aria-label={`Xem ${project.title}`}
+                aria-label={`View ${project.title}`}
               />
               <div
                 className={`relative aspect-[16/9] overflow-hidden rounded-2xl bg-muted ${index % 2 ? "lg:order-2" : ""}`}
@@ -146,7 +185,7 @@ export function ProjectExplorer({ projects }: { projects: Project[] }) {
               </div>
               <div className={index % 2 ? "lg:order-1" : ""}>
                 <p className="mb-2.5 text-[10px] font-semibold uppercase tracking-[.1em] text-primary">
-                  {project.category}
+                  {toEnglishLabel(project.category)}
                 </p>
                 <h3 className="text-3xl font-semibold leading-tight tracking-[-.04em] md:text-4xl">
                   {project.title}
@@ -156,33 +195,33 @@ export function ProjectExplorer({ projects }: { projects: Project[] }) {
                 </p>
                 <dl className="mt-5 grid gap-2 border-t pt-4 text-[13px] text-muted-foreground">
                   <div className="flex justify-between gap-4">
-                    <dt>Năm</dt>
+                    <dt>Year</dt>
                     <dd className="font-medium text-foreground">
                       {project.year}
                     </dd>
                   </div>
                   <div className="flex justify-between gap-4">
-                    <dt>Vị trí</dt>
+                    <dt>Location</dt>
                     <dd className="line-clamp-1 text-right font-medium text-foreground">
                       {project.location}
                     </dd>
                   </div>
                 </dl>
                 <span className="mt-auto pt-5 text-[13px] font-semibold text-primary">
-                  Khám phá dự án →
+                  Explore project →
                 </span>
               </div>
             </article>
           ))}
           {visible.length === 0 && (
             <EmptyState
-              title="Không tìm thấy dự án"
-              description="Hãy thử thay đổi hoặc đặt lại bộ lọc."
+              title="No projects found"
+              description="Try a different search or reset the filters."
             />
           )}
         </div>
         <CatalogPagination
-          ariaLabel="Phân trang dự án"
+          ariaLabel="Project pagination"
           page={page}
           pages={pages}
           pathname={ROUTES.projects}

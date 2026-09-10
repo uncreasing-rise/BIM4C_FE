@@ -53,14 +53,16 @@ export function NewsletterForm() {
       if (error instanceof z.ZodError) {
         setFieldErrors(getZodFieldErrors<NewsletterField>(error));
         const field = error.issues[0]?.path[0];
-        if (field === "email") document.getElementById("newsletter-email")?.focus();
-        if (field === "consent") document.getElementById("newsletter-consent")?.focus();
+        if (field === "email")
+          document.getElementById("newsletter-email")?.focus();
+        if (field === "consent")
+          document.getElementById("newsletter-consent")?.focus();
         return;
       }
       setMessage(
         error instanceof ApiError
           ? error.message
-          : "Không thể đăng ký lúc này.",
+          : "We could not subscribe you right now.",
       );
     } finally {
       submitting.current = false;
@@ -70,7 +72,7 @@ export function NewsletterForm() {
   return (
     <form onSubmit={handleSubmit} noValidate>
       <Label className="mb-2 block text-xs" htmlFor="newsletter-email">
-        Email của bạn
+        Your email
       </Label>
       <div className="flex">
         <Input
@@ -79,22 +81,35 @@ export function NewsletterForm() {
           name="email"
           type="email"
           autoComplete="email"
-          placeholder="name@company.com"
+          placeholder="you@company.com"
           required
           aria-invalid={Boolean(fieldErrors.email)}
-          aria-describedby={fieldErrors.email ? "newsletter-email-error" : undefined}
+          aria-describedby={
+            fieldErrors.email ? "newsletter-email-error" : undefined
+          }
         />
         <Button
           className="h-[46px] w-12 rounded-l-none"
           type="submit"
           disabled={status === "submitting"}
-          aria-label="Đăng ký"
+          aria-label="Subscribe"
         >
           {status === "submitting" ? "…" : "→"}
         </Button>
       </div>
-      {fieldErrors.email && <p id="newsletter-email-error" className="mt-2 text-xs text-red-200" role="alert">{fieldErrors.email}</p>}
-      <Label className="mt-3 flex items-start gap-2 text-xs leading-normal text-white/70" htmlFor="newsletter-consent">
+      {fieldErrors.email && (
+        <p
+          id="newsletter-email-error"
+          className="mt-2 text-xs text-red-200"
+          role="alert"
+        >
+          {fieldErrors.email}
+        </p>
+      )}
+      <Label
+        className="mt-3 flex items-start gap-2 text-xs leading-normal text-white/70"
+        htmlFor="newsletter-consent"
+      >
         <Checkbox
           id="newsletter-consent"
           className="mt-0.5"
@@ -103,10 +118,32 @@ export function NewsletterForm() {
           checked={consent}
           onCheckedChange={(checked) => setConsent(checked === true)}
           aria-invalid={Boolean(fieldErrors.consent)}
-          aria-describedby={fieldErrors.consent ? "newsletter-consent-error" : undefined}
-        /> <span>Tôi đồng ý nhận thông tin từ BIM4C và với việc xử lý dữ liệu cá nhân theo <Link className="text-primary underline" href={ROUTES.legalDetail("chinh-sach-bao-mat")} target="_blank">Chính sách bảo mật</Link>.</span>
+          aria-describedby={
+            fieldErrors.consent ? "newsletter-consent-error" : undefined
+          }
+        />{" "}
+        <span>
+          I agree to receive BIM4C updates and to the processing of my personal
+          data under the{" "}
+          <Link
+            className="text-primary underline"
+            href={ROUTES.legalDetail("chinh-sach-bao-mat")}
+            target="_blank"
+          >
+            Privacy Policy
+          </Link>
+          .
+        </span>
       </Label>
-      {fieldErrors.consent && <p id="newsletter-consent-error" className="mt-2 text-xs text-red-200" role="alert">{fieldErrors.consent}</p>}
+      {fieldErrors.consent && (
+        <p
+          id="newsletter-consent-error"
+          className="mt-2 text-xs text-red-200"
+          role="alert"
+        >
+          {fieldErrors.consent}
+        </p>
+      )}
       {message && (
         <p
           className={`mt-3 text-xs ${status === "error" ? "text-red-200" : "text-emerald-200"}`}

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ConsultationForm } from "@/features/contact/components/ConsultationForm";
 import { CourseRegistrationForm } from "@/features/contact/components/CourseRegistrationForm";
+import { NewsletterForm } from "@/features/contact/components/NewsletterForm";
 import type { Project } from "@/features/projects/types/project";
 import type { ContentBlock } from "@/features/shared/schemas/content-block.schema";
 import type { ContentEntry } from "@/types/content";
@@ -13,6 +14,7 @@ import { ContentBlockRenderer } from "./ContentBlockRenderer";
 import { PageHero } from "./PageHero";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { breadcrumbSchema, contentSchema } from "@/lib/seo/structured-data";
+import { toEnglishLabel } from "@/lib/utils/public-labels";
 
 type DetailKind = "course" | "project" | "article" | "service";
 type DetailEntry = ContentEntry &
@@ -30,10 +32,10 @@ type DetailEntry = ContentEntry &
   >;
 
 const uiLabels: Record<DetailKind, { aside: string; back: string }> = {
-  course: { aside: "Thông tin khóa học", back: "Khóa học" },
-  project: { aside: "Hồ sơ dự án", back: "Dự án" },
-  article: { aside: "Thông tin bài viết", back: "Bài viết" },
-  service: { aside: "Thông tin dịch vụ", back: "Dịch vụ" },
+  course: { aside: "Course overview", back: "Academy" },
+  project: { aside: "Project profile", back: "Projects" },
+  article: { aside: "Article information", back: "Insights" },
+  service: { aside: "Solution overview", back: "Solutions" },
 };
 
 function legacyBlocks(entry: ContentEntry): ContentBlock[] {
@@ -104,39 +106,53 @@ export function DetailPage({
 }) {
   const blocks = entry.contentBlocks ?? legacyBlocks(entry);
   const detailPath = `${backHref}/${entry.slug}`;
-  const breadcrumbItems = [{ name: "Trang chủ", path: "/" }, { name: uiLabels[kind].back, path: backHref }, { name: entry.title, path: detailPath }];
+  const breadcrumbItems = [
+    { name: "Home", path: "/" },
+    { name: uiLabels[kind].back, path: backHref },
+    { name: entry.title, path: detailPath },
+  ];
   const projectProfile =
     kind === "project"
       ? [
-          ["Chủ đầu tư", entry.investor],
-          ["Địa điểm", entry.location],
-          ["Quy mô", entry.scale],
-          ["Gói thầu", entry.contractPackage],
-          ["Hoàn thành", entry.expectedCompletion ?? entry.year],
-          ["Trạng thái", entry.status],
+          ["Client", entry.investor],
+          ["Location", entry.location],
+          ["Scale", entry.scale],
+          ["Contract package", entry.contractPackage],
+          ["Completion", entry.expectedCompletion ?? entry.year],
+          ["Status", entry.status],
         ].filter((item): item is [string, string] => Boolean(item[1]))
       : [];
   const courseProfile =
     kind === "course"
       ? [
-          ["Thời lượng", entry.duration],
-          ["Trình độ", entry.level],
-          ["Học phí", entry.price],
-          ["Giảng viên", entry.instructor],
+          ["Duration", entry.duration],
+          ["Level", entry.level],
+          ["Price", entry.price],
+          ["Instructor", entry.instructor],
         ].filter((item): item is [string, string] => Boolean(item[1]))
       : [];
 
   return (
     <>
-      <JsonLd data={[breadcrumbSchema(breadcrumbItems), contentSchema(kind, entry, detailPath)]} />
+      <JsonLd
+        data={[
+          breadcrumbSchema(breadcrumbItems),
+          contentSchema(kind, entry, detailPath),
+        ]}
+      />
       <PageHero
         eyebrow={
-          entry.meta ? `${entry.eyebrow} · ${entry.meta}` : entry.eyebrow
+          entry.meta
+            ? `${toEnglishLabel(entry.eyebrow)} · ${entry.meta}`
+            : toEnglishLabel(entry.eyebrow)
         }
         title={entry.title}
         description={entry.description}
         image={entry.image}
-        breadcrumbs={breadcrumbItems.map((item, index) => ({ label: item.name, href: index < breadcrumbItems.length - 1 ? item.path : undefined }))}
+        breadcrumbs={breadcrumbItems.map((item, index) => ({
+          label: item.name,
+          href: index < breadcrumbItems.length - 1 ? item.path : undefined,
+        }))}
       />
       <article className="bg-background py-16 lg:py-24">
         <div className="site-container">
@@ -148,11 +164,22 @@ export function DetailPage({
             </Button>
             {(entry.authorName || entry.publishedAt) && (
               <p className="flex flex-wrap gap-x-4 text-sm text-muted-foreground">
-                {entry.publishedAt && <time dateTime={entry.publishedAt}>{new Intl.DateTimeFormat("vi-VN", { dateStyle: "long", timeZone: "UTC" }).format(new Date(entry.publishedAt))}</time>}
-                {entry.authorName && <span>
-                Tác giả:{" "}
-                <strong className="text-foreground">{entry.authorName}</strong>
-                </span>}
+                {entry.publishedAt && (
+                  <time dateTime={entry.publishedAt}>
+                    {new Intl.DateTimeFormat("vi-VN", {
+                      dateStyle: "long",
+                      timeZone: "UTC",
+                    }).format(new Date(entry.publishedAt))}
+                  </time>
+                )}
+                {entry.authorName && (
+                  <span>
+                    By{" "}
+                    <strong className="text-foreground">
+                      {entry.authorName}
+                    </strong>
+                  </span>
+                )}
               </p>
             )}
           </div>
@@ -235,6 +262,17 @@ export function DetailPage({
                     courseId={entry.id ?? entry.slug}
                     courseTitle={entry.title}
                   />
+                ) : kind === "article" ? (
+                  <div>
+                    <h3 className="mb-2 text-xl font-semibold text-white">
+                      Get BIM insights
+                    </h3>
+                    <p className="mb-5 text-sm leading-6 text-white/65">
+                      Practical project lessons and digital construction
+                      insights, delivered to your inbox.
+                    </p>
+                    <NewsletterForm />
+                  </div>
                 ) : (
                   <ConsultationForm
                     compact
@@ -246,7 +284,10 @@ export function DetailPage({
           </div>
         </div>
         {kind === "project" && entry.gallery?.length ? (
-          <section className="site-container mt-16" aria-label="Thư viện dự án">
+          <section
+            className="site-container mt-16"
+            aria-label="Project gallery"
+          >
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {entry.gallery.map((image, index) => (
                 <figure
@@ -277,7 +318,7 @@ export function DetailPage({
         {kind === "course" && entry.curriculum?.length ? (
           <section className="site-container mt-16">
             <h2 className="mb-6 text-3xl font-semibold tracking-tight">
-              Nội dung chương trình
+              Course curriculum
             </h2>
             <ol className="divide-y rounded-2xl border">
               {entry.curriculum.map((module, index) => (
@@ -306,14 +347,14 @@ export function DetailPage({
             <div className="site-container">
               <header className="mb-8 flex items-end justify-between gap-5">
                 <div>
-                  <p className="eyebrow">Khám phá thêm</p>
+                  <p className="eyebrow">Keep exploring</p>
                   <h2 className="text-3xl font-semibold tracking-[-.035em]">
-                    Nội dung liên quan
+                    Related content
                   </h2>
                 </div>
                 <Button asChild variant="outline">
                   <Link href={backHref}>
-                    Xem tất cả <ArrowUpRight />
+                    View all <ArrowUpRight />
                   </Link>
                 </Button>
               </header>
@@ -338,7 +379,7 @@ export function DetailPage({
                     <Link
                       className="absolute inset-0"
                       href={`${backHref}/${item.slug}`}
-                      aria-label={`Xem ${item.title}`}
+                      aria-label={`View ${item.title}`}
                     />
                   </article>
                 ))}

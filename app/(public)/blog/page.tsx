@@ -5,17 +5,17 @@ import { ROUTES } from "@/constants/routes";
 import { PageHero } from "@/components/shared/PageHero";
 import { BlogExplorer } from "@/components/blog/BlogExplorer";
 import { getAllPosts } from "@/features/blog/api/queries";
-const description = "Tin tức, dự án và kiến thức chuyên môn từ BIM4C.";
-export async function generateMetadata({ searchParams }: { searchParams: Promise<ListingSearchParams> }): Promise<Metadata> { return listingMetadata("Blog", description, ROUTES.blog, await searchParams); }
+const description = "Project news, expert perspectives and digital construction insights from BIM4C.";
+export async function generateMetadata({ searchParams }: { searchParams: Promise<ListingSearchParams> }): Promise<Metadata> { return listingMetadata("Insights", description, ROUTES.blog, await searchParams); }
 export default async function BlogPage({ searchParams }: { searchParams: Promise<ListingSearchParams> }) {
   const posts = await getAllPosts();
   const destination = normalizedPageRedirect(ROUTES.blog, await searchParams, posts.length, 5); if (destination) redirect(destination);
   return (
     <main>
       <PageHero
-        eyebrow="BIM4C"
-        title="Tin tức"
-        description="Tin mới, sự kiện và góc nhìn chuyên môn từ BIM4C."
+        eyebrow="BIM4C insights"
+        title="Insights"
+        description="Practical lessons, project stories and perspectives on the future of digital construction."
         image="/images/news-project-coordination.webp"
       />
       <BlogExplorer posts={posts} />

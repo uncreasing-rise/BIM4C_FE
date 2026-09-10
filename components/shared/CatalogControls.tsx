@@ -91,11 +91,13 @@ export function CatalogSelect({
   value,
   values,
   onChange,
+  formatLabel = (item) => item,
 }: {
   label: string;
   value: string;
   values: string[];
   onChange: (value: string) => void;
+  formatLabel?: (item: string) => string;
 }) {
   return (
     <Select value={value} onValueChange={onChange}>
@@ -106,10 +108,10 @@ export function CatalogSelect({
         <SelectValue placeholder={label} />
       </SelectTrigger>
       <SelectContent>
-        <SelectItem value="Tất cả">Tất cả</SelectItem>
+        <SelectItem value="All">All</SelectItem>
         {values.map((item) => (
           <SelectItem value={item} key={item}>
-            {item}
+            {formatLabel(item)}
           </SelectItem>
         ))}
       </SelectContent>
@@ -133,7 +135,8 @@ export function CatalogPagination({
   const changePage = (trigger: HTMLElement) => {
     scrollToElementTop(trigger.closest("section"));
   };
-  const href = (number: number) => number === 1 ? pathname : `${pathname}?page=${number}`;
+  const href = (number: number) =>
+    number === 1 ? pathname : `${pathname}?page=${number}`;
 
   const pageItems = Array.from(
     { length: pages },
@@ -148,13 +151,22 @@ export function CatalogPagination({
       className="mt-12 flex justify-center gap-2 border-t pt-8"
       aria-label={ariaLabel}
     >
-      <Button asChild
+      <Button
+        asChild
         variant="outline"
         size="icon"
         className="rounded-full"
-        aria-label="Trang trước"
+      aria-label={page === 1 ? "Already on the first page" : "Previous page"}
       >
-        <Link aria-disabled={page === 1} tabIndex={page === 1 ? -1 : undefined} href={href(Math.max(1, page - 1))} scroll={false} onClick={(event) => changePage(event.currentTarget)}><ChevronLeft /></Link>
+        <Link
+          aria-disabled={page === 1}
+          tabIndex={page === 1 ? -1 : undefined}
+          href={href(Math.max(1, page - 1))}
+          scroll={false}
+          onClick={(event) => changePage(event.currentTarget)}
+        >
+          <ChevronLeft />
+        </Link>
       </Button>
       {pageItems.map((number, index) => (
         <span className="contents" key={number}>
@@ -163,24 +175,40 @@ export function CatalogPagination({
               …
             </span>
           )}
-          <Button asChild
+          <Button
+            asChild
             variant={page === number ? "default" : "outline"}
             size="icon"
             className="rounded-full"
-            aria-label={`Trang ${number}`}
+            aria-label={`Page ${number}`}
             aria-current={page === number ? "page" : undefined}
           >
-            <Link href={href(number)} scroll={false} onClick={(event) => changePage(event.currentTarget)}>{number}</Link>
+            <Link
+              href={href(number)}
+              scroll={false}
+              onClick={(event) => changePage(event.currentTarget)}
+            >
+              {number}
+            </Link>
           </Button>
         </span>
       ))}
-      <Button asChild
+      <Button
+        asChild
         variant="outline"
         size="icon"
         className="rounded-full"
-        aria-label="Trang sau"
+      aria-label={page === pages ? "Already on the last page" : "Next page"}
       >
-        <Link aria-disabled={page === pages} tabIndex={page === pages ? -1 : undefined} href={href(Math.min(pages, page + 1))} scroll={false} onClick={(event) => changePage(event.currentTarget)}><ChevronRight /></Link>
+        <Link
+          aria-disabled={page === pages}
+          tabIndex={page === pages ? -1 : undefined}
+          href={href(Math.min(pages, page + 1))}
+          scroll={false}
+          onClick={(event) => changePage(event.currentTarget)}
+        >
+          <ChevronRight />
+        </Link>
       </Button>
     </nav>
   );

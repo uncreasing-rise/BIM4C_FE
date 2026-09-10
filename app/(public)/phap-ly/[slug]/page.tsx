@@ -30,7 +30,7 @@ export default async function LegalDetailPage({
   return (
     <main>
       <PageHero
-        eyebrow="PHÁP LÝ BIM4C"
+        eyebrow="BIM4C LEGAL"
         title={document.title}
         description={document.summary}
         image="/images/news-project-coordination.webp"
@@ -39,14 +39,14 @@ export default async function LegalDetailPage({
         <div className="mx-auto grid w-[calc(100%_-_32px)] max-w-[1220px] grid-cols-1 items-start gap-10 md:w-[calc(100%_-_48px)] lg:grid-cols-[280px_minmax(0,1fr)] lg:gap-16">
           <aside className="border-t-4 border-primary bg-muted p-6 lg:sticky lg:top-[110px]">
             <p className="text-xs font-semibold uppercase tracking-wider text-primary">
-              CẬP NHẬT
+              LAST UPDATED
             </p>
             <strong className="mt-1 block text-sm text-foreground">
               {document.updatedAt}
             </strong>
             <nav
               className="mt-6 border-t border-border"
-              aria-label="Mục lục"
+              aria-label="Table of contents"
             >
               {document.sections.map((section, index) => (
                 <a
@@ -101,7 +101,7 @@ export default async function LegalDetailPage({
             className="text-xs font-semibold uppercase text-primary"
             href={ROUTES.legal}
           >
-            ← Tất cả thông tin pháp lý
+            ← All legal information
           </Link>
         </div>
       </article>

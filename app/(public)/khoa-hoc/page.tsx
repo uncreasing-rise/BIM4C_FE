@@ -6,20 +6,20 @@ import { PageHero } from "@/components/shared/PageHero";
 import { CourseExplorer } from "@/components/courses/CourseExplorer";
 import { getCourses } from "@/features/courses/api/queries";
 
-const description = "Chương trình đào tạo BIM thực chiến dành cho kỹ sư và doanh nghiệp.";
-export async function generateMetadata({ searchParams }: { searchParams: Promise<ListingSearchParams> }): Promise<Metadata> { return listingMetadata("Đào tạo", description, ROUTES.courses, await searchParams); }
+const description = "Practical BIM training for engineers, project teams and organizations.";
+export async function generateMetadata({ searchParams }: { searchParams: Promise<ListingSearchParams> }): Promise<Metadata> { return listingMetadata("Academy", description, ROUTES.courses, await searchParams); }
 const learningValues = [
   [
-    "Thực hành từ dự án",
-    "Tình huống, dữ liệu và mô hình được chọn lọc từ công việc triển khai thực tế.",
+    "Project-based practice",
+    "Exercises, data and models selected from real delivery situations.",
   ],
   [
-    "Mentor đồng hành",
-    "Phản hồi trực tiếp giúp học viên nhận ra vấn đề và cải thiện sau từng bài tập.",
+    "Expert mentorship",
+    "Direct feedback helps learners identify issues and improve after every exercise.",
   ],
   [
-    "Đầu ra ứng dụng được",
-    "Sản phẩm hoàn thành có thể đưa vào công việc hoặc hồ sơ năng lực nghề nghiệp.",
+    "Work-ready outcomes",
+    "Completed work can be applied to your role or used in a professional portfolio.",
   ],
 ] as const;
 
@@ -30,8 +30,8 @@ export default async function CoursesPage({ searchParams }: { searchParams: Prom
     <main>
       <PageHero
         eyebrow="BIM4C Academy"
-        title="Đào tạo"
-        description="Chương trình BIM thực chiến, được xây dựng từ kinh nghiệm triển khai dự án."
+        title="Learn to deliver better"
+        description="Practical BIM programmes shaped by real project delivery experience."
         image="/images/news-bim-training.webp"
       />
       <CourseExplorer courses={courses} />
@@ -39,10 +39,10 @@ export default async function CoursesPage({ searchParams }: { searchParams: Prom
         <div className="mx-auto grid w-[calc(100%_-_32px)] max-w-[1200px] gap-9 md:w-[calc(100%_-_48px)] lg:grid-cols-[.7fr_1.3fr] lg:gap-20">
           <header>
             <p className="mb-2 text-[10px] font-semibold uppercase tracking-[.14em] text-primary">
-              Phương pháp đào tạo
+              How we teach
             </p>
             <h2 className="text-[30px] font-semibold leading-[1.16] tracking-[-.025em] md:text-[40px]">
-              Học để làm được.
+              Learn by doing.
             </h2>
           </header>
           <div className="border-t border-border">

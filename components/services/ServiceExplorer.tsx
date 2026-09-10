@@ -15,30 +15,44 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { ROUTES } from "@/constants/routes";
 import type { ContentEntry } from "@/types/content";
 import { parsePage } from "@/lib/seo/listing";
+import { toEnglishLabel } from "@/lib/utils/public-labels";
 
 const pageSize = 4;
 
 export function ServiceExplorer({ services }: { services: ContentEntry[] }) {
   const categories = useMemo(
     () => [
-      "Tất cả",
+      "All",
       ...new Set(
         services.map((service) => service.category || service.eyebrow),
       ),
     ],
     [services],
   );
-  const [category, setCategory] = useState("Tất cả");
-  const [query, setQuery] = useState("");
+  const searchParams = useSearchParams();
+  const [category, setCategory] = useState(
+    searchParams.get("category") ?? "All",
+  );
+  const [query, setQuery] = useState(searchParams.get("q") ?? "");
   const router = useRouter();
-  const page = parsePage(useSearchParams().get("page"));
-  const resetPage = () => router.replace(ROUTES.services, { scroll: false });
+  const page = parsePage(searchParams.get("page"));
+  const updateUrl = (key: string, value: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("page");
+    if (!value || value === "All") params.delete(key);
+    else params.set(key, value);
+    const queryString = params.toString();
+    router.replace(
+      `${ROUTES.services}${queryString ? `?${queryString}` : ""}`,
+      { scroll: false },
+    );
+  };
   const filtered = useMemo(() => {
     const normalizedQuery = query.trim().toLocaleLowerCase("vi");
     return services.filter((service) => {
       const serviceCategory = service.category || service.eyebrow;
       return (
-        (category === "Tất cả" || serviceCategory === category) &&
+        (category === "All" || serviceCategory === category) &&
         (!normalizedQuery ||
           `${service.title} ${service.description} ${service.highlights.join(" ")}`
             .toLocaleLowerCase("vi")
@@ -53,7 +67,7 @@ export function ServiceExplorer({ services }: { services: ContentEntry[] }) {
     <section className="py-20 lg:py-28" id="service-list">
       <div className="site-container grid gap-12 lg:grid-cols-[.78fr_1.22fr] lg:gap-16">
         <header className="self-start lg:sticky lg:top-28">
-          <p className="eyebrow">Danh mục dịch vụ</p>
+          <p className="eyebrow">Solution catalogue</p>
           <h2 className="text-balance text-4xl font-semibold leading-[1.06] tracking-[-.05em] sm:text-5xl">
             Đúng giải pháp. Đúng thời điểm.
           </h2>
@@ -64,30 +78,35 @@ export function ServiceExplorer({ services }: { services: ContentEntry[] }) {
         </header>
         <div>
           <CatalogCategories
-            ariaLabel="Danh mục dịch vụ"
+            ariaLabel="Solution categories"
             items={categories}
             value={category}
+            formatLabel={toEnglishLabel}
             onChange={(value) => {
               setCategory(value);
-              resetPage();
+              updateUrl("category", value);
             }}
           />
           <CatalogFilterBar>
             <CatalogSearch
-              label="Tìm dịch vụ"
-              placeholder="Tìm theo tên, mục tiêu hoặc năng lực"
+              label="Search solutions"
+              placeholder="Search by name, goal or capability"
               value={query}
               onChange={(value) => {
                 setQuery(value);
-                resetPage();
+                updateUrl("q", value);
               }}
             />
           </CatalogFilterBar>
-          <p className="mb-5 text-xs text-muted-foreground">
+          <p
+            className="mb-5 text-xs text-muted-foreground"
+            role="status"
+            aria-live="polite"
+          >
             <strong className="font-semibold text-foreground">
               {filtered.length}
             </strong>{" "}
-            dịch vụ phù hợp
+            matching solutions
           </p>
           {visible.length ? (
             <div className="border-t">
@@ -113,7 +132,7 @@ export function ServiceExplorer({ services }: { services: ContentEntry[] }) {
                   </div>
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-[.16em] text-primary">
-                      Giải pháp BIM4C
+                      BIM4C solution
                     </p>
                     <h3 className="mt-2 text-2xl font-semibold tracking-[-.035em] md:text-3xl">
                       {service.title}
@@ -133,25 +152,25 @@ export function ServiceExplorer({ services }: { services: ContentEntry[] }) {
                       ))}
                     </ul>
                     <span className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-primary">
-                      Khám phá giải pháp <ArrowUpRight className="size-4" />
+                      Explore solution <ArrowUpRight className="size-4" />
                     </span>
                   </div>
                   <Link
                     className="absolute inset-0"
                     href={ROUTES.serviceDetail(service.slug)}
-                    aria-label={`Xem ${service.title}`}
+                    aria-label={`View ${service.title}`}
                   />
                 </article>
               ))}
             </div>
           ) : (
             <EmptyState
-              title="Không tìm thấy dịch vụ"
-              description="Hãy thử từ khóa hoặc danh mục khác."
+              title="No solutions found"
+              description="Try a different keyword or category."
             />
           )}
           <CatalogPagination
-            ariaLabel="Phân trang dịch vụ"
+            ariaLabel="Solution pagination"
             page={page}
             pages={pages}
             pathname={ROUTES.services}

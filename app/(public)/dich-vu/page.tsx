@@ -9,8 +9,8 @@ import { ROUTES } from "@/constants/routes";
 import { getServices } from "@/features/services/api/queries";
 import { ServiceExplorer } from "@/components/services/ServiceExplorer";
 
-const description = "Các dịch vụ tư vấn BIM, thiết kế, đào tạo và giám sát của BIM4C.";
-export async function generateMetadata({ searchParams }: { searchParams: Promise<ListingSearchParams> }): Promise<Metadata> { return listingMetadata("Dịch vụ", description, ROUTES.services, await searchParams); }
+const description = "BIM consulting, design, training and construction advisory solutions from BIM4C.";
+export async function generateMetadata({ searchParams }: { searchParams: Promise<ListingSearchParams> }): Promise<Metadata> { return listingMetadata("Solutions", description, ROUTES.services, await searchParams); }
 
 export default async function ServicesPage({ searchParams }: { searchParams: Promise<ListingSearchParams> }) {
   const services = await getServices();
@@ -18,23 +18,23 @@ export default async function ServicesPage({ searchParams }: { searchParams: Pro
   return (
     <main>
       <PageHero
-        eyebrow="Năng lực BIM4C"
-        title="Giải pháp cho toàn bộ vòng đời công trình"
-        description="Từ chiến lược, thiết kế và phối hợp đến bàn giao dữ liệu — mỗi giải pháp được thiết kế quanh kết quả thực tế."
+        eyebrow="BIM4C capabilities"
+        title="Solutions for the full project lifecycle"
+        description="From strategy and design coordination to digital handover, every solution is built around a measurable outcome."
         image="/images/service-design.jpg"
       />
       <ServiceExplorer services={services} />
       <section className="bg-brand-ink py-20 text-white">
         <div className="site-container flex flex-col gap-7 md:flex-row md:items-center md:justify-between">
           <div>
-            <p className="eyebrow">Bắt đầu cùng BIM4C</p>
+            <p className="eyebrow">Start with BIM4C</p>
             <h2 className="max-w-3xl text-4xl font-semibold tracking-[-.04em]">
-              Biến thách thức dự án thành một lộ trình rõ ràng.
+              Turn project challenges into a clear delivery roadmap.
             </h2>
           </div>
           <Button asChild size="lg" className="w-fit rounded-full">
             <Link href={ROUTES.contact}>
-              Trao đổi với chuyên gia <ArrowUpRight />
+              Talk to an expert <ArrowUpRight />
             </Link>
           </Button>
         </div>

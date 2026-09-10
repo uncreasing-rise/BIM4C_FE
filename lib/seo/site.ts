@@ -1,8 +1,10 @@
 import { env } from "@/lib/config/env";
 
 export const SITE_NAME = "BIM4C";
-export const DEFAULT_TITLE = "BIM4C Construction | Chuyển đổi số xây dựng";
-export const DEFAULT_DESCRIPTION = "BIM4C tiên phong ứng dụng BIM trong thiết kế, thi công và quản lý dự án xây dựng tại Việt Nam.";
+export const DEFAULT_TITLE =
+  "BIM4C Construction | Digital delivery with clarity";
+export const DEFAULT_DESCRIPTION =
+  "BIM4C helps construction teams coordinate design, delivery and asset data with confidence.";
 export const DEFAULT_SOCIAL_IMAGE = "/images/hero.jpg";
 export const canonicalOrigin = env.appUrl;
 

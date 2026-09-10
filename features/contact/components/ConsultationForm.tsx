@@ -10,7 +10,8 @@ import { getZodFieldErrors } from "../utils/zod-errors";
 import Link from "next/link";
 import { ROUTES } from "@/constants/routes";
 
-type ContactField = "name" | "phone" | "email" | "company" | "message" | "consent";
+type ContactField =
+  "name" | "phone" | "email" | "company" | "message" | "consent";
 
 export function ConsultationForm({
   compact = false,
@@ -59,7 +60,7 @@ export function ConsultationForm({
       setMessage(
         error instanceof Error
           ? error.message
-          : "Không thể gửi yêu cầu lúc này.",
+          : "We could not send your enquiry right now.",
       );
     }
   }
@@ -73,7 +74,7 @@ export function ConsultationForm({
     <form className="grid grid-cols-1 gap-[18px]" onSubmit={submit} noValidate>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <label className={labelClass} htmlFor="consultation-name">
-          <span className={captionClass}>Họ và tên *</span>
+          <span className={captionClass}>Full name *</span>
           <Input
             id="consultation-name"
             className={inputClass}
@@ -82,12 +83,22 @@ export function ConsultationForm({
             placeholder="Nguyễn Văn A"
             required
             aria-invalid={Boolean(fieldErrors.name)}
-            aria-describedby={fieldErrors.name ? "consultation-name-error" : undefined}
+            aria-describedby={
+              fieldErrors.name ? "consultation-name-error" : undefined
+            }
           />
-          {fieldErrors.name && <p id="consultation-name-error" className="text-xs text-red-100" role="alert">{fieldErrors.name}</p>}
+          {fieldErrors.name && (
+            <p
+              id="consultation-name-error"
+              className="text-xs text-red-100"
+              role="alert"
+            >
+              {fieldErrors.name}
+            </p>
+          )}
         </label>
         <label className={labelClass} htmlFor="consultation-phone">
-          <span className={captionClass}>Số điện thoại</span>
+          <span className={captionClass}>Phone number</span>
           <Input
             id="consultation-phone"
             className={inputClass}
@@ -96,9 +107,19 @@ export function ConsultationForm({
             autoComplete="tel"
             placeholder="090 000 0000"
             aria-invalid={Boolean(fieldErrors.phone)}
-            aria-describedby={fieldErrors.phone ? "consultation-phone-error" : undefined}
+            aria-describedby={
+              fieldErrors.phone ? "consultation-phone-error" : undefined
+            }
           />
-          {fieldErrors.phone && <p id="consultation-phone-error" className="text-xs text-red-100" role="alert">{fieldErrors.phone}</p>}
+          {fieldErrors.phone && (
+            <p
+              id="consultation-phone-error"
+              className="text-xs text-red-100"
+              role="alert"
+            >
+              {fieldErrors.phone}
+            </p>
+          )}
         </label>
         <label className={labelClass} htmlFor="consultation-email">
           <span className={captionClass}>Email *</span>
@@ -108,16 +129,26 @@ export function ConsultationForm({
             name="email"
             type="email"
             autoComplete="email"
-            placeholder="name@company.com"
+            placeholder="you@company.com"
             required
             aria-invalid={Boolean(fieldErrors.email)}
-            aria-describedby={fieldErrors.email ? "consultation-email-error" : undefined}
+            aria-describedby={
+              fieldErrors.email ? "consultation-email-error" : undefined
+            }
           />
-          {fieldErrors.email && <p id="consultation-email-error" className="text-xs text-red-100" role="alert">{fieldErrors.email}</p>}
+          {fieldErrors.email && (
+            <p
+              id="consultation-email-error"
+              className="text-xs text-red-100"
+              role="alert"
+            >
+              {fieldErrors.email}
+            </p>
+          )}
         </label>
         {!compact && (
           <label className={labelClass} htmlFor="consultation-company">
-            <span className={captionClass}>Công ty</span>
+            <span className={captionClass}>Company</span>
             <Input
               id="consultation-company"
               className={inputClass}
@@ -125,31 +156,82 @@ export function ConsultationForm({
               autoComplete="organization"
               placeholder="Tên doanh nghiệp"
               aria-invalid={Boolean(fieldErrors.company)}
-              aria-describedby={fieldErrors.company ? "consultation-company-error" : undefined}
+              aria-describedby={
+                fieldErrors.company ? "consultation-company-error" : undefined
+              }
             />
-            {fieldErrors.company && <p id="consultation-company-error" className="text-xs text-red-100" role="alert">{fieldErrors.company}</p>}
+            {fieldErrors.company && (
+              <p
+                id="consultation-company-error"
+                className="text-xs text-red-100"
+                role="alert"
+              >
+                {fieldErrors.company}
+              </p>
+            )}
           </label>
         )}
       </div>
       <label className={labelClass} htmlFor="consultation-message">
-        <span className={captionClass}>Nội dung cần tư vấn *</span>
+        <span className={captionClass}>How can we help? *</span>
         <Textarea
           id="consultation-message"
           className="min-h-32 w-full resize-y rounded-xl border border-white/15 bg-white/[.06] p-4 text-[15px] leading-6 text-white shadow-none outline-none transition placeholder:text-white/30 hover:border-white/25 focus-visible:border-primary focus-visible:bg-white/[.09] focus-visible:ring-3 focus-visible:ring-primary/15"
           name="message"
           rows={compact ? 3 : 4}
           required
-          placeholder="Mô tả ngắn nhu cầu hoặc dự án của bạn"
+          placeholder="Briefly describe your project or challenge"
           aria-invalid={Boolean(fieldErrors.message)}
-          aria-describedby={fieldErrors.message ? "consultation-message-error" : undefined}
+          aria-describedby={
+            fieldErrors.message ? "consultation-message-error" : undefined
+          }
         />
-        {fieldErrors.message && <p id="consultation-message-error" className="text-xs text-red-100" role="alert">{fieldErrors.message}</p>}
+        {fieldErrors.message && (
+          <p
+            id="consultation-message-error"
+            className="text-xs text-red-100"
+            role="alert"
+          >
+            {fieldErrors.message}
+          </p>
+        )}
       </label>
-      <label className="flex items-start gap-3 text-xs leading-5 text-white/75" htmlFor="consultation-consent">
-        <input id="consultation-consent" name="consent" type="checkbox" required className="mt-1 size-4 accent-primary" aria-invalid={Boolean(fieldErrors.consent)} aria-describedby={fieldErrors.consent ? "consultation-consent-error" : undefined} />
-        <span>Tôi đã đọc và đồng ý với <Link className="text-primary underline" href={ROUTES.legalDetail("chinh-sach-bao-mat")} target="_blank">Chính sách bảo mật</Link> và việc xử lý dữ liệu cá nhân.</span>
+      <label
+        className="flex items-start gap-3 text-xs leading-5 text-white/75"
+        htmlFor="consultation-consent"
+      >
+        <input
+          id="consultation-consent"
+          name="consent"
+          type="checkbox"
+          required
+          className="mt-1 size-4 accent-primary"
+          aria-invalid={Boolean(fieldErrors.consent)}
+          aria-describedby={
+            fieldErrors.consent ? "consultation-consent-error" : undefined
+          }
+        />
+        <span>
+          I have read and agree to the{" "}
+          <Link
+            className="text-primary underline"
+            href={ROUTES.legalDetail("chinh-sach-bao-mat")}
+            target="_blank"
+          >
+            Privacy Policy
+          </Link>{" "}
+          and the processing of my personal data.
+        </span>
       </label>
-      {fieldErrors.consent && <p id="consultation-consent-error" className="text-xs text-red-100" role="alert">{fieldErrors.consent}</p>}
+      {fieldErrors.consent && (
+        <p
+          id="consultation-consent-error"
+          className="text-xs text-red-100"
+          role="alert"
+        >
+          {fieldErrors.consent}
+        </p>
+      )}
       <div className="flex flex-col items-start gap-4 border-t border-white/10 pt-6 sm:flex-row sm:items-center sm:justify-between">
         <Button
           type="submit"
@@ -157,11 +239,11 @@ export function ConsultationForm({
           className="min-w-48 rounded-full"
           disabled={status === "sending"}
         >
-          {status === "sending" ? "Đang gửi…" : "Gửi yêu cầu tư vấn"}
+          {status === "sending" ? "Sending…" : "Send project enquiry"}
           <span>→</span>
         </Button>
         <small className="max-w-56 text-xs leading-5 text-white/45">
-          BIM4C chỉ sử dụng thông tin để liên hệ tư vấn.
+          BIM4C only uses this information to respond to your enquiry.
         </small>
       </div>
       {message && (

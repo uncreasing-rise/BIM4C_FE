@@ -10,28 +10,28 @@ import { ROUTES } from "@/constants/routes";
 import { Partners } from "@/components/sections/Partners";
 import { pageMetadata } from "@/lib/seo/listing";
 
-export const metadata: Metadata = pageMetadata("Giới thiệu", "BIM4C tiên phong chuyển đổi số xây dựng với BIM, AI, IoT và Digital Twin.", ROUTES.about);
+export const metadata: Metadata = pageMetadata("About", "BIM4C advances digital construction through BIM, data and collaboration.", ROUTES.about);
 
 const values = [
   [
     "01",
-    "Chính trực",
-    "Minh bạch trong dữ liệu, trách nhiệm trong mọi quyết định.",
+    "Integrity",
+    "Be transparent with data and accountable in every decision.",
   ],
   [
     "02",
-    "Đổi mới",
-    "Không ngừng thử nghiệm công nghệ và phương pháp làm việc hiệu quả hơn.",
+    "Innovation",
+    "Keep testing better technology and more effective ways of working.",
   ],
   [
     "03",
-    "Hợp tác",
-    "Đặt con người và khả năng phối hợp đa bộ môn ở trung tâm.",
+    "Collaboration",
+    "Put people and multidisciplinary coordination at the centre.",
   ],
   [
     "04",
-    "Bền vững",
-    "Tối ưu nguồn lực hôm nay để tạo giá trị dài hạn cho ngày mai.",
+    "Sustainability",
+    "Use today’s resources wisely to create long-term value.",
   ],
 ] as const;
 const team = [
@@ -46,8 +46,8 @@ export default function AboutPage() {
     <main>
       <PageHero
         eyebrow="BIM4C"
-        title="Công nghệ phục vụ con người"
-        description="Tiên phong chuyển đổi số xây dựng bằng BIM, dữ liệu và tinh thần hợp tác."
+        title="Technology that serves people"
+        description="Advancing digital construction through BIM, data and a collaborative mindset."
         image="/images/service-consulting.jpg"
         variant="about"
       />
@@ -55,10 +55,10 @@ export default function AboutPage() {
       <section className="border-y border-border bg-muted/45 py-8 lg:py-10">
         <div className="mx-auto grid w-[calc(100%_-_2rem)] max-w-7xl grid-cols-2 gap-3 rounded-[2rem] border border-border/70 bg-card p-3 shadow-[0_24px_70px_-50px_rgba(7,31,39,.38)] md:w-[calc(100%_-_3rem)] md:grid-cols-4">
           {[
-            ["25+", "Khách hàng"],
-            ["180+", "Dự án"],
-            ["120+", "Đối tác"],
-            ["96%", "Đúng cam kết"],
+            ["25+", "Clients"],
+            ["180+", "Projects"],
+            ["120+", "Partners"],
+            ["96%", "On-time delivery"],
           ].map(([value, label]) => (
             <article
               className="group flex min-h-36 flex-col items-center justify-center rounded-2xl px-4 py-6 text-center transition-colors duration-300 hover:bg-primary/8 md:min-h-40"
@@ -78,26 +78,26 @@ export default function AboutPage() {
       <section className="mx-auto grid w-[calc(100%_-_2rem)] max-w-7xl gap-12 py-20 md:w-[calc(100%_-_3rem)] lg:grid-cols-2 lg:items-center lg:py-28">
         <div>
           <Badge variant="outline" className="mb-4">
-            Về BIM4C
+            About BIM4C
           </Badge>
           <h2 className="text-4xl font-semibold tracking-[-.04em] sm:text-5xl">
-            Biến phức tạp thành một quy trình rõ ràng.
+            Turn complexity into a clearer process.
           </h2>
           <p className="mt-6 text-lg leading-8 text-muted-foreground">
-            Chúng tôi ứng dụng Mô hình Thông tin Công trình kết hợp AI, IoT và
-            Digital Twin để tối ưu thiết kế, thi công và vận hành. Mỗi giải pháp
-            bắt đầu từ mục tiêu thực tế của dự án.
+            We combine Building Information Modelling with AI, IoT and Digital
+            Twin capabilities to improve design, construction and operations.
+            Every solution starts with a real project goal.
           </p>
           <Button asChild className="mt-8 rounded-full">
             <Link href={ROUTES.services}>
-              Khám phá giải pháp <ArrowRight />
+              Explore our solutions <ArrowRight />
             </Link>
           </Button>
         </div>
         <div className="relative aspect-[4/3] overflow-hidden rounded-3xl">
           <Image
             src="/images/news-project-coordination.webp"
-            alt="Đội ngũ BIM4C phối hợp dự án"
+            alt="BIM4C team coordinating a construction project"
             fill
             sizes="(max-width:1023px) 100vw, 50vw"
             className="object-cover"
@@ -120,34 +120,33 @@ export default function AboutPage() {
             />
             <div className="absolute inset-0 bg-gradient-to-t from-brand-ink/70 via-transparent to-transparent" />
             <div className="absolute inset-x-0 bottom-0 p-7 text-white">
-              <p className="font-semibold">Ban Giám đốc BIM4C</p>
+              <p className="font-semibold">BIM4C leadership</p>
               <p className="mt-1 text-sm text-white/65">
-                Kiến tạo giá trị bằng tri thức và dữ liệu
+                Creating value through knowledge and data
               </p>
             </div>
           </div>
           <div data-motion="reveal">
-            <p className="eyebrow">Thư ngỏ từ Giám đốc</p>
+            <p className="eyebrow">A note from our director</p>
             <blockquote className="text-balance text-3xl font-semibold leading-[1.2] tracking-[-.04em] sm:text-4xl">
-              “Chuyển đổi số không bắt đầu từ phần mềm. Nó bắt đầu từ một cách
-              làm việc rõ ràng hơn và những con người cùng tin vào giá trị của
-              dữ liệu.”
+              “Digital transformation does not start with software. It starts
+              with clearer ways of working and people who believe in the value
+              of data.”
             </blockquote>
             <div className="mt-7 space-y-4 text-base leading-8 text-muted-foreground">
               <p>
-                Kính gửi Quý Khách hàng và Đối tác, BIM4C được thành lập với
-                mong muốn đưa BIM trở thành năng lực thực tiễn trong mỗi tổ chức
-                xây dựng — dễ tiếp cận, đo lường được và tạo ra giá trị thật.
+                BIM4C was founded to make BIM a practical capability for every
+                construction organization — accessible, measurable and useful.
               </p>
               <p>
-                Chúng tôi cam kết đồng hành bằng chuyên môn, sự chính trực và
-                tinh thần học hỏi không ngừng để mỗi dự án hôm nay trở thành nền
-                tảng tốt hơn cho ngành xây dựng ngày mai.
+                We bring expertise, integrity and a continuous learning mindset
+                so every project becomes a stronger foundation for tomorrow’s
+                built environment.
               </p>
             </div>
             <div className="mt-8 border-t pt-6">
-              <strong className="block text-lg">Giám đốc BIM4C</strong>
-              <span className="text-sm text-muted-foreground">Trân trọng</span>
+              <strong className="block text-lg">BIM4C Director</strong>
+              <span className="text-sm text-muted-foreground">With respect</span>
             </div>
           </div>
         </div>
@@ -156,9 +155,9 @@ export default function AboutPage() {
       <section className="relative overflow-hidden bg-brand-ink py-20 text-white lg:py-28">
         <div className="absolute inset-0 opacity-10 [background-image:linear-gradient(rgba(255,255,255,.15)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.15)_1px,transparent_1px)] [background-size:64px_64px]" />
         <div className="site-container relative">
-          <p className="eyebrow">Giá trị cốt lõi</p>
+          <p className="eyebrow">Core values</p>
           <h2 className="max-w-3xl text-4xl font-semibold tracking-[-.04em] sm:text-6xl">
-            Bốn nguyên tắc dẫn lối mọi quyết định.
+            Four principles behind every decision.
           </h2>
           <div className="mt-12 grid gap-px overflow-hidden rounded-3xl bg-white/10 md:grid-cols-2">
             {values.map(([number, title, text]) => (
@@ -184,18 +183,18 @@ export default function AboutPage() {
         <div className="grid gap-12 lg:grid-cols-2">
           <div>
             <Badge variant="outline" className="mb-4">
-              Sứ mệnh & Tầm nhìn
+              Mission & vision
             </Badge>
             <h2 className="text-4xl font-semibold tracking-[-.04em] sm:text-5xl">
-              Một ngành xây dựng minh bạch và bền vững hơn.
+              A more transparent and sustainable built environment.
             </h2>
           </div>
           <div className="space-y-5">
             {[
-              "Chuẩn hóa dữ liệu xuyên suốt vòng đời công trình",
-              "Trao quyền cho đội ngũ bằng công cụ và kỹ năng phù hợp",
-              "Giảm lãng phí, rủi ro và tác động đến môi trường",
-              "Xây dựng quan hệ đối tác dài hạn dựa trên kết quả",
+              "Standardize data across the project lifecycle",
+              "Equip teams with the right tools and skills",
+              "Reduce waste, risk and environmental impact",
+              "Build long-term partnerships around results",
             ].map((item) => (
               <p
                 className="flex gap-3 border-b pb-5 text-base leading-7 text-muted-foreground"
@@ -212,10 +211,10 @@ export default function AboutPage() {
       <section data-about-section="team" className="bg-muted/40 py-20 lg:py-28">
         <div className="mx-auto w-[calc(100%_-_2rem)] max-w-7xl md:w-[calc(100%_-_3rem)]">
           <Badge variant="outline" className="mb-4">
-            Đội ngũ
+            Our team
           </Badge>
           <h2 className="text-4xl font-semibold tracking-[-.04em] sm:text-5xl">
-            Chuyên gia cùng một mục tiêu.
+            Specialists working toward one outcome.
           </h2>
           <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
             {team.map(([name, role, image], index) => (
@@ -255,10 +254,10 @@ export default function AboutPage() {
         <div className="rounded-3xl bg-primary px-6 py-14 text-primary-foreground sm:px-12 lg:flex lg:items-center lg:justify-between lg:px-16">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[.14em] opacity-75">
-              Cùng BIM4C
+              Work with BIM4C
             </p>
             <h2 className="mt-3 max-w-2xl text-4xl font-semibold tracking-[-.04em]">
-              Kiến tạo giá trị từ dự án tiếp theo.
+              Create measurable value on your next project.
             </h2>
           </div>
           <Button
@@ -268,7 +267,7 @@ export default function AboutPage() {
             className="mt-8 rounded-full lg:mt-0"
           >
             <Link href={ROUTES.contact}>
-              Liên hệ chuyên gia <ArrowRight />
+              Talk to an expert <ArrowRight />
             </Link>
           </Button>
         </div>

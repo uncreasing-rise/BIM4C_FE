@@ -23,7 +23,7 @@ export function Footer() {
           <div className="mt-8 space-y-3 text-sm text-zinc-400">
             <p className="flex gap-3">
               <MapPin className="size-4 text-primary" />
-              TP. Hồ Chí Minh, Việt Nam
+              Ho Chi Minh City, Vietnam
             </p>
             <p className="flex gap-3">
               <Mail className="size-4 text-primary" />
@@ -37,7 +37,7 @@ export function Footer() {
         </div>
         <div>
           <h2 className="text-sm font-semibold uppercase tracking-[.16em] text-zinc-500">
-            Khám phá
+            Explore
           </h2>
           <nav className="mt-5 grid gap-3">
             {MAIN_NAVIGATION.map((item) => (
@@ -53,10 +53,10 @@ export function Footer() {
           </nav>
         </div>
         <div>
-          <h2 className="text-xl font-semibold">Nhận BIM Insights</h2>
+          <h2 className="text-xl font-semibold">Get BIM insights</h2>
           <p className="mt-3 text-sm leading-6 text-zinc-400">
-            Tin tức dự án và kiến thức chuyển đổi số xây dựng gửi đến email của
-            bạn.
+            Project news and digital construction insights, delivered to your
+            inbox.
           </p>
           <div className="mt-6">
             <NewsletterForm />
@@ -71,13 +71,13 @@ export function Footer() {
               className="transition-colors hover:text-white"
               href={ROUTES.legalDetail("dieu-khoan-su-dung")}
             >
-              Điều khoản
+              Terms
             </Link>
             <Link
               className="transition-colors hover:text-white"
               href={ROUTES.legalDetail("chinh-sach-bao-mat")}
             >
-              Bảo mật
+              Privacy
             </Link>
           </div>
         </div>

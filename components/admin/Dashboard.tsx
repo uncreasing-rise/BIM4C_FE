@@ -138,7 +138,12 @@ export function Dashboard() {
                     )}
                   </td>
                   <td>
-                    <Link href={href[item.type]}>→</Link>
+                    <Link
+                      aria-label={`Mở danh sách ${label[item.type]}`}
+                      href={href[item.type]}
+                    >
+                      →
+                    </Link>
                   </td>
                 </tr>
               ))}

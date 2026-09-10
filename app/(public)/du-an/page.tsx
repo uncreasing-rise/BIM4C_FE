@@ -6,17 +6,17 @@ import { PROJECT_PAGE_SIZE } from "@/features/projects/constants";
 import { PageHero } from "@/components/shared/PageHero";
 import { ProjectExplorer } from "@/components/projects/ProjectExplorer";
 import { getAllProjects } from "@/features/projects/api/queries";
-const description = "Khám phá các dự án xây dựng và BIM tiêu biểu của BIM4C.";
-export async function generateMetadata({ searchParams }: { searchParams: Promise<ListingSearchParams> }): Promise<Metadata> { return listingMetadata("Dự án", description, ROUTES.projects, await searchParams); }
+const description = "Explore BIM4C construction and digital delivery projects.";
+export async function generateMetadata({ searchParams }: { searchParams: Promise<ListingSearchParams> }): Promise<Metadata> { return listingMetadata("Projects", description, ROUTES.projects, await searchParams); }
 export default async function ProjectsPage({ searchParams }: { searchParams: Promise<ListingSearchParams> }) {
   const projects = await getAllProjects();
   const destination = normalizedPageRedirect(ROUTES.projects, await searchParams, projects.length, PROJECT_PAGE_SIZE); if (destination) redirect(destination);
   return (
     <main>
       <PageHero
-        eyebrow="BIM4C"
-        title="Dự án"
-        description="Những công trình khẳng định năng lực triển khai và cam kết của BIM4C."
+        eyebrow="BIM4C portfolio"
+        title="Projects"
+        description="Selected projects that demonstrate how BIM4C turns coordination into delivery confidence."
         image="/images/project-lumi.jpg"
       />
       <ProjectExplorer projects={projects} />

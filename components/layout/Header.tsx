@@ -39,7 +39,7 @@ export function Header() {
         <Link
           href={ROUTES.home}
           className="flex items-center gap-3"
-          aria-label="BIM4C — Trang chủ"
+          aria-label="BIM4C — Home"
         >
           <span
             className={cn(
@@ -83,7 +83,8 @@ export function Header() {
                 overHero
                   ? "text-white/75 hover:bg-white/10 hover:text-white"
                   : "text-muted-foreground hover:bg-background hover:text-foreground",
-                pathname.startsWith(item.href) &&
+                (pathname === item.href ||
+                  pathname.startsWith(`${item.href}/`)) &&
                   (overHero
                     ? "bg-white text-brand-ink hover:bg-white hover:text-brand-ink"
                     : "bg-foreground text-background shadow-sm hover:bg-foreground hover:text-background"),
@@ -101,7 +102,7 @@ export function Header() {
           )}
         >
           <Link href={ROUTES.contact}>
-            Nhận tư vấn <ArrowUpRight />
+            Talk to an expert <ArrowUpRight />
           </Link>
         </Button>
         <Sheet key={pathname}>
@@ -113,7 +114,8 @@ export function Header() {
                 "size-11 lg:hidden",
                 overHero && "text-white hover:bg-white/10 hover:text-white",
               )}
-              aria-label="Mở menu"
+              aria-label="Open navigation menu"
+              aria-haspopup="dialog"
             >
               <Menu />
             </Button>
@@ -134,7 +136,7 @@ export function Header() {
               ))}
               <SheetClose asChild>
                 <Button asChild className="mt-4 min-h-11">
-                  <Link href={ROUTES.contact}>Nhận tư vấn</Link>
+                  <Link href={ROUTES.contact}>Talk to an expert</Link>
                 </Button>
               </SheetClose>
             </nav>

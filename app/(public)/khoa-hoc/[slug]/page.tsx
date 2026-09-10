@@ -36,7 +36,7 @@ export default async function CourseDetail({
         kind="course"
         related={selectRelatedContent(entry, courses)}
         backHref={ROUTES.courses}
-        backLabel="Tất cả khóa học"
+        backLabel="All programmes"
       />
     </main>
   );

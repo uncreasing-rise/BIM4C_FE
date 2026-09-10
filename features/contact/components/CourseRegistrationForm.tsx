@@ -56,7 +56,7 @@ export function CourseRegistrationForm({
       setMessage(
         error instanceof Error
           ? error.message
-          : "Không thể đăng ký lúc này.",
+          : "We could not submit your registration right now.",
       );
     }
   }
@@ -65,11 +65,13 @@ export function CourseRegistrationForm({
     "h-[46px] w-full border border-white/25 bg-background/[.07] px-[13px] text-white outline-none focus:border-white focus:bg-background/10";
   return (
     <form className="grid gap-[18px]" onSubmit={submit} noValidate>
-      <h3 className="text-2xl font-semibold text-white">Đăng ký khóa học</h3>
+      <h3 className="text-2xl font-semibold text-white">
+        Register for this programme
+      </h3>
       <p className="text-white/70">{courseTitle}</p>
       <label className={labelClass} htmlFor="course-registration-name">
         <span className="text-xs font-semibold uppercase tracking-[.06em] text-white/70">
-          Họ và tên *
+          Full name *
         </span>
         <Input
           id="course-registration-name"
@@ -78,18 +80,61 @@ export function CourseRegistrationForm({
           autoComplete="name"
           required
           aria-invalid={Boolean(fieldErrors.name)}
-          aria-describedby={fieldErrors.name ? "course-registration-name-error" : undefined}
+          aria-describedby={
+            fieldErrors.name ? "course-registration-name-error" : undefined
+          }
         />
-        {fieldErrors.name && <p id="course-registration-name-error" className="text-xs text-red-100" role="alert">{fieldErrors.name}</p>}
+        {fieldErrors.name && (
+          <p
+            id="course-registration-name-error"
+            className="text-xs text-red-100"
+            role="alert"
+          >
+            {fieldErrors.name}
+          </p>
+        )}
       </label>
-      <label className="flex items-start gap-3 text-xs leading-5 text-white/75" htmlFor="course-registration-consent">
-        <input id="course-registration-consent" name="consent" type="checkbox" required className="mt-1 size-4 accent-primary" aria-invalid={Boolean(fieldErrors.consent)} aria-describedby={fieldErrors.consent ? "course-registration-consent-error" : undefined} />
-        <span>Tôi đã đọc và đồng ý với <Link className="text-primary underline" href={ROUTES.legalDetail("chinh-sach-bao-mat")} target="_blank">Chính sách bảo mật</Link> và việc xử lý dữ liệu cá nhân.</span>
+      <label
+        className="flex items-start gap-3 text-xs leading-5 text-white/75"
+        htmlFor="course-registration-consent"
+      >
+        <input
+          id="course-registration-consent"
+          name="consent"
+          type="checkbox"
+          required
+          className="mt-1 size-4 accent-primary"
+          aria-invalid={Boolean(fieldErrors.consent)}
+          aria-describedby={
+            fieldErrors.consent
+              ? "course-registration-consent-error"
+              : undefined
+          }
+        />
+        <span>
+          I have read and agree to the{" "}
+          <Link
+            className="text-primary underline"
+            href={ROUTES.legalDetail("chinh-sach-bao-mat")}
+            target="_blank"
+          >
+            Privacy Policy
+          </Link>{" "}
+          and the processing of my personal data.
+        </span>
       </label>
-      {fieldErrors.consent && <p id="course-registration-consent-error" className="text-xs text-red-100" role="alert">{fieldErrors.consent}</p>}
+      {fieldErrors.consent && (
+        <p
+          id="course-registration-consent-error"
+          className="text-xs text-red-100"
+          role="alert"
+        >
+          {fieldErrors.consent}
+        </p>
+      )}
       <label className={labelClass} htmlFor="course-registration-phone">
         <span className="text-xs font-semibold uppercase tracking-[.06em] text-white/70">
-          Số điện thoại *
+          Phone number *
         </span>
         <Input
           id="course-registration-phone"
@@ -99,9 +144,19 @@ export function CourseRegistrationForm({
           autoComplete="tel"
           required
           aria-invalid={Boolean(fieldErrors.phone)}
-          aria-describedby={fieldErrors.phone ? "course-registration-phone-error" : undefined}
+          aria-describedby={
+            fieldErrors.phone ? "course-registration-phone-error" : undefined
+          }
         />
-        {fieldErrors.phone && <p id="course-registration-phone-error" className="text-xs text-red-100" role="alert">{fieldErrors.phone}</p>}
+        {fieldErrors.phone && (
+          <p
+            id="course-registration-phone-error"
+            className="text-xs text-red-100"
+            role="alert"
+          >
+            {fieldErrors.phone}
+          </p>
+        )}
       </label>
       <label className={labelClass} htmlFor="course-registration-email">
         <span className="text-xs font-semibold uppercase tracking-[.06em] text-white/70">
@@ -115,15 +170,22 @@ export function CourseRegistrationForm({
           autoComplete="email"
           required
           aria-invalid={Boolean(fieldErrors.email)}
-          aria-describedby={fieldErrors.email ? "course-registration-email-error" : undefined}
+          aria-describedby={
+            fieldErrors.email ? "course-registration-email-error" : undefined
+          }
         />
-        {fieldErrors.email && <p id="course-registration-email-error" className="text-xs text-red-100" role="alert">{fieldErrors.email}</p>}
+        {fieldErrors.email && (
+          <p
+            id="course-registration-email-error"
+            className="text-xs text-red-100"
+            role="alert"
+          >
+            {fieldErrors.email}
+          </p>
+        )}
       </label>
-      <Button
-        type="submit"
-        disabled={status === "sending"}
-      >
-        {status === "sending" ? "Đang gửi…" : "Đăng ký ngay"}
+      <Button type="submit" disabled={status === "sending"}>
+        {status === "sending" ? "Sending…" : "Register now"}
         <span className="ml-[18px]">→</span>
       </Button>
       {message && (

@@ -9,7 +9,7 @@ interface ErrorStateProps {
 }
 
 export function ErrorState({
-  title = "Không thể tải dữ liệu",
+  title = "We could not load this content",
   message,
   onRetry,
 }: ErrorStateProps) {

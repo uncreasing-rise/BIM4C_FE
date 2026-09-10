@@ -5,29 +5,29 @@ import { legalDocuments } from "@/constants/legal-content";
 import { ROUTES } from "@/constants/routes";
 import { pageMetadata } from "@/lib/seo/listing";
 
-export const metadata: Metadata = pageMetadata("Pháp lý", "Chính sách bảo mật, điều khoản sử dụng và quy định bảo vệ dữ liệu cá nhân của BIM4C.", ROUTES.legal);
+export const metadata: Metadata = pageMetadata("Legal", "BIM4C privacy, terms of use and personal data protection information.", ROUTES.legal);
 
 export default function LegalPage() {
   return (
     <main>
       <PageHero
-        eyebrow="THÔNG TIN PHÁP LÝ"
-        title="Minh bạch trong từng cam kết"
-        description="Các chính sách và điều khoản áp dụng khi bạn truy cập, tương tác và cung cấp thông tin cho BIM4C."
+        eyebrow="LEGAL INFORMATION"
+        title="Transparency in every commitment"
+        description="Policies and terms that apply when you visit, interact with and share information with BIM4C."
         image="/images/news-project-coordination.webp"
       />
       <section className="bg-muted py-16 lg:py-24">
         <div className="mx-auto w-[calc(100%_-_32px)] max-w-[1220px] md:w-[calc(100%_-_48px)]">
           <header className="mb-10 max-w-[760px]">
             <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-primary">
-              PHÁP LÝ BIM4C
+              BIM4C LEGAL
             </p>
             <h2 className="text-4xl font-semibold text-foreground">
-              Thông tin bạn cần biết
+              Information you should know
             </h2>
             <p className="mt-4 leading-relaxed text-muted-foreground">
-              Chọn tài liệu bên dưới để tìm hiểu cách chúng tôi vận hành website
-              và bảo vệ quyền lợi của người dùng.
+              Choose a document below to learn how we operate this website and
+              protect your rights as a user.
             </p>
           </header>
           <div className="grid grid-cols-1 border-l border-t border-border md:grid-cols-3">
@@ -49,7 +49,7 @@ export default function LegalPage() {
                   className="mt-auto text-xs font-semibold uppercase text-primary"
                   href={ROUTES.legalDetail(document.slug)}
                 >
-                  Xem chi tiết <b>→</b>
+                  Read document <b>→</b>
                 </Link>
               </article>
             ))}

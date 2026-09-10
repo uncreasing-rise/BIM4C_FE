@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { ROUTES } from "@/constants/routes";
 import type { ContentEntry } from "@/types/content";
 import { parsePage } from "@/lib/seo/listing";
+import { toEnglishLabel } from "@/lib/utils/public-labels";
 
 const pageSize = 6;
 const courseCategory = (course: ContentEntry) =>
@@ -23,20 +24,32 @@ const courseCategory = (course: ContentEntry) =>
 
 export function CourseExplorer({ courses }: { courses: ContentEntry[] }) {
   const categories = useMemo(
-    () => ["Tất cả", ...new Set(courses.map(courseCategory).filter(Boolean))],
+    () => ["All", ...new Set(courses.map(courseCategory).filter(Boolean))],
     [courses],
   );
-  const [category, setCategory] = useState("Tất cả");
-  const [query, setQuery] = useState("");
+  const searchParams = useSearchParams();
+  const [category, setCategory] = useState(
+    searchParams.get("category") ?? "All",
+  );
+  const [query, setQuery] = useState(searchParams.get("q") ?? "");
   const router = useRouter();
-  const page = parsePage(useSearchParams().get("page"));
-  const resetPage = () => router.replace(ROUTES.courses, { scroll: false });
+  const page = parsePage(searchParams.get("page"));
+  const updateUrl = (key: string, value: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("page");
+    if (!value || value === "All") params.delete(key);
+    else params.set(key, value);
+    const queryString = params.toString();
+    router.replace(`${ROUTES.courses}${queryString ? `?${queryString}` : ""}`, {
+      scroll: false,
+    });
+  };
   const [selectedSlug, setSelectedSlug] = useState(courses[0]?.slug ?? "");
   const filtered = useMemo(
     () =>
       courses.filter(
         (course) =>
-          (category === "Tất cả" || courseCategory(course) === category) &&
+          (category === "All" || courseCategory(course) === category) &&
           (!query ||
             `${course.title} ${course.description}`
               .toLocaleLowerCase("vi")
@@ -57,33 +70,33 @@ export function CourseExplorer({ courses }: { courses: ContentEntry[] }) {
       <div className="site-container py-20 lg:py-24">
         <header className="mb-8 grid gap-4 border-b pb-8 md:grid-cols-[.8fr_1.2fr] md:items-end">
           <div>
-            <p className="eyebrow">Chương trình đào tạo</p>
+            <p className="eyebrow">Training programmes</p>
             <h2 className="text-3xl font-semibold tracking-[-.04em] md:text-5xl">
-              Năng lực có thể áp dụng ngay
+              Skills you can apply immediately
             </h2>
           </div>
           <p className="max-w-xl leading-7 text-muted-foreground md:justify-self-end">
-            Chọn chương trình phù hợp với công việc và mục tiêu phát triển của
-            bạn.
+            Choose a programme that matches your role and development goals.
           </p>
         </header>
         <CatalogCategories
-          ariaLabel="Danh mục đào tạo"
+          ariaLabel="Academy categories"
           items={categories}
           value={category}
+          formatLabel={toEnglishLabel}
           onChange={(value) => {
             setCategory(value);
-            resetPage();
+            updateUrl("category", value);
           }}
         />
         <CatalogFilterBar>
           <CatalogSearch
-            label="Tìm khóa học"
-            placeholder="Tìm chương trình"
+            label="Search courses"
+            placeholder="Search programmes"
             value={query}
             onChange={(value) => {
               setQuery(value);
-              resetPage();
+              updateUrl("q", value);
             }}
           />
         </CatalogFilterBar>
@@ -91,11 +104,11 @@ export function CourseExplorer({ courses }: { courses: ContentEntry[] }) {
           <strong className="font-semibold text-foreground">
             {filtered.length}
           </strong>{" "}
-          chương trình phù hợp
+          matching programmes
         </p>
         {selected && (
           <div className="grid gap-8 lg:grid-cols-[.7fr_1.3fr] lg:items-start">
-            <div className="border-t">
+            <div className="border-t" aria-label="Programme selection">
               {visible.map((course, index) => (
                 <button
                   type="button"
@@ -126,7 +139,7 @@ export function CourseExplorer({ courses }: { courses: ContentEntry[] }) {
               </div>
               <div className="p-7 md:p-9">
                 <Badge className="bg-white/10 text-white">
-                  {courseCategory(selected)}
+                  {toEnglishLabel(courseCategory(selected))}
                 </Badge>
                 <h3 className="mt-4 text-3xl font-semibold tracking-[-.04em] md:text-4xl">
                   {selected.title}
@@ -146,7 +159,7 @@ export function CourseExplorer({ courses }: { courses: ContentEntry[] }) {
                 </div>
                 <Button asChild className="mt-8 rounded-full">
                   <Link href={ROUTES.courseDetail(selected.slug)}>
-                    Xem chương trình →
+                    View programme →
                   </Link>
                 </Button>
               </div>
@@ -155,12 +168,12 @@ export function CourseExplorer({ courses }: { courses: ContentEntry[] }) {
         )}
         {filtered.length === 0 && (
           <EmptyState
-            title="Không tìm thấy chương trình"
-            description="Hãy thử một từ khóa hoặc danh mục khác."
+            title="No programmes found"
+            description="Try a different keyword or category."
           />
         )}
         <CatalogPagination
-          ariaLabel="Phân trang khóa học"
+          ariaLabel="Academy pagination"
           page={page}
           pages={pages}
           pathname={ROUTES.courses}

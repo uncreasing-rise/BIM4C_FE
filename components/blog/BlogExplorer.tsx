@@ -14,6 +14,7 @@ import {
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ROUTES } from "@/constants/routes";
 import type { ContentEntry } from "@/types/content";
+import { toEnglishLabel } from "@/lib/utils/public-labels";
 
 const pageSize = 5;
 const publishedAt = (meta?: string) => {
@@ -24,10 +25,7 @@ const publishedAt = (meta?: string) => {
   const parsed = Date.parse(meta);
   return Number.isNaN(parsed) ? 0 : parsed;
 };
-const naturalCase = (value: string) =>
-  value
-    .toLocaleLowerCase("vi-VN")
-    .replace(/^./u, (character) => character.toLocaleUpperCase("vi-VN"));
+const naturalCase = (value: string) => toEnglishLabel(value);
 
 export function BlogExplorer({ posts }: { posts: ContentEntry[] }) {
   const sortedPosts = useMemo(
@@ -35,19 +33,31 @@ export function BlogExplorer({ posts }: { posts: ContentEntry[] }) {
     [posts],
   );
   const categories = useMemo(
-    () => ["Tất cả", ...new Set(sortedPosts.map((item) => item.eyebrow))],
+    () => ["All", ...new Set(sortedPosts.map((item) => item.eyebrow))],
     [sortedPosts],
   );
-  const [category, setCategory] = useState("Tất cả");
-  const [query, setQuery] = useState("");
+  const searchParams = useSearchParams();
+  const [category, setCategory] = useState(
+    searchParams.get("category") ?? "All",
+  );
+  const [query, setQuery] = useState(searchParams.get("q") ?? "");
   const router = useRouter();
-  const page = parsePage(useSearchParams().get("page"));
-  const resetPage = () => router.replace(ROUTES.blog, { scroll: false });
+  const page = parsePage(searchParams.get("page"));
+  const updateUrl = (key: string, value: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("page");
+    if (!value || value === "All") params.delete(key);
+    else params.set(key, value);
+    const queryString = params.toString();
+    router.replace(`${ROUTES.blog}${queryString ? `?${queryString}` : ""}`, {
+      scroll: false,
+    });
+  };
   const filtered = useMemo(
     () =>
       sortedPosts.filter(
         (item) =>
-          (category === "Tất cả" || item.eyebrow === category) &&
+          (category === "All" || item.eyebrow === category) &&
           (!query ||
             (item.title + " " + item.description)
               .toLocaleLowerCase("vi")
@@ -69,28 +79,28 @@ export function BlogExplorer({ posts }: { posts: ContentEntry[] }) {
             </h2>
           </div>
           <p className="max-w-xl text-sm leading-7 text-muted-foreground md:justify-self-end">
-            Góc nhìn chuyên môn, bài học dự án và xu hướng công nghệ dành cho
-            ngành xây dựng.
+            Expert perspectives, project lessons and technology trends for the
+            construction industry.
           </p>
         </header>
         <CatalogCategories
-          ariaLabel="Chủ đề bài viết"
+          ariaLabel="Insight topics"
           items={categories}
           value={category}
           formatLabel={naturalCase}
           onChange={(value) => {
             setCategory(value);
-            resetPage();
+            updateUrl("category", value);
           }}
         />
         <CatalogFilterBar>
           <CatalogSearch
-            label="Tìm bài viết"
-            placeholder="Tìm bài viết"
+            label="Search insights"
+            placeholder="Search insights"
             value={query}
             onChange={(value) => {
               setQuery(value);
-              resetPage();
+              updateUrl("q", value);
             }}
           />
         </CatalogFilterBar>
@@ -98,7 +108,7 @@ export function BlogExplorer({ posts }: { posts: ContentEntry[] }) {
           <strong className="font-semibold text-foreground">
             {filtered.length}
           </strong>{" "}
-          bài viết phù hợp
+          matching articles
         </p>
         {visible.length ? (
           <div className="grid grid-cols-1 gap-x-10 border-t pt-8 lg:grid-cols-[1.1fr_.9fr]">
@@ -114,7 +124,7 @@ export function BlogExplorer({ posts }: { posts: ContentEntry[] }) {
                 <Link
                   className="absolute inset-0 z-10 rounded-[14px] focus-visible:outline-2 focus-visible:outline-offset-[-3px] focus-visible:outline-primary"
                   href={ROUTES.blogDetail(item.slug)}
-                  aria-label={"Xem " + item.title}
+                  aria-label={"View " + item.title}
                 />
                 <div
                   className={
@@ -164,7 +174,7 @@ export function BlogExplorer({ posts }: { posts: ContentEntry[] }) {
                   >
                     <time>{item.meta}</time>
                     <span className="font-semibold text-primary">
-                      Đọc thêm →
+                      Read more →
                     </span>
                   </div>
                 </div>
@@ -173,12 +183,12 @@ export function BlogExplorer({ posts }: { posts: ContentEntry[] }) {
           </div>
         ) : (
           <EmptyState
-            title="Không tìm thấy bài viết"
-            description="Hãy thử một từ khóa hoặc chủ đề khác."
+            title="No articles found"
+            description="Try a different keyword or topic."
           />
         )}
         <CatalogPagination
-          ariaLabel="Phân trang tin tức"
+          ariaLabel="Insights pagination"
           page={page}
           pages={pages}
           pathname={ROUTES.blog}

@@ -33,7 +33,7 @@ export default async function ServiceDetail({
         kind="service"
         related={selectRelatedContent(entry, services)}
         backHref={ROUTES.services}
-        backLabel="Tất cả dịch vụ"
+        backLabel="All solutions"
       />
     </main>
   );

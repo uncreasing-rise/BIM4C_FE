@@ -19,18 +19,18 @@ import { Partners } from "@/components/sections/Partners";
 const capabilities = [
   {
     icon: ScanLine,
-    title: "Điều phối chính xác",
-    text: "Phát hiện xung đột sớm và đưa mọi bộ môn về cùng một nguồn dữ liệu.",
+    title: "Precise coordination",
+    text: "Find conflicts early and bring every discipline into one reliable source of truth.",
   },
   {
     icon: Boxes,
-    title: "Mô hình xuyên suốt",
-    text: "Kết nối thiết kế, thi công và vận hành bằng quy trình BIM nhất quán.",
+    title: "Connected delivery",
+    text: "Connect design, construction and operations through one consistent BIM workflow.",
   },
   {
     icon: ChartNoAxesCombined,
-    title: "Quyết định từ dữ liệu",
-    text: "Theo dõi tiến độ, chi phí và chất lượng bằng thông tin trực quan.",
+    title: "Decisions from data",
+    text: "Track progress, cost and quality with information your team can act on.",
   },
 ] as const;
 
@@ -49,7 +49,7 @@ export default async function Home() {
         <Image
           data-motion="parallax"
           src="/images/news-project-coordination.webp"
-          alt="Đội ngũ BIM4C phối hợp dự án"
+          alt="BIM4C team coordinating a construction project"
           fill
           priority
           sizes="100vw"
@@ -57,23 +57,23 @@ export default async function Home() {
         />
         <div className="absolute inset-0 -z-10 bg-[linear-gradient(90deg,rgba(4,24,31,.98)_0%,rgba(4,24,31,.84)_53%,rgba(4,24,31,.3)_100%)]" />
         <div className="absolute inset-0 -z-10 opacity-20 [background-image:linear-gradient(rgba(255,255,255,.12)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.12)_1px,transparent_1px)] [background-size:72px_72px]" />
-        <div className="site-container grid min-h-svh items-end gap-12 py-16 pt-28 md:items-center md:py-24 md:pt-28 lg:grid-cols-[1fr_20rem]">
-          <div className="max-w-4xl" data-motion="hero">
+        <div className="site-container grid min-w-0 min-h-svh items-end gap-12 py-16 pt-28 md:items-center md:py-24 md:pt-28 lg:grid-cols-[1fr_20rem]">
+          <div className="min-w-0 max-w-4xl" data-motion="hero">
             <Badge className="mb-6 rounded-full border-white/15 bg-white/10 px-4 py-1.5 text-white backdrop-blur-md">
               BIM · VDC · DIGITAL TWIN
             </Badge>
             <h1 className="text-balance text-5xl font-semibold leading-[.94] tracking-[-.06em] sm:text-7xl lg:text-[5.5rem]">
-              Xây dựng rõ ràng hơn{" "}
-              <span className="text-primary">bằng dữ liệu.</span>
+              Build with clarity{" "}
+              <span className="text-primary">through better data.</span>
             </h1>
-            <p className="mt-7 max-w-2xl border-l border-primary pl-5 text-base leading-7 text-zinc-300 sm:text-lg">
-              BIM4C kết nối con người, quy trình và mô hình số để mỗi công trình
-              được triển khai chính xác, hiệu quả và bền vững.
+            <p className="mt-7 max-w-2xl break-words border-l border-primary pl-5 text-base leading-7 text-zinc-300 sm:text-lg">
+              BIM4C connects people, processes and digital models so every
+              project can be delivered with greater certainty and efficiency.
             </p>
             <div className="mt-9 flex flex-wrap gap-3">
               <Button asChild size="lg" className="rounded-full">
                 <Link href={ROUTES.contact}>
-                  Bắt đầu dự án <ArrowRight />
+                  Start a conversation <ArrowRight />
                 </Link>
               </Button>
               <Button
@@ -82,7 +82,7 @@ export default async function Home() {
                 variant="outline"
                 className="rounded-full border-white/20 bg-white/5 text-white backdrop-blur hover:bg-white/15 hover:text-white"
               >
-                <Link href={ROUTES.projects}>Xem năng lực</Link>
+                <Link href={ROUTES.projects}>Explore our work</Link>
               </Button>
             </div>
           </div>
@@ -95,7 +95,7 @@ export default async function Home() {
                 <CheckCircle2 />
               </span>
               <div>
-                <p className="text-xs text-zinc-400">Dự án đang vận hành</p>
+                <p className="text-xs text-zinc-400">Project in delivery</p>
                 <p className="font-semibold">LUMIÈRE Riverside</p>
               </div>
             </div>
@@ -103,10 +103,26 @@ export default async function Home() {
               <div className="h-full w-[82%] rounded-full bg-primary" />
             </div>
             <div className="mt-3 flex justify-between text-xs text-zinc-400">
-              <span>Tiến độ phối hợp</span>
+              <span>Coordination progress</span>
               <strong className="text-white">82%</strong>
             </div>
           </div>
+        </div>
+      </section>
+
+      <section className="border-b bg-card" aria-label="BIM4C at a glance">
+        <div className="site-container grid grid-cols-2 divide-x divide-y divide-border sm:grid-cols-4 sm:divide-y-0">
+          {[
+            ["25+", "Clients"],
+            ["180+", "Projects"],
+            ["120+", "Partners"],
+            ["96%", "On-time delivery"],
+          ].map(([value, label]) => (
+            <div className="px-4 py-7 text-center sm:px-6 sm:py-9" key={label}>
+              <strong className="block text-3xl font-semibold tracking-[-.05em] sm:text-4xl">{value}</strong>
+              <span className="mt-1 block text-xs text-muted-foreground sm:text-sm">{label}</span>
+            </div>
+          ))}
         </div>
       </section>
 
@@ -116,15 +132,15 @@ export default async function Home() {
       >
         <div className="grid gap-12 lg:grid-cols-[.8fr_1.2fr] lg:items-end">
           <div data-motion="reveal">
-            <p className="eyebrow">Năng lực cốt lõi</p>
-            <h2 className="display-title">Từ mô hình đến giá trị thực tế.</h2>
+            <p className="eyebrow">Core capabilities</p>
+            <h2 className="display-title">From models to measurable value.</h2>
           </div>
           <p
             className="max-w-2xl text-lg leading-8 text-muted-foreground"
             data-motion="reveal"
           >
-            Chúng tôi thiết kế quy trình BIM vừa đủ cho mục tiêu kinh doanh, đội
-            ngũ và mức độ sẵn sàng của từng tổ chức.
+            We design BIM workflows around your business goals, team and level
+            of digital readiness.
           </p>
         </div>
         <div className="mt-12 grid gap-4 md:grid-cols-3">
@@ -159,9 +175,9 @@ export default async function Home() {
         <div className="mx-auto w-[calc(100%_-_2rem)] max-w-7xl md:w-[calc(100%_-_3rem)]">
           <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <Badge className="mb-4 bg-white/10 text-white">Giải pháp</Badge>
+              <Badge className="mb-4 bg-white/10 text-white">Solutions</Badge>
               <h2 className="text-4xl font-semibold tracking-[-.04em] sm:text-5xl">
-                Đồng hành trọn vòng đời.
+                Support across the full project lifecycle.
               </h2>
             </div>
             <Button
@@ -170,7 +186,7 @@ export default async function Home() {
               className="w-fit border-zinc-700 bg-transparent text-white"
             >
               <Link href={ROUTES.services}>
-                Tất cả dịch vụ <ArrowRight />
+                View all solutions <ArrowRight />
               </Link>
             </Button>
           </div>
@@ -214,7 +230,7 @@ export default async function Home() {
                 <Link
                   className="absolute inset-0"
                   href={ROUTES.serviceDetail(item.slug)}
-                  aria-label={`Xem ${item.title}`}
+                  aria-label={`View ${item.title}`}
                 />
               </article>
             ))}
@@ -229,15 +245,15 @@ export default async function Home() {
         <div className="flex items-end justify-between gap-6">
           <div>
             <Badge variant="outline" className="mb-4">
-              Dự án
+              Projects
             </Badge>
             <h2 className="text-4xl font-semibold tracking-[-.04em] sm:text-5xl">
-              Năng lực được chứng minh.
+              Capability, proven in the field.
             </h2>
           </div>
           <Button asChild variant="ghost" className="hidden sm:inline-flex">
             <Link href={ROUTES.projects}>
-              Xem tất cả <ArrowRight />
+              View all projects <ArrowRight />
             </Link>
           </Button>
         </div>
@@ -334,7 +350,7 @@ export default async function Home() {
                     ))
                   ) : (
                     <span className="text-sm font-semibold text-primary">
-                      Xem case study{" "}
+                      View case study{" "}
                       <ArrowRight className="ml-1 inline size-4" />
                     </span>
                   )}
@@ -342,7 +358,7 @@ export default async function Home() {
                 <Link
                   className="absolute inset-0"
                   href={ROUTES.projectDetail(item.slug)}
-                  aria-label={`Khám phá ${item.title}`}
+                  aria-label={`Explore ${item.title}`}
                 />
               </div>
             </article>
@@ -361,7 +377,7 @@ export default async function Home() {
             BIM Insights
           </Badge>
           <h2 className="text-4xl font-semibold tracking-[-.04em] sm:text-5xl">
-            Góc nhìn mới nhất.
+            Latest insights.
           </h2>
           <div className="mt-10 grid gap-x-10 gap-y-0 md:grid-cols-2">
             {posts.map((item, index) => (
@@ -393,7 +409,7 @@ export default async function Home() {
                   />
                   {index === 0 && (
                     <Badge className="absolute left-5 top-5 border-white/20 bg-black/35 text-white backdrop-blur">
-                      Bài nổi bật
+                      Featured story
                     </Badge>
                   )}
                 </div>
@@ -428,7 +444,7 @@ export default async function Home() {
                   </p>
                   <div className="mt-6 flex items-center justify-between">
                     <span className="text-sm font-semibold text-primary">
-                      Đọc bài viết
+                      Read article
                     </span>
                     <span className="grid size-9 place-items-center rounded-full border transition-colors group-hover:border-primary group-hover:bg-primary group-hover:text-primary-foreground">
                       <ArrowRight className="size-4" />
@@ -437,7 +453,7 @@ export default async function Home() {
                   <Link
                     className="absolute inset-0"
                     href={ROUTES.blogDetail(item.slug)}
-                    aria-label={`Đọc ${item.title}`}
+                    aria-label={`Read ${item.title}`}
                   />
                 </div>
               </article>
@@ -453,10 +469,10 @@ export default async function Home() {
         <div className="overflow-hidden rounded-3xl bg-primary px-6 py-14 text-primary-foreground sm:px-12 lg:flex lg:items-center lg:justify-between lg:px-16">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[.14em] opacity-75">
-              Sẵn sàng chuyển đổi?
+              Ready to move forward?
             </p>
             <h2 className="mt-3 max-w-2xl text-4xl font-semibold tracking-[-.04em]">
-              Cùng biến dữ liệu dự án thành lợi thế.
+              Turn project data into a competitive advantage.
             </h2>
           </div>
           <Button
@@ -466,7 +482,7 @@ export default async function Home() {
             className="mt-8 rounded-full lg:mt-0"
           >
             <Link href={ROUTES.contact}>
-              Trao đổi với chuyên gia <ArrowRight />
+              Talk to an expert <ArrowRight />
             </Link>
           </Button>
         </div>

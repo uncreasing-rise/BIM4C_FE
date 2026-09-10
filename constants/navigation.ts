@@ -1,27 +1,34 @@
 import { ROUTES } from "./routes";
 
 export const MAIN_NAVIGATION = [
-  { label: "Giới thiệu", href: ROUTES.about },
-  { label: "Dịch vụ", href: ROUTES.services },
-  { label: "Dự án", href: ROUTES.projects },
-  { label: "Khóa học", href: ROUTES.courses },
+  { label: "About", href: ROUTES.about },
+  { label: "Solutions", href: ROUTES.services },
+  { label: "Projects", href: ROUTES.projects },
+  { label: "Academy", href: ROUTES.courses },
   { label: "Blog", href: ROUTES.blog },
 ] as const;
 
 export const HEADER_MENUS = {
   about: [
-    { label: "Tổng quan", href: ROUTES.about },
-    { label: "Hệ thống quản trị", href: ROUTES.about },
-    { label: "Năng lực", href: ROUTES.services },
-    { label: "Khách hàng và đối tác", href: "/#partners" },
+    { label: "Overview", href: ROUTES.about },
+    { label: "Our approach", href: ROUTES.about },
+    { label: "Capabilities", href: ROUTES.services },
+    { label: "Clients and partners", href: "/#partners" },
   ],
   services: [
-    { label: "Tư vấn BIM", href: ROUTES.serviceDetail("tu-van-bim") },
-    { label: "Đào tạo", href: ROUTES.serviceDetail("dao-tao") },
-    { label: "Thiết kế", href: ROUTES.serviceDetail("thiet-ke") },
-    { label: "Tư vấn giám sát", href: ROUTES.serviceDetail("tu-van-giam-sat") },
+    { label: "BIM consulting", href: ROUTES.serviceDetail("tu-van-bim") },
+    { label: "Training", href: ROUTES.serviceDetail("dao-tao") },
+    { label: "Design", href: ROUTES.serviceDetail("thiet-ke") },
+    {
+      label: "Construction advisory",
+      href: ROUTES.serviceDetail("tu-van-giam-sat"),
+    },
   ],
-  projects: ["Nhà cao tầng", "Nhà ở", "Công nghiệp", "Hạ tầng", "Cơ điện"].map(
-    (label) => ({ label, href: ROUTES.projects }),
-  ),
+  projects: [
+    "High-rise",
+    "Residential",
+    "Industrial",
+    "Infrastructure",
+    "MEP",
+  ].map((label) => ({ label, href: ROUTES.projects })),
 } as const;

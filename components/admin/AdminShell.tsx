@@ -100,6 +100,7 @@ export function AdminShell({
   return (
     <div className="min-h-screen lg:grid lg:grid-cols-[248px_minmax(0,1fr)]">
       <aside
+        id="admin-sidebar"
         className={`fixed inset-y-0 left-0 z-50 flex w-[248px] flex-col bg-foreground px-4 pb-[18px] text-white transition-transform lg:translate-x-0 ${open ? "translate-x-0" : "-translate-x-full"}`}
       >
         <div className="flex h-[86px] flex-col justify-center border-b border-white/10 px-3">
@@ -157,6 +158,8 @@ export function AdminShell({
             className="lg:hidden"
             onClick={() => setOpen(true)}
             aria-label="Mở menu"
+            aria-expanded={open}
+            aria-controls="admin-sidebar"
           >
             <Menu />
           </Button>
@@ -166,6 +169,7 @@ export function AdminShell({
               className="bg-muted pl-9 text-xs"
               aria-label="Tìm kiếm toàn hệ thống"
               placeholder="Tìm nội dung, dự án, khóa học..."
+              type="search"
             />
           </div>
           <div className="flex items-center gap-3 md:gap-6">
@@ -196,7 +200,9 @@ export function AdminShell({
               <h1 className="mb-1.5 text-2xl font-semibold tracking-tight text-foreground">
                 {title}
               </h1>
-              <span className="text-xs text-muted-foreground">{description}</span>
+              <span className="text-xs text-muted-foreground">
+                {description}
+              </span>
             </div>
             {action}
           </header>
