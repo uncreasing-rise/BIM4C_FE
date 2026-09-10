@@ -101,10 +101,10 @@ export function ServiceExplorer({ services }: { services: ContentEntry[] }) {
             matching solutions
           </p>
           {visible.length ? (
-            <div className="grid gap-6 md:grid-cols-2">
+            <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
               {visible.map((service, index) => (
                 <article
-                  className="group relative overflow-hidden rounded-xl border bg-card transition-shadow hover:shadow-lg"
+                  className="service-card group relative flex flex-col overflow-hidden rounded-xl border bg-card"
                   key={service.slug}
                 >
                   <div className="relative aspect-[16/7] overflow-hidden bg-muted">
@@ -112,7 +112,7 @@ export function ServiceExplorer({ services }: { services: ContentEntry[] }) {
                       src={service.image}
                       alt={service.title}
                       fill
-                      sizes="(max-width:767px) 100vw, 50vw"
+                      sizes="(max-width:767px) 100vw, (max-width:1279px) 50vw, 33vw"
                       className="object-cover transition-transform duration-700 group-hover:scale-105"
                     />
                     <span className="absolute left-4 top-4 rounded-full bg-black/45 px-3 py-1 text-xs font-semibold text-white backdrop-blur">
@@ -122,28 +122,28 @@ export function ServiceExplorer({ services }: { services: ContentEntry[] }) {
                       )}
                     </span>
                   </div>
-                  <div className="p-6">
+                  <div className="flex flex-1 flex-col p-5">
                     <p className="text-xs font-semibold uppercase tracking-[.16em] text-primary">
                       BIM4C solution
                     </p>
-                    <h3 className="mt-2 text-2xl font-semibold tracking-[-.035em] md:text-3xl">
+                    <h3 className="mt-2 text-xl font-semibold tracking-[-.035em]">
                       {service.title}
                     </h3>
-                    <p className="mt-3 line-clamp-2 text-sm leading-6 text-muted-foreground">
+                    <p className="mt-3 text-sm leading-6 text-muted-foreground">
                       {service.description}
                     </p>
-                    <ul className="mt-4 flex flex-wrap gap-x-5 gap-y-2 border-t pt-4">
+                    <ul className="mb-5 mt-4 grid gap-2 border-t pt-4">
                       {service.highlights.slice(0, 3).map((item) => (
                         <li
                           className="flex items-center gap-2 text-xs"
                           key={item}
                         >
-                          <Check className="size-4 text-primary" />
+                          <Check className="size-4 shrink-0 text-primary" />
                           {item}
                         </li>
                       ))}
                     </ul>
-                    <span className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-primary">
+                    <span className="mt-auto inline-flex items-center gap-2 text-sm font-semibold text-primary">
                       Explore solution <ArrowUpRight className="size-4" />
                     </span>
                   </div>

@@ -9,6 +9,7 @@ import { getPosts } from "@/features/blog/api/queries";
 import { getCourses } from "@/features/courses/api/queries";
 import { Partners } from "@/components/sections/Partners";
 import { ExpertiseStrip } from "@/components/sections/ExpertiseStrip";
+import { ProjectRow } from "@/components/projects/ProjectRow";
 import { DeliveryProcess } from "@/components/sections/DeliveryProcess";
 
 export default async function Home() {
@@ -20,48 +21,64 @@ export default async function Home() {
   ]);
   const featured =
     projects.find((project) => project.category === "High-rise") ?? projects[0];
+  const servicePriority = ["tu-van-bim", "bim-coordination", "thiet-ke"];
+  const orderedServices = [...services].sort((a, b) => {
+    const rank = (slug: string) => {
+      const index = servicePriority.indexOf(slug);
+      return index < 0 ? servicePriority.length : index;
+    };
+    return rank(a.slug) - rank(b.slug);
+  });
   return (
     <main>
       <section
         data-home-section="hero"
-        className="technical-grid relative overflow-hidden bg-brand-ink text-white"
+        className="page-hero home-hero technical-grid relative overflow-hidden bg-brand-ink text-white"
       >
+        <Image
+          src={featured?.image ?? "/images/news-digital-twin.webp"}
+          alt=""
+          fill
+          priority
+          sizes="100vw"
+          className="pointer-events-none object-cover opacity-15 lg:hidden"
+        />
         <div
           aria-hidden="true"
           className="pointer-events-none absolute -right-40 top-0 size-[40rem] rounded-full bg-teal-500/10 blur-[100px]"
         />
-        <div className="site-container relative grid items-center gap-10 pb-10 pt-28 md:pb-14 md:pt-32 lg:grid-cols-[1fr_1fr] lg:gap-14">
+        <div className="site-container relative grid items-center gap-7 py-8 lg:grid-cols-[1.05fr_.95fr] lg:gap-12">
           <div className="min-w-0">
             <p className="mb-5 flex items-center gap-3 text-xs font-semibold uppercase tracking-[.16em] text-teal-200">
               <span className="size-2 rounded-full bg-teal-300" />
               BIM consulting &amp; digital delivery
             </p>
-            <h1 className="max-w-xl text-balance text-[clamp(2.6rem,4.5vw,4.5rem)] font-semibold leading-[1.04] tracking-[-.045em]">
+            <h1 className="max-w-xl text-balance text-[clamp(2.4rem,4vw,3.65rem)] font-semibold leading-[1.08] tracking-[-.045em]">
               Build better.
               <br />
               <span className="text-teal-300">Together, through BIM.</span>
             </h1>
             <p className="mt-5 max-w-lg text-base leading-7 text-slate-300 md:text-lg md:leading-8">
-              We help owners, designers and contractors coordinate models,
-              resolve complexity and turn project information into confident
+              BIM consulting, model coordination and digital delivery for
+              owners, designers and contractors. Clear information. Confident
               decisions.
             </p>
             <div className="mt-7 flex flex-wrap gap-3">
-              <Button asChild size="lg" className="rounded-lg">
+              <Button asChild size="lg" className="rounded-lg px-4">
                 <Link href={ROUTES.contact}>
-                  Discuss your project <ArrowUpRight />
+                  Discuss a project <ArrowUpRight />
                 </Link>
               </Button>
               <Button
                 asChild
                 variant="outline"
                 size="lg"
-                className="rounded-lg border-white/25 bg-transparent text-white hover:bg-white/10 hover:text-white"
+                className="rounded-lg border-white/25 bg-transparent px-4 text-white hover:bg-white/10 hover:text-white"
               >
-                <Link href={ROUTES.projects}>Explore our work</Link>
+                <Link href={ROUTES.projects}>Our work</Link>
               </Button>
             </div>
-            <div className="mt-7 flex flex-wrap gap-x-5 gap-y-2 border-t border-white/15 pt-5 text-xs text-slate-300">
+            <div className="mt-7 hidden flex-wrap gap-x-5 gap-y-2 border-t border-white/15 pt-5 text-xs text-slate-300 md:flex">
               {[
                 "BIM strategy",
                 "Multidisciplinary coordination",
@@ -74,13 +91,13 @@ export default async function Home() {
               ))}
             </div>
           </div>
-          <div className="relative min-w-0">
+          <div className="relative hidden min-w-0 lg:block">
             <div
               className="absolute -left-4 -top-4 hidden h-20 w-20 border-l border-t border-teal-300/40 lg:block"
               aria-hidden="true"
             />
             <article className="group relative overflow-hidden rounded-2xl border border-white/15 bg-white/5">
-              <div className="relative aspect-[16/10] sm:aspect-[16/11]">
+              <div className="relative aspect-[16/9]">
                 <Image
                   src={featured?.image ?? "/images/news-digital-twin.webp"}
                   alt={
@@ -140,7 +157,7 @@ export default async function Home() {
       <section
         id="services"
         data-home-section="services"
-        className="py-14 lg:py-16"
+        className="services-section py-12 lg:py-14"
       >
         <div className="site-container">
           <header className="mb-8 flex flex-col justify-between gap-5 md:flex-row md:items-end">
@@ -165,11 +182,11 @@ export default async function Home() {
               </Link>
             </div>
           </header>
-          <div className="grid gap-5 md:grid-cols-3">
-            {services.slice(0, 3).map((service, index) => (
+          <div className="grid gap-5 md:grid-cols-3" data-motion="reveal">
+            {orderedServices.slice(0, 3).map((service, index) => (
               <article
                 key={service.slug}
-                className="group relative overflow-hidden rounded-xl border bg-card transition-shadow hover:shadow-lg"
+                className="service-card group relative flex flex-col overflow-hidden rounded-xl border bg-card"
               >
                 <div className="relative aspect-[16/8] overflow-hidden bg-muted">
                   <Image
@@ -183,8 +200,8 @@ export default async function Home() {
                     0{index + 1}
                   </span>
                 </div>
-                <div className="p-5 lg:p-6">
-                  <h3 className="text-2xl font-semibold tracking-tight">
+                <div className="flex flex-1 flex-col p-5">
+                  <h3 className="text-xl font-semibold tracking-tight">
                     <Link
                       className="after:absolute after:inset-0"
                       href={ROUTES.serviceDetail(service.slug)}
@@ -192,18 +209,18 @@ export default async function Home() {
                       {service.title}
                     </Link>
                   </h3>
-                  <p className="mt-3 line-clamp-2 text-sm leading-7 text-muted-foreground md:line-clamp-none">
+                  <p className="mt-3 text-sm leading-6 text-muted-foreground">
                     {service.description}
                   </p>
-                  <ul className="mt-4 hidden space-y-2 border-t pt-4 md:block">
-                    {service.highlights.slice(0, 3).map((item) => (
+                  <ul className="mb-4 mt-4 space-y-2 border-t pt-4">
+                    {service.highlights.slice(0, 2).map((item) => (
                       <li key={item} className="flex gap-2 text-xs leading-5">
                         <Check className="mt-0.5 size-3.5 shrink-0 text-primary" />
                         {item}
                       </li>
                     ))}
                   </ul>
-                  <span className="mt-4 flex items-center justify-between text-sm font-semibold text-primary">
+                  <span className="mt-auto flex items-center justify-between pt-4 text-sm font-semibold text-primary">
                     Explore solution <ArrowUpRight className="size-5" />
                   </span>
                 </div>
@@ -212,7 +229,7 @@ export default async function Home() {
           </div>
           {services.length > 3 && (
             <div className="mt-5 grid divide-y rounded-xl border bg-muted/50 md:grid-cols-3 md:divide-x md:divide-y-0">
-              {services.slice(3, 6).map((service) => (
+              {orderedServices.slice(3, 6).map((service) => (
                 <Link
                   href={ROUTES.serviceDetail(service.slug)}
                   key={service.slug}
@@ -247,73 +264,14 @@ export default async function Home() {
               All projects <ArrowUpRight className="size-4" />
             </Link>
           </header>
-          <div className="grid gap-5 lg:grid-cols-[1.15fr_.85fr]">
+          <div className="border-t border-white/20">
             {projects.slice(0, 3).map((project, index) => (
-              <article
+              <ProjectRow
                 key={project.slug}
-                className={
-                  index === 0
-                    ? "group relative overflow-hidden rounded-xl border border-white/15 lg:row-span-2"
-                    : "group relative grid overflow-hidden rounded-xl border border-white/15 bg-white/5 sm:grid-cols-[.85fr_1.15fr]"
-                }
-              >
-                <div
-                  className={
-                    index === 0
-                      ? "relative aspect-[16/10] min-h-64 lg:absolute lg:inset-0 lg:aspect-auto"
-                      : "relative aspect-[16/9] sm:aspect-auto sm:min-h-52"
-                  }
-                >
-                  <Image
-                    src={project.image}
-                    alt=""
-                    fill
-                    sizes={
-                      index === 0
-                        ? "(max-width:1023px) 100vw, 55vw"
-                        : "(max-width:639px) 100vw, 25vw"
-                    }
-                    className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
-                  />
-                </div>
-                {index === 0 && (
-                  <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-brand-ink via-brand-ink/10 to-transparent" />
-                )}
-                <div
-                  className={
-                    index === 0
-                      ? "relative p-6 lg:flex lg:min-h-[29rem] lg:flex-col lg:justify-end lg:p-8"
-                      : "p-5"
-                  }
-                >
-                  <p className="text-xs font-medium text-teal-200">
-                    {project.category} · {project.year}
-                  </p>
-                  <h3
-                    className={
-                      index === 0
-                        ? "mt-2 max-w-lg text-3xl font-semibold leading-tight tracking-tight"
-                        : "mt-2 text-xl font-semibold leading-snug"
-                    }
-                  >
-                    {project.title}
-                  </h3>
-                  <p className="mt-3 text-sm leading-6 text-slate-300">
-                    {index === 0 ? project.description : project.location}
-                  </p>
-                  <div className="mt-5 flex items-center justify-between gap-3 border-t border-white/20 pt-4 text-xs">
-                    <span className="text-slate-300">{project.status}</span>
-                    <span className="inline-flex items-center gap-2 font-semibold text-teal-200">
-                      View project <ArrowUpRight className="size-4" />
-                    </span>
-                  </div>
-                </div>
-                <Link
-                  className="absolute inset-0"
-                  href={ROUTES.projectDetail(project.slug)}
-                  aria-label={"Explore " + project.title}
-                />
-              </article>
+                project={project}
+                number={index + 1}
+                dark
+              />
             ))}
           </div>
         </div>

@@ -1,51 +1,27 @@
-import Link from "next/link";
-import { ArrowUpRight } from "lucide-react";
-import { ROUTES } from "@/constants/routes";
-
-const areas = [
-  [
-    "01",
-    "BIM strategy",
-    "Standards & delivery planning",
-    ROUTES.serviceDetail("tu-van-bim"),
-  ],
-  [
-    "02",
-    "Model coordination",
-    "Connected disciplines",
-    ROUTES.serviceDetail("bim-coordination"),
-  ],
-  ["03", "Team development", "Practical BIM training", ROUTES.courses],
-  [
-    "04",
-    "Asset information",
-    "Digital handover & operations",
-    ROUTES.serviceDetail("digital-twin-va-du-lieu-tai-san"),
-  ],
-] as const;
+﻿import { Building2, HardHat, PencilRuler } from "lucide-react";
 
 export function ExpertiseStrip() {
   return (
-    <section className="border-b bg-card" aria-label="Explore our expertise">
-      <div className="site-container grid grid-cols-2 lg:grid-cols-4">
-        {areas.map(([number, title, description, href]) => (
-          <Link
-            href={href}
-            key={title}
-            className="group min-w-0 border-b border-border/60 px-3 py-6 transition-colors hover:bg-muted sm:px-6 lg:border-b-0"
-          >
-            <span className="flex items-center justify-between text-xs font-medium text-primary">
-              {number}
-              <ArrowUpRight className="size-4" />
-            </span>
-            <h2 className="mt-3 text-base font-semibold tracking-tight sm:text-lg">
-              {title}
-            </h2>
-            <p className="mt-1 text-xs leading-5 text-muted-foreground sm:text-sm">
-              {description}
-            </p>
-          </Link>
-        ))}
+    <section className="border-b bg-white" aria-label="Who we work with">
+      <div className="site-container flex flex-wrap items-center justify-between gap-x-8 gap-y-4 py-5">
+        <p className="text-xs font-semibold uppercase tracking-[.14em] text-muted-foreground">
+          One partner. Your whole project team.
+        </p>
+        <ul className="flex flex-wrap gap-x-7 gap-y-3">
+          {[
+            { icon: Building2, label: "Owners & developers" },
+            { icon: PencilRuler, label: "Design consultants" },
+            { icon: HardHat, label: "Contractors" },
+          ].map(({ icon: Icon, label }) => (
+            <li
+              key={label}
+              className="flex items-center gap-2 text-xs font-medium sm:text-sm"
+            >
+              <Icon className="size-4 text-primary" aria-hidden="true" />
+              {label}
+            </li>
+          ))}
+        </ul>
       </div>
     </section>
   );

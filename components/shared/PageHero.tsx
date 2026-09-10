@@ -33,7 +33,7 @@ export function PageHero({
   return (
     <section
       className={cn(
-        "technical-grid relative isolate flex min-h-72 items-end overflow-hidden bg-brand-ink pt-24 text-white md:min-h-80",
+        "page-hero technical-grid relative isolate flex items-center overflow-hidden bg-brand-ink text-white",
       )}
     >
       <Image
@@ -81,7 +81,10 @@ export function PageHero({
             </span>
           ))}
         </nav>
-        <h1 className="max-w-4xl text-balance text-3xl font-semibold leading-[1.04] tracking-[-.045em] sm:text-4xl lg:text-5xl">
+        <p className="mb-4 text-xs font-semibold uppercase tracking-[.16em] text-teal-300">
+          {naturalEyebrow}
+        </p>
+        <h1 className="max-w-3xl text-balance text-3xl font-semibold leading-[1.1] tracking-[-.045em] sm:text-4xl lg:text-5xl">
           {title}
         </h1>
         <p className="mt-4 max-w-2xl break-words border-l border-primary pl-4 text-sm leading-6 text-zinc-300 md:text-base">

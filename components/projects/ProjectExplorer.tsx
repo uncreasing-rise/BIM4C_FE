@@ -1,7 +1,6 @@
 "use client";
 
-import Image from "next/image";
-import Link from "next/link";
+import { ProjectRow } from "@/components/projects/ProjectRow";
 import { useMemo } from "react";
 import { useCatalogFilters } from "@/components/shared/useCatalogFilters";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -140,60 +139,13 @@ export function ProjectExplorer({ projects }: { projects: Project[] }) {
             Reset filters
           </button>
         </div>
-        <div className="grid gap-6 md:grid-cols-2">
-          {visible.map((project) => (
-            <article
-              className="group relative flex min-w-0 flex-col overflow-hidden rounded-xl border bg-card transition-shadow hover:shadow-lg"
+        <div className="border-t">
+          {visible.map((project, index) => (
+            <ProjectRow
               key={project.slug}
-            >
-              <Link
-                className="absolute inset-0 z-10 rounded-[14px] focus-visible:outline-2 focus-visible:outline-offset-[-3px] focus-visible:outline-primary"
-                href={ROUTES.projectDetail(project.slug)}
-                aria-label={`View ${project.title}`}
-              />
-              <div className="relative aspect-[16/8] overflow-hidden bg-muted">
-                <Image
-                  className="object-cover transition-transform duration-700 group-hover:scale-[1.04]"
-                  src={project.image}
-                  alt={project.title}
-                  fill
-                  sizes="(max-width:767px) 100vw, 50vw"
-                />
-              </div>
-              <div className="flex flex-1 flex-col p-5 sm:p-6">
-                <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-primary">
-                  {toEnglishLabel(project.category)}
-                </p>
-                <h3 className="text-2xl font-semibold leading-tight tracking-tight">
-                  {project.title}
-                </h3>
-                <p className="mt-3 line-clamp-2 text-sm leading-7 text-muted-foreground">
-                  {project.description}
-                </p>
-                <dl className="mt-5 grid grid-cols-2 gap-3 border-y py-4 text-sm text-muted-foreground">
-                  <div>
-                    <dt>Year</dt>
-                    <dd className="font-medium text-foreground">
-                      {project.year}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt>Location</dt>
-                    <dd className="line-clamp-1 font-medium text-foreground">
-                      {project.location}
-                    </dd>
-                  </div>
-                </dl>
-                <div className="mt-auto flex items-center justify-between gap-3 pt-4">
-                  <span className="rounded-md bg-muted px-2 py-1 text-xs font-medium text-muted-foreground">
-                    {project.status}
-                  </span>
-                  <span className="text-sm font-semibold text-primary">
-                    Explore project →
-                  </span>
-                </div>
-              </div>
-            </article>
+              project={project}
+              number={(page - 1) * PROJECT_PAGE_SIZE + index + 1}
+            />
           ))}
           {visible.length === 0 && (
             <div className="md:col-span-2">

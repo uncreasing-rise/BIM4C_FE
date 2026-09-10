@@ -122,54 +122,79 @@ export function Header() {
             Talk to an expert <ArrowUpRight />
           </Link>
         </Button>
-        <Sheet key={pathname}>
-          <SheetTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              className={cn(
-                "size-11 lg:hidden",
-                overHero && "text-white hover:bg-white/10 hover:text-white",
-              )}
-              aria-label="Open navigation menu"
-              aria-haspopup="dialog"
-            >
-              <Menu />
-            </Button>
-          </SheetTrigger>
-          <SheetContent className="p-6">
-            <SheetTitle className="mb-8 text-left">BIM4C</SheetTitle>
-            <nav className="grid gap-2">
-              {MAIN_NAVIGATION.map((item) => (
-                <SheetClose asChild key={item.href}>
-                  <Button
-                    asChild
-                    variant="ghost"
-                    className="min-h-11 justify-start text-base"
+        <div className="flex items-center gap-1 lg:hidden">
+          <Link
+            href={ROUTES.contact}
+            className={cn(
+              "inline-flex min-h-11 items-center rounded-lg px-3 text-xs font-semibold",
+              overHero
+                ? "bg-white/10 text-white hover:bg-white/20"
+                : "bg-primary text-white hover:bg-primary-hover",
+            )}
+          >
+            Contact
+          </Link>
+          <Sheet key={pathname}>
+            <SheetTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className={cn(
+                  "size-11 lg:hidden",
+                  overHero && "text-white hover:bg-white/10 hover:text-white",
+                )}
+                aria-label="Open navigation menu"
+                aria-haspopup="dialog"
+              >
+                <Menu />
+              </Button>
+            </SheetTrigger>
+            <SheetContent className="overflow-y-auto p-6">
+              <SheetTitle className="mb-2 text-left">Explore BIM4C</SheetTitle>
+              <p className="mb-5 text-sm leading-6 text-muted-foreground">
+                BIM expertise for your next project.
+              </p>
+              <nav className="grid gap-2">
+                <SheetClose asChild>
+                  <Link
+                    href={ROUTES.home}
+                    className="flex min-h-11 items-center rounded-lg px-4 text-base font-medium hover:bg-muted"
+                    aria-current={pathname === ROUTES.home ? "page" : undefined}
                   >
-                    <Link
-                      href={item.href}
-                      aria-current={
-                        pathname === item.href ||
-                        pathname.startsWith(`${item.href}/`)
-                          ? "page"
-                          : undefined
-                      }
-                      className="aria-[current=page]:bg-muted aria-[current=page]:text-primary"
+                    Home
+                  </Link>
+                </SheetClose>
+                {MAIN_NAVIGATION.map((item) => (
+                  <SheetClose asChild key={item.href}>
+                    <Button
+                      asChild
+                      variant="ghost"
+                      className="min-h-11 justify-start text-base"
                     >
-                      {item.label}
-                    </Link>
+                      <Link
+                        href={item.href}
+                        aria-current={
+                          pathname === item.href ||
+                          pathname.startsWith(`${item.href}/`)
+                            ? "page"
+                            : undefined
+                        }
+                        className="aria-[current=page]:bg-muted aria-[current=page]:text-primary"
+                      >
+                        {item.label}
+                      </Link>
+                    </Button>
+                  </SheetClose>
+                ))}
+                <SheetClose asChild>
+                  <Button asChild className="mt-4 min-h-11">
+                    <Link href={ROUTES.contact}>Talk to an expert</Link>
                   </Button>
                 </SheetClose>
-              ))}
-              <SheetClose asChild>
-                <Button asChild className="mt-4 min-h-11">
-                  <Link href={ROUTES.contact}>Talk to an expert</Link>
-                </Button>
-              </SheetClose>
-            </nav>
-          </SheetContent>
-        </Sheet>
+              </nav>
+            </SheetContent>
+          </Sheet>
+        </div>
       </div>
     </header>
   );

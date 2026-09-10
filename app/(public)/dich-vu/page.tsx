@@ -12,6 +12,8 @@ import { PageHero } from "@/components/shared/PageHero";
 import { ROUTES } from "@/constants/routes";
 import { getServices } from "@/features/services/api/queries";
 import { ServiceExplorer } from "@/components/services/ServiceExplorer";
+import { ServiceGuide } from "@/components/services/ServiceGuide";
+import { ServiceFaq } from "@/components/services/ServiceFaq";
 
 const description =
   "BIM consulting, design, training and construction advisory solutions from BIM4C.";
@@ -49,7 +51,11 @@ export default async function ServicesPage({
         description="From strategy and design coordination to digital handover, every solution is built around a measurable outcome."
         image="/images/service-design.jpg"
       />
+      <ServiceGuide
+        services={services.map(({ slug, title }) => ({ slug, title }))}
+      />
       <ServiceExplorer services={services} />
+      <ServiceFaq />
       <section className="bg-brand-ink py-20 text-white">
         <div className="site-container flex flex-col gap-7 md:flex-row md:items-center md:justify-between">
           <div>

@@ -24,11 +24,15 @@ export function CatalogLoadingState({
   label?: string;
 }) {
   return (
-    <main className="site-container py-12" aria-busy="true" aria-label={label}>
-      <div className="mb-10 overflow-hidden rounded-3xl bg-muted/50">
-        <div className="h-56 animate-pulse bg-muted md:h-72" />
-      </div>
-      <div className="grid gap-10 lg:grid-cols-[.78fr_1.22fr]">
+    <main aria-busy="true" aria-label={label}>
+      <section className="page-hero technical-grid flex items-center bg-brand-ink">
+        <div className="site-container space-y-5 py-8" aria-hidden="true">
+          <div className="h-3 w-32 animate-pulse rounded bg-white/15" />
+          <div className="h-12 w-3/4 max-w-xl animate-pulse rounded bg-white/15" />
+          <div className="h-5 w-4/5 max-w-lg animate-pulse rounded bg-white/10" />
+        </div>
+      </section>
+      <div className="site-container grid gap-10 py-12 lg:grid-cols-[.78fr_1.22fr]">
         <div className="space-y-4">
           <div className="h-3 w-32 animate-pulse rounded bg-muted" />
           <div className="h-12 w-full animate-pulse rounded bg-muted" />

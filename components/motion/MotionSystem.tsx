@@ -9,6 +9,7 @@ export function MotionSystem() {
     const preference = window.matchMedia("(prefers-reduced-motion: reduce)");
     if (preference.matches) return;
     const animations: Animation[] = [];
+    const observed = new WeakSet<Element>();
     const observer = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {
@@ -27,11 +28,37 @@ export function MotionSystem() {
       },
       { threshold: 0.12 },
     );
-    document
-      .querySelectorAll("main [data-motion='reveal']")
-      .forEach((element) => observer.observe(element));
+    const discover = () => {
+      document
+        .querySelectorAll(
+          "main [data-motion='reveal'], main > section > .site-container > header",
+        )
+        .forEach((element) => {
+          if (observed.has(element)) return;
+          observed.add(element);
+          observer.observe(element);
+        });
+      document
+        .querySelectorAll("main:not([aria-busy='true'])")
+        .forEach((main) => {
+          if (observed.has(main)) return;
+          observed.add(main);
+          animations.push(
+            main.animate([{ opacity: 0.65 }, { opacity: 1 }], {
+              duration: 260,
+              easing: "ease-out",
+            }),
+          );
+        });
+    };
+    discover();
+    // Streaming can replace the loading fallback after the pathname changes.
+    const mutations = new MutationObserver(discover);
+    const content = document.getElementById("main-content");
+    if (content) mutations.observe(content, { childList: true, subtree: true });
     const stop = () => {
       observer.disconnect();
+      mutations.disconnect();
       animations.forEach((animation) => animation.cancel());
     };
     preference.addEventListener("change", stop);

@@ -9,6 +9,8 @@ import { submitContactForm } from "../api/mutations";
 import { getZodFieldErrors } from "../utils/zod-errors";
 import Link from "next/link";
 import { ROUTES } from "@/constants/routes";
+import { contactSchema } from "../schemas/contact.schema";
+import { CheckCircle2 } from "lucide-react";
 
 type ContactField =
   "name" | "phone" | "email" | "company" | "message" | "consent";
@@ -30,19 +32,24 @@ export function ConsultationForm({
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (status === "sending") return;
     const form = event.currentTarget;
     const data = new FormData(form);
     setStatus("sending");
     setMessage("");
     setFieldErrors({});
     try {
-      const result = await submitContactForm({
+      const input = contactSchema.parse({
         name: String(data.get("name") ?? ""),
         email: String(data.get("email") ?? ""),
         phone: String(data.get("phone") ?? ""),
         company: String(data.get("company") ?? ""),
-        message: `${subject ? `${subject}\n\n` : ""}${String(data.get("message") ?? "")}`,
+        message: String(data.get("message") ?? ""),
         consent: data.get("consent") === "on",
+      });
+      const result = await submitContactForm({
+        ...input,
+        message: `${subject ? `${subject}\n\n` : ""}${input.message}`,
       });
       form.reset();
       setStatus("success");
@@ -69,6 +76,39 @@ export function ConsultationForm({
   const captionClass = "text-xs font-medium text-white/85";
   const inputClass =
     "h-12 w-full min-w-0 rounded-xl border border-white/30 bg-white/[.06] px-4 text-base text-white shadow-none outline-none transition placeholder:text-white/65 hover:border-white/50 focus-visible:border-white focus-visible:ring-3 focus-visible:ring-white/30";
+  if (status === "success") {
+    return (
+      <div
+        className="rounded-xl border border-teal-200/25 bg-teal-200/10 p-6"
+        role="status"
+        aria-live="polite"
+      >
+        <CheckCircle2
+          className="mb-4 size-9 text-teal-200"
+          aria-hidden="true"
+        />
+        <h3 className="text-xl font-semibold text-white">
+          Thank you for getting in touch.
+        </h3>
+        <p className="mt-3 text-sm leading-7 text-white/85">{message}</p>
+        <p className="mt-3 text-sm leading-7 text-white/75">
+          Our team will review your enquiry and contact you using the details
+          you provided.
+        </p>
+        <Button
+          type="button"
+          variant="outline"
+          className="mt-5 border-white/30 bg-transparent text-white hover:bg-white/10 hover:text-white"
+          onClick={() => {
+            setStatus("idle");
+            setMessage("");
+          }}
+        >
+          Send another enquiry
+        </Button>
+      </div>
+    );
+  }
   return (
     <form
       className="grid min-w-0 grid-cols-1 gap-[18px]"
@@ -256,7 +296,7 @@ export function ConsultationForm({
       </div>
       {message && (
         <p
-          className={`m-0 col-span-full px-[11px] py-[9px] text-xs leading-[1.45] ${status === "success" ? "bg-emerald-300/15 text-emerald-100" : "bg-red-300/15 text-red-100"}`}
+          className="m-0 col-span-full rounded-lg bg-red-300/15 px-3 py-3 text-sm leading-6 text-red-100"
           role={status === "error" ? "alert" : "status"}
         >
           {message}

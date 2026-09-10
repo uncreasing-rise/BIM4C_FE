@@ -118,7 +118,7 @@
     @apply border-border outline-ring/50;
   }
   html {
-    @apply scroll-smooth font-sans;
+    @apply font-sans;
     scroll-padding-top: 6rem;
   }
   body {
@@ -164,6 +164,45 @@
     background-size: 48px 48px;
   }
 
+  .page-hero {
+    min-height: 37.5rem;
+    padding-top: 5rem;
+  }
+
+  .home-hero {
+    display: flex;
+    align-items: center;
+  }
+
+  .services-section {
+    background-image: radial-gradient(
+      ellipse at 100% 0%,
+      #dff2f0 0%,
+      transparent 55%
+    );
+  }
+
+  .service-card {
+    box-shadow: 0 3px 14px rgb(7 31 39 / 4%);
+    transition:
+      transform 240ms ease,
+      box-shadow 240ms ease,
+      border-color 240ms ease;
+  }
+
+  .service-card:hover,
+  .service-card:focus-within {
+    transform: translateY(-4px);
+    border-color: var(--primary);
+    box-shadow: 0 14px 30px rgb(7 31 39 / 10%);
+  }
+
+  @media (max-width: 767px) {
+    .page-hero {
+      min-height: 35rem;
+    }
+  }
+
   /* Dark surfaces need a brighter ink, while action backgrounds stay dark enough for white text. */
   .bg-brand-ink .text-primary,
   .bg-brand-ink .eyebrow,
@@ -179,7 +218,7 @@
     scroll-margin-top: 6rem;
   }
 
-  :where(button, a, input, textarea, select):focus-visible {
+  :where(button, a, input, textarea, select, summary):focus-visible {
     outline: 3px solid color-mix(in oklch, var(--ring) 65%, transparent);
     outline-offset: 3px;
   }

@@ -13,16 +13,16 @@ export function ConsultationSection() {
     <section
       id="contact"
       data-consultation
-      className="relative min-h-[calc(100svh-5rem)] overflow-hidden bg-brand-ink pb-20 pt-32 text-white lg:pb-28 lg:pt-36"
+      className="relative overflow-hidden bg-brand-ink py-12 text-white lg:py-16"
     >
       <div className="pointer-events-none absolute -left-40 top-1/2 size-96 -translate-y-1/2 rounded-full bg-primary/10 blur-3xl" />
       <div className="pointer-events-none absolute -right-40 -top-48 size-[32rem] rounded-full bg-primary/10 blur-3xl" />
       <div className="site-container relative grid gap-12 lg:grid-cols-[.82fr_1.18fr] lg:items-start lg:gap-20">
         <div data-consultation-copy className="lg:sticky lg:top-28">
           <p className="eyebrow">Talk to BIM4C</p>
-          <h1 className="max-w-xl text-balance text-4xl font-semibold leading-[1.08] tracking-[-.04em] sm:text-5xl lg:text-6xl">
-            Let’s talk about your project.
-          </h1>
+          <h2 className="max-w-xl text-balance text-3xl font-semibold leading-[1.12] tracking-[-.04em] sm:text-4xl">
+            A clear scope starts here.
+          </h2>
           <p className="mt-6 max-w-xl text-base leading-8 text-white/60">
             Tell us about your challenge. We will help clarify the scope,
             priorities and next steps.
