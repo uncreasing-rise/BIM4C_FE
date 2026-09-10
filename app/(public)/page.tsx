@@ -47,7 +47,7 @@ export default async function Home() {
           aria-hidden="true"
           className="pointer-events-none absolute -right-40 top-0 size-[40rem] rounded-full bg-teal-500/10 blur-[100px]"
         />
-        <div className="site-container relative grid items-center gap-7 py-8 lg:grid-cols-[1.05fr_.95fr] lg:gap-12">
+        <div className="site-container relative grid items-center gap-7 py-8 lg:grid-cols-[1.05fr_.95fr] lg:gap-12" data-motion="hero">
           <div className="min-w-0">
             <p className="mb-5 flex items-center gap-3 text-xs font-semibold uppercase tracking-[.16em] text-teal-200">
               <span className="size-2 rounded-full bg-teal-300" />
@@ -64,7 +64,7 @@ export default async function Home() {
               decisions.
             </p>
             <div className="mt-7 flex flex-wrap gap-3">
-              <Button asChild size="lg" className="rounded-lg px-4">
+              <Button asChild size="lg" className="rounded-lg px-4" data-motion="magnetic">
                 <Link href={ROUTES.contact}>
                   Discuss a project <ArrowUpRight />
                 </Link>
@@ -74,6 +74,7 @@ export default async function Home() {
                 variant="outline"
                 size="lg"
                 className="rounded-lg border-white/25 bg-transparent px-4 text-white hover:bg-white/10 hover:text-white"
+                data-motion="magnetic"
               >
                 <Link href={ROUTES.projects}>Our work</Link>
               </Button>
@@ -96,7 +97,7 @@ export default async function Home() {
               className="absolute -left-4 -top-4 hidden h-20 w-20 border-l border-t border-teal-300/40 lg:block"
               aria-hidden="true"
             />
-            <article className="group relative overflow-hidden rounded-2xl border border-white/15 bg-white/5">
+            <article className="group relative overflow-hidden rounded-2xl border border-white/15 bg-white/5" data-motion="tile">
               <div className="relative aspect-[16/9]">
                 <Image
                   src={featured?.image ?? "/images/news-digital-twin.webp"}
@@ -187,6 +188,7 @@ export default async function Home() {
               <article
                 key={service.slug}
                 className="service-card group relative flex flex-col overflow-hidden rounded-xl border bg-card"
+                data-motion="tile"
               >
                 <div className="relative aspect-[16/8] overflow-hidden bg-muted">
                   <Image

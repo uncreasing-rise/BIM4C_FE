@@ -21,6 +21,7 @@ export function ProjectRow({
         "project-row group relative grid min-w-0 gap-5 border-b py-7 md:grid-cols-[1.1fr_1fr] md:items-center md:gap-8 lg:grid-cols-[1.15fr_1fr] lg:gap-12",
         dark ? "border-white/20" : "border-border",
       )}
+      data-motion="tile"
     >
       <div className="relative aspect-[16/9] overflow-hidden rounded-lg bg-muted">
         <Image

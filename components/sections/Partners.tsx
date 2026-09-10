@@ -30,7 +30,8 @@ export function Partners({ compact = false }: { compact?: boolean }) {
             {partners.map(([name, src]) => (
               <li
                 key={name}
-                className="grid min-h-28 place-items-center rounded-xl border border-white/15 bg-white/[.06] p-5"
+                className="relative grid min-h-28 place-items-center rounded-xl border border-white/15 bg-white/[.06] p-5"
+                data-motion="tile"
               >
                 <Image
                   src={src}

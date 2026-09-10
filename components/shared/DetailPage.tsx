@@ -157,9 +157,9 @@ export function DetailPage({
           href: index < breadcrumbItems.length - 1 ? item.path : undefined,
         }))}
       />
-      <article className="bg-background py-8 lg:py-12">
+      <article className="bg-background py-8 lg:py-12" data-motion="detail">
         <div className="site-container">
-          <div className="mb-7 flex flex-wrap items-center justify-between gap-3 border-b pb-5">
+          <div className="mb-7 flex flex-wrap items-center justify-between gap-3 border-b pb-5" data-motion="reveal">
             <Button asChild variant="ghost" className="px-0">
               <Link href={backHref}>
                 <ArrowLeft /> {backLabel}
@@ -187,7 +187,7 @@ export function DetailPage({
             )}
           </div>
           {projectProfile.length > 0 && (
-            <dl className="mb-8 grid grid-cols-2 gap-x-6 gap-y-4 rounded-xl border bg-card p-5 md:grid-cols-3">
+            <dl className="mb-8 grid grid-cols-2 gap-x-6 gap-y-4 rounded-xl border bg-card p-5 md:grid-cols-3" data-motion="tile">
               {projectProfile.map(([label, value]) => (
                 <div key={label}>
                   <dt className="text-xs font-medium text-muted-foreground">
@@ -200,7 +200,7 @@ export function DetailPage({
               ))}
             </dl>
           )}
-          <div className="mb-8 flex flex-wrap items-center justify-between gap-4 rounded-xl border bg-muted/50 p-4">
+          <div className="mb-8 flex flex-wrap items-center justify-between gap-4 rounded-xl border bg-muted/50 p-4" data-motion="reveal">
             <nav aria-label="On this page" className="min-w-0 flex-1">
               <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 On this page
@@ -234,12 +234,13 @@ export function DetailPage({
             )}
           </div>
           <div className="grid items-start gap-12 lg:grid-cols-[minmax(0,1fr)_22rem] lg:gap-16">
-            <div className="min-w-0">
+            <div className="min-w-0" data-motion="reveal">
               <ContentBlockRenderer blocks={blocks} />
             </div>
             <Card
               id="detail-enquiry"
               className="scroll-mt-28 gap-0 overflow-hidden rounded-2xl bg-brand-ink p-0 text-white ring-0"
+              data-motion="tile"
             >
               <CardHeader className="border-b border-white/10 p-6">
                 <Badge className="mb-3 w-fit bg-white/10 text-white">
@@ -327,6 +328,7 @@ export function DetailPage({
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {entry.gallery.map((image, index) => (
                 <figure
+                  data-motion="tile"
                   className={
                     index === 0
                       ? "relative overflow-hidden rounded-2xl sm:col-span-2"
@@ -360,6 +362,7 @@ export function DetailPage({
               {entry.curriculum.map((module, index) => (
                 <li
                   className="grid gap-3 p-5 sm:grid-cols-[3rem_1fr]"
+                  data-motion="tile"
                   key={module.id ?? `${module.title}-${index}`}
                 >
                   <span className="font-mono text-sm text-primary">
@@ -396,7 +399,7 @@ export function DetailPage({
               </header>
               <div className="grid gap-6 md:grid-cols-3">
                 {related.slice(0, 3).map((item) => (
-                  <article className="group relative" key={item.slug}>
+                  <article className="group relative" key={item.slug} data-motion="tile">
                     <div className="relative aspect-[16/10] overflow-hidden rounded-2xl">
                       <Image
                         src={item.image}

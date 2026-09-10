@@ -93,6 +93,7 @@ export function CourseExplorer({
               <article
                 key={course.slug}
                 className="group relative grid min-w-0 grid-cols-[5.5rem_minmax(0,1fr)] overflow-hidden rounded-xl border bg-card transition-shadow hover:shadow-lg focus-within:ring-2 focus-within:ring-primary md:flex md:flex-col"
+                data-motion="tile"
               >
                 <div className="relative ml-4 mt-5 aspect-square self-start overflow-hidden rounded-lg bg-muted md:ml-0 md:mt-0 md:aspect-[16/9] md:w-full md:rounded-none">
                   <Image

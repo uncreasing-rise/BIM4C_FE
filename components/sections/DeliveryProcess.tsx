@@ -48,6 +48,7 @@ export function DeliveryProcess() {
             <li
               key={title}
               className="relative border-b border-r p-6 last:border-r-0 lg:border-b-0"
+              data-motion="tile"
             >
               <div className="flex items-center justify-between">
                 <Icon className="size-6 text-primary" />

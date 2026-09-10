@@ -92,6 +92,7 @@ export function ServiceExplorer({
               {visible.map((service, index) => (
                 <article
                   className="service-card group relative flex flex-col overflow-hidden rounded-xl border bg-card"
+                  data-motion="tile"
                   key={service.slug}
                 >
                   <div className="relative aspect-[16/7] overflow-hidden bg-muted">

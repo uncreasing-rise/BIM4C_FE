@@ -87,6 +87,7 @@ export function BlogExplorer({
                     ? "group relative flex min-w-0 flex-col border-b pb-8 lg:row-span-4"
                     : "group relative grid min-w-0 grid-cols-[5rem_minmax(0,1fr)] gap-4 border-b py-6 sm:grid-cols-[8rem_minmax(0,1fr)] lg:col-start-2"
                 }
+                data-motion="tile"
                 key={item.slug}
               >
                 <Link
