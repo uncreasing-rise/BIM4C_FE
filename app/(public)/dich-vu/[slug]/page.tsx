@@ -6,9 +6,10 @@ import { getServiceBySlug, getServices } from "@/features/services/api/queries";
 import { getContentMetadata } from "@/features/shared/seo/content-metadata";
 import { selectRelatedContent } from "@/features/shared/selectors/related-content";
 
-export function generateStaticParams() {
-  return [];
-}
+// The root layout reads the locale cookie, so this detail route must not be
+// treated as an ISR/SSG entry during the Server Components render.
+export const dynamic = "force-dynamic";
+
 export async function generateMetadata({
   params,
 }: {

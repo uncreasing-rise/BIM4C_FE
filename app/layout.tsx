@@ -16,6 +16,11 @@ import { Toaster } from "sonner";
 
 const geist = Geist({ subsets: ["latin"], variable: "--font-sans" });
 
+// The layout reads the locale cookie, so every route is intentionally rendered
+// dynamically. This also prevents ISR/SSG routes from bailing out with
+// DYNAMIC_SERVER_USAGE when they traverse the root layout.
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   metadataBase: new URL(env.appUrl),
   title: { default: DEFAULT_TITLE, template: `%s | ${SITE_NAME}` },
