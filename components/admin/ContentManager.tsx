@@ -17,6 +17,7 @@ import { CategoryManager } from "./CategoryManager";
 import { ContentBlockEditor } from "./ContentBlockEditor";
 import { MediaPicker } from "./MediaPicker";
 import { BilingualFormTabs } from "./BilingualFormTabs";
+import { toast } from "sonner";
 import {
   contentBlocksSchema,
   isSafeMediaReference,
@@ -179,32 +180,33 @@ export function ContentManager({
   async function save() {
     if (!editor) return;
     if (!editor.title.trim()) {
-      setFeedback("Vui lòng nhập tiêu đề tiếng Anh (Title).");
+      toast.error("Vui lòng nhập tiêu đề tiếng Anh (Title).");
       return;
     }
     if (!editor.description.trim()) {
-      setFeedback("Vui lòng nhập mô tả tiếng Anh (Description).");
+      toast.error("Vui lòng nhập mô tả tiếng Anh (Description).");
       return;
     }
     setSaving(true);
-    setFeedback("");
+    const toastId = toast.loading("Đang lưu nội dung...");
     try {
       if (editor.contentBlocks) {
         contentBlocksSchema.parse(editor.contentBlocks);
       }
       if (editor.id) {
         await adminContentApi.update(contentType, editor.id, editor);
-        setFeedback("Cập nhật nội dung thành công.");
+        toast.success("Cập nhật nội dung thành công!", { id: toastId });
       } else {
         await adminContentApi.create(contentType, editor);
-        setFeedback("Tạo mới nội dung thành công.");
+        toast.success("Tạo mới nội dung thành công!", { id: toastId });
       }
       setDirty(false);
       setEditor(null);
       await load();
     } catch (error) {
-      setFeedback(
+      toast.error(
         error instanceof Error ? error.message : "Không thể lưu nội dung.",
+        { id: toastId },
       );
     } finally {
       setSaving(false);
@@ -214,12 +216,15 @@ export function ContentManager({
   async function remove(id: string) {
     if (!window.confirm("Bạn có chắc muốn xóa nội dung này?")) return;
     setSaving(true);
+    const toastId = toast.loading("Đang xóa...");
     try {
       await adminContentApi.remove(contentType, id);
-      setFeedback("Xóa thành công.");
+      toast.success("Xóa nội dung thành công!", { id: toastId });
       await load();
     } catch (error) {
-      setFeedback(error instanceof Error ? error.message : "Không thể xóa.");
+      toast.error(error instanceof Error ? error.message : "Không thể xóa.", {
+        id: toastId,
+      });
     } finally {
       setSaving(false);
     }
@@ -228,10 +233,12 @@ export function ContentManager({
   async function bulk(action: "publish" | "archive" | "delete") {
     if (!selected.length) return;
     setSaving(true);
+    const toastId = toast.loading("Đang thực hiện thao tác hàng loạt...");
     try {
       if (action === "delete") {
         if (!window.confirm(`Xóa ${selected.length} nội dung đã chọn?`)) return;
         await Promise.all(selected.map((id) => adminContentApi.remove(contentType, id)));
+        toast.success(`Đã xóa ${selected.length} nội dung.`, { id: toastId });
       } else {
         const nextStatus: AdminContentStatus =
           action === "publish" ? "PUBLISHED" : "ARCHIVED";
@@ -240,12 +247,17 @@ export function ContentManager({
             adminContentApi.update(contentType, id, { status: nextStatus }),
           ),
         );
+        toast.success(
+          `Đã ${action === "publish" ? "xuất bản" : "lưu trữ"} ${selected.length} nội dung.`,
+          { id: toastId },
+        );
       }
       setSelected([]);
       await load();
     } catch (error) {
-      setFeedback(
+      toast.error(
         error instanceof Error ? error.message : "Thao tác hàng loạt thất bại.",
+        { id: toastId },
       );
     } finally {
       setSaving(false);
@@ -272,8 +284,9 @@ export function ContentManager({
           },
         ],
       });
+      toast.success("Đã thêm hình ảnh vào dự án!");
     } catch (e) {
-      setFeedback(e instanceof Error ? e.message : "Không thể thêm ảnh");
+      toast.error(e instanceof Error ? e.message : "Không thể thêm ảnh");
     }
   }
 
@@ -485,7 +498,7 @@ export function ContentManager({
                     )}
                   </td>
                   <td>
-                    <div className="flex min-w-[104px] gap-1 [&_button]:size-8 [&_button]:border [&_button]:border-border">
+                    <div className="flex min-w-[104px] gap-2 [&_button]:min-h-[44px] [&_button]:min-w-[44px] [&_button]:rounded-lg [&_button]:border [&_button]:border-border [&_button]:flex [&_button]:items-center [&_button]:justify-center [&_button]:transition-colors [&_button]:hover:bg-muted [&_button]:active:scale-95">
                       <button
                         onClick={() => {
                           const value = structuredClone(item);
@@ -503,6 +516,7 @@ export function ContentManager({
                           setEditor({ ...value, contentBlocks: blocks });
                         }}
                         aria-label={`Sửa ${item.title}`}
+                        className="text-base font-medium text-foreground hover:text-primary"
                       >
                         ✎
                       </button>
@@ -510,6 +524,7 @@ export function ContentManager({
                         disabled={saving}
                         onClick={() => void remove(item.id)}
                         aria-label={`Xóa ${item.title}`}
+                        className="text-lg font-bold text-destructive hover:bg-destructive/10"
                       >
                         ×
                       </button>
@@ -534,7 +549,7 @@ export function ContentManager({
           <span>
             Trang {page} / {totalPages}
           </span>
-          <div className="flex gap-2 [&_button]:size-8 [&_button]:border [&_button]:border-border">
+          <div className="flex gap-2 [&_button]:min-h-[44px] [&_button]:min-w-[44px] [&_button]:rounded-lg [&_button]:border [&_button]:border-border [&_button]:flex [&_button]:items-center [&_button]:justify-center [&_button]:font-bold [&_button]:transition-colors [&_button]:hover:bg-muted [&_button]:disabled:opacity-40">
             <button
               disabled={page <= 1}
               onClick={() => {

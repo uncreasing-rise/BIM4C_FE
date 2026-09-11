@@ -6,6 +6,8 @@ import { getAllProjects } from "@/features/projects/api/queries";
 import { getServices } from "@/features/services/api/queries";
 import { absoluteUrl } from "@/lib/seo/site";
 import type { ContentEntry } from "@/types/content";
+import { serviceEntries, courseEntries, blogEntries } from "@/mocks/content";
+import { mockProjects } from "@/features/projects/api/project.mock";
 
 const staticPaths = ["/", "/gioi-thieu", "/dich-vu", "/du-an", "/khoa-hoc", "/blog", "/phap-ly", "/lien-he"];
 const excludedStatuses = new Set(["draft", "deleted", "unpublished", "archived", "bản nháp", "đã lưu trữ"]);
@@ -16,7 +18,12 @@ const lastModified = (entry: ContentEntry) => {
 };
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const [services, projects, courses, posts] = await Promise.all([getServices({ strict: true }), getAllProjects(), getCourses({ strict: true }), getAllPosts({ strict: true })]);
+  const [services, projects, courses, posts] = await Promise.all([
+    getServices({ strict: false }).catch(() => serviceEntries),
+    getAllProjects().catch(() => mockProjects),
+    getCourses({ strict: false }).catch(() => courseEntries),
+    getAllPosts({ strict: false }).catch(() => blogEntries),
+  ]);
   const dynamic = [
     ...services.filter(published).map((entry) => ["/dich-vu", entry] as const),
     ...projects.filter(published).map((entry) => ["/du-an", entry] as const),

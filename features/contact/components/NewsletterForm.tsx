@@ -13,6 +13,8 @@ import { useLanguage } from "@/lib/i18n/context";
 import { subscribeNewsletter } from "../api/mutations";
 import { getZodFieldErrors } from "../utils/zod-errors";
 
+import { toast } from "sonner";
+
 type FormStatus = "idle" | "submitting" | "success" | "error";
 type NewsletterField = "email" | "consent";
 
@@ -49,6 +51,7 @@ export function NewsletterForm() {
       );
       setStatus("success");
       setMessage(result.message);
+      toast.success(result.message || "Thank you for subscribing to BIM4C updates!");
       form.reset();
       setConsent(false);
     } catch (error) {
@@ -62,11 +65,12 @@ export function NewsletterForm() {
           document.getElementById(`${formId}-newsletter-consent`)?.focus();
         return;
       }
-      setMessage(
+      const errText =
         error instanceof ApiError
           ? error.message
-          : "We could not subscribe you right now.",
-      );
+          : "We could not subscribe you right now.";
+      setMessage(errText);
+      toast.error(errText);
     } finally {
       submitting.current = false;
     }

@@ -9,6 +9,7 @@ import { Partners } from "@/components/sections/Partners";
 import { ExpertiseStrip } from "@/components/sections/ExpertiseStrip";
 import { ProjectCarousel } from "@/components/projects/ProjectCarousel";
 import { DeliveryProcess } from "@/components/sections/DeliveryProcess";
+import { BimInteractiveHeroVisual } from "@/components/sections/BimInteractiveHeroVisual";
 import { useLanguage } from "@/lib/i18n/context";
 import { localizeContentList } from "@/lib/i18n/localize";
 import type { ContentEntry } from "@/types/content";
@@ -117,68 +118,8 @@ export function HomeView({
               ))}
             </div>
           </div>
-          <div className="relative hidden min-w-0 lg:block">
-            <div
-              className="absolute -left-4 -top-4 hidden h-20 w-20 border-l border-t border-teal-300/40 lg:block"
-              aria-hidden="true"
-            />
-            <article
-              className="group relative overflow-hidden rounded-2xl border border-white/15 bg-white/5"
-              data-motion="tile"
-            >
-              <div className="relative aspect-[16/9]">
-                <Image
-                  src={featured?.image ?? "/images/news-digital-twin.webp"}
-                  alt={
-                    featured
-                      ? featured.title
-                      : "Coordinating construction models"
-                  }
-                  fill
-                  priority
-                  sizes="(max-width:1023px) 100vw, 50vw"
-                  className="object-cover transition-transform duration-700 group-hover:scale-[1.025]"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-brand-ink/70 via-transparent to-transparent" />
-                <span className="absolute left-4 top-4 inline-flex items-center gap-2 rounded-md border border-white/25 bg-brand-ink/80 px-3 py-2 text-xs font-medium text-white backdrop-blur">
-                  <Layers3 className="size-4 text-teal-300" />
-                  {t.hero.cardTag}
-                </span>
-                <span className="absolute bottom-4 left-4 font-mono text-[11px] tracking-wider text-white/85">
-                  {t.hero.cardTagline}
-                </span>
-              </div>
-              <div className="flex items-center justify-between gap-5 p-5">
-                <div className="min-w-0">
-                  <p className="text-xs text-teal-200">
-                    {featured?.category ?? "BIM4C"}
-                    {featured?.location ? " · " + featured.location : ""}
-                  </p>
-                  <h2 className="mt-1 text-lg font-semibold leading-snug">
-                    {featured?.title ?? "Connected project delivery"}
-                  </h2>
-                </div>
-                <span className="grid size-11 shrink-0 place-items-center rounded-full border border-white/25">
-                  <ArrowUpRight className="size-5" />
-                </span>
-              </div>
-              <Link
-                href={
-                  featured
-                    ? ROUTES.projectDetail(featured.slug)
-                    : ROUTES.projects
-                }
-                className="absolute inset-0"
-                aria-label={
-                  featured ? "Explore " + featured.title : "Explore projects"
-                }
-              />
-            </article>
-            <p className="mt-3 text-right text-xs text-slate-400">
-              {isVi
-                ? "Từ dữ liệu dự án đến quyết định thực thi."
-                : "From project information to practical decisions."}
-            </p>
+          <div className="relative hidden min-w-0 lg:block" data-motion="tile">
+            <BimInteractiveHeroVisual featuredProject={featured} />
           </div>
         </div>
       </section>

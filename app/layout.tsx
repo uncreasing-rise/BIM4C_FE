@@ -12,6 +12,7 @@ import { Geist } from "next/font/google";
 import { cn } from "@/lib/utils";
 import { LanguageProvider } from "@/lib/i18n/context";
 import { DEFAULT_LOCALE, LOCALE_COOKIE_NAME, type Locale } from "@/lib/i18n/config";
+import { Toaster } from "sonner";
 
 const geist = Geist({ subsets: ["latin"], variable: "--font-sans" });
 
@@ -63,7 +64,10 @@ export default async function RootLayout({
       suppressHydrationWarning
     >
       <body suppressHydrationWarning>
-        <LanguageProvider initialLocale={locale}>{children}</LanguageProvider>
+        <LanguageProvider initialLocale={locale}>
+          {children}
+          <Toaster richColors position="top-right" closeButton />
+        </LanguageProvider>
       </body>
     </html>
   );

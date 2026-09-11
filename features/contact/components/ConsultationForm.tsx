@@ -12,6 +12,8 @@ import { ROUTES } from "@/constants/routes";
 import { contactSchema } from "../schemas/contact.schema";
 import { CheckCircle2 } from "lucide-react";
 
+import { toast } from "sonner";
+
 type ContactField =
   "name" | "phone" | "email" | "company" | "message" | "consent";
 
@@ -54,6 +56,7 @@ export function ConsultationForm({
       form.reset();
       setStatus("success");
       setMessage(result.message);
+      toast.success(result.message || "Đã gửi yêu cầu tư vấn thành công!");
     } catch (error) {
       setStatus("error");
       if (error instanceof ZodError) {
@@ -64,11 +67,12 @@ export function ConsultationForm({
         }
         return;
       }
-      setMessage(
+      const errText =
         error instanceof Error
           ? error.message
-          : "We could not send your enquiry right now.",
-      );
+          : "We could not send your enquiry right now.";
+      setMessage(errText);
+      toast.error(errText);
     }
   }
 
