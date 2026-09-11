@@ -166,60 +166,69 @@ export function HomeView({
             </div>
           </header>
           <div className="grid gap-5 md:grid-cols-3" data-motion="reveal">
-            {orderedServices.slice(0, 3).map((service, index) => (
-              <article
-                key={service.slug}
-                className="service-card group relative flex flex-col overflow-hidden rounded-xl border bg-card"
-                data-motion="tile"
-              >
-                <div className="relative aspect-[16/8] overflow-hidden bg-muted">
-                  <Image
-                    src={service.image}
-                    alt=""
-                    fill
-                    sizes="(max-width:767px) 100vw, 33vw"
-                    className="object-cover transition-transform duration-500 group-hover:scale-[1.035]"
-                  />
-                  <span className="absolute left-4 top-4 rounded-md bg-brand-ink/85 px-3 py-1.5 font-mono text-xs text-white">
-                    0{index + 1}
-                  </span>
-                </div>
-                <div className="flex flex-1 flex-col p-5">
-                  <h3 className="text-xl font-semibold tracking-tight">
-                    <Link
-                      className="after:absolute after:inset-0"
-                      href={ROUTES.serviceDetail(service.slug)}
-                    >
-                      {service.title}
-                    </Link>
-                  </h3>
-                  <p className="mt-3 text-sm leading-6 text-muted-foreground">
-                    {service.description}
-                  </p>
-                  <ul className="mb-4 mt-4 space-y-2 border-t pt-4">
-                    {service.highlights.slice(0, 2).map((item) => (
-                      <li key={item} className="flex gap-2 text-xs leading-5">
-                        <Check className="mt-0.5 size-3.5 shrink-0 text-primary" />
-                        {item}
-                      </li>
-                    ))}
-                  </ul>
-                  <span className="mt-auto flex items-center justify-between pt-4 text-sm font-semibold text-primary">
-                    {t.common.viewDetails} <ArrowUpRight className="size-5" />
-                  </span>
-                </div>
-              </article>
-            ))}
+            {orderedServices.slice(0, 3).map((service, index) => {
+              const bimDim = index === 0 ? "3D & 4D BIM" : index === 1 ? "COORDINATION / CDE" : "5D & 7D ASSET";
+              return (
+                <article
+                  key={service.slug}
+                  className="service-card glow-card-teal group relative flex flex-col overflow-hidden rounded-2xl border border-border/80 bg-card transition-all duration-300 hover:border-primary/50"
+                  data-motion="tile"
+                >
+                  <div className="relative aspect-[16/9] overflow-hidden bg-muted">
+                    <Image
+                      src={service.image}
+                      alt=""
+                      fill
+                      sizes="(max-width:767px) 100vw, 33vw"
+                      className="object-cover transition-transform duration-700 group-hover:scale-105"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-brand-ink/80 via-transparent to-transparent opacity-60 group-hover:opacity-40 transition-opacity" />
+                    
+                    <span className="absolute left-3 top-3 rounded-md bg-brand-ink/90 backdrop-blur-md px-2.5 py-1 font-mono text-[11px] font-bold text-teal-300 border border-teal-500/30">
+                      {bimDim}
+                    </span>
+                    <span className="absolute right-3 top-3 rounded-md bg-black/60 backdrop-blur-md px-2 py-1 font-mono text-[11px] text-white/90">
+                      0{index + 1}
+                    </span>
+                  </div>
+                  <div className="flex flex-1 flex-col p-6">
+                    <h3 className="text-xl font-bold tracking-tight text-foreground group-hover:text-primary transition-colors">
+                      <Link
+                        className="after:absolute after:inset-0"
+                        href={ROUTES.serviceDetail(service.slug)}
+                      >
+                        {service.title}
+                      </Link>
+                    </h3>
+                    <p className="mt-2.5 text-sm leading-6 text-muted-foreground">
+                      {service.description}
+                    </p>
+                    <ul className="mb-5 mt-5 space-y-2 border-t border-border/60 pt-4">
+                      {service.highlights.slice(0, 2).map((item) => (
+                        <li key={item} className="flex gap-2 text-xs leading-5 text-foreground/85">
+                          <Check className="mt-0.5 size-3.5 shrink-0 text-primary" />
+                          {item}
+                        </li>
+                      ))}
+                    </ul>
+                    <span className="mt-auto flex items-center justify-between pt-2 text-xs font-bold uppercase tracking-wider text-primary">
+                      <span>{t.common.viewDetails}</span>
+                      <ArrowUpRight className="size-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                    </span>
+                  </div>
+                </article>
+              );
+            })}
           </div>
           {services.length > 3 && (
-            <div className="mt-5 grid divide-y rounded-xl border bg-muted/50 md:grid-cols-3 md:divide-x md:divide-y-0">
+            <div className="mt-5 grid divide-y rounded-xl border border-border/80 bg-muted/40 md:grid-cols-3 md:divide-x md:divide-y-0">
               {orderedServices.slice(3, 6).map((service) => (
                 <Link
                   href={ROUTES.serviceDetail(service.slug)}
                   key={service.slug}
-                  className="flex min-h-20 items-center justify-between gap-4 px-5 py-4 text-sm font-semibold transition-colors hover:bg-muted"
+                  className="flex min-h-20 items-center justify-between gap-4 px-5 py-4 text-sm font-semibold transition-colors hover:bg-muted/80 hover:text-primary"
                 >
-                  {service.title}
+                  <span className="truncate">{service.title}</span>
                   <ArrowRight className="size-4 shrink-0 text-primary" />
                 </Link>
               ))}
@@ -231,19 +240,21 @@ export function HomeView({
       <section
         id="projects"
         data-home-section="projects"
-        className="bg-brand-ink py-14 text-white lg:py-16"
+        className="bg-brand-ink py-16 text-white lg:py-20 relative overflow-hidden"
       >
-        <div className="site-container">
-          <header className="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+        {/* Background mesh grid */}
+        <div className="pointer-events-none absolute inset-0 tech-grid-pattern opacity-40" aria-hidden="true" />
+        <div className="site-container relative">
+          <header className="mb-10 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
             <div>
-              <p className="eyebrow">{isVi ? "Kinh nghiệm thực chiến" : "Selected experience"}</p>
-              <h2 className="section-title">
+              <p className="eyebrow text-teal-300">{isVi ? "Kinh nghiệm thực chiến" : "Selected experience"}</p>
+              <h2 className="section-title text-white">
                 {isVi ? "Dự án thực tế. Năng lực kết nối." : "Real projects. Connected expertise."}
               </h2>
             </div>
             <Link
               href={ROUTES.projects}
-              className="inline-flex min-h-11 shrink-0 items-center gap-2 text-sm font-semibold text-teal-200"
+              className="inline-flex min-h-11 shrink-0 items-center gap-2 text-sm font-semibold text-teal-300 hover:text-teal-200"
             >
               {isVi ? "Tất cả dự án" : "All projects"} <ArrowUpRight className="size-4" />
             </Link>
@@ -254,10 +265,10 @@ export function HomeView({
 
       <DeliveryProcess />
 
-      <section data-home-section="academy" className="py-14 lg:py-16">
+      <section data-home-section="academy" className="py-16 lg:py-20">
         <div className="site-container">
-          <div className="grid overflow-hidden rounded-2xl border bg-card lg:grid-cols-[.85fr_1.15fr]">
-            <div className="relative min-h-64 lg:min-h-96">
+          <div className="grid overflow-hidden rounded-3xl border border-border/80 bg-card shadow-lg lg:grid-cols-[.9fr_1.1fr]">
+            <div className="relative min-h-72 lg:min-h-full">
               <Image
                 src="/images/news-bim-training.webp"
                 alt="A team reviewing BIM project work together"
@@ -265,45 +276,59 @@ export function HomeView({
                 sizes="(max-width:1023px) 100vw, 45vw"
                 className="object-cover"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-brand-ink/90 via-transparent to-transparent" />
-              <p className="absolute bottom-6 left-6 text-sm font-medium text-white">
+              <div className="absolute inset-0 bg-gradient-to-t from-brand-ink/95 via-brand-ink/40 to-transparent" />
+              
+              <div className="absolute top-6 left-6 flex flex-wrap gap-2">
+                <span className="rounded-full border border-white/20 bg-black/60 px-3 py-1 font-mono text-[11px] font-semibold text-teal-300 backdrop-blur-md">
+                  ISO 19650 CERTIFIED
+                </span>
+                <span className="rounded-full border border-white/20 bg-black/60 px-3 py-1 font-mono text-[11px] font-semibold text-white backdrop-blur-md">
+                  REVIT • NAVISWORKS • DYNAMO
+                </span>
+              </div>
+
+              <p className="absolute bottom-6 left-6 right-6 text-sm font-medium text-white/90">
                 {isVi
-                  ? "Học trên dữ liệu dự án thực tế. Ứng dụng ngay vào công việc."
-                  : "Learn with project data. Apply it at work."}
+                  ? "Học trên dữ liệu dự án thực tế. Cấp chứng chỉ định danh chuẩn hóa quốc tế."
+                  : "Learn with live project datasets. Receive verifiable industry certificates."}
               </p>
             </div>
-            <div className="p-6 sm:p-8">
-              <p className="eyebrow">BIM4C Academy</p>
-              <h2 className="section-title">
-                {isVi ? "Nâng cao năng lực đội ngũ của bạn." : "Build your team’s next capability."}
-              </h2>
-              <p className="mt-3 text-sm leading-7 text-muted-foreground">
-                {isVi
-                  ? "Chương trình thực chiến cho kỹ sư, điều phối viên và cấp quản lý với bài tập hướng dẫn chi tiết."
-                  : "Practical programmes for engineers, coordinators and managers, with guided exercises and feedback."}
-              </p>
-              <div className="mt-5 divide-y border-y">
-                {courses.slice(0, 3).map((course) => (
-                  <Link
-                    key={course.slug}
-                    href={ROUTES.courseDetail(course.slug)}
-                    className="flex min-h-16 items-center justify-between gap-3 py-3 text-sm font-semibold hover:text-primary"
-                  >
-                    <span>
-                      {course.title}
-                      <span className="mt-1 block text-xs font-normal text-muted-foreground">
-                        {course.duration || course.eyebrow}
-                      </span>
-                    </span>
-                    <ArrowUpRight className="size-4 shrink-0" />
-                  </Link>
-                ))}
+            <div className="p-6 sm:p-10 flex flex-col justify-between">
+              <div>
+                <p className="eyebrow">BIM4C ACADEMY</p>
+                <h2 className="section-title">
+                  {isVi ? "Nâng cao năng lực chuyên môn đội ngũ." : "Build your team’s next BIM capability."}
+                </h2>
+                <p className="mt-3 text-sm leading-7 text-muted-foreground">
+                  {isVi
+                    ? "Chương trình thực chiến cho Kỹ sư Mô hình (Modeler), Điều phối viên (Coordinator) và Giám đốc BIM (Manager) với case study thực tế."
+                    : "Practical programmes for Modelers, Coordinators and BIM Managers with guided hands-on exercises."}
+                </p>
+                <div className="mt-6 divide-y divide-border/60 border-y border-border/60">
+                  {courses.slice(0, 3).map((course) => (
+                    <Link
+                      key={course.slug}
+                      href={ROUTES.courseDetail(course.slug)}
+                      className="group flex min-h-16 items-center justify-between gap-3 py-3.5 text-sm font-semibold hover:text-primary transition-colors"
+                    >
+                      <div>
+                        <span className="block text-foreground group-hover:text-primary transition-colors">
+                          {course.title}
+                        </span>
+                        <span className="mt-0.5 block font-mono text-xs font-normal text-muted-foreground">
+                          {course.duration || course.eyebrow}
+                        </span>
+                      </div>
+                      <ArrowUpRight className="size-4 shrink-0 text-muted-foreground transition-transform group-hover:text-primary group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                    </Link>
+                  ))}
+                </div>
               </div>
               <Link
                 href={ROUTES.courses}
-                className="mt-3 inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-primary"
+                className="mt-6 inline-flex min-h-11 items-center gap-2 text-sm font-bold text-primary hover:underline underline-offset-4"
               >
-                {isVi ? "Xem tất cả khóa học" : "Browse all programmes"} <ArrowRight className="size-4" />
+                {isVi ? "Khám phá tất cả chương trình đào tạo" : "Browse all programmes"} <ArrowRight className="size-4" />
               </Link>
             </div>
           </div>

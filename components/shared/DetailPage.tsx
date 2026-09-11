@@ -239,14 +239,21 @@ export function DetailPage({
             </div>
             <Card
               id="detail-enquiry"
-              className="scroll-mt-28 gap-0 overflow-hidden rounded-2xl bg-brand-ink p-0 text-white ring-0"
+              className="scroll-mt-28 gap-0 overflow-hidden rounded-2xl bg-brand-ink p-0 text-white ring-0 border border-white/10 shadow-2xl"
               data-motion="tile"
             >
-              <CardHeader className="border-b border-white/10 p-6">
-                <Badge className="mb-3 w-fit bg-white/10 text-white">
-                  {uiLabels[kind].aside}
-                </Badge>
-                <CardTitle className="text-2xl text-white">
+              <CardHeader className="border-b border-white/10 p-6 bg-white/[0.02]">
+                <div className="flex items-center justify-between gap-2">
+                  <Badge className="w-fit bg-teal-500/20 text-teal-300 border-teal-500/30">
+                    {uiLabels[kind].aside}
+                  </Badge>
+                  {kind === "course" && (
+                    <span className="font-mono text-[11px] text-teal-300 bg-black/40 px-2 py-0.5 rounded border border-teal-500/30">
+                      ISO 19650
+                    </span>
+                  )}
+                </div>
+                <CardTitle className="text-2xl text-white mt-2">
                   {entry.title}
                 </CardTitle>
               </CardHeader>
@@ -268,6 +275,25 @@ export function DetailPage({
                     ))}
                   </dl>
                 )}
+
+                {/* Holographic Certificate Preview for Courses */}
+                {kind === "course" && (
+                  <div className="mb-6 rounded-xl border border-teal-500/30 p-4 hologram-effect text-white shadow-lg">
+                    <div className="flex items-center justify-between border-b border-white/20 pb-2">
+                      <span className="font-mono text-[10px] uppercase font-bold tracking-wider text-teal-200">
+                        BIM4C VERIFIED CERTIFICATE
+                      </span>
+                      <span className="font-mono text-[10px] text-white/75">ID: 19650-VERIFIED</span>
+                    </div>
+                    <p className="mt-2 text-xs font-semibold text-white">
+                      Chứng nhận Kỹ năng Thực chiến
+                    </p>
+                    <p className="mt-1 text-[11px] text-white/80">
+                      Cấp mã định danh QR Code & hồ sơ năng lực số sau khi hoàn thành đồ án.
+                    </p>
+                  </div>
+                )}
+
                 {entry.learningOutcomes?.length ? (
                   <ul className="mb-7 grid gap-3">
                     {entry.learningOutcomes.map((item) => (

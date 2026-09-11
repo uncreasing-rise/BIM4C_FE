@@ -283,13 +283,17 @@
 }
 
 @keyframes scan-beam {
-  0%, 100% {
-    transform: translateY(-10%);
+  0% {
+    transform: translateY(-5%);
     opacity: 0.2;
   }
   50% {
-    transform: translateY(110%);
-    opacity: 0.8;
+    transform: translateY(105%);
+    opacity: 0.9;
+  }
+  100% {
+    transform: translateY(-5%);
+    opacity: 0.2;
   }
 }
 
@@ -300,6 +304,61 @@
   50% {
     transform: translateY(-8px) rotate(1deg);
   }
+}
+
+@keyframes radar-pulse {
+  0% {
+    transform: scale(0.95);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.3;
+  }
+  100% {
+    transform: scale(0.95);
+    opacity: 0.8;
+  }
+}
+
+@keyframes gradient-flow {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.tech-grid-pattern {
+  background-image: 
+    linear-gradient(to right, rgba(45, 212, 191, 0.07) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(45, 212, 191, 0.07) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+.glow-card-teal {
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.glow-card-teal:hover {
+  box-shadow: 0 12px 30px -10px rgba(9, 167, 165, 0.25), 0 0 1px 1px rgba(45, 212, 191, 0.3);
+  transform: translateY(-3px);
+}
+
+.hologram-effect {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.08) 0%,
+    rgba(45, 212, 191, 0.15) 35%,
+    rgba(217, 70, 239, 0.1) 70%,
+    rgba(255, 255, 255, 0.12) 100%
+  );
+  background-size: 200% 200%;
+  animation: gradient-flow 6s ease infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {

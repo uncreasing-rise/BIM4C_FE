@@ -1,6 +1,6 @@
 "use client";
 
-import { ClipboardList, Network, ScanLine, FolderCheck } from "lucide-react";
+import { ClipboardList, Network, ScanLine, FolderCheck, ArrowRight, ShieldCheck } from "lucide-react";
 import { useLanguage } from "@/lib/i18n/context";
 
 export function DeliveryProcess() {
@@ -10,73 +10,106 @@ export function DeliveryProcess() {
   const steps = [
     {
       icon: ClipboardList,
-      title: isVi ? "Xác định" : "Define",
+      phase: "PHASE 01",
+      title: isVi ? "Xác định & Lập BEP" : "Define & BEP Setup",
       text: isVi
-        ? "Thống nhất phạm vi, yêu cầu thông tin và phân định trách nhiệm."
-        : "Agree the scope, information requirements and responsibilities.",
-      output: isVi ? "Kế hoạch triển khai (BEP)" : "Delivery plan",
+        ? "Thống nhất phạm vi, yêu cầu thông tin EIR, ma trận LOD và phân định trách nhiệm CDE."
+        : "Agree scope, EIR information requirements, LOD matrix and CDE responsibilities.",
+      output: isVi ? "BIM Execution Plan (BEP)" : "BIM Execution Plan",
+      tag: "ISO 19650-1",
     },
     {
       icon: Network,
-      title: isVi ? "Kết nối" : "Connect",
+      phase: "PHASE 02",
+      title: isVi ? "Mô hình & Kết nối" : "Modeling & Integration",
       text: isVi
-        ? "Đưa các bộ môn, mô hình và tài liệu vào quy trình làm việc chung."
-        : "Bring disciplines, models and documents into a shared workflow.",
-      output: isVi ? "Thông tin phối hợp" : "Coordinated information",
+        ? "Đưa các bộ môn Kiến trúc, Kết cấu, MEP và tài liệu vào quy trình làm việc phối hợp chung."
+        : "Bring Architecture, Structure, MEP models and specs into a unified federated CDE workflow.",
+      output: isVi ? "Mô hình phối hợp đa bộ môn" : "Federated Model",
+      tag: "OpenBIM IFC4",
     },
     {
       icon: ScanLine,
-      title: isVi ? "Xử lý" : "Resolve",
+      phase: "PHASE 03",
+      title: isVi ? "Xử lý xung đột (Clash)" : "Clash Resolution",
       text: isVi
-        ? "Kiểm soát chất lượng, gán việc và theo dõi xử lý xung đột triệt để."
-        : "Review quality, assign issues and track decisions to closure.",
-      output: isVi ? "Quyết định có thể truy vết" : "Traceable decisions",
+        ? "Kiểm soát chất lượng tự động, phát hiện và điều phối giải quyết triệt để 100% xung đột."
+        : "Automated clash detection, issue matrix tracking and multi-discipline coordination sign-off.",
+      output: isVi ? "Báo cáo BCF & Không xung đột" : "Zero Clash BCF Report",
+      tag: "BCF / Navisworks",
     },
     {
       icon: FolderCheck,
-      title: isVi ? "Bàn giao" : "Deliver",
+      phase: "PHASE 04",
+      title: isVi ? "Bàn giao & Vận hành" : "Digital Handover",
       text: isVi
-        ? "Kiểm tra sản phẩm bàn giao và chuẩn bị dữ liệu cho vận hành."
-        : "Check the agreed outputs and prepare information for its next use.",
-      output: isVi ? "Bàn giao có cấu trúc" : "Structured handover",
+        ? "Kiểm tra sản phẩm bàn giao, trích xuất khối lượng QTO và chuẩn bị dữ liệu COBie cho Digital Twin."
+        : "Verify outputs, extract accurate QTO quantities and assemble COBie data for Digital Twin/FM.",
+      output: isVi ? "Dữ liệu COBie & As-Built" : "COBie & As-Built Twin",
+      tag: "COBie / 7D FM",
     },
   ];
 
   return (
-    <section className="border-y bg-muted/60 py-14 lg:py-16" id="our-process">
-      <div className="site-container">
-        <header className="mb-8 flex flex-col justify-between gap-4 md:flex-row md:items-end">
+    <section className="border-y border-border/70 bg-gradient-to-b from-muted/40 via-background to-muted/20 py-16 lg:py-20 relative overflow-hidden" id="our-process">
+      {/* Background ambient light */}
+      <div className="pointer-events-none absolute -left-20 top-1/2 size-96 -translate-y-1/2 rounded-full bg-primary/5 blur-3xl" aria-hidden="true" />
+
+      <div className="site-container relative">
+        <header className="mb-12 flex flex-col justify-between gap-4 md:flex-row md:items-end">
           <div>
-            <p className="eyebrow">{t.deliveryProcess.eyebrow}</p>
+            <div className="flex items-center gap-2 mb-2">
+              <span className="size-2 rounded-full bg-primary animate-pulse" />
+              <p className="eyebrow m-0">{t.deliveryProcess.eyebrow}</p>
+            </div>
             <h2 className="section-title">{t.deliveryProcess.title}</h2>
           </div>
-          <p className="max-w-sm text-sm leading-7 text-muted-foreground">
+          <p className="max-w-md text-sm leading-7 text-muted-foreground">
             {t.deliveryProcess.description}
           </p>
         </header>
-        <ol className="grid gap-0 overflow-hidden rounded-2xl border bg-card sm:grid-cols-2 lg:grid-cols-4">
-          {steps.map(({ icon: Icon, title, text, output }, index) => (
-            <li
+
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {steps.map(({ icon: Icon, phase, title, text, output, tag }, index) => (
+            <div
               key={title}
-              className="relative border-b border-r p-6 last:border-r-0 lg:border-b-0"
-              data-motion="tile"
+              className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-border/80 bg-card p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-primary/50 hover:shadow-xl hover:shadow-primary/5"
             >
-              <div className="flex items-center justify-between">
-                <Icon className="size-6 text-primary" />
-                <span className="font-mono text-xs text-muted-foreground">
-                  0{index + 1} / 04
+              {/* Step indicator top */}
+              <div>
+                <div className="flex items-center justify-between pb-4 border-b border-border/60">
+                  <div className="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-white">
+                    <Icon className="size-5" />
+                  </div>
+                  <span className="font-mono text-[11px] font-semibold text-primary/80 bg-primary/10 px-2.5 py-0.5 rounded-full">
+                    {phase}
+                  </span>
+                </div>
+
+                <span className="mt-4 block font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+                  {tag}
                 </span>
+                <h3 className="mt-1 text-lg font-bold tracking-tight text-foreground group-hover:text-primary transition-colors">
+                  {title}
+                </h3>
+                <p className="mt-2 text-xs leading-5 text-muted-foreground">
+                  {text}
+                </p>
               </div>
-              <h3 className="mt-5 text-xl font-semibold">{title}</h3>
-              <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                {text}
-              </p>
-              <p className="mt-5 border-t pt-3 text-xs font-medium text-primary">
-                {output}
-              </p>
-            </li>
+
+              {/* Step Output Box */}
+              <div className="mt-6 rounded-xl border border-border/70 bg-muted/50 p-3">
+                <span className="block font-mono text-[10px] uppercase text-muted-foreground">
+                  {isVi ? "Sản phẩm đầu ra:" : "Deliverable:"}
+                </span>
+                <p className="mt-0.5 text-xs font-semibold text-foreground flex items-center gap-1">
+                  <span className="size-1.5 rounded-full bg-primary" />
+                  {output}
+                </p>
+              </div>
+            </div>
           ))}
-        </ol>
+        </div>
       </div>
     </section>
   );
