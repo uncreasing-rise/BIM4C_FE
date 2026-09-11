@@ -14,29 +14,38 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { Button } from "@/components/ui/button";
 import { ROUTES } from "@/constants/routes";
 import type { ContentEntry } from "@/types/content";
-import { toEnglishLabel } from "@/lib/utils/public-labels";
+import { toLocalizedLabel } from "@/lib/utils/public-labels";
 import type { PageMeta } from "@/features/shared/types/pagination";
-
-const pageSize = 6;
-const courseCategory = (course: ContentEntry) =>
-  toEnglishLabel(
-    course.category?.trim() || course.eyebrow.split("·")[0].trim(),
-  );
+import { useLanguage } from "@/lib/i18n/context";
+import { localizeContentList } from "@/lib/i18n/localize";
 
 export function CourseExplorer({
-  courses,
+  courses: rawCourses,
   meta,
 }: {
   courses: ContentEntry[];
   meta: PageMeta;
 }) {
+  const { t, locale } = useLanguage();
+  const courses = localizeContentList(rawCourses, locale);
+
+  const courseCategory = (course: ContentEntry) =>
+    toLocalizedLabel(
+      course.category?.trim() || course.eyebrow.split("·")[0].trim(),
+      locale,
+    );
+
   const { searchParams, query, setQuery, update, reset, pending } =
     useCatalogFilters();
-  const category = toEnglishLabel(searchParams.get("category") ?? "All");
+  const categoryParam = searchParams.get("category") ?? "All";
+  const category = toLocalizedLabel(categoryParam, locale);
+
+  const allLabel = t.common.all;
   const categories = [
-    "All",
+    allLabel,
     ...new Set(courses.map(courseCategory).filter(Boolean)),
   ];
+
   const pages = meta.totalPages;
   const page = meta.page;
   const visible = courses;
@@ -44,44 +53,47 @@ export function CourseExplorer({
   return (
     <section
       className="bg-background py-12 lg:py-16"
-      aria-label="Training programmes"
+      aria-label={t.coursesPage.catalogueTitle}
       aria-busy={pending}
     >
       <div className="site-container">
         <header className="mb-6 flex flex-col justify-between gap-4 border-b pb-6 md:flex-row md:items-end">
           <div>
-            <p className="eyebrow">BIM4C Academy</p>
+            <p className="eyebrow">{t.coursesPage.eyebrow}</p>
             <h2 className="text-3xl font-semibold tracking-tight md:text-4xl">
-              Find your next skill
+              {t.coursesPage.catalogueTitle}
             </h2>
           </div>
           <p className="max-w-lg text-base leading-7 text-muted-foreground">
-            Compare programmes, explore the learning outcomes and find the right
-            level for your role.
+            {t.coursesPage.catalogueDesc}
           </p>
         </header>
         <CatalogCategories
-          ariaLabel="Programme categories"
+          ariaLabel={t.coursesPage.catalogueTitle}
           items={categories}
-          value={category}
-          onChange={(value) => update("category", value)}
+          value={category === "All" ? allLabel : category}
+          onChange={(value) =>
+            update("category", value === allLabel ? "All" : value)
+          }
         />
         <CatalogFilterBar>
           <CatalogSearch
-            label="Search programmes"
-            placeholder="Search by skill, tool or programme"
+            label={t.coursesPage.searchLabel}
+            placeholder={t.coursesPage.searchPlaceholder}
             value={query}
             onChange={setQuery}
           />
         </CatalogFilterBar>
         <div className="mb-6 flex items-center justify-between gap-4">
           <p role="status" className="text-sm text-muted-foreground">
-            <strong className="text-foreground">{meta.total}</strong>{" "}
-            {meta.total === 1 ? "programme" : "programmes"}
+            <strong className="font-semibold text-foreground">
+              {meta.total}
+            </strong>{" "}
+            {t.coursesPage.programmesCount(meta.total)}
           </p>
-          {(query || category !== "All") && (
+          {(query || (categoryParam !== "All" && categoryParam !== allLabel)) && (
             <Button variant="ghost" onClick={reset}>
-              Clear filters
+              {t.common.clearFilters}
             </Button>
           )}
         </div>
@@ -124,26 +136,33 @@ export function CourseExplorer({
                       <div className="flex items-center gap-2">
                         <dt className="flex items-center gap-2 text-muted-foreground">
                           <Clock3 className="size-4" />
-                          Duration
+                          {t.coursesPage.durationLabel}
                         </dt>
-                        <dd className="ml-auto font-medium">{duration}</dd>
+                        <dd className="ml-auto font-medium">
+                          {toLocalizedLabel(duration, locale)}
+                        </dd>
                       </div>
                     )}
                     {course.level && (
                       <div className="flex justify-between gap-3">
-                        <dt className="text-muted-foreground">Level</dt>
-                        <dd>{course.level}</dd>
+                        <dt className="text-muted-foreground">
+                          {t.coursesPage.levelLabel}
+                        </dt>
+                        <dd>{toLocalizedLabel(course.level, locale)}</dd>
                       </div>
                     )}
                     {course.price && (
                       <div className="flex justify-between gap-3">
-                        <dt className="text-muted-foreground">Tuition</dt>
+                        <dt className="text-muted-foreground">
+                          {t.coursesPage.tuitionLabel}
+                        </dt>
                         <dd>{course.price}</dd>
                       </div>
                     )}
                   </dl>
                   <span className="mt-5 flex min-h-11 items-center justify-between text-sm font-semibold text-primary">
-                    Explore programme <ArrowUpRight className="size-5" />
+                    {t.coursesPage.exploreProgramme}{" "}
+                    <ArrowUpRight className="size-5" />
                   </span>
                 </div>
               </article>
@@ -152,20 +171,12 @@ export function CourseExplorer({
         </div>
         {!visible.length && (
           <EmptyState
-            title={
-              meta.total
-                ? "No programmes match your search"
-                : "New programmes are being prepared"
-            }
-            description={
-              meta.total
-                ? "Try another skill or clear the filters."
-                : "Contact our team to discuss training for your organization."
-            }
+            title={t.coursesPage.emptyTitle}
+            description={t.coursesPage.emptyDesc}
           />
         )}
         <CatalogPagination
-          ariaLabel="Programme pagination"
+          ariaLabel={t.coursesPage.catalogueTitle}
           page={page}
           pages={pages}
           pathname={ROUTES.courses}

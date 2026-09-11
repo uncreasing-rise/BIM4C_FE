@@ -7,10 +7,11 @@ import {
 } from "@/lib/seo/listing";
 import { ROUTES } from "@/constants/routes";
 import { PROJECT_PAGE_SIZE } from "@/features/projects/constants";
-import { PageHero } from "@/components/shared/PageHero";
-import { ProjectExplorer } from "@/components/projects/ProjectExplorer";
+import { ProjectsPageView } from "@/components/projects/ProjectsPageView";
 import { getProjectsPage } from "@/features/projects/api/queries";
+
 const description = "Explore BIM4C construction and digital delivery projects.";
+
 export async function generateMetadata({
   searchParams,
 }: {
@@ -23,6 +24,7 @@ export async function generateMetadata({
     await searchParams,
   );
 }
+
 export default async function ProjectsPage({
   searchParams,
 }: {
@@ -50,6 +52,7 @@ export default async function ProjectsPage({
         ? params.status
         : undefined,
   });
+
   const destination = normalizedPageRedirect(
     ROUTES.projects,
     params,
@@ -57,15 +60,11 @@ export default async function ProjectsPage({
     PROJECT_PAGE_SIZE,
   );
   if (destination) redirect(destination);
+
   return (
-    <main>
-      <PageHero
-        eyebrow="BIM4C portfolio"
-        title="Projects"
-        description="Selected projects that demonstrate how BIM4C turns coordination into delivery confidence."
-        image="/images/news-project-coordination.webp"
-      />
-      <ProjectExplorer projects={projectsPage.items} meta={projectsPage.meta} />
-    </main>
+    <ProjectsPageView
+      projects={projectsPage.items}
+      meta={projectsPage.meta}
+    />
   );
 }

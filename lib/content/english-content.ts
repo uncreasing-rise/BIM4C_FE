@@ -45,7 +45,6 @@ const technicalFields = new Set([
   "instructor",
   "relatedIds",
   "type",
-  "status",
   "imageLayout",
 ]);
 

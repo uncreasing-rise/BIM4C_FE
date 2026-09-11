@@ -1,14 +1,13 @@
+"use client";
+
 import { CheckCircle2, Clock3, Mail, Phone } from "lucide-react";
 import { ConsultationForm } from "@/features/contact/components/ConsultationForm";
 import { CONTACT_EMAIL, ROUTES } from "@/constants/routes";
-
-const commitments = [
-  "Speak directly with a BIM specialist",
-  "A proposal matched to your project stage and scale",
-  "Your business information stays confidential",
-] as const;
+import { useLanguage } from "@/lib/i18n/context";
 
 export function ConsultationSection() {
+  const { t } = useLanguage();
+
   return (
     <section
       id="contact"
@@ -19,17 +18,16 @@ export function ConsultationSection() {
       <div className="pointer-events-none absolute -right-40 -top-48 size-[32rem] rounded-full bg-primary/10 blur-3xl" />
       <div className="site-container relative grid gap-12 lg:grid-cols-[.82fr_1.18fr] lg:items-start lg:gap-20">
         <div data-consultation-copy className="lg:sticky lg:top-28">
-          <p className="eyebrow">Talk to BIM4C</p>
+          <p className="eyebrow">{t.contactPage.talkEyebrow}</p>
           <h2 className="max-w-xl text-balance text-3xl font-semibold leading-[1.12] tracking-[-.04em] sm:text-4xl">
-            A clear scope starts here.
+            {t.contactPage.talkTitle}
           </h2>
           <p className="mt-6 max-w-xl text-base leading-8 text-white/60">
-            Tell us about your challenge. We will help clarify the scope,
-            priorities and next steps.
+            {t.contactPage.talkDesc}
           </p>
 
           <ul className="mt-9 hidden gap-4 border-t border-white/10 pt-7 lg:grid">
-            {commitments.map((item) => (
+            {t.contactPage.commitments.map((item) => (
               <li
                 className="flex items-center gap-3 text-sm text-white/75"
                 key={item}
@@ -62,14 +60,13 @@ export function ConsultationSection() {
         >
           <div className="mb-7 flex items-start justify-between gap-6 border-b border-white/10 pb-6">
             <div>
-              <p className="text-xl font-semibold">Project enquiry</p>
+              <p className="text-xl font-semibold">{t.contactPage.enquiryTitle}</p>
               <p className="mt-2 text-sm text-white/65">
-                Fields marked * are required. We usually reply within one
-                business day.
+                {t.contactPage.enquiryDesc}
               </p>
             </div>
             <span className="hidden items-center gap-2 rounded-full border border-primary/25 bg-primary/10 px-3 py-1.5 text-xs text-primary sm:flex">
-              <Clock3 className="size-3.5" /> 1 business day
+              <Clock3 className="size-3.5" /> {t.contactPage.responseTime}
             </span>
           </div>
           <ConsultationForm />

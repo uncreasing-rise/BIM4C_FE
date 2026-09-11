@@ -12,71 +12,82 @@ import {
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ROUTES } from "@/constants/routes";
 import type { ContentEntry } from "@/types/content";
-import { toEnglishLabel } from "@/lib/utils/public-labels";
+import { toLocalizedLabel } from "@/lib/utils/public-labels";
 import type { PageMeta } from "@/features/shared/types/pagination";
-
-const naturalCase = (value: string) => toEnglishLabel(value);
+import { useLanguage } from "@/lib/i18n/context";
+import { localizeContentList } from "@/lib/i18n/localize";
 
 export function BlogExplorer({
-  posts,
+  posts: rawPosts,
   meta,
 }: {
   posts: ContentEntry[];
   meta: PageMeta;
 }) {
-  const categories = ["All", ...new Set(posts.map((item) => item.eyebrow))];
+  const { t, locale } = useLanguage();
+  const posts = localizeContentList(rawPosts, locale);
+
+  const allLabel = t.common.all;
+  const categories = [
+    allLabel,
+    ...new Set(posts.map((item) => toLocalizedLabel(item.eyebrow, locale))),
+  ];
+
   const { searchParams, query, setQuery, update, reset, pending } =
     useCatalogFilters();
-  const category = searchParams.get("category") ?? "All";
+  const categoryParam = searchParams.get("category") ?? "All";
+  const category = toLocalizedLabel(categoryParam, locale);
+
   const pages = meta.totalPages;
   const page = meta.page;
   const visible = posts;
+
+  const formatFilterLabel = (val: string) => toLocalizedLabel(val, locale);
 
   return (
     <section className="bg-background py-12 lg:py-16" aria-busy={pending}>
       <div className="site-container">
         <header className="mb-8 grid gap-4 border-b pb-8 md:grid-cols-[.8fr_1.2fr] md:items-end">
           <div>
-            <p className="eyebrow">News &amp; insights</p>
+            <p className="eyebrow">{t.blogPage.catalogueEyebrow}</p>
             <h2 className="text-3xl font-semibold tracking-[-.04em] md:text-5xl">
-              Practical perspectives on digital construction
+              {t.blogPage.catalogueTitle}
             </h2>
           </div>
           <p className="max-w-xl text-sm leading-7 text-muted-foreground md:justify-self-end">
-            Expert perspectives, project lessons and technology trends for the
-            construction industry.
+            {t.blogPage.catalogueDesc}
           </p>
         </header>
         <CatalogCategories
-          ariaLabel="Insight topics"
+          ariaLabel={t.blogPage.catalogueEyebrow}
           items={categories}
-          value={category}
-          formatLabel={naturalCase}
+          value={category === "All" ? allLabel : category}
+          formatLabel={formatFilterLabel}
           onChange={(value) => {
-            update("category", value);
+            update("category", value === allLabel ? "All" : value);
           }}
         />
         <CatalogFilterBar>
           <CatalogSearch
-            label="Search insights"
-            placeholder="Search insights"
+            label={t.blogPage.searchLabel}
+            placeholder={t.blogPage.searchPlaceholder}
             value={query}
             onChange={setQuery}
           />
         </CatalogFilterBar>
-        {(query || category !== "All") && (
+        {(query || (categoryParam !== "All" && categoryParam !== allLabel)) && (
           <button
             className="mb-4 min-h-11 rounded-lg px-3 text-sm font-semibold text-primary hover:bg-muted"
             onClick={reset}
           >
-            Clear filters
+            {t.common.clearFilters}
           </button>
         )}
         <p role="status" className="mb-5 text-sm text-muted-foreground">
           <strong className="font-semibold text-foreground">
             {meta.total}
           </strong>{" "}
-          matching articles
+          {t.blogPage.matchingCount(meta.total)}
         </p>
         {visible.length ? (
           <div className="grid grid-cols-1 gap-x-10 border-t pt-8 lg:grid-cols-[1.1fr_.9fr]">
@@ -120,7 +131,7 @@ export function BlogExplorer({
                   }
                 >
                   <p className="mb-2.5 text-[10px] font-semibold uppercase tracking-[.1em] text-primary">
-                    {item.eyebrow}
+                    {toLocalizedLabel(item.eyebrow, locale)}
                   </p>
                   <h3 className="line-clamp-2 text-[21px] font-semibold leading-[1.3] tracking-[-.015em] text-foreground">
                     {item.title}
@@ -143,7 +154,7 @@ export function BlogExplorer({
                   >
                     <time>{item.meta}</time>
                     <span className="font-semibold text-primary">
-                      Read more →
+                      {t.blogPage.readMore}
                     </span>
                   </div>
                 </div>
@@ -152,12 +163,12 @@ export function BlogExplorer({
           </div>
         ) : (
           <EmptyState
-            title="No articles found"
-            description="Try a different keyword or topic."
+            title={t.blogPage.emptyTitle}
+            description={t.blogPage.emptyDesc}
           />
         )}
         <CatalogPagination
-          ariaLabel="Insights pagination"
+          ariaLabel={t.blogPage.catalogueTitle}
           page={page}
           pages={pages}
           pathname={ROUTES.blog}

@@ -1,4 +1,6 @@
-const labels: Record<string, string> = {
+import type { Locale } from "../i18n/config";
+
+const viToEnLabels: Record<string, string> = {
   "Tư vấn BIM": "BIM Consulting",
   "Đào tạo": "Training",
   "Thiết kế": "Design",
@@ -58,6 +60,42 @@ const labels: Record<string, string> = {
   "Bản nháp": "Draft",
 };
 
+const enToViLabels: Record<string, string> = Object.fromEntries(
+  Object.entries(viToEnLabels).map(([vi, en]) => [en, vi]),
+);
+
+// Additional variations for robustness
+enToViLabels["All"] = "Tất cả";
+enToViLabels["High-rise"] = "Nhà cao tầng";
+enToViLabels["Low-rise"] = "Nhà thấp tầng";
+enToViLabels["Industrial"] = "Công nghiệp";
+enToViLabels["Infrastructure"] = "Hạ tầng";
+enToViLabels["MEP"] = "Cơ điện";
+enToViLabels["In delivery"] = "Đang thi công";
+enToViLabels["Completed"] = "Hoàn thành";
+enToViLabels["Planned"] = "Sắp triển khai";
+enToViLabels["Hanoi"] = "Hà Nội";
+enToViLabels["Ho Chi Minh City"] = "TP. Hồ Chí Minh";
+enToViLabels["Binh Duong"] = "Bình Dương";
+enToViLabels["Nghe An"] = "Nghệ An";
+enToViLabels["Bac Ninh"] = "Bắc Ninh";
+enToViLabels["Hai Phong"] = "Hải Phòng";
+enToViLabels["Other"] = "Khác";
+
 export function toEnglishLabel(value: string): string {
-  return labels[value] ?? value;
+  if (!value) return value;
+  return viToEnLabels[value] ?? value;
+}
+
+export function toVietnameseLabel(value: string): string {
+  if (!value) return value;
+  return enToViLabels[value] ?? value;
+}
+
+export function toLocalizedLabel(value: string, locale: Locale = "vi"): string {
+  if (!value) return value;
+  if (locale === "en") {
+    return toEnglishLabel(value);
+  }
+  return toVietnameseLabel(value);
 }

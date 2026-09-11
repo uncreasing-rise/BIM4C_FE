@@ -1,3 +1,5 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft, ArrowUpRight, Check } from "lucide-react";
@@ -14,7 +16,9 @@ import { ContentBlockRenderer } from "./ContentBlockRenderer";
 import { PageHero } from "./PageHero";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { breadcrumbSchema, contentSchema } from "@/lib/seo/structured-data";
-import { toEnglishLabel } from "@/lib/utils/public-labels";
+import { toLocalizedLabel } from "@/lib/utils/public-labels";
+import { useLanguage } from "@/lib/i18n/context";
+import { localizeContent, localizeContentList } from "@/lib/i18n/localize";
 
 type DetailKind = "course" | "project" | "article" | "service";
 type DetailEntry = ContentEntry &
@@ -30,13 +34,6 @@ type DetailEntry = ContentEntry &
       | "status"
     >
   >;
-
-const uiLabels: Record<DetailKind, { aside: string; back: string }> = {
-  course: { aside: "Course overview", back: "Academy" },
-  project: { aside: "Project profile", back: "Projects" },
-  article: { aside: "Article information", back: "Insights" },
-  service: { aside: "Solution overview", back: "Solutions" },
-};
 
 function legacyBlocks(entry: ContentEntry): ContentBlock[] {
   return entry.sections.flatMap((section, index) => {
@@ -92,48 +89,83 @@ function legacyBlocks(entry: ContentEntry): ContentBlock[] {
 }
 
 export function DetailPage({
-  entry,
+  entry: rawEntry,
   backHref,
   backLabel,
   kind = "service",
-  related = [],
+  related: rawRelated = [],
 }: {
   entry: DetailEntry;
   backHref: string;
-  backLabel: string;
+  backLabel?: string;
   kind?: DetailKind;
   related?: ContentEntry[];
 }) {
+  const { t, locale } = useLanguage();
+  const entry = localizeContent(rawEntry, locale) as DetailEntry;
+  const related = localizeContentList(rawRelated, locale);
+
+  const uiLabels: Record<DetailKind, { aside: string; back: string }> = {
+    course: {
+      aside: t.detailPage.courseProfile,
+      back: t.detailPage.backCourses,
+    },
+    project: {
+      aside: t.detailPage.projectProfile,
+      back: t.detailPage.backProjects,
+    },
+    article: {
+      aside: t.detailPage.articleInfo,
+      back: t.detailPage.backBlog,
+    },
+    service: {
+      aside: t.detailPage.serviceProfile,
+      back: t.detailPage.backServices,
+    },
+  };
+
   const blocks = entry.contentBlocks ?? legacyBlocks(entry);
   const detailPath = `${backHref}/${entry.slug}`;
   const breadcrumbItems = [
-    { name: "Home", path: "/" },
+    { name: t.navigation.home, path: "/" },
     { name: uiLabels[kind].back, path: backHref },
     { name: entry.title, path: detailPath },
   ];
+
   const projectProfile =
     kind === "project"
       ? [
-          ["Client", entry.investor],
-          ["Location", entry.location],
-          ["Scale", entry.scale],
-          ["Contract package", entry.contractPackage],
+          [t.detailPage.fields.client, entry.investor],
+          [t.detailPage.fields.location, toLocalizedLabel(entry.location ?? "", locale)],
+          [t.detailPage.fields.scale, entry.scale],
+          [t.detailPage.fields.contractPackage, entry.contractPackage],
           [
-            entry.expectedCompletion ? "Expected completion" : "Project year",
+            entry.expectedCompletion
+              ? t.detailPage.fields.expectedCompletion
+              : t.detailPage.fields.projectYear,
             entry.expectedCompletion ?? entry.year,
           ],
-          ["Status", entry.status],
+          [t.detailPage.fields.status, toLocalizedLabel(entry.status ?? "", locale)],
         ].filter((item): item is [string, string] => Boolean(item[1]))
       : [];
+
   const courseProfile =
     kind === "course"
       ? [
-          ["Duration", entry.duration || entry.eyebrow.split("·")[1]?.trim()],
-          ["Level", entry.level || entry.eyebrow.split("·")[0]?.trim()],
-          ["Price", entry.price],
-          ["Instructor", entry.instructor],
+          [
+            t.detailPage.fields.duration,
+            entry.duration || entry.eyebrow.split("·")[1]?.trim(),
+          ],
+          [
+            t.detailPage.fields.level,
+            toLocalizedLabel(entry.level || entry.eyebrow.split("·")[0]?.trim(), locale),
+          ],
+          [t.detailPage.fields.price, entry.price],
+          [t.detailPage.fields.instructor, entry.instructor],
         ].filter((item): item is [string, string] => Boolean(item[1]))
       : [];
+
+  const defaultBackLabel = backLabel || uiLabels[kind].back;
 
   return (
     <>
@@ -146,8 +178,8 @@ export function DetailPage({
       <PageHero
         eyebrow={
           entry.meta
-            ? `${toEnglishLabel(entry.eyebrow)} · ${entry.meta}`
-            : toEnglishLabel(entry.eyebrow)
+            ? `${toLocalizedLabel(entry.eyebrow, locale)} · ${entry.meta}`
+            : toLocalizedLabel(entry.eyebrow, locale)
         }
         title={entry.title}
         description={entry.description}
@@ -159,17 +191,20 @@ export function DetailPage({
       />
       <article className="bg-background py-8 lg:py-12" data-motion="detail">
         <div className="site-container">
-          <div className="mb-7 flex flex-wrap items-center justify-between gap-3 border-b pb-5" data-motion="reveal">
+          <div
+            className="mb-7 flex flex-wrap items-center justify-between gap-3 border-b pb-5"
+            data-motion="reveal"
+          >
             <Button asChild variant="ghost" className="px-0">
               <Link href={backHref}>
-                <ArrowLeft /> {backLabel}
+                <ArrowLeft /> {defaultBackLabel}
               </Link>
             </Button>
             {(entry.authorName || entry.publishedAt) && (
               <p className="flex flex-wrap gap-x-4 text-sm text-muted-foreground">
                 {entry.publishedAt && (
                   <time dateTime={entry.publishedAt}>
-                    {new Intl.DateTimeFormat("en-GB", {
+                    {new Intl.DateTimeFormat(locale === "vi" ? "vi-VN" : "en-GB", {
                       dateStyle: "long",
                       timeZone: "UTC",
                     }).format(new Date(entry.publishedAt))}
@@ -177,7 +212,7 @@ export function DetailPage({
                 )}
                 {entry.authorName && (
                   <span>
-                    By{" "}
+                    {t.detailPage.byAuthor}{" "}
                     <strong className="text-foreground">
                       {entry.authorName}
                     </strong>
@@ -187,7 +222,10 @@ export function DetailPage({
             )}
           </div>
           {projectProfile.length > 0 && (
-            <dl className="mb-8 grid grid-cols-2 gap-x-6 gap-y-4 rounded-xl border bg-card p-5 md:grid-cols-3" data-motion="tile">
+            <dl
+              className="mb-8 grid grid-cols-2 gap-x-6 gap-y-4 rounded-xl border bg-card p-5 md:grid-cols-3"
+              data-motion="tile"
+            >
               {projectProfile.map(([label, value]) => (
                 <div key={label}>
                   <dt className="text-xs font-medium text-muted-foreground">
@@ -200,10 +238,13 @@ export function DetailPage({
               ))}
             </dl>
           )}
-          <div className="mb-8 flex flex-wrap items-center justify-between gap-4 rounded-xl border bg-muted/50 p-4" data-motion="reveal">
-            <nav aria-label="On this page" className="min-w-0 flex-1">
+          <div
+            className="mb-8 flex flex-wrap items-center justify-between gap-4 rounded-xl border bg-muted/50 p-4"
+            data-motion="reveal"
+          >
+            <nav aria-label={t.detailPage.onThisPage} className="min-w-0 flex-1">
               <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                On this page
+                {t.detailPage.onThisPage}
               </p>
               <ul className="flex flex-wrap gap-x-5 gap-y-2">
                 {blocks
@@ -226,8 +267,8 @@ export function DetailPage({
               <Button asChild className="shrink-0">
                 <a href="#detail-enquiry">
                   {kind === "course"
-                    ? "Enquire about this programme"
-                    : "Discuss your project"}{" "}
+                    ? t.detailPage.enquireProgramme
+                    : t.detailPage.discussProject}{" "}
                   <ArrowUpRight />
                 </a>
               </Button>
@@ -281,15 +322,17 @@ export function DetailPage({
                   <div className="mb-6 rounded-xl border border-teal-500/30 p-4 hologram-effect text-white shadow-lg">
                     <div className="flex items-center justify-between border-b border-white/20 pb-2">
                       <span className="font-mono text-[10px] uppercase font-bold tracking-wider text-teal-200">
-                        BIM4C VERIFIED CERTIFICATE
+                        {t.detailPage.certificateBadge}
                       </span>
-                      <span className="font-mono text-[10px] text-white/75">ID: 19650-VERIFIED</span>
+                      <span className="font-mono text-[10px] text-white/75">
+                        ID: 19650-VERIFIED
+                      </span>
                     </div>
                     <p className="mt-2 text-xs font-semibold text-white">
-                      Chứng nhận Kỹ năng Thực chiến
+                      {t.detailPage.certificateTitle}
                     </p>
                     <p className="mt-1 text-[11px] text-white/80">
-                      Cấp mã định danh QR Code & hồ sơ năng lực số sau khi hoàn thành đồ án.
+                      {t.detailPage.certificateDesc}
                     </p>
                   </div>
                 )}
@@ -328,11 +371,10 @@ export function DetailPage({
                 ) : kind === "article" ? (
                   <div>
                     <h3 className="mb-2 text-xl font-semibold text-white">
-                      Get BIM insights
+                      {t.detailPage.getInsightsTitle}
                     </h3>
                     <p className="mb-5 text-sm leading-6 text-white/65">
-                      Practical project lessons and digital construction
-                      insights, delivered to your inbox.
+                      {t.detailPage.getInsightsDesc}
                     </p>
                     <NewsletterForm />
                   </div>
@@ -382,7 +424,7 @@ export function DetailPage({
         {kind === "course" && entry.curriculum?.length ? (
           <section className="site-container mt-16">
             <h2 className="mb-6 text-3xl font-semibold tracking-tight">
-              Course curriculum
+              {t.detailPage.curriculumTitle}
             </h2>
             <ol className="divide-y rounded-2xl border">
               {entry.curriculum.map((module, index) => (
@@ -412,14 +454,14 @@ export function DetailPage({
             <div className="site-container">
               <header className="mb-8 flex items-end justify-between gap-5">
                 <div>
-                  <p className="eyebrow">Keep exploring</p>
+                  <p className="eyebrow">{t.detailPage.keepExploring}</p>
                   <h2 className="text-3xl font-semibold tracking-[-.035em]">
-                    Related content
+                    {t.detailPage.relatedContent}
                   </h2>
                 </div>
                 <Button asChild variant="outline">
                   <Link href={backHref}>
-                    View all <ArrowUpRight />
+                    {t.detailPage.viewAll} <ArrowUpRight />
                   </Link>
                 </Button>
               </header>
@@ -436,7 +478,7 @@ export function DetailPage({
                       />
                     </div>
                     <p className="mt-4 text-xs font-semibold uppercase tracking-wider text-primary">
-                      {item.eyebrow}
+                      {toLocalizedLabel(item.eyebrow, locale)}
                     </p>
                     <h3 className="mt-2 text-xl font-semibold leading-snug">
                       {item.title}

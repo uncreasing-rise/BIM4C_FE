@@ -13,68 +13,82 @@ import {
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ROUTES } from "@/constants/routes";
 import type { ContentEntry } from "@/types/content";
-import { toEnglishLabel } from "@/lib/utils/public-labels";
+import { toLocalizedLabel } from "@/lib/utils/public-labels";
 import type { PageMeta } from "@/features/shared/types/pagination";
+import { useLanguage } from "@/lib/i18n/context";
+import { localizeContentList } from "@/lib/i18n/localize";
 
 const pageSize = 6;
 
 export function ServiceExplorer({
-  services,
+  services: rawServices,
   meta,
 }: {
   services: ContentEntry[];
   meta: PageMeta;
 }) {
+  const { t, locale } = useLanguage();
+  const services = localizeContentList(rawServices, locale);
+
+  const allLabel = t.common.all;
   const categories = [
-    "All",
-    ...new Set(services.map((service) => service.category || service.eyebrow)),
+    allLabel,
+    ...new Set(
+      services.map((service) =>
+        toLocalizedLabel(service.category || service.eyebrow, locale),
+      ),
+    ),
   ];
+
   const { searchParams, query, setQuery, update, reset, pending } =
     useCatalogFilters();
-  const category = searchParams.get("category") ?? "All";
+  const categoryParam = searchParams.get("category") ?? "All";
+  const category = toLocalizedLabel(categoryParam, locale);
+
   const pages = meta.totalPages;
   const page = meta.page;
   const visible = services;
+
+  const formatFilterLabel = (val: string) => toLocalizedLabel(val, locale);
 
   return (
     <section className="py-12 lg:py-16" id="service-list" aria-busy={pending}>
       <div className="site-container">
         <header className="mb-7 flex flex-col justify-between gap-4 border-b pb-6 md:flex-row md:items-end">
           <div>
-            <p className="eyebrow">Solution catalogue</p>
-            <h2 className="section-title">Expertise that fits your project.</h2>
+            <p className="eyebrow">{t.servicesPage.catalogueEyebrow}</p>
+            <h2 className="section-title">{t.servicesPage.catalogueTitle}</h2>
           </div>
           <p className="max-w-md text-sm leading-7 text-muted-foreground">
-            From BIM strategy to coordinated models and asset information, find
-            support that fits your project stage and your team.
+            {t.servicesPage.catalogueDesc}
           </p>
         </header>
         <div>
           {categories.length > 2 && (
             <CatalogCategories
-              ariaLabel="Solution categories"
+              ariaLabel={t.servicesPage.catalogueTitle}
               items={categories}
-              value={category}
-              formatLabel={toEnglishLabel}
+              value={category === "All" ? allLabel : category}
+              formatLabel={formatFilterLabel}
               onChange={(value) => {
-                update("category", value);
+                update("category", value === allLabel ? "All" : value);
               }}
             />
           )}
           <CatalogFilterBar>
             <CatalogSearch
-              label="Search solutions"
-              placeholder="Search by name, goal or capability"
+              label={t.servicesPage.searchLabel}
+              placeholder={t.servicesPage.searchPlaceholder}
               value={query}
               onChange={setQuery}
             />
           </CatalogFilterBar>
-          {(query || category !== "All") && (
+          {(query || (categoryParam !== "All" && categoryParam !== allLabel)) && (
             <button
               className="mb-4 min-h-11 rounded-lg px-3 text-sm font-semibold text-primary hover:bg-muted"
               onClick={reset}
             >
-              Clear filters
+              {t.common.clearFilters}
             </button>
           )}
           <p
@@ -85,7 +99,7 @@ export function ServiceExplorer({
             <strong className="font-semibold text-foreground">
               {meta.total}
             </strong>{" "}
-            matching solutions
+            {t.servicesPage.matchingCount(meta.total)}
           </p>
           {visible.length ? (
             <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
@@ -112,7 +126,7 @@ export function ServiceExplorer({
                   </div>
                   <div className="flex flex-1 flex-col p-5">
                     <p className="text-xs font-semibold uppercase tracking-[.16em] text-primary">
-                      BIM4C solution
+                      {t.servicesPage.solutionBadge}
                     </p>
                     <h3 className="mt-2 text-xl font-semibold tracking-[-.035em]">
                       {service.title}
@@ -132,7 +146,8 @@ export function ServiceExplorer({
                       ))}
                     </ul>
                     <span className="mt-auto inline-flex items-center gap-2 text-sm font-semibold text-primary">
-                      Explore solution <ArrowUpRight className="size-4" />
+                      {t.servicesPage.exploreSolution}{" "}
+                      <ArrowUpRight className="size-4" />
                     </span>
                   </div>
                   <Link
@@ -145,12 +160,12 @@ export function ServiceExplorer({
             </div>
           ) : (
             <EmptyState
-              title="No solutions found"
-              description="Try a different keyword or category."
+              title={t.servicesPage.emptyTitle}
+              description={t.servicesPage.emptyDesc}
             />
           )}
           <CatalogPagination
-            ariaLabel="Solution pagination"
+            ariaLabel={t.servicesPage.catalogueTitle}
             page={page}
             pages={pages}
             pathname={ROUTES.services}

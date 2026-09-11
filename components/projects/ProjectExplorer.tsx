@@ -17,16 +17,21 @@ import {
   PROJECT_PAGE_SIZE,
 } from "@/features/projects/constants";
 import type { Project } from "@/features/projects/types/project";
-import { toEnglishLabel } from "@/lib/utils/public-labels";
+import { toLocalizedLabel } from "@/lib/utils/public-labels";
 import type { PageMeta } from "@/features/shared/types/pagination";
+import { useLanguage } from "@/lib/i18n/context";
+import { localizeContentList } from "@/lib/i18n/localize";
 
 export function ProjectExplorer({
-  projects,
+  projects: rawProjects,
   meta,
 }: {
   projects: Project[];
   meta: PageMeta;
 }) {
+  const { t, locale } = useLanguage();
+  const projects = localizeContentList(rawProjects, locale);
+
   const { searchParams, query, setQuery, update, reset, pending } =
     useCatalogFilters();
   const category = searchParams.get("category") ?? ALL_PROJECT_FILTER;
@@ -44,6 +49,8 @@ export function ProjectExplorer({
     status !== ALL_PROJECT_FILTER,
   );
 
+  const formatFilterLabel = (val: string) => toLocalizedLabel(val, locale);
+
   return (
     <section
       className="bg-background py-12 lg:py-16"
@@ -53,51 +60,51 @@ export function ProjectExplorer({
       <div className="site-container">
         <header className="mb-8 grid gap-4 border-b pb-8 md:grid-cols-[.8fr_1.2fr] md:items-end">
           <div>
-            <p className="eyebrow">Project catalogue</p>
+            <p className="eyebrow">{t.projectsPage.eyebrow}</p>
             <h2 className="text-3xl font-semibold tracking-[-.035em] md:text-4xl">
-              Find a project like yours
+              {t.projectsPage.catalogueTitle}
             </h2>
           </div>
           <p className="max-w-xl text-sm leading-7 text-muted-foreground md:justify-self-end">
-            Browse projects by type, location, year and delivery status.
+            {t.projectsPage.catalogueDesc}
           </p>
         </header>
         <CatalogCategories
-          ariaLabel="Project type"
+          ariaLabel={t.projectsPage.catalogueTitle}
           items={PROJECT_CATEGORIES}
           value={category}
-          formatLabel={toEnglishLabel}
+          formatLabel={formatFilterLabel}
           onChange={(value) => update("category", value)}
         />
         <CatalogFilterBar>
           <CatalogSearch
-            label="Project name"
-            placeholder="Search projects"
+            label={t.projectsPage.searchLabel}
+            placeholder={t.projectsPage.searchPlaceholder}
             value={query}
             onChange={setQuery}
           />
           <CatalogSelect
-            label="Location"
+            label={t.projectsPage.locationFilter}
             value={location}
             values={[...new Set(projects.map((item) => item.location))]}
             onChange={(value) => update("location", value)}
-            formatLabel={toEnglishLabel}
+            formatLabel={formatFilterLabel}
           />
           <CatalogSelect
-            label="Year"
+            label={t.projectsPage.yearFilter}
             value={year}
             values={[...new Set(projects.map((item) => item.year))]
               .sort()
               .reverse()}
             onChange={(value) => update("year", value)}
-            formatLabel={toEnglishLabel}
+            formatLabel={formatFilterLabel}
           />
           <CatalogSelect
-            label="Delivery status"
+            label={t.projectsPage.statusFilter}
             value={status}
             values={[...new Set(projects.map((item) => item.status))]}
             onChange={(value) => update("status", value)}
-            formatLabel={toEnglishLabel}
+            formatLabel={formatFilterLabel}
           />
         </CatalogFilterBar>
         <div className="mb-6 flex items-center justify-between gap-4">
@@ -107,16 +114,12 @@ export function ProjectExplorer({
             aria-live="polite"
           >
             {meta.total ? (
-              <>
-                Showing {(page - 1) * PROJECT_PAGE_SIZE + 1}–
-                {Math.min(page * PROJECT_PAGE_SIZE, meta.total)} of{" "}
-                <strong className="font-semibold text-foreground">
-                  {meta.total}
-                </strong>{" "}
-                projects
-              </>
+              t.projectsPage.showingText(
+                Math.min(page * PROJECT_PAGE_SIZE, meta.total),
+                meta.total,
+              )
             ) : (
-              "0 matching projects"
+              t.projectsPage.matchingCount(0)
             )}
           </p>
           <button
@@ -124,9 +127,9 @@ export function ProjectExplorer({
             type="button"
             onClick={reset}
             disabled={!hasFilters}
-            aria-label="Clear all project filters"
+            aria-label={t.projectsPage.resetFilters}
           >
-            Reset filters
+            {t.projectsPage.resetFilters}
           </button>
         </div>
         <div className="border-t">
@@ -142,20 +145,20 @@ export function ProjectExplorer({
               <EmptyState
                 title={
                   hasFilters
-                    ? "No projects match your filters"
-                    : "Projects are being prepared"
+                    ? t.projectsPage.emptyTitleFilters
+                    : t.projectsPage.emptyTitleGeneral
                 }
                 description={
                   hasFilters
-                    ? "Try a broader search or clear the filters to see all projects."
-                    : "Contact our team to discuss relevant experience for your project."
+                    ? t.projectsPage.emptyDescFilters
+                    : t.projectsPage.emptyDescGeneral
                 }
               />
             </div>
           )}
         </div>
         <CatalogPagination
-          ariaLabel="Project pagination"
+          ariaLabel={t.projectsPage.catalogueTitle}
           page={page}
           pages={pages}
           pathname={ROUTES.projects}

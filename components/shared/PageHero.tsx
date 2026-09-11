@@ -1,7 +1,10 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
-import { toEnglishLabel } from "@/lib/utils/public-labels";
+import { toLocalizedLabel } from "@/lib/utils/public-labels";
+import { useLanguage } from "@/lib/i18n/context";
 
 type PageHeroProps = {
   eyebrow: string;
@@ -20,8 +23,10 @@ export function PageHero({
   variant = "default",
   breadcrumbs,
 }: PageHeroProps) {
+  const { t, locale } = useLanguage();
   const isAbout = variant === "about";
-  const naturalEyebrow = toEnglishLabel(
+
+  const naturalEyebrow = toLocalizedLabel(
     eyebrow === eyebrow.toLocaleUpperCase("vi-VN")
       ? eyebrow
           .toLocaleLowerCase("vi-VN")
@@ -29,7 +34,9 @@ export function PageHero({
           .replace(/\bbim4c\b/giu, "BIM4C")
           .replace(/\bbim\b/giu, "BIM")
       : eyebrow,
+    locale,
   );
+
   return (
     <section
       className={cn(
@@ -57,7 +64,7 @@ export function PageHero({
         >
           {(
             breadcrumbs ?? [
-              { label: "Home", href: "/" },
+              { label: t.navigation.home, href: "/" },
               { label: naturalEyebrow },
             ]
           ).map((item, index, items) => (

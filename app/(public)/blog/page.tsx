@@ -6,11 +6,12 @@ import {
   type ListingSearchParams,
 } from "@/lib/seo/listing";
 import { ROUTES } from "@/constants/routes";
-import { PageHero } from "@/components/shared/PageHero";
-import { BlogExplorer } from "@/components/blog/BlogExplorer";
 import { getPostsPage } from "@/features/blog/api/queries";
+import { BlogPageView } from "@/components/blog/BlogPageView";
+
 const description =
   "Project news, expert perspectives and digital construction insights from BIM4C.";
+
 export async function generateMetadata({
   searchParams,
 }: {
@@ -23,6 +24,7 @@ export async function generateMetadata({
     await searchParams,
   );
 }
+
 export default async function BlogPage({
   searchParams,
 }: {
@@ -38,6 +40,7 @@ export default async function BlogPage({
         ? params.category
         : undefined,
   });
+
   const destination = normalizedPageRedirect(
     ROUTES.blog,
     params,
@@ -45,15 +48,11 @@ export default async function BlogPage({
     5,
   );
   if (destination) redirect(destination);
+
   return (
-    <main>
-      <PageHero
-        eyebrow="BIM4C insights"
-        title="Insights"
-        description="Practical lessons, project stories and perspectives on the future of digital construction."
-        image="/images/news-project-coordination.webp"
-      />
-      <BlogExplorer posts={postsPage.items} meta={postsPage.meta} />
-    </main>
+    <BlogPageView
+      posts={postsPage.items}
+      meta={postsPage.meta}
+    />
   );
 }

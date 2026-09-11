@@ -11,8 +11,8 @@ import Link from "next/link";
 import { ROUTES } from "@/constants/routes";
 import { contactSchema } from "../schemas/contact.schema";
 import { CheckCircle2 } from "lucide-react";
-
 import { toast } from "sonner";
+import { useLanguage } from "@/lib/i18n/context";
 
 type ContactField =
   "name" | "phone" | "email" | "company" | "message" | "consent";
@@ -24,6 +24,7 @@ export function ConsultationForm({
   compact?: boolean;
   subject?: string;
 }) {
+  const { t } = useLanguage();
   const [status, setStatus] = useState<
     "idle" | "sending" | "success" | "error"
   >("idle");
@@ -55,8 +56,8 @@ export function ConsultationForm({
       });
       form.reset();
       setStatus("success");
-      setMessage(result.message);
-      toast.success(result.message || "Đã gửi yêu cầu tư vấn thành công!");
+      setMessage(result.message || t.forms.thankYouDesc);
+      toast.success(result.message || t.consultation.successMessage);
     } catch (error) {
       setStatus("error");
       if (error instanceof ZodError) {
@@ -70,7 +71,7 @@ export function ConsultationForm({
       const errText =
         error instanceof Error
           ? error.message
-          : "We could not send your enquiry right now.";
+          : "An error occurred while sending your enquiry.";
       setMessage(errText);
       toast.error(errText);
     }
@@ -80,6 +81,7 @@ export function ConsultationForm({
   const captionClass = "text-xs font-medium text-white/85";
   const inputClass =
     "h-12 w-full min-w-0 rounded-xl border border-white/30 bg-white/[.06] px-4 text-base text-white shadow-none outline-none transition placeholder:text-white/65 hover:border-white/50 focus-visible:border-white focus-visible:ring-3 focus-visible:ring-white/30";
+
   if (status === "success") {
     return (
       <div
@@ -92,12 +94,11 @@ export function ConsultationForm({
           aria-hidden="true"
         />
         <h3 className="text-xl font-semibold text-white">
-          Thank you for getting in touch.
+          {t.forms.thankYouTitle}
         </h3>
         <p className="mt-3 text-sm leading-7 text-white/85">{message}</p>
         <p className="mt-3 text-sm leading-7 text-white/75">
-          Our team will review your enquiry and contact you using the details
-          you provided.
+          {t.forms.thankYouDesc}
         </p>
         <Button
           type="button"
@@ -108,11 +109,12 @@ export function ConsultationForm({
             setMessage("");
           }}
         >
-          Send another enquiry
+          {t.forms.sendAnother}
         </Button>
       </div>
     );
   }
+
   return (
     <form
       className="grid min-w-0 grid-cols-1 gap-[18px]"
@@ -124,13 +126,13 @@ export function ConsultationForm({
         className={`grid min-w-0 grid-cols-1 gap-4 ${compact ? "" : "sm:grid-cols-2"}`}
       >
         <label className={labelClass} htmlFor="consultation-name">
-          <span className={captionClass}>Full name *</span>
+          <span className={captionClass}>{t.forms.fullName}</span>
           <Input
             id="consultation-name"
             className={inputClass}
             name="name"
             autoComplete="name"
-            placeholder="Your full name"
+            placeholder={t.forms.fullNamePlaceholder}
             required
             aria-invalid={Boolean(fieldErrors.name)}
             aria-describedby={
@@ -148,14 +150,14 @@ export function ConsultationForm({
           )}
         </label>
         <label className={labelClass} htmlFor="consultation-phone">
-          <span className={captionClass}>Phone number (optional)</span>
+          <span className={captionClass}>{t.forms.phone}</span>
           <Input
             id="consultation-phone"
             className={inputClass}
             name="phone"
             type="tel"
             autoComplete="tel"
-            placeholder="090 000 0000"
+            placeholder={t.forms.phonePlaceholder}
             aria-invalid={Boolean(fieldErrors.phone)}
             aria-describedby={
               fieldErrors.phone ? "consultation-phone-error" : undefined
@@ -172,14 +174,14 @@ export function ConsultationForm({
           )}
         </label>
         <label className={labelClass} htmlFor="consultation-email">
-          <span className={captionClass}>Email *</span>
+          <span className={captionClass}>{t.forms.workEmail}</span>
           <Input
             id="consultation-email"
             className={inputClass}
             name="email"
             type="email"
             autoComplete="email"
-            placeholder="you@company.com"
+            placeholder={t.forms.workEmailPlaceholder}
             required
             aria-invalid={Boolean(fieldErrors.email)}
             aria-describedby={
@@ -198,13 +200,13 @@ export function ConsultationForm({
         </label>
         {!compact && (
           <label className={labelClass} htmlFor="consultation-company">
-            <span className={captionClass}>Company (optional)</span>
+            <span className={captionClass}>{t.forms.company}</span>
             <Input
               id="consultation-company"
               className={inputClass}
               name="company"
               autoComplete="organization"
-              placeholder="Your organization"
+              placeholder={t.forms.companyPlaceholder}
               aria-invalid={Boolean(fieldErrors.company)}
               aria-describedby={
                 fieldErrors.company ? "consultation-company-error" : undefined
@@ -223,14 +225,14 @@ export function ConsultationForm({
         )}
       </div>
       <label className={labelClass} htmlFor="consultation-message">
-        <span className={captionClass}>How can we help? *</span>
+        <span className={captionClass}>{t.forms.message}</span>
         <Textarea
           id="consultation-message"
           className="min-h-32 w-full min-w-0 resize-y rounded-xl border border-white/30 bg-white/[.06] p-4 text-base leading-6 text-white shadow-none outline-none transition placeholder:text-white/65 hover:border-white/50 focus-visible:border-white focus-visible:ring-3 focus-visible:ring-white/30"
           name="message"
           rows={compact ? 3 : 4}
           required
-          placeholder="What are you working on, and where would you like our help?"
+          placeholder={t.forms.messagePlaceholder}
           aria-invalid={Boolean(fieldErrors.message)}
           aria-describedby={
             fieldErrors.message ? "consultation-message-error" : undefined
@@ -262,15 +264,15 @@ export function ConsultationForm({
           }
         />
         <span>
-          I have read and agree to the{" "}
+          {t.forms.consentLabel}{" "}
           <Link
             className="text-primary underline"
             href={ROUTES.legalDetail("chinh-sach-bao-mat")}
             target="_blank"
           >
-            Privacy Policy
+            {t.forms.privacyPolicy}
           </Link>{" "}
-          and the processing of my personal data.
+          {t.forms.consentSuffix}
         </span>
       </label>
       {fieldErrors.consent && (
@@ -291,11 +293,11 @@ export function ConsultationForm({
           className={`min-h-12 max-w-full rounded-full ${compact ? "w-full" : "w-full sm:w-auto"}`}
           disabled={status === "sending"}
         >
-          {status === "sending" ? "Sending…" : "Send project enquiry"}
+          {status === "sending" ? t.forms.submitting : t.forms.submitEnquiry}
           <span>→</span>
         </Button>
         <small className="text-xs leading-5 text-white/75">
-          BIM4C only uses this information to respond to your enquiry.
+          {t.forms.dataProtectionNote}
         </small>
       </div>
       {message && (

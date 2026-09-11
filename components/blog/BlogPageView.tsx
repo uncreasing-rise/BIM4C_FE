@@ -1,0 +1,29 @@
+"use client";
+
+import { PageHero } from "@/components/shared/PageHero";
+import { BlogExplorer } from "@/components/blog/BlogExplorer";
+import type { ContentEntry } from "@/types/content";
+import type { PageMeta } from "@/features/shared/types/pagination";
+import { useLanguage } from "@/lib/i18n/context";
+
+export function BlogPageView({
+  posts,
+  meta,
+}: {
+  posts: ContentEntry[];
+  meta: PageMeta;
+}) {
+  const { t } = useLanguage();
+
+  return (
+    <main>
+      <PageHero
+        eyebrow={t.blogPage.eyebrow}
+        title={t.blogPage.title}
+        description={t.blogPage.description}
+        image="/images/news-project-coordination.webp"
+      />
+      <BlogExplorer posts={posts} meta={meta} />
+    </main>
+  );
+}

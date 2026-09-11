@@ -1,13 +1,17 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import type { Project } from "@/features/projects/types/project";
 import { ROUTES } from "@/constants/routes";
-import { toEnglishLabel } from "@/lib/utils/public-labels";
+import { toLocalizedLabel } from "@/lib/utils/public-labels";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/lib/i18n/context";
+import { localizeContent } from "@/lib/i18n/localize";
 
 export function ProjectRow({
-  project,
+  project: rawProject,
   number,
   dark = false,
 }: {
@@ -15,6 +19,9 @@ export function ProjectRow({
   number: number;
   dark?: boolean;
 }) {
+  const { t, locale } = useLanguage();
+  const project = localizeContent(rawProject, locale);
+
   return (
     <article
       className={cn(
@@ -42,8 +49,8 @@ export function ProjectRow({
             dark ? "text-teal-200" : "text-primary",
           )}
         >
-          {toEnglishLabel(project.category)} <span aria-hidden="true"> / </span>{" "}
-          {project.year}
+          {toLocalizedLabel(project.category, locale)}{" "}
+          <span aria-hidden="true"> / </span> {project.year}
         </p>
         <h3 className="mt-3 text-2xl font-semibold leading-tight tracking-tight lg:text-3xl">
           <Link
@@ -70,16 +77,18 @@ export function ProjectRow({
         >
           <div>
             <dt className={dark ? "text-slate-400" : "text-muted-foreground"}>
-              Location
+              {t.projectsPage.location}
             </dt>
-            <dd className="mt-1 font-medium leading-5">{project.location}</dd>
+            <dd className="mt-1 font-medium leading-5">
+              {toLocalizedLabel(project.location, locale)}
+            </dd>
           </div>
           <div>
             <dt className={dark ? "text-slate-400" : "text-muted-foreground"}>
-              Status
+              {t.projectsPage.status}
             </dt>
             <dd className="mt-1 font-medium leading-5">
-              {toEnglishLabel(project.status)}
+              {toLocalizedLabel(project.status, locale)}
             </dd>
           </div>
         </dl>
@@ -89,7 +98,7 @@ export function ProjectRow({
             dark ? "text-teal-200" : "text-primary",
           )}
         >
-          Explore project{" "}
+          {t.projectsPage.exploreProject}{" "}
           <span
             className={cn(
               "grid size-9 place-items-center rounded-full border transition-colors",

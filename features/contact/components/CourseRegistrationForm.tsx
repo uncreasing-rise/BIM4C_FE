@@ -8,6 +8,8 @@ import { registerCourse } from "../api/mutations";
 import { getZodFieldErrors } from "../utils/zod-errors";
 import Link from "next/link";
 import { ROUTES } from "@/constants/routes";
+import { useLanguage } from "@/lib/i18n/context";
+import { toast } from "sonner";
 
 type CourseField = "name" | "phone" | "email" | "consent";
 
@@ -18,6 +20,7 @@ export function CourseRegistrationForm({
   courseId: string;
   courseTitle: string;
 }) {
+  const { t } = useLanguage();
   const [status, setStatus] = useState<
     "idle" | "sending" | "success" | "error"
   >("idle");
@@ -25,6 +28,7 @@ export function CourseRegistrationForm({
   const [fieldErrors, setFieldErrors] = useState<
     Partial<Record<CourseField, string>>
   >({});
+
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = event.currentTarget;
@@ -42,7 +46,8 @@ export function CourseRegistrationForm({
       });
       form.reset();
       setStatus("success");
-      setMessage(result.message);
+      setMessage(result.message || t.forms.thankYouDesc);
+      toast.success(result.message || t.forms.thankYouTitle);
     } catch (error) {
       setStatus("error");
       if (error instanceof ZodError) {
@@ -53,16 +58,19 @@ export function CourseRegistrationForm({
         }
         return;
       }
-      setMessage(
+      const errText =
         error instanceof Error
           ? error.message
-          : "We could not submit your registration right now.",
-      );
+          : "An error occurred while submitting your registration.";
+      setMessage(errText);
+      toast.error(errText);
     }
   }
+
   const labelClass = "grid gap-[7px]";
   const inputClass =
     "h-[46px] w-full border border-white/25 bg-background/[.07] px-[13px] text-base text-white outline-none focus:border-white focus:bg-background/10";
+
   return (
     <form
       className="grid gap-[18px]"
@@ -71,18 +79,19 @@ export function CourseRegistrationForm({
       aria-busy={status === "sending"}
     >
       <h3 className="text-2xl font-semibold text-white">
-        Enquire about this programme
+        {t.detailPage.enquireProgramme}
       </h3>
       <p className="text-white/70">{courseTitle}</p>
       <label className={labelClass} htmlFor="course-registration-name">
         <span className="text-xs font-semibold uppercase tracking-[.06em] text-white/70">
-          Full name *
+          {t.forms.fullName}
         </span>
         <Input
           id="course-registration-name"
           className={inputClass}
           name="name"
           autoComplete="name"
+          placeholder={t.forms.fullNamePlaceholder}
           required
           aria-invalid={Boolean(fieldErrors.name)}
           aria-describedby={
@@ -102,7 +111,7 @@ export function CourseRegistrationForm({
 
       <label className={labelClass} htmlFor="course-registration-phone">
         <span className="text-xs font-semibold uppercase tracking-[.06em] text-white/70">
-          Phone number *
+          {t.forms.phone}
         </span>
         <Input
           id="course-registration-phone"
@@ -110,6 +119,7 @@ export function CourseRegistrationForm({
           name="phone"
           type="tel"
           autoComplete="tel"
+          placeholder={t.forms.phonePlaceholder}
           required
           aria-invalid={Boolean(fieldErrors.phone)}
           aria-describedby={
@@ -128,7 +138,7 @@ export function CourseRegistrationForm({
       </label>
       <label className={labelClass} htmlFor="course-registration-email">
         <span className="text-xs font-semibold uppercase tracking-[.06em] text-white/70">
-          Email *
+          {t.forms.workEmail}
         </span>
         <Input
           id="course-registration-email"
@@ -136,6 +146,7 @@ export function CourseRegistrationForm({
           name="email"
           type="email"
           autoComplete="email"
+          placeholder={t.forms.workEmailPlaceholder}
           required
           aria-invalid={Boolean(fieldErrors.email)}
           aria-describedby={
@@ -170,15 +181,15 @@ export function CourseRegistrationForm({
           }
         />
         <span>
-          I have read and agree to the{" "}
+          {t.forms.consentLabel}{" "}
           <Link
             className="text-primary underline"
             href={ROUTES.legalDetail("chinh-sach-bao-mat")}
             target="_blank"
           >
-            Privacy Policy
+            {t.forms.privacyPolicy}
           </Link>{" "}
-          and the processing of my personal data.
+          {t.forms.consentSuffix}
         </span>
       </label>
       {fieldErrors.consent && (
@@ -195,12 +206,11 @@ export function CourseRegistrationForm({
         type="submit"
         disabled={status === "sending"}
       >
-        {status === "sending" ? "Sending…" : "Request programme details"}
+        {status === "sending" ? t.forms.submitting : t.forms.submitRegistration}
         <span className="ml-[18px]">→</span>
       </Button>
       <p className="text-xs leading-5 text-white/75">
-        We will contact you with availability, tuition and the next steps.
-        Submitting this form does not confirm a place.
+        {t.forms.registrationNotice}
       </p>
       {message && (
         <p
