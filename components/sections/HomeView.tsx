@@ -1,0 +1,465 @@
+"use client";
+
+import Image from "next/image";
+import Link from "next/link";
+import { ArrowRight, ArrowUpRight, Check, Layers3, Mail } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { ROUTES, CONTACT_EMAIL } from "@/constants/routes";
+import { Partners } from "@/components/sections/Partners";
+import { ExpertiseStrip } from "@/components/sections/ExpertiseStrip";
+import { ProjectCarousel } from "@/components/projects/ProjectCarousel";
+import { DeliveryProcess } from "@/components/sections/DeliveryProcess";
+import { useLanguage } from "@/lib/i18n/context";
+import { localizeContentList } from "@/lib/i18n/localize";
+import type { ContentEntry } from "@/types/content";
+import type { Project } from "@/features/projects/types/project";
+
+interface HomeViewProps {
+  rawProjects: Project[];
+  rawServices: ContentEntry[];
+  rawPosts: ContentEntry[];
+  rawCourses: ContentEntry[];
+}
+
+export function HomeView({
+  rawProjects,
+  rawServices,
+  rawPosts,
+  rawCourses,
+}: HomeViewProps) {
+  const { t, locale } = useLanguage();
+
+  const isVi = locale === "vi";
+  const projects = localizeContentList(rawProjects, locale);
+  const services = localizeContentList(rawServices, locale);
+  const posts = localizeContentList(rawPosts, locale);
+  const courses = localizeContentList(rawCourses, locale);
+
+  const featured =
+    projects.find((project) => project.category === (isVi ? "Nhà cao tầng" : "High-rise")) ??
+    projects[0];
+
+  const servicePriority = ["tu-van-bim", "bim-coordination", "thiet-ke"];
+  const orderedServices = [...services].sort((a, b) => {
+    const rank = (slug: string) => {
+      const index = servicePriority.indexOf(slug);
+      return index < 0 ? servicePriority.length : index;
+    };
+    return rank(a.slug) - rank(b.slug);
+  });
+
+  return (
+    <main>
+      <section
+        data-home-section="hero"
+        className="page-hero home-hero technical-grid relative overflow-hidden bg-brand-ink text-white"
+      >
+        <Image
+          src={featured?.image ?? "/images/news-digital-twin.webp"}
+          alt=""
+          fill
+          priority
+          sizes="100vw"
+          className="pointer-events-none object-cover opacity-15 lg:hidden"
+        />
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute -right-40 top-0 size-[40rem] rounded-full bg-teal-500/10 blur-[100px]"
+        />
+        <div
+          className="site-container relative grid items-center gap-7 py-8 lg:grid-cols-[1.05fr_.95fr] lg:gap-12"
+          data-motion="hero"
+        >
+          <div className="min-w-0">
+            <p className="mb-5 flex items-center gap-3 text-xs font-semibold uppercase tracking-[.16em] text-teal-200">
+              <span className="size-2 rounded-full bg-teal-300" />
+              {t.hero.badge}
+            </p>
+            <h1 className="max-w-xl text-balance text-[clamp(2.4rem,4vw,3.65rem)] font-semibold leading-[1.08] tracking-[-.045em]">
+              {t.hero.titleMain}
+              <br />
+              <span className="text-teal-300">{t.hero.titleHighlight}</span>
+            </h1>
+            <p className="mt-5 max-w-lg text-base leading-7 text-slate-300 md:text-lg md:leading-8">
+              {t.hero.description}
+            </p>
+            <div className="mt-7 flex flex-wrap gap-3">
+              <Button
+                asChild
+                size="lg"
+                className="rounded-lg px-4"
+                data-motion="magnetic"
+              >
+                <Link href={ROUTES.contact}>
+                  {t.hero.ctaPrimary} <ArrowUpRight />
+                </Link>
+              </Button>
+              <Button
+                asChild
+                variant="outline"
+                size="lg"
+                className="rounded-lg border-white/25 bg-transparent px-4 text-white hover:bg-white/10 hover:text-white"
+                data-motion="magnetic"
+              >
+                <Link href={ROUTES.projects}>{t.hero.ctaSecondary}</Link>
+              </Button>
+            </div>
+            <div className="mt-7 hidden flex-wrap gap-x-5 gap-y-2 border-t border-white/15 pt-5 text-xs text-slate-300 md:flex">
+              {[
+                t.hero.featureBimStrategy,
+                t.hero.featureCoordination,
+                t.hero.featureDigitalHandover,
+              ].map((label) => (
+                <span key={label} className="flex items-center gap-2">
+                  <Check className="size-3.5 text-teal-300" />
+                  {label}
+                </span>
+              ))}
+            </div>
+          </div>
+          <div className="relative hidden min-w-0 lg:block">
+            <div
+              className="absolute -left-4 -top-4 hidden h-20 w-20 border-l border-t border-teal-300/40 lg:block"
+              aria-hidden="true"
+            />
+            <article
+              className="group relative overflow-hidden rounded-2xl border border-white/15 bg-white/5"
+              data-motion="tile"
+            >
+              <div className="relative aspect-[16/9]">
+                <Image
+                  src={featured?.image ?? "/images/news-digital-twin.webp"}
+                  alt={
+                    featured
+                      ? featured.title
+                      : "Coordinating construction models"
+                  }
+                  fill
+                  priority
+                  sizes="(max-width:1023px) 100vw, 50vw"
+                  className="object-cover transition-transform duration-700 group-hover:scale-[1.025]"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-brand-ink/70 via-transparent to-transparent" />
+                <span className="absolute left-4 top-4 inline-flex items-center gap-2 rounded-md border border-white/25 bg-brand-ink/80 px-3 py-2 text-xs font-medium text-white backdrop-blur">
+                  <Layers3 className="size-4 text-teal-300" />
+                  {t.hero.cardTag}
+                </span>
+                <span className="absolute bottom-4 left-4 font-mono text-[11px] tracking-wider text-white/85">
+                  {t.hero.cardTagline}
+                </span>
+              </div>
+              <div className="flex items-center justify-between gap-5 p-5">
+                <div className="min-w-0">
+                  <p className="text-xs text-teal-200">
+                    {featured?.category ?? "BIM4C"}
+                    {featured?.location ? " · " + featured.location : ""}
+                  </p>
+                  <h2 className="mt-1 text-lg font-semibold leading-snug">
+                    {featured?.title ?? "Connected project delivery"}
+                  </h2>
+                </div>
+                <span className="grid size-11 shrink-0 place-items-center rounded-full border border-white/25">
+                  <ArrowUpRight className="size-5" />
+                </span>
+              </div>
+              <Link
+                href={
+                  featured
+                    ? ROUTES.projectDetail(featured.slug)
+                    : ROUTES.projects
+                }
+                className="absolute inset-0"
+                aria-label={
+                  featured ? "Explore " + featured.title : "Explore projects"
+                }
+              />
+            </article>
+            <p className="mt-3 text-right text-xs text-slate-400">
+              {isVi
+                ? "Từ dữ liệu dự án đến quyết định thực thi."
+                : "From project information to practical decisions."}
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <ExpertiseStrip />
+
+      <section
+        id="services"
+        data-home-section="services"
+        className="services-section py-12 lg:py-14"
+      >
+        <div className="site-container">
+          <header className="mb-8 flex flex-col justify-between gap-5 md:flex-row md:items-end">
+            <div>
+              <p className="eyebrow">{isVi ? "Năng lực chuyên môn" : "Our expertise"}</p>
+              <h2 className="section-title">
+                {isVi ? (
+                  <>
+                    Giải pháp phù hợp.
+                    <br />
+                    Mọi giai đoạn dự án.
+                  </>
+                ) : (
+                  <>
+                    The right support.
+                    <br />
+                    At every project stage.
+                  </>
+                )}
+              </h2>
+            </div>
+            <div className="max-w-md">
+              <p className="text-sm leading-7 text-muted-foreground">
+                {isVi
+                  ? "Xây dựng chiến lược BIM, kết nối đa bộ môn và trang bị cho đội ngũ nguồn dữ liệu số hữu ích."
+                  : "Define your BIM strategy, connect your disciplines and equip your team with information they can use."}
+              </p>
+              <Link
+                href={ROUTES.services}
+                className="mt-3 inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-primary"
+              >
+                {t.common.exploreExpertise} <ArrowUpRight className="size-4" />
+              </Link>
+            </div>
+          </header>
+          <div className="grid gap-5 md:grid-cols-3" data-motion="reveal">
+            {orderedServices.slice(0, 3).map((service, index) => (
+              <article
+                key={service.slug}
+                className="service-card group relative flex flex-col overflow-hidden rounded-xl border bg-card"
+                data-motion="tile"
+              >
+                <div className="relative aspect-[16/8] overflow-hidden bg-muted">
+                  <Image
+                    src={service.image}
+                    alt=""
+                    fill
+                    sizes="(max-width:767px) 100vw, 33vw"
+                    className="object-cover transition-transform duration-500 group-hover:scale-[1.035]"
+                  />
+                  <span className="absolute left-4 top-4 rounded-md bg-brand-ink/85 px-3 py-1.5 font-mono text-xs text-white">
+                    0{index + 1}
+                  </span>
+                </div>
+                <div className="flex flex-1 flex-col p-5">
+                  <h3 className="text-xl font-semibold tracking-tight">
+                    <Link
+                      className="after:absolute after:inset-0"
+                      href={ROUTES.serviceDetail(service.slug)}
+                    >
+                      {service.title}
+                    </Link>
+                  </h3>
+                  <p className="mt-3 text-sm leading-6 text-muted-foreground">
+                    {service.description}
+                  </p>
+                  <ul className="mb-4 mt-4 space-y-2 border-t pt-4">
+                    {service.highlights.slice(0, 2).map((item) => (
+                      <li key={item} className="flex gap-2 text-xs leading-5">
+                        <Check className="mt-0.5 size-3.5 shrink-0 text-primary" />
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                  <span className="mt-auto flex items-center justify-between pt-4 text-sm font-semibold text-primary">
+                    {t.common.viewDetails} <ArrowUpRight className="size-5" />
+                  </span>
+                </div>
+              </article>
+            ))}
+          </div>
+          {services.length > 3 && (
+            <div className="mt-5 grid divide-y rounded-xl border bg-muted/50 md:grid-cols-3 md:divide-x md:divide-y-0">
+              {orderedServices.slice(3, 6).map((service) => (
+                <Link
+                  href={ROUTES.serviceDetail(service.slug)}
+                  key={service.slug}
+                  className="flex min-h-20 items-center justify-between gap-4 px-5 py-4 text-sm font-semibold transition-colors hover:bg-muted"
+                >
+                  {service.title}
+                  <ArrowRight className="size-4 shrink-0 text-primary" />
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
+
+      <section
+        id="projects"
+        data-home-section="projects"
+        className="bg-brand-ink py-14 text-white lg:py-16"
+      >
+        <div className="site-container">
+          <header className="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+            <div>
+              <p className="eyebrow">{isVi ? "Kinh nghiệm thực chiến" : "Selected experience"}</p>
+              <h2 className="section-title">
+                {isVi ? "Dự án thực tế. Năng lực kết nối." : "Real projects. Connected expertise."}
+              </h2>
+            </div>
+            <Link
+              href={ROUTES.projects}
+              className="inline-flex min-h-11 shrink-0 items-center gap-2 text-sm font-semibold text-teal-200"
+            >
+              {isVi ? "Tất cả dự án" : "All projects"} <ArrowUpRight className="size-4" />
+            </Link>
+          </header>
+          <ProjectCarousel projects={projects.slice(0, 3)} />
+        </div>
+      </section>
+
+      <DeliveryProcess />
+
+      <section data-home-section="academy" className="py-14 lg:py-16">
+        <div className="site-container">
+          <div className="grid overflow-hidden rounded-2xl border bg-card lg:grid-cols-[.85fr_1.15fr]">
+            <div className="relative min-h-64 lg:min-h-96">
+              <Image
+                src="/images/news-bim-training.webp"
+                alt="A team reviewing BIM project work together"
+                fill
+                sizes="(max-width:1023px) 100vw, 45vw"
+                className="object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-brand-ink/90 via-transparent to-transparent" />
+              <p className="absolute bottom-6 left-6 text-sm font-medium text-white">
+                {isVi
+                  ? "Học trên dữ liệu dự án thực tế. Ứng dụng ngay vào công việc."
+                  : "Learn with project data. Apply it at work."}
+              </p>
+            </div>
+            <div className="p-6 sm:p-8">
+              <p className="eyebrow">BIM4C Academy</p>
+              <h2 className="section-title">
+                {isVi ? "Nâng cao năng lực đội ngũ của bạn." : "Build your team’s next capability."}
+              </h2>
+              <p className="mt-3 text-sm leading-7 text-muted-foreground">
+                {isVi
+                  ? "Chương trình thực chiến cho kỹ sư, điều phối viên và cấp quản lý với bài tập hướng dẫn chi tiết."
+                  : "Practical programmes for engineers, coordinators and managers, with guided exercises and feedback."}
+              </p>
+              <div className="mt-5 divide-y border-y">
+                {courses.slice(0, 3).map((course) => (
+                  <Link
+                    key={course.slug}
+                    href={ROUTES.courseDetail(course.slug)}
+                    className="flex min-h-16 items-center justify-between gap-3 py-3 text-sm font-semibold hover:text-primary"
+                  >
+                    <span>
+                      {course.title}
+                      <span className="mt-1 block text-xs font-normal text-muted-foreground">
+                        {course.duration || course.eyebrow}
+                      </span>
+                    </span>
+                    <ArrowUpRight className="size-4 shrink-0" />
+                  </Link>
+                ))}
+              </div>
+              <Link
+                href={ROUTES.courses}
+                className="mt-3 inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-primary"
+              >
+                {isVi ? "Xem tất cả khóa học" : "Browse all programmes"} <ArrowRight className="size-4" />
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <Partners compact />
+
+      <section data-home-section="news" className="py-14 lg:py-16">
+        <div className="site-container">
+          <header className="mb-7 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+            <div>
+              <p className="eyebrow">{isVi ? "Góc nhìn & Bài viết" : "From our journal"}</p>
+              <h2 className="section-title">
+                {isVi ? "Giải pháp chuyển đổi số hiệu quả." : "Ideas for better project delivery."}
+              </h2>
+            </div>
+            <Link
+              href={ROUTES.blog}
+              className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-primary"
+            >
+              {isVi ? "Tất cả bài viết" : "All insights"} <ArrowUpRight className="size-4" />
+            </Link>
+          </header>
+          <div className="grid gap-6 md:grid-cols-3">
+            {posts.slice(0, 3).map((post) => (
+              <article className="group relative min-w-0" key={post.slug}>
+                <div className="relative aspect-[16/9] overflow-hidden rounded-xl bg-muted">
+                  <Image
+                    src={post.image}
+                    alt=""
+                    fill
+                    sizes="(max-width:767px) 100vw, 33vw"
+                    className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+                  />
+                </div>
+                <p className="mt-4 text-xs font-medium text-primary">
+                  {post.eyebrow}
+                  <span className="text-muted-foreground"> · {post.meta}</span>
+                </p>
+                <h3 className="mt-2 text-xl font-semibold leading-snug tracking-tight">
+                  <Link
+                    className="after:absolute after:inset-0"
+                    href={ROUTES.blogDetail(post.slug)}
+                  >
+                    {post.title}
+                  </Link>
+                </h3>
+                <p className="mt-2 line-clamp-2 text-sm leading-6 text-muted-foreground">
+                  {post.description}
+                </p>
+                <span className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-primary">
+                  {t.common.readMore} <ArrowUpRight className="size-4" />
+                </span>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section data-home-section="cta" className="pb-14 lg:pb-16">
+        <div className="site-container">
+          <div className="relative grid gap-7 overflow-hidden rounded-2xl bg-primary p-7 text-white sm:p-10 lg:grid-cols-[1fr_auto] lg:items-center">
+            <div>
+              <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-white/80">
+                {isVi ? "Dự án của bạn. Hợp tác cùng chúng tôi." : "Your project. Our next conversation."}
+              </p>
+              <h2 className="max-w-xl text-3xl font-semibold leading-tight tracking-tight sm:text-4xl">
+                {isVi ? "Lộ trình rõ ràng hơn cho bước tiến tiếp theo." : "Let’s make your next step clearer."}
+              </h2>
+              <p className="mt-3 max-w-lg text-sm leading-6 text-white/85">
+                {isVi
+                  ? "Chia sẻ kế hoạch của bạn. Chúng tôi sẽ giúp xác định đúng phạm vi và giải pháp hỗ trợ."
+                  : "Tell us what you are planning. We will help you define the right scope and support."}
+              </p>
+            </div>
+            <div className="flex flex-col items-start gap-4">
+              <Button
+                asChild
+                size="lg"
+                className="rounded-lg bg-white text-brand-ink shadow-none hover:bg-white/90"
+              >
+                <Link href={ROUTES.contact}>
+                  {t.common.discussProject} <ArrowUpRight />
+                </Link>
+              </Button>
+              <a
+                href={ROUTES.contactEmail}
+                className="inline-flex items-center gap-2 text-sm text-white underline-offset-4 hover:underline"
+              >
+                <Mail className="size-4" />
+                {CONTACT_EMAIL}
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  );
+}

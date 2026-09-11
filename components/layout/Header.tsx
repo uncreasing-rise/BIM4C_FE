@@ -3,7 +3,6 @@ import Link from "next/link";
 import { ArrowUpRight, Menu } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { MAIN_NAVIGATION } from "@/constants/navigation";
 import { ROUTES } from "@/constants/routes";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,10 +13,21 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/lib/i18n/context";
+import { LanguageSwitcher } from "@/components/shared/LanguageSwitcher";
 
 export function Header() {
   const pathname = usePathname();
   const [overHero, setOverHero] = useState(true);
+  const { t } = useLanguage();
+
+  const navigation = [
+    { label: t.navigation.about, href: ROUTES.about },
+    { label: t.navigation.services, href: ROUTES.services },
+    { label: t.navigation.projects, href: ROUTES.projects },
+    { label: t.navigation.courses, href: ROUTES.courses },
+    { label: t.navigation.blog, href: ROUTES.blog },
+  ];
 
   useEffect(() => {
     const updateHeader = () =>
@@ -47,10 +57,10 @@ export function Header() {
           : "border-b border-black/5 bg-background/85 text-foreground shadow-sm backdrop-blur-2xl supports-[backdrop-filter]:bg-background/75",
       )}
     >
-      <div className="site-container flex h-20 items-center justify-between">
+      <div className="site-container flex h-20 items-center justify-between gap-4">
         <Link
           href={ROUTES.home}
-          className="flex items-center gap-3"
+          className="flex items-center gap-3 shrink-0"
           aria-label="BIM4C — Home"
         >
           <span
@@ -73,7 +83,7 @@ export function Header() {
                 overHero ? "text-white/60" : "text-muted-foreground",
               )}
             >
-              Digital Construction
+              {t.navigation.tagline}
             </small>
           </span>
         </Link>
@@ -86,7 +96,7 @@ export function Header() {
           )}
           aria-label="Main navigation"
         >
-          {MAIN_NAVIGATION.map((item) => (
+          {navigation.map((item) => (
             <Link
               href={item.href}
               key={item.href}
@@ -111,28 +121,32 @@ export function Header() {
             </Link>
           ))}
         </nav>
-        <Button
-          asChild
-          className={cn(
-            "hidden rounded-full px-5 lg:inline-flex",
-            overHero && "bg-white text-brand-ink shadow-none hover:bg-white/90",
-          )}
-        >
-          <Link href={ROUTES.contact}>
-            Talk to an expert <ArrowUpRight />
-          </Link>
-        </Button>
-        <div className="flex items-center gap-1 lg:hidden">
+        <div className="hidden items-center gap-3 lg:flex">
+          <LanguageSwitcher isOverHero={overHero} />
+          <Button
+            asChild
+            className={cn(
+              "rounded-full px-5",
+              overHero && "bg-white text-brand-ink shadow-none hover:bg-white/90",
+            )}
+          >
+            <Link href={ROUTES.contact}>
+              {t.common.talkToExpert} <ArrowUpRight className="size-4" />
+            </Link>
+          </Button>
+        </div>
+        <div className="flex items-center gap-2 lg:hidden">
+          <LanguageSwitcher variant="compact" isOverHero={overHero} />
           <Link
             href={ROUTES.contact}
             className={cn(
-              "inline-flex min-h-11 items-center rounded-lg px-3 text-xs font-semibold",
+              "inline-flex min-h-10 items-center rounded-lg px-3 text-xs font-semibold",
               overHero
                 ? "bg-white/10 text-white hover:bg-white/20"
                 : "bg-primary text-white hover:bg-primary-hover",
             )}
           >
-            Contact
+            {t.common.contact}
           </Link>
           <Sheet key={pathname}>
             <SheetTrigger asChild>
@@ -140,20 +154,24 @@ export function Header() {
                 variant="ghost"
                 size="icon"
                 className={cn(
-                  "size-11 lg:hidden",
+                  "size-10 lg:hidden",
                   overHero && "text-white hover:bg-white/10 hover:text-white",
                 )}
                 aria-label="Open navigation menu"
                 aria-haspopup="dialog"
               >
-                <Menu />
+                <Menu className="size-5" />
               </Button>
             </SheetTrigger>
             <SheetContent className="overflow-y-auto p-6">
-              <SheetTitle className="mb-2 text-left">Explore BIM4C</SheetTitle>
+              <SheetTitle className="mb-2 text-left">{t.navigation.exploreBim4c}</SheetTitle>
               <p className="mb-5 text-sm leading-6 text-muted-foreground">
-                BIM expertise for your next project.
+                {t.hero.badge}
               </p>
+              <div className="mb-4 flex items-center justify-between border-b pb-4">
+                <span className="text-xs font-medium text-muted-foreground">Language / Ngôn ngữ:</span>
+                <LanguageSwitcher />
+              </div>
               <nav className="grid gap-2">
                 <SheetClose asChild>
                   <Link
@@ -161,10 +179,10 @@ export function Header() {
                     className="flex min-h-11 items-center rounded-lg px-4 text-base font-medium hover:bg-muted"
                     aria-current={pathname === ROUTES.home ? "page" : undefined}
                   >
-                    Home
+                    {t.navigation.home}
                   </Link>
                 </SheetClose>
-                {MAIN_NAVIGATION.map((item) => (
+                {navigation.map((item) => (
                   <SheetClose asChild key={item.href}>
                     <Button
                       asChild
@@ -188,7 +206,7 @@ export function Header() {
                 ))}
                 <SheetClose asChild>
                   <Button asChild className="mt-4 min-h-11">
-                    <Link href={ROUTES.contact}>Talk to an expert</Link>
+                    <Link href={ROUTES.contact}>{t.common.talkToExpert}</Link>
                   </Button>
                 </SheetClose>
               </nav>

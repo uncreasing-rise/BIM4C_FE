@@ -1,10 +1,22 @@
+"use client";
+
 import Link from "next/link";
 import { ArrowUpRight, Mail, MapPin, Phone } from "lucide-react";
-import { MAIN_NAVIGATION } from "@/constants/navigation";
 import { CONTACT_EMAIL, ROUTES } from "@/constants/routes";
 import { NewsletterForm } from "@/features/contact/components/NewsletterForm";
+import { useLanguage } from "@/lib/i18n/context";
 
 export function Footer() {
+  const { t } = useLanguage();
+
+  const navigation = [
+    { label: t.navigation.about, href: ROUTES.about },
+    { label: t.navigation.services, href: ROUTES.services },
+    { label: t.navigation.projects, href: ROUTES.projects },
+    { label: t.navigation.courses, href: ROUTES.courses },
+    { label: t.navigation.blog, href: ROUTES.blog },
+  ];
+
   return (
     <footer className="relative overflow-hidden border-t border-white/10 bg-brand-ink text-zinc-100">
       <div className="pointer-events-none absolute -right-40 -top-40 size-96 rounded-full bg-primary/10 blur-3xl" />
@@ -17,8 +29,7 @@ export function Footer() {
             BIM<span className="text-primary">4C</span>
           </Link>
           <p className="mt-5 max-w-md text-sm leading-7 text-zinc-400">
-            Connecting people, processes and project data for better design,
-            construction and asset management.
+            {t.footer.description}
           </p>
           <div className="mt-8 space-y-3 text-sm text-zinc-400">
             <p className="flex gap-3">
@@ -47,10 +58,10 @@ export function Footer() {
         </div>
         <div>
           <h2 className="text-sm font-semibold uppercase tracking-[.16em] text-zinc-500">
-            Explore
+            {t.footer.exploreTitle}
           </h2>
           <nav className="mt-5 grid gap-3">
-            {MAIN_NAVIGATION.map((item) => (
+            {navigation.map((item) => (
               <Link
                 className="group flex w-fit items-center gap-1 text-sm text-zinc-300 hover:text-white"
                 href={item.href}
@@ -63,10 +74,9 @@ export function Footer() {
           </nav>
         </div>
         <div>
-          <h2 className="text-xl font-semibold">Get BIM insights</h2>
+          <h2 className="text-xl font-semibold">{t.footer.newsletterTitle}</h2>
           <p className="mt-3 text-sm leading-6 text-zinc-400">
-            Project news and digital construction insights, delivered to your
-            inbox.
+            {t.footer.newsletterDesc}
           </p>
           <div className="mt-6">
             <NewsletterForm />
@@ -75,19 +85,19 @@ export function Footer() {
       </div>
       <div className="border-t border-white/10">
         <div className="site-container flex flex-col gap-3 py-6 text-xs text-zinc-500 sm:flex-row sm:items-center sm:justify-between">
-          <span>© 2026 BIM4C Construction.</span>
+          <span>{t.footer.copyright}</span>
           <div className="flex gap-5">
             <Link
               className="transition-colors hover:text-white"
               href={ROUTES.legalDetail("dieu-khoan-su-dung")}
             >
-              Terms
+              {t.footer.termsLink}
             </Link>
             <Link
               className="transition-colors hover:text-white"
               href={ROUTES.legalDetail("chinh-sach-bao-mat")}
             >
-              Privacy
+              {t.footer.privacyPolicyLink}
             </Link>
           </div>
         </div>

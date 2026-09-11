@@ -1,4 +1,7 @@
+"use client";
+
 import Image from "next/image";
+import { useLanguage } from "@/lib/i18n/context";
 
 const partners = [
   ["Masterise Homes", "/images/partners/transparent/masterise.png"],
@@ -8,6 +11,8 @@ const partners = [
 ] as const;
 
 export function Partners({ compact = false }: { compact?: boolean }) {
+  const { t } = useLanguage();
+
   return (
     <section className="bg-brand-ink text-white" aria-label="Selected partners">
       <div
@@ -17,13 +22,12 @@ export function Partners({ compact = false }: { compact?: boolean }) {
       >
         <div className="grid gap-8 lg:grid-cols-[.8fr_1.2fr] lg:items-center lg:gap-16">
           <div>
-            <p className="eyebrow">Selected partners</p>
+            <p className="eyebrow">{t.partners.eyebrow}</p>
             <h2 className="text-3xl font-semibold leading-tight tracking-tight sm:text-4xl">
-              Built on collaboration.
+              {t.partners.title}
             </h2>
             <p className="mt-4 max-w-lg text-base leading-7 text-zinc-300">
-              Working with project owners and contractors to connect expertise,
-              information and delivery.
+              {t.partners.description}
             </p>
           </div>
           <ul className="grid grid-cols-2 gap-3">

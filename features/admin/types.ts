@@ -61,6 +61,13 @@ export interface AdminContent {
   price?: string | null;
   instructor?: string | null;
   learningOutcomes?: string[];
+  // Bilingual translation fields (English is primary title/desc/etc, Vietnamese is optional localized override)
+  title_vi?: string | null;
+  description_vi?: string | null;
+  eyebrow_vi?: string | null;
+  highlights_vi?: string[];
+  seoTitle_vi?: string | null;
+  seoDescription_vi?: string | null;
 }
 export interface PageMeta {
   page: number;

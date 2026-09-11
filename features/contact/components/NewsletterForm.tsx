@@ -2,21 +2,23 @@
 
 import { useEffect, useId, useRef, useState, type FormEvent } from "react";
 import { z } from "zod";
+import Link from "next/link";
 import { ApiError } from "@/lib/api/errors";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ROUTES } from "@/constants/routes";
+import { useLanguage } from "@/lib/i18n/context";
 import { subscribeNewsletter } from "../api/mutations";
 import { getZodFieldErrors } from "../utils/zod-errors";
-import Link from "next/link";
-import { ROUTES } from "@/constants/routes";
 
 type FormStatus = "idle" | "submitting" | "success" | "error";
 type NewsletterField = "email" | "consent";
 
 export function NewsletterForm() {
   const formId = useId();
+  const { t } = useLanguage();
   const [status, setStatus] = useState<FormStatus>("idle");
   const [message, setMessage] = useState("");
   const [consent, setConsent] = useState(false);
@@ -80,7 +82,7 @@ export function NewsletterForm() {
         className="mb-2 block text-xs"
         htmlFor={`${formId}-newsletter-email`}
       >
-        Your email
+        {t.consultation.emailLabel}
       </Label>
       <div className="flex">
         <Input
@@ -89,7 +91,7 @@ export function NewsletterForm() {
           name="email"
           type="email"
           autoComplete="email"
-          placeholder="you@company.com"
+          placeholder={t.footer.emailPlaceholder}
           required
           aria-invalid={Boolean(fieldErrors.email)}
           aria-describedby={
@@ -100,7 +102,7 @@ export function NewsletterForm() {
           className="h-[46px] w-12 rounded-l-none"
           type="submit"
           disabled={status === "submitting"}
-          aria-label="Subscribe"
+          aria-label={t.footer.subscribeButton}
         >
           {status === "submitting" ? "…" : "→"}
         </Button>
@@ -133,14 +135,13 @@ export function NewsletterForm() {
           }
         />{" "}
         <span>
-          I agree to receive BIM4C updates and to the processing of my personal
-          data under the{" "}
+          {t.footer.consentText}{" "}
           <Link
             className="text-primary underline"
             href={ROUTES.legalDetail("chinh-sach-bao-mat")}
             target="_blank"
           >
-            Privacy Policy
+            {t.footer.privacyLink}
           </Link>
           .
         </span>

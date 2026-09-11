@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import { env } from "@/lib/config/env";
 import {
   DEFAULT_DESCRIPTION,
@@ -9,6 +10,8 @@ import {
 import "./globals.css";
 import { Geist } from "next/font/google";
 import { cn } from "@/lib/utils";
+import { LanguageProvider } from "@/lib/i18n/context";
+import { DEFAULT_LOCALE, LOCALE_COOKIE_NAME, type Locale } from "@/lib/i18n/config";
 
 const geist = Geist({ subsets: ["latin"], variable: "--font-sans" });
 
@@ -45,16 +48,23 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  const cookieStore = await cookies();
+  const rawLocale = cookieStore.get(LOCALE_COOKIE_NAME)?.value as Locale;
+  const locale: Locale = rawLocale === "vi" ? "vi" : DEFAULT_LOCALE;
+
   return (
     <html
-      lang="en"
+      lang={locale}
       data-scroll-behavior="smooth"
       className={cn("font-sans", geist.variable)}
+      suppressHydrationWarning
     >
-      <body suppressHydrationWarning>{children}</body>
+      <body suppressHydrationWarning>
+        <LanguageProvider initialLocale={locale}>{children}</LanguageProvider>
+      </body>
     </html>
   );
 }
