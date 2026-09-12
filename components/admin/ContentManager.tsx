@@ -772,8 +772,8 @@ export function ContentManager({
                     <label>
                       Địa điểm
                       <input
-                        value={editor.location ?? ""}
-                        onChange={(e) => update({ location: e.target.value })}
+                        value={adminLangTab === "en" ? editor.location ?? "" : editor.location_vi ?? ""}
+                        onChange={(e) => update(adminLangTab === "en" ? { location: e.target.value } : { location_vi: e.target.value })}
                       />
                     </label>
                     <label>
@@ -791,27 +791,23 @@ export function ContentManager({
                     Chủ đầu tư
                     <textarea
                       rows={2}
-                      value={editor.investor ?? ""}
-                      onChange={(e) => update({ investor: e.target.value })}
+                      value={adminLangTab === "en" ? editor.investor ?? "" : editor.investor_vi ?? ""}
+                      onChange={(e) => update(adminLangTab === "en" ? { investor: e.target.value } : { investor_vi: e.target.value })}
                     />
                   </label>
                   <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <label>
                       Dự kiến hoàn thành
                       <input
-                        value={editor.expectedCompletion ?? ""}
-                        onChange={(e) =>
-                          update({ expectedCompletion: e.target.value })
-                        }
+                        value={adminLangTab === "en" ? editor.expectedCompletion ?? "" : editor.expectedCompletion_vi ?? ""}
+                        onChange={(e) => update(adminLangTab === "en" ? { expectedCompletion: e.target.value } : { expectedCompletion_vi: e.target.value })}
                       />
                     </label>
                     <label>
                       Gói thầu
                       <input
-                        value={editor.contractPackage ?? ""}
-                        onChange={(e) =>
-                          update({ contractPackage: e.target.value })
-                        }
+                        value={adminLangTab === "en" ? editor.contractPackage ?? "" : editor.contractPackage_vi ?? ""}
+                        onChange={(e) => update(adminLangTab === "en" ? { contractPackage: e.target.value } : { contractPackage_vi: e.target.value })}
                       />
                     </label>
                   </div>
@@ -819,8 +815,8 @@ export function ContentManager({
                     Quy mô
                     <textarea
                       rows={3}
-                      value={editor.scale ?? ""}
-                      onChange={(e) => update({ scale: e.target.value })}
+                    value={adminLangTab === "en" ? editor.scale ?? "" : editor.scale_vi ?? ""}
+                    onChange={(e) => update(adminLangTab === "en" ? { scale: e.target.value } : { scale_vi: e.target.value })}
                     />
                   </label>
                 </>
@@ -843,29 +839,29 @@ export function ContentManager({
                     <label>
                       Thời lượng
                       <input
-                        value={editor.duration ?? ""}
-                        onChange={(e) => update({ duration: e.target.value })}
+                        value={adminLangTab === "en" ? editor.duration ?? "" : editor.duration_vi ?? ""}
+                        onChange={(e) => update(adminLangTab === "en" ? { duration: e.target.value } : { duration_vi: e.target.value })}
                       />
                     </label>
                     <label>
                       Cấp độ
                       <input
-                        value={editor.level ?? ""}
-                        onChange={(e) => update({ level: e.target.value })}
+                        value={adminLangTab === "en" ? editor.level ?? "" : editor.level_vi ?? ""}
+                        onChange={(e) => update(adminLangTab === "en" ? { level: e.target.value } : { level_vi: e.target.value })}
                       />
                     </label>
                     <label>
                       Học phí
                       <input
-                        value={editor.price ?? ""}
-                        onChange={(e) => update({ price: e.target.value })}
+                        value={adminLangTab === "en" ? editor.price ?? "" : editor.price_vi ?? ""}
+                        onChange={(e) => update(adminLangTab === "en" ? { price: e.target.value } : { price_vi: e.target.value })}
                       />
                     </label>
                     <label>
                       Giảng viên
                       <input
-                        value={editor.instructor ?? ""}
-                        onChange={(e) => update({ instructor: e.target.value })}
+                        value={adminLangTab === "en" ? editor.instructor ?? "" : editor.instructor_vi ?? ""}
+                        onChange={(e) => update(adminLangTab === "en" ? { instructor: e.target.value } : { instructor_vi: e.target.value })}
                       />
                     </label>
                   </div>
@@ -873,13 +869,11 @@ export function ContentManager({
                     Kết quả học tập (mỗi dòng một mục)
                     <textarea
                       rows={4}
-                      value={(editor.learningOutcomes ?? []).join("\n")}
+                      value={((adminLangTab === "en" ? editor.learningOutcomes : editor.learningOutcomes_vi) ?? []).join("\n")}
                       onChange={(e) =>
-                        update({
-                          learningOutcomes: e.target.value
-                            .split("\n")
-                            .filter(Boolean),
-                        })
+                        update(adminLangTab === "en"
+                          ? { learningOutcomes: e.target.value.split("\n").filter(Boolean) }
+                          : { learningOutcomes_vi: e.target.value.split("\n").filter(Boolean) })
                       }
                     />
                   </label>
@@ -1146,8 +1140,18 @@ export function ContentManager({
               )}
 
               <ContentBlockEditor
-                value={editor.contentBlocks ?? []}
-                onChange={(contentBlocks) => update({ contentBlocks })}
+                value={
+                  adminLangTab === "en"
+                    ? editor.contentBlocks ?? []
+                    : editor.contentBlocks_vi ?? []
+                }
+                onChange={(contentBlocks) =>
+                  update(
+                    adminLangTab === "en"
+                      ? { contentBlocks }
+                      : { contentBlocks_vi: contentBlocks },
+                  )
+                }
               />
 
               <fieldset className="grid gap-2 border-t pt-5">

@@ -14,7 +14,11 @@ import { LanguageProvider } from "@/lib/i18n/context";
 import { DEFAULT_LOCALE, LOCALE_COOKIE_NAME, type Locale } from "@/lib/i18n/config";
 import { Toaster } from "sonner";
 
-const geist = Geist({ subsets: ["latin"], variable: "--font-sans" });
+const geist = Geist({
+  subsets: ["latin", "latin-ext"],
+  variable: "--font-sans",
+  display: "swap",
+});
 
 // The layout reads the locale cookie, so every route is intentionally rendered
 // dynamically. This also prevents ISR/SSG routes from bailing out with

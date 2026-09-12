@@ -105,7 +105,7 @@ export function mapContentDto(dto: ContentEntryDto): ContentEntry {
       });
     return blocks;
   });
-  return englishContent({
+  const rawContent = {
     id: typeof dto.id === "string" && dto.id ? dto.id : undefined,
     slug: requireString(dto.slug, "slug"),
     title: requireString(dto.title, "title"),
@@ -165,5 +165,41 @@ export function mapContentDto(dto: ContentEntryDto): ContentEntry {
         description: item.description?.trim() || undefined,
         sortOrder: item.sortOrder,
       })),
-  });
+  };
+
+  return {
+    ...rawContent,
+    title_vi: dto.title_vi ?? dto.title,
+    description_vi: dto.description_vi ?? dto.description,
+    eyebrow_vi: dto.eyebrow_vi ?? dto.eyebrow,
+    meta_vi: dto.meta_vi ?? dto.meta ?? undefined,
+    highlights_vi: dto.highlights_vi ?? dto.highlights,
+    sections_vi: (dto.sections_vi as ContentEntry["sections_vi"]) ?? undefined,
+    contentBlocks_vi: Array.isArray(dto.contentBlocks_vi)
+      ? parseContentBlocks(dto.contentBlocks_vi)
+      : undefined,
+    seoTitle_vi: dto.seoTitle_vi ?? dto.seoTitle ?? undefined,
+    seoDescription_vi: dto.seoDescription_vi ?? dto.seoDescription ?? undefined,
+    duration_vi:
+      dto.duration_vi != null
+        ? String(dto.duration_vi)
+        : dto.duration
+          ? String(dto.duration)
+          : undefined,
+    level_vi:
+      dto.level_vi != null
+        ? String(dto.level_vi)
+        : dto.level
+          ? String(dto.level)
+          : undefined,
+    price_vi:
+      dto.price_vi != null
+        ? String(dto.price_vi)
+        : dto.price != null
+          ? String(dto.price)
+          : undefined,
+    instructor_vi: dto.instructor_vi ?? dto.instructor ?? undefined,
+    learningOutcomes_vi:
+      dto.learningOutcomes_vi ?? dto.learningOutcomes ?? undefined,
+  };
 }

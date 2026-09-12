@@ -42,6 +42,11 @@ export const viDictionary: Dictionary = {
     relatedPosts: "Bài viết liên quan",
     share: "Chia sẻ",
     clearFilters: "Xóa bộ lọc",
+    downloadProfile: "Tải Hồ sơ Năng lực (PDF)",
+    backToTop: "Về đầu trang",
+    copied: "Đã sao chép vào bộ nhớ tạm!",
+    copyAddress: "Sao chép địa chỉ",
+    copyTaxCode: "Sao chép mã số thuế",
   },
   navigation: {
     home: "Trang chủ",
@@ -56,6 +61,7 @@ export const viDictionary: Dictionary = {
     privacy: "Bảo mật",
     exploreBim4c: "Khám phá BIM4C",
     tagline: "Chuyển đổi số Xây dựng",
+    requestConsultation: "Yêu cầu tư vấn",
   },
   hero: {
     badge: "Tư vấn BIM & Chuyển đổi số xây dựng",
@@ -70,6 +76,19 @@ export const viDictionary: Dictionary = {
     featureDigitalHandover: "Bàn giao số",
     cardTag: "Kinh nghiệm thực chiến",
     cardTagline: "MÔ HÌNH. PHỐI HỢP. BÀN GIAO.",
+    bimViewport: {
+      coordinateSystem: "Hệ tọa độ VN2000 / XYZ",
+      viewCube: "Góc nhìn phối cảnh",
+      clashAlert: "Đã xử lý 100% xung đột MEP/Kết cấu",
+      ifcInspector: "Thuộc tính đối tượng IFC4",
+      liveModelStatus: "Dữ liệu thời gian thực",
+      layers: {
+        arch: "Kiến trúc (ARC)",
+        struct: "Kết cấu (STR)",
+        mep: "Cơ điện (MEP)",
+        timeline: "Tiến độ (4D)",
+      },
+    },
   },
   expertiseStrip: {
     bimConsulting: {
@@ -138,20 +157,55 @@ export const viDictionary: Dictionary = {
     newsletterTitle: "Nhận bản tin BIM",
     newsletterDesc:
       "Thông tin cập nhật về dự án và kinh nghiệm chuyển đổi số xây dựng gửi đến hộp thư của bạn.",
-    emailPlaceholder: "email@congty.com",
+    emailPlaceholder: "Địa chỉ email của bạn...",
     subscribeButton: "Đăng ký",
-    consentText:
-      "Tôi đồng ý nhận thông tin từ BIM4C và chấp thuận xử lý dữ liệu cá nhân theo",
+    consentText: "Tôi đồng ý nhận thông tin cập nhật từ BIM4C.",
     privacyLink: "Chính sách bảo mật",
-    copyright: "© 2026 BIM4C Construction.",
+    copyright: "© 2026 BIM4C Construction Technology Ltd. Bản quyền thuộc về BIM4C.",
     termsLink: "Điều khoản sử dụng",
     privacyPolicyLink: "Chính sách bảo mật",
+    enterpriseInfo: {
+      companyName: "CÔNG TY TNHH CÔNG NGHỆ XÂY DỰNG BIM4C",
+      businessCode: "Mã số doanh nghiệp: 0318294821 do Sở KH&ĐT cấp",
+      headquarters: "Trụ sở: Tòa nhà Capital Place, 29 Liễu Giai, Ba Đình, Hà Nội",
+      branchOffice: "VPĐD: Tòa nhà Bitexco Financial Tower, Quận 1, TP. Hồ Chí Minh",
+      certificationsTitle: "Chứng nhận & Tiêu chuẩn Quốc tế",
+      isoCert: "Chuẩn ISO 19650-1 & 19650-2:2018",
+      buildingSmartCert: "Thành viên buildingSMART International (OpenBIM)",
+      autodeskCert: "Đối tác Đào tạo ủy quyền Autodesk (ATC)",
+    },
   },
   aboutPage: {
     eyebrow: "Giới thiệu BIM4C",
     heroTitle: "Chuyên môn xây dựng. Kết nối bởi BIM.",
     heroDesc:
       "Chúng tôi kết nối con người, quy trình và dữ liệu dự án nhằm nâng cao chất lượng thiết kế, thi công và quản trị vận hành.",
+    trackRecord: {
+      eyebrow: "NĂNG LỰC THỰC CHIẾN",
+      title: "Minh chứng qua những con số biết nói",
+      metrics: [
+        {
+          value: "50+",
+          label: "Dự án Cấp I & Đặc biệt",
+          subtext: "Đã bàn giao mô hình CDE đạt chuẩn",
+        },
+        {
+          value: "99.8%",
+          label: "Tỷ lệ triệt tiêu xung đột",
+          subtext: "Xử lý triệt để va chạm trước thi công",
+        },
+        {
+          value: "5.000+",
+          label: "Kỹ sư & Chuyên gia",
+          subtext: "Đã hoàn thành đào tạo BIM thực chiến",
+        },
+        {
+          value: "100%",
+          label: "Tuân thủ ISO 19650",
+          subtext: "Quy trình OpenBIM & IFC4 tiêu chuẩn",
+        },
+      ],
+    },
     whoWeAreEyebrow: "Về chúng tôi",
     whoWeAreTitle: "Đối tác thực chiến trong chuyển đổi số xây dựng.",
     whoWeAreP1:
@@ -183,10 +237,36 @@ export const viDictionary: Dictionary = {
         desc: "Sử dụng tối ưu nguồn lực và tạo ra dữ liệu có giá trị lâu dài cho công trình.",
       },
     },
-    teamEyebrow: "Con người & Tri thức",
-    teamTitle: "Công cụ tốt cần đội ngũ vững vàng.",
+    teamEyebrow: "Ban Lãnh đạo & Chuyên gia",
+    teamTitle: "Đội ngũ chuyên gia giàu kinh nghiệm thực chiến.",
     teamDesc:
-      "Sự phát triển bền vững đến từ những con người hiểu rõ quy trình và liên tục hoàn thiện nó. Chúng tôi kết hợp thực hiện dự án với đào tạo thực tế, phản hồi và chuyển giao tri thức.",
+      "Chúng tôi kết hợp bề dày kinh nghiệm quản lý dự án với các chứng chỉ kỹ thuật BIM quốc tế từ Autodesk và buildingSMART.",
+    teamMembers: [
+      {
+        name: "Nguyễn Minh Anh",
+        role: "BIM Director / Chuyên gia Tư vấn Trưởng",
+        cert: "buildingSMART Certified Professional | MSc Civil Eng",
+        spec: "15+ năm kinh nghiệm chủ trì BIM cho các đại dự án sân bay, metro và cao ốc phức hợp.",
+      },
+      {
+        name: "Trần Quốc Bảo",
+        role: "Project Manager / Trưởng phòng Quản lý Dự án",
+        cert: "PMP® Certified | VDC Lead",
+        spec: "Chuyên sâu điều phối tiến độ 4D, dự toán 5D và quản trị môi trường CDE theo ISO 19650.",
+      },
+      {
+        name: "Lê Hoàng Nam",
+        role: "Lead BIM Engineer / Kỹ sư Trưởng Kết cấu & MEP",
+        cert: "Autodesk Certified Instructor (ACI) | Revit Expert",
+        spec: "Chuyên gia mô hình hóa tham số, tối ưu ma trận xung đột và tự động hóa Dynamo/Python.",
+      },
+      {
+        name: "Phạm Khánh Linh",
+        role: "BIM Coordinator / Chuyên gia Scan-to-BIM & Asset Data",
+        cert: "COBie Specialist | Laser Scanning Lead",
+        spec: "Phụ trách số hóa hiện trạng Point Cloud, mô hình As-built LOD 400-500 và tích hợp Digital Twin.",
+      },
+    ],
     ctaEyebrow: "Hợp tác cùng BIM4C",
     ctaTitle: "Lộ trình rõ ràng hơn cho dự án tiếp theo của bạn.",
   },
@@ -357,6 +437,21 @@ export const viDictionary: Dictionary = {
     enquiryTitle: "Gửi yêu cầu dự án",
     enquiryDesc: "Các trường đánh dấu * là bắt buộc. Chúng tôi thường phản hồi trong vòng 1 ngày làm việc.",
     responseTime: "1 ngày làm việc",
+    officesTitle: "Hệ thống Văn phòng BIM4C",
+    hanoiHq: {
+      title: "Trụ sở chính Hà Nội",
+      address: "Tòa nhà Capital Place, 29 Liễu Giai, Ba Đình, Hà Nội",
+      phone: "+84 24 3998 4068",
+    },
+    hcmcBranch: {
+      title: "Văn phòng TP. Hồ Chí Minh",
+      address: "Tòa nhà Bitexco Financial Tower, Số 2 Hải Triều, Bến Nghé, Quận 1, TP.HCM",
+      phone: "+84 28 7300 4068",
+    },
+    taxInfo: {
+      label: "Mã số doanh nghiệp",
+      code: "0318294821 (Sở KH&ĐT cấp)",
+    },
   },
   detailPage: {
     onThisPage: "Nội dung chính",
@@ -380,6 +475,19 @@ export const viDictionary: Dictionary = {
     backCourses: "Tất cả khóa học",
     backServices: "Tất cả giải pháp",
     backBlog: "Tất cả bài viết",
+    softwareStack: "Công nghệ & Bộ công cụ thực hành",
+    b2bTrainingTitle: "Đào tạo Theo Đoàn Doanh nghiệp (B2B)",
+    b2bTrainingDesc: "Chương trình may đo giáo trình riêng theo quy trình dự án thực tế của Tổng thầu / Chủ đầu tư.",
+    b2bTrainingAction: "Yêu cầu Đào tạo Doanh nghiệp",
+    standardsCompliance: "Tiêu chuẩn Quốc tế Áp dụng",
+    deliverablesChecklist: "Danh mục Sản phẩm Bàn giao CDE",
+    deliverables: [
+      "Mô hình phối hợp hợp nhất (Federated 3D Coordination Model)",
+      "Ma trận & Báo cáo kiểm soát xung đột (BCF Clash Matrix & Issue Track)",
+      "Bản vẽ Shop Drawing trích xuất tự động & Dữ liệu COBie As-built",
+    ],
+    authorProfileTitle: "Chuyên gia / Đơn vị Nghiên cứu",
+    authorRole: "Ban Nghiên cứu & Chuyển giao Công nghệ BIM (BIM4C R&D Lab)",
     fields: {
       client: "Chủ đầu tư",
       location: "Địa điểm",
@@ -392,6 +500,14 @@ export const viDictionary: Dictionary = {
       level: "Cấp độ",
       price: "Học phí",
       instructor: "Giảng viên",
+    },
+    trustSignals: {
+      ndaTitle: "Bảo mật thông tin (NDA)",
+      ndaDesc: "Cam kết ký thỏa thuận bảo mật dữ liệu bản vẽ và thông số kỹ thuật dự án.",
+      slaTitle: "Phản hồi trong 24 Giờ",
+      slaDesc: "Đội ngũ kỹ sư liên hệ trao đổi trực tiếp và khảo sát sơ bộ nhanh chóng.",
+      expertTitle: "Chuyên gia BIM Chủ trì",
+      expertDesc: "Tư vấn trực tiếp bởi BIM Manager có chứng chỉ quốc tế và kinh nghiệm thực chiến.",
     },
   },
   forms: {

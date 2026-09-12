@@ -4,6 +4,8 @@ import { MotionSystem } from "@/components/motion/MotionSystem";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { organizationSchema, websiteSchema } from "@/lib/seo/structured-data";
 
+import { BackToTop } from "@/components/shared/BackToTop";
+
 export default function PublicLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
@@ -22,6 +24,7 @@ export default function PublicLayout({
         {children}
       </div>
       <Footer />
+      <BackToTop />
     </div>
   );
 }

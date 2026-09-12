@@ -31,9 +31,8 @@ export function ExpertiseStrip() {
   ];
 
   return (
-    <section className="border-y border-border/80 bg-card/60 backdrop-blur-md relative overflow-hidden" aria-label="Key Performance Indicators">
-      {/* Subtle blueprint grid line */}
-      <div className="site-container py-6">
+    <section className="border-y border-border/70 bg-card/75 backdrop-blur-md relative overflow-hidden" aria-label="Key Performance Indicators">
+      <div className="site-container py-7">
         <div className="grid grid-cols-2 gap-6 md:grid-cols-4 md:divide-x md:divide-border/60">
           {stats.map((stat, idx) => (
             <div
@@ -41,14 +40,14 @@ export function ExpertiseStrip() {
               className={`flex flex-col justify-center ${idx !== 0 ? "md:pl-6" : ""}`}
             >
               <div className="flex items-baseline gap-1">
-                <span className="text-2xl font-extrabold tracking-tight text-foreground sm:text-3xl lg:text-4xl bg-gradient-to-r from-primary via-teal-600 to-teal-400 bg-clip-text text-transparent">
+                <span className="text-2xl font-extrabold tracking-tight text-foreground sm:text-3xl lg:text-4xl bg-gradient-to-r from-primary via-teal-600 to-teal-500 bg-clip-text text-transparent">
                   {stat.num}
                 </span>
               </div>
-              <p className="mt-1 text-xs font-semibold text-foreground/90 sm:text-sm">
+              <p className="mt-1.5 text-xs font-semibold text-foreground/90 sm:text-sm">
                 {stat.label}
               </p>
-              <p className="text-[11px] font-mono text-muted-foreground">
+              <p className="mt-0.5 text-xs text-muted-foreground/80 font-normal">
                 {stat.sub}
               </p>
             </div>

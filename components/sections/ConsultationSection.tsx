@@ -38,7 +38,32 @@ export function ConsultationSection() {
             ))}
           </ul>
 
-          <div className="mt-9 flex flex-wrap gap-x-7 gap-y-3 text-sm">
+          <div className="mt-8 border-t border-white/10 pt-6">
+            <p className="text-xs font-semibold uppercase tracking-wider text-teal-300">
+              {t.contactPage.officesTitle}
+            </p>
+            <div className="mt-4 grid gap-4 text-xs">
+              <div className="rounded-xl border border-white/10 bg-white/[0.04] p-3.5">
+                <p className="font-semibold text-white">{t.contactPage.hanoiHq.title}</p>
+                <p className="mt-1 text-white/70">{t.contactPage.hanoiHq.address}</p>
+                <a className="mt-2 inline-flex items-center gap-1 text-teal-300 hover:underline" href={`tel:${t.contactPage.hanoiHq.phone}`}>
+                  <Phone className="size-3" /> {t.contactPage.hanoiHq.phone}
+                </a>
+              </div>
+              <div className="rounded-xl border border-white/10 bg-white/[0.04] p-3.5">
+                <p className="font-semibold text-white">{t.contactPage.hcmcBranch.title}</p>
+                <p className="mt-1 text-white/70">{t.contactPage.hcmcBranch.address}</p>
+                <a className="mt-2 inline-flex items-center gap-1 text-teal-300 hover:underline" href={`tel:${t.contactPage.hcmcBranch.phone}`}>
+                  <Phone className="size-3" /> {t.contactPage.hcmcBranch.phone}
+                </a>
+              </div>
+            </div>
+            <p className="mt-4 text-[11px] text-white/50">
+              {t.contactPage.taxInfo.label}: <strong className="text-white/80">{t.contactPage.taxInfo.code}</strong>
+            </p>
+          </div>
+
+          <div className="mt-6 flex flex-wrap gap-x-7 gap-y-3 text-sm">
             <a
               className="flex items-center gap-2 text-white/70 transition hover:text-white"
               href="tel:+842873004068"

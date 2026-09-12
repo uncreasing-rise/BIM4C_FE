@@ -65,9 +65,22 @@ export interface AdminContent {
   title_vi?: string | null;
   description_vi?: string | null;
   eyebrow_vi?: string | null;
+  meta_vi?: string | null;
   highlights_vi?: string[];
+  sections_vi?: { title: string; body: string }[];
+  contentBlocks_vi?: ContentBlock[];
   seoTitle_vi?: string | null;
   seoDescription_vi?: string | null;
+  location_vi?: string | null;
+  investor_vi?: string | null;
+  expectedCompletion_vi?: string | null;
+  scale_vi?: string | null;
+  contractPackage_vi?: string | null;
+  duration_vi?: string | null;
+  level_vi?: string | null;
+  price_vi?: string | null;
+  instructor_vi?: string | null;
+  learningOutcomes_vi?: string[];
 }
 export interface PageMeta {
   page: number;

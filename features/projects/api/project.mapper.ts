@@ -7,11 +7,16 @@ import { toEnglishLabel } from "@/lib/utils/public-labels";
 export interface ProjectDto extends ContentEntryDto {
   category: string | { name: string };
   location: string;
+  location_vi?: string | null;
   year: string | number;
   investor?: string | null;
+  investor_vi?: string | null;
   expectedCompletion?: string | null;
+  expectedCompletion_vi?: string | null;
   scale?: string | null;
+  scale_vi?: string | null;
   contractPackage?: string | null;
+  contractPackage_vi?: string | null;
   status: string;
 }
 
@@ -32,16 +37,24 @@ export function mapProjectDto(dto: ProjectDto): Project {
       "Invalid project API contract: category, location, year and status are required.",
     );
   }
-  return englishContent({
+  const rawStatus = PROJECT_STATUS_LABELS[dto.status] ?? dto.status;
+  return {
     ...content,
     id: dto.id ?? undefined,
     category,
     location: dto.location,
+    location_vi: dto.location_vi ?? dto.location,
     year: String(dto.year),
     investor: dto.investor ?? undefined,
+    investor_vi: dto.investor_vi ?? dto.investor ?? undefined,
     expectedCompletion: dto.expectedCompletion ?? undefined,
+    expectedCompletion_vi:
+      dto.expectedCompletion_vi ?? dto.expectedCompletion ?? undefined,
     scale: dto.scale ?? undefined,
+    scale_vi: dto.scale_vi ?? dto.scale ?? undefined,
     contractPackage: dto.contractPackage ?? undefined,
-    status: toEnglishLabel(PROJECT_STATUS_LABELS[dto.status] ?? dto.status),
-  });
+    contractPackage_vi:
+      dto.contractPackage_vi ?? dto.contractPackage ?? undefined,
+    status: rawStatus,
+  };
 }

@@ -30,32 +30,48 @@ export function ProjectRow({
       )}
       data-motion="tile"
     >
-      <div className="relative aspect-[16/9] overflow-hidden rounded-lg bg-muted">
+      <div className="relative aspect-[16/9] overflow-hidden rounded-2xl bg-muted shadow-xs">
         <Image
           src={project.image}
-          alt=""
+          alt={project.title}
           fill
           sizes="(max-width:767px) 100vw, 50vw"
-          className="object-cover transition-transform duration-500 group-hover:scale-[1.025] group-focus-within:scale-[1.025]"
+          className="object-cover transition-transform duration-700 group-hover:scale-105"
         />
-        <span className="absolute left-4 top-4 rounded bg-brand-ink/85 px-3 py-2 font-mono text-xs text-white">
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-60" />
+        <span className="absolute left-4 top-4 rounded-full bg-brand-ink/85 px-3 py-1 font-mono text-xs font-semibold text-white border border-white/10 backdrop-blur">
           {String(number).padStart(2, "0")}
         </span>
+        {project.scale && (
+          <span className="absolute right-4 bottom-4 rounded-md bg-black/60 px-2.5 py-1 text-[11px] font-semibold text-teal-300 backdrop-blur border border-teal-500/30">
+            {project.scale}
+          </span>
+        )}
       </div>
-      <div className="min-w-0 md:py-3">
-        <p
-          className={cn(
-            "text-xs font-semibold uppercase tracking-wider",
-            dark ? "text-teal-200" : "text-primary",
+      <div className="min-w-0 md:py-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <p
+            className={cn(
+              "text-xs font-semibold uppercase tracking-wider",
+              dark ? "text-teal-300" : "text-primary",
+            )}
+          >
+            {toLocalizedLabel(project.category, locale)}
+          </p>
+          <span className="text-muted-foreground/50">·</span>
+          <span className="text-xs font-medium text-muted-foreground">
+            {project.year}
+          </span>
+          {project.contractPackage && (
+            <span className="rounded bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
+              {project.contractPackage}
+            </span>
           )}
-        >
-          {toLocalizedLabel(project.category, locale)}{" "}
-          <span aria-hidden="true"> / </span> {project.year}
-        </p>
-        <h3 className="mt-3 text-2xl font-semibold leading-tight tracking-tight lg:text-3xl">
+        </div>
+        <h3 className="mt-2.5 text-2xl font-bold leading-tight tracking-tight text-foreground group-hover:text-primary transition-colors lg:text-3xl">
           <Link
             href={ROUTES.projectDetail(project.slug)}
-            className="after:absolute after:inset-0 after:rounded-lg"
+            className="after:absolute after:inset-0 after:rounded-2xl"
             aria-label={`View ${project.title}`}
           >
             {project.title}
@@ -63,7 +79,7 @@ export function ProjectRow({
         </h3>
         <p
           className={cn(
-            "mt-3 max-w-xl text-sm leading-7",
+            "mt-3 max-w-xl text-sm leading-7 line-clamp-3",
             dark ? "text-slate-300" : "text-muted-foreground",
           )}
         >
@@ -71,7 +87,7 @@ export function ProjectRow({
         </p>
         <dl
           className={cn(
-            "mt-5 grid grid-cols-[1fr_auto] gap-4 border-t pt-4 text-xs",
+            "mt-5 grid grid-cols-2 sm:grid-cols-3 gap-3 border-t pt-4 text-xs",
             dark ? "border-white/15" : "border-border",
           )}
         >
@@ -79,7 +95,7 @@ export function ProjectRow({
             <dt className={dark ? "text-slate-400" : "text-muted-foreground"}>
               {t.projectsPage.location}
             </dt>
-            <dd className="mt-1 font-medium leading-5">
+            <dd className="mt-1 font-semibold leading-5 text-foreground">
               {toLocalizedLabel(project.location, locale)}
             </dd>
           </div>
@@ -87,10 +103,20 @@ export function ProjectRow({
             <dt className={dark ? "text-slate-400" : "text-muted-foreground"}>
               {t.projectsPage.status}
             </dt>
-            <dd className="mt-1 font-medium leading-5">
+            <dd className="mt-1 font-semibold leading-5 text-foreground">
               {toLocalizedLabel(project.status, locale)}
             </dd>
           </div>
+          {project.investor && (
+            <div>
+              <dt className={dark ? "text-slate-400" : "text-muted-foreground"}>
+                {t.common.investor}
+              </dt>
+              <dd className="mt-1 font-semibold leading-5 text-foreground truncate">
+                {project.investor}
+              </dd>
+            </div>
+          )}
         </dl>
         <span
           className={cn(
@@ -101,7 +127,7 @@ export function ProjectRow({
           {t.projectsPage.exploreProject}{" "}
           <span
             className={cn(
-              "grid size-9 place-items-center rounded-full border transition-colors",
+              "grid size-9 place-items-center rounded-full border transition-all duration-300 group-hover:translate-x-1",
               dark
                 ? "border-white/25 group-hover:bg-white/10"
                 : "border-primary/25 group-hover:bg-primary/10",

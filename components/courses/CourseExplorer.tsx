@@ -104,19 +104,19 @@ export function CourseExplorer({
             return (
               <article
                 key={course.slug}
-                className="group relative grid min-w-0 grid-cols-[5.5rem_minmax(0,1fr)] overflow-hidden rounded-xl border bg-card transition-shadow hover:shadow-lg focus-within:ring-2 focus-within:ring-primary md:flex md:flex-col"
+                className="group relative flex flex-col overflow-hidden rounded-2xl border bg-card transition-all duration-300 hover:-translate-y-1 hover:border-primary/40 hover:shadow-xl focus-within:ring-2 focus-within:ring-primary"
                 data-motion="tile"
               >
-                <div className="relative ml-4 mt-5 aspect-square self-start overflow-hidden rounded-lg bg-muted md:ml-0 md:mt-0 md:aspect-[16/9] md:w-full md:rounded-none">
+                <div className="relative aspect-[16/9] w-full overflow-hidden bg-muted">
                   <Image
                     src={course.image}
-                    alt=""
+                    alt={course.title}
                     fill
-                    sizes="(max-width:767px) 88px, (max-width:1023px) 50vw, 33vw"
-                    className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+                    sizes="(max-width:767px) 100vw, (max-width:1023px) 50vw, 33vw"
+                    className="object-cover transition-transform duration-500 group-hover:scale-105"
                   />
                 </div>
-                <div className="flex min-w-0 flex-1 flex-col p-4 md:p-6">
+                <div className="flex min-w-0 flex-1 flex-col p-5 md:p-6">
                   <p className="text-xs font-semibold uppercase tracking-wider text-primary">
                     {courseCategory(course)}
                   </p>

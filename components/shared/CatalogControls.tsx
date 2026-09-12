@@ -116,7 +116,7 @@ export function CatalogSelect({
           <SelectValue placeholder={label} />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="All">All</SelectItem>
+          <SelectItem value="All">{formatLabel("All")}</SelectItem>
           {values.map((item) => (
             <SelectItem value={item} key={item}>
               {formatLabel(item)}

@@ -60,27 +60,59 @@ export function Header() {
       <div className="site-container flex h-20 items-center justify-between gap-4">
         <Link
           href={ROUTES.home}
-          className="flex items-center gap-3 shrink-0"
-          aria-label="BIM4C — Home"
+          className="flex items-center gap-3 shrink-0 group"
+          aria-label="BIM4C — Enterprise Construction Technology"
         >
-          <span
-            className={cn(
-              "relative grid size-10 place-items-center overflow-hidden rounded-xl text-sm font-black after:absolute after:inset-x-0 after:bottom-0 after:h-1 after:bg-primary",
-              overHero
-                ? "bg-white text-brand-ink"
-                : "bg-foreground text-background",
-            )}
-          >
-            B4
-          </span>
+          {/* Architectural 3D BIM Cube Brand Icon */}
+          <div className="relative flex size-10 items-center justify-center rounded-xl bg-gradient-to-br from-teal-500 to-teal-800 p-0.5 shadow-md shadow-teal-900/20 transition-transform group-hover:scale-105">
+            <svg
+              viewBox="0 0 32 32"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              className="size-6 text-white"
+              aria-hidden="true"
+            >
+              {/* Isometric 3D BIM Node Structure */}
+              <path
+                d="M16 3L28 10V22L16 29L4 22V10L16 3Z"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="opacity-90"
+              />
+              <path
+                d="M16 3V16M28 10L16 16M4 10L16 16"
+                stroke="currentColor"
+                strokeWidth="1.75"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <path
+                d="M16 16V29"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+              />
+              <circle cx="16" cy="16" r="2.5" fill="#5eead4" />
+              <circle cx="28" cy="10" r="1.5" fill="currentColor" />
+              <circle cx="4" cy="10" r="1.5" fill="currentColor" />
+              <circle cx="16" cy="29" r="1.5" fill="currentColor" />
+            </svg>
+          </div>
           <span className="leading-none">
-            <strong className="block text-[15px] tracking-[.16em]">
-              BIM4C
-            </strong>
+            <span className="flex items-center gap-1">
+              <strong className="block text-[17px] font-black tracking-[.18em]">
+                BIM<span className="text-teal-400">4C</span>
+              </strong>
+              <span className="rounded bg-teal-500/20 px-1 py-0.2 font-mono text-[9px] font-bold text-teal-300 border border-teal-500/30">
+                PRO
+              </span>
+            </span>
             <small
               className={cn(
-                "mt-1.5 block text-[9px] font-semibold uppercase tracking-[.14em]",
-                overHero ? "text-white/60" : "text-muted-foreground",
+                "mt-1 block text-[9.5px] font-medium tracking-[.12em]",
+                overHero ? "text-white/70" : "text-muted-foreground",
               )}
             >
               {t.navigation.tagline}
@@ -91,8 +123,8 @@ export function Header() {
           className={cn(
             "hidden items-center gap-1 rounded-full border p-1 backdrop-blur-md lg:flex",
             overHero
-              ? "border-white/15 bg-black/15"
-              : "border-border/70 bg-white/60",
+              ? "border-white/15 bg-black/25"
+              : "border-border/70 bg-white/75 shadow-xs",
           )}
           aria-label="Main navigation"
         >
@@ -106,15 +138,15 @@ export function Header() {
                   : undefined
               }
               className={cn(
-                "rounded-full px-4 py-2 text-[13px] font-semibold transition-all",
+                "rounded-full px-4 py-1.5 text-[13px] font-semibold transition-all duration-200",
                 overHero
-                  ? "text-white/75 hover:bg-white/10 hover:text-white"
-                  : "text-muted-foreground hover:bg-background hover:text-foreground",
+                  ? "text-white/80 hover:bg-white/10 hover:text-white"
+                  : "text-muted-foreground hover:bg-muted/80 hover:text-foreground",
                 (pathname === item.href ||
                   pathname.startsWith(`${item.href}/`)) &&
                   (overHero
-                    ? "bg-white text-brand-ink hover:bg-white hover:text-brand-ink"
-                    : "bg-foreground text-background shadow-sm hover:bg-foreground hover:text-background"),
+                    ? "bg-white text-brand-ink font-bold shadow-xs hover:bg-white hover:text-brand-ink"
+                    : "bg-primary text-white font-bold shadow-xs hover:bg-primary/90 hover:text-white"),
               )}
             >
               {item.label}
@@ -126,12 +158,14 @@ export function Header() {
           <Button
             asChild
             className={cn(
-              "rounded-full px-5",
-              overHero && "bg-white text-brand-ink shadow-none hover:bg-white/90",
+              "rounded-full px-5 font-semibold transition-all duration-300 shadow-md",
+              overHero
+                ? "bg-white text-brand-ink hover:bg-teal-50 hover:text-brand-ink shadow-teal-900/30"
+                : "bg-primary text-white hover:bg-primary-hover shadow-primary/20",
             )}
           >
             <Link href={ROUTES.contact}>
-              {t.common.talkToExpert} <ArrowUpRight className="size-4" />
+              {t.navigation.requestConsultation} <ArrowUpRight className="size-4 ml-1" />
             </Link>
           </Button>
         </div>

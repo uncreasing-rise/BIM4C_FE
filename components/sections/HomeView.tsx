@@ -12,6 +12,7 @@ import { DeliveryProcess } from "@/components/sections/DeliveryProcess";
 import { BimInteractiveHeroVisual } from "@/components/sections/BimInteractiveHeroVisual";
 import { useLanguage } from "@/lib/i18n/context";
 import { localizeContentList } from "@/lib/i18n/localize";
+import { toLocalizedLabel } from "@/lib/utils/public-labels";
 import type { ContentEntry } from "@/types/content";
 import type { Project } from "@/features/projects/types/project";
 
@@ -315,8 +316,8 @@ export function HomeView({
                         <span className="block text-foreground group-hover:text-primary transition-colors">
                           {course.title}
                         </span>
-                        <span className="mt-0.5 block font-mono text-xs font-normal text-muted-foreground">
-                          {course.duration || course.eyebrow}
+                        <span className="mt-0.5 block text-xs font-medium text-muted-foreground">
+                          {toLocalizedLabel(course.duration || course.eyebrow, locale)}
                         </span>
                       </div>
                       <ArrowUpRight className="size-4 shrink-0 text-muted-foreground transition-transform group-hover:text-primary group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
@@ -366,7 +367,7 @@ export function HomeView({
                   />
                 </div>
                 <p className="mt-4 text-xs font-medium text-primary">
-                  {post.eyebrow}
+                  {toLocalizedLabel(post.eyebrow, locale)}
                   <span className="text-muted-foreground"> · {post.meta}</span>
                 </p>
                 <h3 className="mt-2 text-xl font-semibold leading-snug tracking-tight">

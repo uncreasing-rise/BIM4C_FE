@@ -102,14 +102,14 @@ export function ServiceExplorer({
             {t.servicesPage.matchingCount(meta.total)}
           </p>
           {visible.length ? (
-            <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+            <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
               {visible.map((service, index) => (
                 <article
-                  className="service-card group relative flex flex-col overflow-hidden rounded-xl border bg-card"
+                  className="service-card group relative flex flex-col overflow-hidden rounded-2xl border bg-card shadow-xs transition-all duration-300 hover:-translate-y-1 hover:border-primary/40 hover:shadow-xl focus-within:ring-2 focus-within:ring-primary"
                   data-motion="tile"
                   key={service.slug}
                 >
-                  <div className="relative aspect-[16/7] overflow-hidden bg-muted">
+                  <div className="relative aspect-[16/8] overflow-hidden bg-muted">
                     <Image
                       src={service.image}
                       alt={service.title}
@@ -117,37 +117,38 @@ export function ServiceExplorer({
                       sizes="(max-width:767px) 100vw, (max-width:1279px) 50vw, 33vw"
                       className="object-cover transition-transform duration-700 group-hover:scale-105"
                     />
-                    <span className="absolute left-4 top-4 rounded-full bg-black/45 px-3 py-1 text-xs font-semibold text-white backdrop-blur">
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-60" />
+                    <span className="absolute left-4 top-4 rounded-full bg-brand-ink/80 px-3 py-1 text-xs font-mono font-semibold text-white backdrop-blur border border-white/10">
                       {String((page - 1) * pageSize + index + 1).padStart(
                         2,
                         "0",
                       )}
                     </span>
                   </div>
-                  <div className="flex flex-1 flex-col p-5">
+                  <div className="flex flex-1 flex-col p-6">
                     <p className="text-xs font-semibold uppercase tracking-[.16em] text-primary">
                       {t.servicesPage.solutionBadge}
                     </p>
-                    <h3 className="mt-2 text-xl font-semibold tracking-[-.035em]">
+                    <h3 className="mt-2 text-xl font-bold tracking-tight text-foreground group-hover:text-primary transition-colors">
                       {service.title}
                     </h3>
-                    <p className="mt-3 text-sm leading-6 text-muted-foreground">
+                    <p className="mt-3 text-sm leading-6 text-muted-foreground line-clamp-3">
                       {service.description}
                     </p>
                     <ul className="mb-5 mt-4 grid gap-2 border-t pt-4">
                       {service.highlights.slice(0, 3).map((item) => (
                         <li
-                          className="flex items-center gap-2 text-xs"
+                          className="flex items-start gap-2 text-xs text-muted-foreground"
                           key={item}
                         >
-                          <Check className="size-4 shrink-0 text-primary" />
-                          {item}
+                          <Check className="size-4 shrink-0 text-primary mt-0.5" />
+                          <span>{item}</span>
                         </li>
                       ))}
                     </ul>
-                    <span className="mt-auto inline-flex items-center gap-2 text-sm font-semibold text-primary">
+                    <span className="mt-auto inline-flex items-center gap-2 text-sm font-semibold text-primary group-hover:underline">
                       {t.servicesPage.exploreSolution}{" "}
-                      <ArrowUpRight className="size-4" />
+                      <ArrowUpRight className="size-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
                     </span>
                   </div>
                   <Link

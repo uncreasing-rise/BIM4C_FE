@@ -42,6 +42,11 @@ export interface Dictionary {
     relatedPosts: string;
     share: string;
     clearFilters: string;
+    downloadProfile: string;
+    backToTop: string;
+    copied: string;
+    copyAddress: string;
+    copyTaxCode: string;
   };
   navigation: {
     home: string;
@@ -56,6 +61,7 @@ export interface Dictionary {
     privacy: string;
     exploreBim4c: string;
     tagline: string;
+    requestConsultation: string;
   };
   hero: {
     badge: string;
@@ -69,6 +75,19 @@ export interface Dictionary {
     featureDigitalHandover: string;
     cardTag: string;
     cardTagline: string;
+    bimViewport: {
+      coordinateSystem: string;
+      viewCube: string;
+      clashAlert: string;
+      ifcInspector: string;
+      liveModelStatus: string;
+      layers: {
+        arch: string;
+        struct: string;
+        mep: string;
+        timeline: string;
+      };
+    };
   };
   expertiseStrip: {
     bimConsulting: { title: string; desc: string };
@@ -115,11 +134,26 @@ export interface Dictionary {
     copyright: string;
     termsLink: string;
     privacyPolicyLink: string;
+    enterpriseInfo: {
+      companyName: string;
+      businessCode: string;
+      headquarters: string;
+      branchOffice: string;
+      certificationsTitle: string;
+      isoCert: string;
+      buildingSmartCert: string;
+      autodeskCert: string;
+    };
   };
   aboutPage: {
     eyebrow: string;
     heroTitle: string;
     heroDesc: string;
+    trackRecord: {
+      eyebrow: string;
+      title: string;
+      metrics: { value: string; label: string; subtext: string }[];
+    };
     whoWeAreEyebrow: string;
     whoWeAreTitle: string;
     whoWeAreP1: string;
@@ -139,6 +173,7 @@ export interface Dictionary {
     teamEyebrow: string;
     teamTitle: string;
     teamDesc: string;
+    teamMembers: { name: string; role: string; cert: string; spec: string }[];
     ctaEyebrow: string;
     ctaTitle: string;
   };
@@ -243,6 +278,10 @@ export interface Dictionary {
     enquiryTitle: string;
     enquiryDesc: string;
     responseTime: string;
+    officesTitle: string;
+    hanoiHq: { title: string; address: string; phone: string };
+    hcmcBranch: { title: string; address: string; phone: string };
+    taxInfo: { label: string; code: string };
   };
   detailPage: {
     onThisPage: string;
@@ -266,6 +305,15 @@ export interface Dictionary {
     backCourses: string;
     backServices: string;
     backBlog: string;
+    softwareStack: string;
+    b2bTrainingTitle: string;
+    b2bTrainingDesc: string;
+    b2bTrainingAction: string;
+    standardsCompliance: string;
+    deliverablesChecklist: string;
+    deliverables: string[];
+    authorProfileTitle: string;
+    authorRole: string;
     fields: {
       client: string;
       location: string;
@@ -278,6 +326,14 @@ export interface Dictionary {
       level: string;
       price: string;
       instructor: string;
+    };
+    trustSignals: {
+      ndaTitle: string;
+      ndaDesc: string;
+      slaTitle: string;
+      slaDesc: string;
+      expertTitle: string;
+      expertDesc: string;
     };
   };
   forms: {

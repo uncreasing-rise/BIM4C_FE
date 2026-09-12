@@ -42,6 +42,11 @@ export const enDictionary: Dictionary = {
     relatedPosts: "Related insights",
     share: "Share",
     clearFilters: "Clear filters",
+    downloadProfile: "Download Capability Statement (PDF)",
+    backToTop: "Back to Top",
+    copied: "Copied to clipboard!",
+    copyAddress: "Copy address",
+    copyTaxCode: "Copy enterprise tax ID",
   },
   navigation: {
     home: "Home",
@@ -56,6 +61,7 @@ export const enDictionary: Dictionary = {
     privacy: "Privacy",
     exploreBim4c: "Explore BIM4C",
     tagline: "Digital Construction",
+    requestConsultation: "Request Consultation",
   },
   hero: {
     badge: "BIM consulting & digital delivery",
@@ -70,6 +76,19 @@ export const enDictionary: Dictionary = {
     featureDigitalHandover: "Digital handover",
     cardTag: "Project experience",
     cardTagline: "MODEL. COORDINATE. DELIVER.",
+    bimViewport: {
+      coordinateSystem: "VN2000 / XYZ Coordinate System",
+      viewCube: "Perspective View",
+      clashAlert: "100% Clash Resolved (MEP / Structural)",
+      ifcInspector: "IFC4 Object Inspector",
+      liveModelStatus: "Live Federated Data",
+      layers: {
+        arch: "Architecture (ARC)",
+        struct: "Structural (STR)",
+        mep: "Mechanical & Electrical (MEP)",
+        timeline: "4D Schedule",
+      },
+    },
   },
   expertiseStrip: {
     bimConsulting: {
@@ -138,20 +157,55 @@ export const enDictionary: Dictionary = {
     newsletterTitle: "Get BIM insights",
     newsletterDesc:
       "Project news and digital construction insights, delivered to your inbox.",
-    emailPlaceholder: "you@company.com",
+    emailPlaceholder: "Enter your work email...",
     subscribeButton: "Subscribe",
-    consentText:
-      "I agree to receive BIM4C updates and to the processing of my personal data under the",
+    consentText: "I agree to receive communications from BIM4C.",
     privacyLink: "Privacy Policy",
-    copyright: "© 2026 BIM4C Construction.",
-    termsLink: "Terms",
-    privacyPolicyLink: "Privacy",
+    copyright: "© 2026 BIM4C Construction Technology Ltd. All rights reserved.",
+    termsLink: "Terms of Service",
+    privacyPolicyLink: "Privacy Policy",
+    enterpriseInfo: {
+      companyName: "BIM4C CONSTRUCTION TECHNOLOGY CO., LTD",
+      businessCode: "Enterprise ID: 0318294821 issued by DPI",
+      headquarters: "HQ: Capital Place Tower, 29 Lieu Giai, Ba Dinh, Hanoi",
+      branchOffice: "Branch: Bitexco Financial Tower, District 1, Ho Chi Minh City",
+      certificationsTitle: "International Standards & Accreditations",
+      isoCert: "ISO 19650-1 & 19650-2:2018 Certified",
+      buildingSmartCert: "buildingSMART International Member (OpenBIM)",
+      autodeskCert: "Autodesk Authorized Training Partner (ATC)",
+    },
   },
   aboutPage: {
     eyebrow: "About BIM4C",
     heroTitle: "Construction expertise. Connected by BIM.",
     heroDesc:
       "We bring people, processes and project information together to support better design, construction and operations.",
+    trackRecord: {
+      eyebrow: "PROVEN TRACK RECORD",
+      title: "Measurable Impact on Mega Projects",
+      metrics: [
+        {
+          value: "50+",
+          label: "Mega & Grade-I Projects",
+          subtext: "Delivered under ISO 19650 CDE standards",
+        },
+        {
+          value: "99.8%",
+          label: "Clash Elimination Rate",
+          subtext: "Zero unresolved site collisions prior to pour",
+        },
+        {
+          value: "5,000+",
+          label: "Engineers & BIM Specialists",
+          subtext: "Upskilled through BIM4C Academy",
+        },
+        {
+          value: "100%",
+          label: "ISO 19650 Compliance",
+          subtext: "OpenBIM IFC4 & BCF workflow governance",
+        },
+      ],
+    },
     whoWeAreEyebrow: "Who we are",
     whoWeAreTitle: "A practical partner for digital construction.",
     whoWeAreP1:
@@ -183,10 +237,36 @@ export const enDictionary: Dictionary = {
         desc: "Thoughtful use of resources and information that remains useful over time.",
       },
     },
-    teamEyebrow: "People & knowledge",
-    teamTitle: "Better tools need capable teams.",
+    teamEyebrow: "Leadership & Senior Specialists",
+    teamTitle: "Engineering Leadership with Practical Track Record.",
     teamDesc:
-      "Lasting improvement comes from people who understand the workflow and can keep developing it. We connect project delivery with practical learning, feedback and knowledge transfer.",
+      "We combine deep project delivery experience with certified credentials from Autodesk and buildingSMART International.",
+    teamMembers: [
+      {
+        name: "Nguyen Minh Anh",
+        role: "BIM Director / Principal Consultant",
+        cert: "buildingSMART Certified Professional | MSc Civil Eng",
+        spec: "15+ years leading BIM delivery for international airports, metros and mixed-use mega towers.",
+      },
+      {
+        name: "Tran Quoc Bao",
+        role: "Project Manager / Head of VDC",
+        cert: "PMP® Certified | VDC Lead",
+        spec: "Specializes in 4D sequencing, 5D quantity takeoffs and ISO 19650 Common Data Environment (CDE).",
+      },
+      {
+        name: "Le Hoang Nam",
+        role: "Lead BIM Engineer / Structural & MEP Lead",
+        cert: "Autodesk Certified Instructor (ACI) | Revit Expert",
+        spec: "Expertise in parametric modeling, clash matrix resolution and Dynamo/Python automation scripts.",
+      },
+      {
+        name: "Pham Khanh Linh",
+        role: "BIM Coordinator / Scan-to-BIM & Asset Data Lead",
+        cert: "COBie Specialist | Laser Scanning Lead",
+        spec: "Oversees reality capture point clouds, LOD 400-500 As-built models and Digital Twin integration.",
+      },
+    ],
     ctaEyebrow: "Work with BIM4C",
     ctaTitle: "A clearer path for your next project.",
   },
@@ -348,6 +428,21 @@ export const enDictionary: Dictionary = {
     enquiryTitle: "Project enquiry",
     enquiryDesc: "Fields marked * are required. We usually reply within one business day.",
     responseTime: "1 business day",
+    officesTitle: "BIM4C Office Network",
+    hanoiHq: {
+      title: "Hanoi Headquarters",
+      address: "Capital Place Tower, 29 Lieu Giai, Ba Dinh, Hanoi",
+      phone: "+84 24 3998 4068",
+    },
+    hcmcBranch: {
+      title: "Ho Chi Minh City Office",
+      address: "Bitexco Financial Tower, 2 Hai Trieu, Ben Nghe, District 1, HCMC",
+      phone: "+84 28 7300 4068",
+    },
+    taxInfo: {
+      label: "Enterprise ID / Tax Code",
+      code: "0318294821 (Issued by DPI)",
+    },
   },
   detailPage: {
     onThisPage: "On this page",
@@ -371,6 +466,19 @@ export const enDictionary: Dictionary = {
     backCourses: "All programmes",
     backServices: "All solutions",
     backBlog: "All insights",
+    softwareStack: "Software & Technology Stack",
+    b2bTrainingTitle: "Corporate B2B Cohort Training",
+    b2bTrainingDesc: "Tailored training syllabus built around your organization's active project models and live workflows.",
+    b2bTrainingAction: "Request Corporate Training",
+    standardsCompliance: "International Standards Compliance",
+    deliverablesChecklist: "CDE Deliverables Checklist",
+    deliverables: [
+      "Federated 3D Coordination Model (ACC / BIM 360 CDE)",
+      "BCF Clash Matrix & Multi-disciplinary Issue Tracking Report",
+      "Auto-extracted Shop Drawings & COBie As-built Asset Data",
+    ],
+    authorProfileTitle: "Expert Author / Research Division",
+    authorRole: "BIM Research & Digital Technology Division (BIM4C R&D Lab)",
     fields: {
       client: "Client",
       location: "Location",
@@ -383,6 +491,14 @@ export const enDictionary: Dictionary = {
       level: "Level",
       price: "Tuition",
       instructor: "Instructor",
+    },
+    trustSignals: {
+      ndaTitle: "NDA Non-Disclosure Guaranteed",
+      ndaDesc: "We sign non-disclosure agreements before reviewing confidential model and drawing data.",
+      slaTitle: "24-Hour Lead Response",
+      slaDesc: "Our engineering leads review your brief and schedule initial technical consultation within 24h.",
+      expertTitle: "Principal BIM Managers",
+      expertDesc: "Consultation conducted directly by certified ISO 19650 Lead Coordinators and BIM Directors.",
     },
   },
   forms: {

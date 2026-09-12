@@ -2,7 +2,19 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowLeft, ArrowUpRight, Check } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowUpRight,
+  Check,
+  ShieldCheck,
+  Clock,
+  Award,
+  CheckCircle2,
+  Cpu,
+  Layers,
+  FileText,
+  Building2,
+} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -154,7 +166,7 @@ export function DetailPage({
       ? [
           [
             t.detailPage.fields.duration,
-            entry.duration || entry.eyebrow.split("·")[1]?.trim(),
+            toLocalizedLabel(entry.duration || entry.eyebrow.split("·")[1]?.trim() || "", locale),
           ],
           [
             t.detailPage.fields.level,
@@ -321,7 +333,7 @@ export function DetailPage({
                 {kind === "course" && (
                   <div className="mb-6 rounded-xl border border-teal-500/30 p-4 hologram-effect text-white shadow-lg">
                     <div className="flex items-center justify-between border-b border-white/20 pb-2">
-                      <span className="font-mono text-[10px] uppercase font-bold tracking-wider text-teal-200">
+                      <span className="text-[11px] uppercase font-bold tracking-wider text-teal-200">
                         {t.detailPage.certificateBadge}
                       </span>
                       <span className="font-mono text-[10px] text-white/75">
@@ -384,6 +396,33 @@ export function DetailPage({
                     subject={`${uiLabels[kind].back}: ${entry.title}`}
                   />
                 )}
+
+                {/* Enterprise Assurance Trust Signals */}
+                {kind !== "article" && t.detailPage.trustSignals && (
+                  <div className="mt-6 pt-5 border-t border-white/10 space-y-2.5">
+                    <div className="flex items-start gap-2.5 text-xs text-white/75">
+                      <ShieldCheck className="size-4 text-teal-400 shrink-0 mt-0.5" />
+                      <div>
+                        <span className="font-semibold text-white/90">{t.detailPage.trustSignals.ndaTitle}: </span>
+                        <span>{t.detailPage.trustSignals.ndaDesc}</span>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-2.5 text-xs text-white/75">
+                      <Clock className="size-4 text-teal-400 shrink-0 mt-0.5" />
+                      <div>
+                        <span className="font-semibold text-white/90">{t.detailPage.trustSignals.slaTitle}: </span>
+                        <span>{t.detailPage.trustSignals.slaDesc}</span>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-2.5 text-xs text-white/75">
+                      <Award className="size-4 text-teal-400 shrink-0 mt-0.5" />
+                      <div>
+                        <span className="font-semibold text-white/90">{t.detailPage.trustSignals.expertTitle}: </span>
+                        <span>{t.detailPage.trustSignals.expertDesc}</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -426,20 +465,20 @@ export function DetailPage({
             <h2 className="mb-6 text-3xl font-semibold tracking-tight">
               {t.detailPage.curriculumTitle}
             </h2>
-            <ol className="divide-y rounded-2xl border">
+            <ol className="divide-y rounded-2xl border bg-card shadow-xs">
               {entry.curriculum.map((module, index) => (
                 <li
-                  className="grid gap-3 p-5 sm:grid-cols-[3rem_1fr]"
+                  className="grid gap-3 p-6 sm:grid-cols-[3.5rem_1fr]"
                   data-motion="tile"
                   key={module.id ?? `${module.title}-${index}`}
                 >
-                  <span className="font-mono text-sm text-primary">
+                  <span className="font-mono text-base font-bold text-primary">
                     {String(index + 1).padStart(2, "0")}
                   </span>
                   <div>
-                    <h3 className="font-semibold">{module.title}</h3>
+                    <h3 className="text-lg font-bold text-foreground">{module.title}</h3>
                     {module.description && (
-                      <p className="mt-2 leading-7 text-muted-foreground">
+                      <p className="mt-2 text-sm leading-7 text-muted-foreground">
                         {module.description}
                       </p>
                     )}
@@ -447,8 +486,120 @@ export function DetailPage({
                 </li>
               ))}
             </ol>
+
+            {/* Software & Tools Stack */}
+            <div className="mt-10 rounded-2xl border bg-muted/30 p-6 sm:p-8">
+              <p className="text-xs font-semibold uppercase tracking-wider text-primary">
+                {t.detailPage.softwareStack}
+              </p>
+              <div className="mt-4 flex flex-wrap gap-2.5">
+                {[
+                  "Autodesk Revit (Arch / Struct / MEP)",
+                  "Navisworks Manage (Clash Detective)",
+                  "Autodesk Construction Cloud (ACC / BIM 360)",
+                  "Solibri Model Checker",
+                  "Dynamo BIM & Python Automation",
+                  "OpenBIM IFC4 & BCF Standards",
+                ].map((tool) => (
+                  <span
+                    key={tool}
+                    className="inline-flex items-center gap-1.5 rounded-lg border bg-card px-3.5 py-2 text-xs font-semibold text-foreground shadow-2xs"
+                  >
+                    <Cpu className="size-3.5 text-teal-600 dark:text-teal-400" />
+                    {tool}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            {/* Corporate B2B Cohort Training Banner */}
+            <div className="mt-8 relative overflow-hidden rounded-2xl bg-brand-ink p-6 text-white sm:p-8">
+              <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <span className="rounded bg-teal-500/20 px-2.5 py-1 text-xs font-bold text-teal-300 border border-teal-500/30">
+                    B2B ENTERPRISE
+                  </span>
+                  <h3 className="mt-3 text-2xl font-bold text-white">
+                    {t.detailPage.b2bTrainingTitle}
+                  </h3>
+                  <p className="mt-2 max-w-xl text-sm leading-relaxed text-slate-300">
+                    {t.detailPage.b2bTrainingDesc}
+                  </p>
+                </div>
+                <Button asChild size="lg" className="shrink-0 bg-teal-500 hover:bg-teal-400 text-brand-ink font-bold">
+                  <a href="#detail-enquiry">
+                    {t.detailPage.b2bTrainingAction} <ArrowUpRight className="size-4 ml-1" />
+                  </a>
+                </Button>
+              </div>
+            </div>
           </section>
         ) : null}
+
+        {/* Project Standards & Deliverables Banner */}
+        {kind === "project" && (
+          <section className="site-container mt-12">
+            <div className="grid gap-6 md:grid-cols-2">
+              <div className="rounded-2xl border bg-card p-6 shadow-xs">
+                <div className="flex items-center gap-2 text-primary font-bold text-sm uppercase tracking-wider">
+                  <Building2 className="size-5" />
+                  <span>{t.detailPage.standardsCompliance}</span>
+                </div>
+                <ul className="mt-4 space-y-3 text-sm text-muted-foreground">
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="size-4 text-teal-500 shrink-0" />
+                    <span>ISO 19650-1 & ISO 19650-2:2018 CDE Information Governance</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="size-4 text-teal-500 shrink-0" />
+                    <span>AIA G202-2013 Building Information Modeling Protocol (LOD 300 - 500)</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="size-4 text-teal-500 shrink-0" />
+                    <span>buildingSMART OpenBIM IFC4 & BCF 2.1 Coordination</span>
+                  </li>
+                </ul>
+              </div>
+
+              <div className="rounded-2xl border bg-card p-6 shadow-xs">
+                <div className="flex items-center gap-2 text-primary font-bold text-sm uppercase tracking-wider">
+                  <FileText className="size-5" />
+                  <span>{t.detailPage.deliverablesChecklist}</span>
+                </div>
+                <ul className="mt-4 space-y-3 text-sm text-muted-foreground">
+                  {t.detailPage.deliverables.map((item) => (
+                    <li className="flex items-center gap-2" key={item}>
+                      <CheckCircle2 className="size-4 text-teal-500 shrink-0" />
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* Blog / Insight Author Profile */}
+        {kind === "article" && (
+          <section className="site-container mt-12">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 rounded-2xl border bg-muted/40 p-6">
+              <div className="grid size-14 shrink-0 place-items-center rounded-2xl bg-primary text-white font-bold text-lg">
+                B4
+              </div>
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wider text-primary">
+                  {t.detailPage.authorProfileTitle}
+                </p>
+                <h3 className="text-base font-bold text-foreground mt-0.5">
+                  {entry.authorName || "BIM4C Engineering Team"}
+                </h3>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {t.detailPage.authorRole}
+                </p>
+              </div>
+            </div>
+          </section>
+        )}
         {related.length > 0 && (
           <section className="mt-20 border-t bg-muted/40 py-16">
             <div className="site-container">
