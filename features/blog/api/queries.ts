@@ -41,7 +41,10 @@ export async function getPosts(
       params.limit,
     ).items.map(mapContentDto);
   } catch (error) {
-    if (!params.strict && canDeferBuildData(error)) return [];
+    if (!params.strict && (canDeferBuildData(error) || process.env.NODE_ENV !== "production")) {
+      console.warn("Backend /posts error, falling back to blogEntries:", error);
+      return blogEntries;
+    }
     throw error;
   }
 }
@@ -60,6 +63,10 @@ export async function getPostBySlug(
     return mapContentDto(unwrapData(response));
   } catch (error) {
     if (isNotFoundError(error)) return null;
+    if (canDeferBuildData(error) || process.env.NODE_ENV !== "production") {
+      console.warn(`Backend /posts/${slug} error, falling back to mock post:`, error);
+      return blogEntries.find((post) => post.slug === slug) ?? null;
+    }
     throw error;
   }
 }
@@ -103,8 +110,15 @@ export async function getPostsPage(
     const result = unwrapPage<ContentEntryDto>(response, page, limit);
     return { ...result, items: result.items.map(mapContentDto) };
   } catch (error) {
-    if (!params.strict && canDeferBuildData(error))
-      return { items: [], meta: { page, limit, total: 0, totalPages: 1 } };
+    if (!params.strict && (canDeferBuildData(error) || process.env.NODE_ENV !== "production")) {
+      console.warn("Backend /posts list error, falling back to blogEntries:", error);
+      const totalPages = Math.max(1, Math.ceil(blogEntries.length / limit));
+      const safePage = Math.min(page, totalPages);
+      return {
+        items: blogEntries.slice((safePage - 1) * limit, safePage * limit),
+        meta: { page: safePage, limit, total: blogEntries.length, totalPages },
+      };
+    }
     throw error;
   }
 }

@@ -27,6 +27,7 @@ export function Header() {
     { label: t.navigation.projects, href: ROUTES.projects },
     { label: t.navigation.courses, href: ROUTES.courses },
     { label: t.navigation.blog, href: ROUTES.blog },
+    { label: t.navigation.bimViewer, href: ROUTES.bimViewer, is3D: true },
   ];
 
   useEffect(() => {
@@ -51,10 +52,10 @@ export function Header() {
   return (
     <header
       className={cn(
-        "fixed inset-x-0 top-0 z-50 transition-all duration-500",
+        "fixed inset-x-0 top-0 z-50 transition-all duration-300",
         overHero
           ? "border-transparent bg-transparent text-white"
-          : "border-b border-black/5 bg-background/85 text-foreground shadow-sm backdrop-blur-2xl supports-[backdrop-filter]:bg-background/75",
+          : "border-b border-slate-200/80 bg-white/95 text-slate-900 shadow-md backdrop-blur-xl supports-[backdrop-filter]:bg-white/90",
       )}
     >
       <div className="site-container flex h-20 items-center justify-between gap-4">
@@ -102,17 +103,29 @@ export function Header() {
           </div>
           <span className="leading-none">
             <span className="flex items-center gap-1">
-              <strong className="block text-[17px] font-black tracking-[.18em]">
-                BIM<span className="text-teal-400">4C</span>
+              <strong
+                className={cn(
+                  "block text-[17px] font-black tracking-[.18em]",
+                  overHero ? "text-white" : "text-slate-950",
+                )}
+              >
+                BIM<span className={overHero ? "text-teal-400" : "text-teal-600"}>4C</span>
               </strong>
-              <span className="rounded bg-teal-500/20 px-1 py-0.2 font-mono text-[9px] font-bold text-teal-300 border border-teal-500/30">
+              <span
+                className={cn(
+                  "rounded px-1.5 py-0.5 font-mono text-[9px] font-bold",
+                  overHero
+                    ? "bg-teal-500/20 text-teal-300 border border-teal-500/30"
+                    : "bg-teal-500/15 text-teal-700 border border-teal-600/30",
+                )}
+              >
                 PRO
               </span>
             </span>
             <small
               className={cn(
-                "mt-1 block text-[9.5px] font-medium tracking-[.12em]",
-                overHero ? "text-white/70" : "text-muted-foreground",
+                "mt-1 block text-[9.5px] font-semibold tracking-[.12em]",
+                overHero ? "text-white/75" : "text-slate-600",
               )}
             >
               {t.navigation.tagline}
@@ -121,47 +134,60 @@ export function Header() {
         </Link>
         <nav
           className={cn(
-            "hidden items-center gap-1 rounded-full border p-1 backdrop-blur-md lg:flex",
+            "hidden items-center gap-1 rounded-full border p-1 backdrop-blur-md lg:flex transition-all duration-300",
             overHero
-              ? "border-white/15 bg-black/25"
-              : "border-border/70 bg-white/75 shadow-xs",
+              ? "border-white/15 bg-black/30 shadow-lg"
+              : "border-slate-200/90 bg-slate-100/90 shadow-inner",
           )}
           aria-label="Main navigation"
         >
-          {navigation.map((item) => (
-            <Link
-              href={item.href}
-              key={item.href}
-              aria-current={
-                pathname === item.href || pathname.startsWith(`${item.href}/`)
-                  ? "page"
-                  : undefined
-              }
-              className={cn(
-                "rounded-full px-4 py-1.5 text-[13px] font-semibold transition-all duration-200",
-                overHero
-                  ? "text-white/80 hover:bg-white/10 hover:text-white"
-                  : "text-muted-foreground hover:bg-muted/80 hover:text-foreground",
-                (pathname === item.href ||
-                  pathname.startsWith(`${item.href}/`)) &&
-                  (overHero
-                    ? "bg-white text-brand-ink font-bold shadow-xs hover:bg-white hover:text-brand-ink"
-                    : "bg-primary text-white font-bold shadow-xs hover:bg-primary/90 hover:text-white"),
-              )}
-            >
-              {item.label}
-            </Link>
-          ))}
+          {navigation.map((item) => {
+            const isCurrentPage =
+              pathname === item.href || pathname.startsWith(`${item.href}/`);
+            return (
+              <Link
+                href={item.href}
+                key={item.href}
+                aria-current={isCurrentPage ? "page" : undefined}
+                className={cn(
+                  "rounded-full px-4 py-1.5 text-[13px] font-semibold transition-all duration-200",
+                  overHero
+                    ? isCurrentPage
+                      ? "bg-white text-brand-ink font-bold shadow-sm"
+                      : "text-white/85 hover:bg-white/10 hover:text-white"
+                    : isCurrentPage
+                      ? "bg-primary text-white font-bold shadow-md shadow-primary/30"
+                      : "text-slate-700 hover:bg-white hover:text-slate-950 font-medium",
+                )}
+              >
+                {item.label}
+                {"is3D" in item && item.is3D && (
+                  <span
+                    className={cn(
+                      "ml-1.5 rounded-full px-1.5 py-0.2 font-mono text-[9px] font-bold border",
+                      isCurrentPage
+                        ? "bg-white/20 text-white border-white/30"
+                        : overHero
+                          ? "bg-teal-500/25 text-teal-300 border-teal-500/40"
+                          : "bg-teal-600/15 text-teal-700 border-teal-600/30",
+                    )}
+                  >
+                    3D
+                  </span>
+                )}
+              </Link>
+            );
+          })}
         </nav>
         <div className="hidden items-center gap-3 lg:flex">
           <LanguageSwitcher isOverHero={overHero} />
           <Button
             asChild
             className={cn(
-              "rounded-full px-5 font-semibold transition-all duration-300 shadow-md",
+              "rounded-full px-5 font-bold transition-all duration-300 shadow-md",
               overHero
                 ? "bg-white text-brand-ink hover:bg-teal-50 hover:text-brand-ink shadow-teal-900/30"
-                : "bg-primary text-white hover:bg-primary-hover shadow-primary/20",
+                : "bg-primary text-white hover:bg-primary-hover shadow-primary/30",
             )}
           >
             <Link href={ROUTES.contact}>
@@ -174,10 +200,10 @@ export function Header() {
           <Link
             href={ROUTES.contact}
             className={cn(
-              "inline-flex min-h-10 items-center rounded-lg px-3 text-xs font-semibold",
+              "inline-flex min-h-10 items-center rounded-lg px-3 text-xs font-bold",
               overHero
                 ? "bg-white/10 text-white hover:bg-white/20"
-                : "bg-primary text-white hover:bg-primary-hover",
+                : "bg-primary text-white hover:bg-primary-hover shadow-xs",
             )}
           >
             {t.common.contact}
@@ -189,7 +215,9 @@ export function Header() {
                 size="icon"
                 className={cn(
                   "size-10 lg:hidden",
-                  overHero && "text-white hover:bg-white/10 hover:text-white",
+                  overHero
+                    ? "text-white hover:bg-white/10 hover:text-white"
+                    : "text-slate-900 hover:bg-slate-100 hover:text-slate-950",
                 )}
                 aria-label="Open navigation menu"
                 aria-haspopup="dialog"
@@ -239,7 +267,7 @@ export function Header() {
                   </SheetClose>
                 ))}
                 <SheetClose asChild>
-                  <Button asChild className="mt-4 min-h-11">
+                  <Button asChild className="mt-4 min-h-11 font-bold">
                     <Link href={ROUTES.contact}>{t.common.talkToExpert}</Link>
                   </Button>
                 </SheetClose>

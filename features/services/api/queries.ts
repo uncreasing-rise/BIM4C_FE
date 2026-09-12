@@ -26,7 +26,10 @@ export async function getServices(
     });
     return unwrapPage<ContentEntryDto>(response).items.map(mapContentDto);
   } catch (error) {
-    if (!options.strict && canDeferBuildData(error)) return [];
+    if (!options.strict && (canDeferBuildData(error) || process.env.NODE_ENV !== "production")) {
+      console.warn("Backend /services error, falling back to serviceEntries:", error);
+      return serviceEntries;
+    }
     throw error;
   }
 }
@@ -61,14 +64,27 @@ export async function getServicesPage(
     sortBy: params.sortBy,
     sortOrder: params.sortOrder,
   });
-  const response = await apiClient.get<
-    ApiResponse<ContentEntryDto[]> | ContentEntryDto[]
-  >(endpoint, {
-    next: { revalidate: 600, tags: ["services"] },
-    signal: params.signal,
-  });
-  const result = unwrapPage<ContentEntryDto>(response, page, limit);
-  return { ...result, items: result.items.map(mapContentDto) };
+  try {
+    const response = await apiClient.get<
+      ApiResponse<ContentEntryDto[]> | ContentEntryDto[]
+    >(endpoint, {
+      next: { revalidate: 600, tags: ["services"] },
+      signal: params.signal,
+    });
+    const result = unwrapPage<ContentEntryDto>(response, page, limit);
+    return { ...result, items: result.items.map(mapContentDto) };
+  } catch (error) {
+    if (canDeferBuildData(error) || process.env.NODE_ENV !== "production") {
+      console.warn("Backend /services list error, falling back to serviceEntries:", error);
+      const totalPages = Math.max(1, Math.ceil(serviceEntries.length / limit));
+      const safePage = Math.min(page, totalPages);
+      return {
+        items: serviceEntries.slice((safePage - 1) * limit, safePage * limit),
+        meta: { page: safePage, limit, total: serviceEntries.length, totalPages },
+      };
+    }
+    throw error;
+  }
 }
 
 export async function getServiceBySlug(
@@ -85,6 +101,11 @@ export async function getServiceBySlug(
     return mapContentDto(unwrapData(response));
   } catch (error) {
     if (isNotFoundError(error)) return null;
+    if (canDeferBuildData(error) || process.env.NODE_ENV !== "production") {
+      console.warn(`Backend /services/${slug} error, falling back to mock service:`, error);
+      return serviceEntries.find((service) => service.slug === slug) ?? null;
+    }
     throw error;
   }
 }
+

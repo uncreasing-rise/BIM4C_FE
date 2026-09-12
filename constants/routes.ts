@@ -14,5 +14,6 @@ export const ROUTES = {
   legal: "/phap-ly",
   legalDetail: (slug: string) => `/phap-ly/${slug}`,
   contact: "/lien-he",
+  bimViewer: "/bim-viewer",
   contactEmail: `mailto:${CONTACT_EMAIL}`,
 } as const;

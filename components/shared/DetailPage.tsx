@@ -329,8 +329,8 @@ export function DetailPage({
                   </dl>
                 )}
 
-                {/* Holographic Certificate Preview for Courses */}
-                {kind === "course" && (
+                {/* Holographic Certificate Preview for Courses (Temporarily hidden) */}
+                {/* {kind === "course" && (
                   <div className="mb-6 rounded-xl border border-teal-500/30 p-4 hologram-effect text-white shadow-lg">
                     <div className="flex items-center justify-between border-b border-white/20 pb-2">
                       <span className="text-[11px] uppercase font-bold tracking-wider text-teal-200">
@@ -347,7 +347,7 @@ export function DetailPage({
                       {t.detailPage.certificateDesc}
                     </p>
                   </div>
-                )}
+                )} */}
 
                 {entry.learningOutcomes?.length ? (
                   <ul className="mb-7 grid gap-3">

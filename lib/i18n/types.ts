@@ -55,6 +55,7 @@ export interface Dictionary {
     projects: string;
     courses: string;
     blog: string;
+    bimViewer: string;
     contact: string;
     legal: string;
     terms: string;
@@ -367,6 +368,92 @@ export interface Dictionary {
     sectionTitle: string;
     sectionDesc: string;
     readDocument: string;
+  };
+  bimViewerPage: {
+    badge: string;
+    title: string;
+    subtitle: string;
+    selectModel: string;
+    uploadIfc: string;
+    uploadIfcNotice: string;
+    tools: {
+      orbit: string;
+      measure: string;
+      section: string;
+      explode: string;
+      layers: string;
+      clashes: string;
+      reset: string;
+      fullscreen: string;
+      snapshot: string;
+    };
+    views: {
+      perspective: string;
+      top: string;
+      front: string;
+      right: string;
+      isometric: string;
+    };
+    layers: {
+      architecture: string;
+      structure: string;
+      mep: string;
+      clashMarkers: string;
+    };
+    sections: {
+      title: string;
+      axisX: string;
+      axisY: string;
+      axisZ: string;
+      resetClipping: string;
+    };
+    measure: {
+      title: string;
+      instruction: string;
+      distance: string;
+      deltaX: string;
+      deltaY: string;
+      deltaZ: string;
+      clear: string;
+    };
+    explode: {
+      title: string;
+      intensity: string;
+    };
+    properties: {
+      title: string;
+      noSelection: string;
+      noSelectionDesc: string;
+      elementName: string;
+      ifcType: string;
+      guid: string;
+      storey: string;
+      psetsTitle: string;
+      geometryTitle: string;
+      spatialTree: string;
+    };
+    clashes: {
+      title: string;
+      count: (count: number) => string;
+      severity: {
+        high: string;
+        medium: string;
+        low: string;
+      };
+      focusClash: string;
+    };
+    models: {
+      tower: string;
+      steel: string;
+      mep: string;
+      villa: string;
+    };
+    performance: {
+      fps: string;
+      elements: string;
+      memory: string;
+      openBimStandard: string;
+    };
   };
 }
 

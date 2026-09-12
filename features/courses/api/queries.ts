@@ -26,7 +26,10 @@ export async function getCourses(
     });
     return unwrapPage<ContentEntryDto>(response).items.map(mapContentDto);
   } catch (error) {
-    if (!options.strict && canDeferBuildData(error)) return [];
+    if (!options.strict && (canDeferBuildData(error) || process.env.NODE_ENV !== "production")) {
+      console.warn("Backend /courses error, falling back to courseEntries:", error);
+      return courseEntries;
+    }
     throw error;
   }
 }
@@ -61,14 +64,27 @@ export async function getCoursesPage(
     sortBy: params.sortBy,
     sortOrder: params.sortOrder,
   });
-  const response = await apiClient.get<
-    ApiResponse<ContentEntryDto[]> | ContentEntryDto[]
-  >(endpoint, {
-    next: { revalidate: 600, tags: ["courses"] },
-    signal: params.signal,
-  });
-  const result = unwrapPage<ContentEntryDto>(response, page, limit);
-  return { ...result, items: result.items.map(mapContentDto) };
+  try {
+    const response = await apiClient.get<
+      ApiResponse<ContentEntryDto[]> | ContentEntryDto[]
+    >(endpoint, {
+      next: { revalidate: 600, tags: ["courses"] },
+      signal: params.signal,
+    });
+    const result = unwrapPage<ContentEntryDto>(response, page, limit);
+    return { ...result, items: result.items.map(mapContentDto) };
+  } catch (error) {
+    if (canDeferBuildData(error) || process.env.NODE_ENV !== "production") {
+      console.warn("Backend /courses list error, falling back to courseEntries:", error);
+      const totalPages = Math.max(1, Math.ceil(courseEntries.length / limit));
+      const safePage = Math.min(page, totalPages);
+      return {
+        items: courseEntries.slice((safePage - 1) * limit, safePage * limit),
+        meta: { page: safePage, limit, total: courseEntries.length, totalPages },
+      };
+    }
+    throw error;
+  }
 }
 
 export async function getCourseBySlug(
@@ -85,6 +101,11 @@ export async function getCourseBySlug(
     return mapContentDto(unwrapData(response));
   } catch (error) {
     if (isNotFoundError(error)) return null;
+    if (canDeferBuildData(error) || process.env.NODE_ENV !== "production") {
+      console.warn(`Backend /courses/${slug} error, falling back to mock course:`, error);
+      return courseEntries.find((course) => course.slug === slug) ?? null;
+    }
     throw error;
   }
 }
+

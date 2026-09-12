@@ -13,9 +13,10 @@ import { mockProjects } from "./project.mock";
 import { mapProjectDto, type ProjectDto } from "./project.mapper";
 import type { Project, ProjectQueryParams } from "../types/project";
 import { toEnglishLabel } from "@/lib/utils/public-labels";
+import { canDeferBuildData } from "@/lib/config/build";
 
 export async function getProjects(
-  params: ProjectQueryParams = {},
+  params: ProjectQueryParams & { strict?: boolean } = {},
 ): Promise<Project[]> {
   if (env.useMockApi) return mockProjects;
   const endpoint = withQueryParams(API_ENDPOINTS.projects.list, {
@@ -29,15 +30,23 @@ export async function getProjects(
     sortBy: params.sortBy,
     sortOrder: params.sortOrder,
   });
-  const response = await apiClient.get<
-    ApiResponse<ProjectDto[]> | ProjectDto[]
-  >(endpoint, {
-    signal: params.signal,
-    next: { revalidate: 300, tags: ["projects"] },
-  });
-  return unwrapPage<ProjectDto>(response, params.page, params.limit).items.map(
-    mapProjectDto,
-  );
+  try {
+    const response = await apiClient.get<
+      ApiResponse<ProjectDto[]> | ProjectDto[]
+    >(endpoint, {
+      signal: params.signal,
+      next: { revalidate: 300, tags: ["projects"] },
+    });
+    return unwrapPage<ProjectDto>(response, params.page, params.limit).items.map(
+      mapProjectDto,
+    );
+  } catch (error) {
+    if (!params.strict && (canDeferBuildData(error) || process.env.NODE_ENV !== "production")) {
+      console.warn("Backend /projects error, falling back to mockProjects:", error);
+      return mockProjects;
+    }
+    throw error;
+  }
 }
 
 export async function getProjectsPage(
@@ -98,14 +107,27 @@ export async function getProjectsPage(
     sortBy: params.sortBy,
     sortOrder: params.sortOrder,
   });
-  const response = await apiClient.get<
-    ApiResponse<ProjectDto[]> | ProjectDto[]
-  >(endpoint, {
-    next: { revalidate: 300, tags: ["projects"] },
-    signal: params.signal,
-  });
-  const result = unwrapPage<ProjectDto>(response, page, limit);
-  return { ...result, items: result.items.map(mapProjectDto) };
+  try {
+    const response = await apiClient.get<
+      ApiResponse<ProjectDto[]> | ProjectDto[]
+    >(endpoint, {
+      next: { revalidate: 300, tags: ["projects"] },
+      signal: params.signal,
+    });
+    const result = unwrapPage<ProjectDto>(response, page, limit);
+    return { ...result, items: result.items.map(mapProjectDto) };
+  } catch (error) {
+    if (canDeferBuildData(error) || process.env.NODE_ENV !== "production") {
+      console.warn("Backend /projects list error, falling back to mockProjects:", error);
+      const totalPages = Math.max(1, Math.ceil(mockProjects.length / limit));
+      const safePage = Math.min(page, totalPages);
+      return {
+        items: mockProjects.slice((safePage - 1) * limit, safePage * limit),
+        meta: { page: safePage, limit, total: mockProjects.length, totalPages },
+      };
+    }
+    throw error;
+  }
 }
 
 export async function getProjectBySlug(slug: string): Promise<Project | null> {
@@ -119,6 +141,10 @@ export async function getProjectBySlug(slug: string): Promise<Project | null> {
     return mapProjectDto(unwrapData(response));
   } catch (error) {
     if (isNotFoundError(error)) return null;
+    if (canDeferBuildData(error) || process.env.NODE_ENV !== "production") {
+      console.warn(`Backend /projects/${slug} error, falling back to mock project:`, error);
+      return mockProjects.find((project) => project.slug === slug) ?? null;
+    }
     throw error;
   }
 }

@@ -66,7 +66,7 @@ export function LanguageSwitcher({
         "inline-flex items-center gap-1 rounded-full border p-1 text-xs font-medium backdrop-blur-md transition-all duration-300",
         isOverHero
           ? "border-white/20 bg-black/25 text-white shadow-inner"
-          : "border-border/70 bg-white/70 text-foreground shadow-xs",
+          : "border-slate-200/90 bg-slate-100/90 text-slate-800 shadow-inner",
         className,
       )}
       role="group"
@@ -75,7 +75,7 @@ export function LanguageSwitcher({
       <Globe
         className={cn(
           "ml-2 mr-0.5 size-3.5 transition-opacity",
-          isOverHero ? "text-teal-300 opacity-90" : "text-primary opacity-80",
+          isOverHero ? "text-teal-300 opacity-90" : "text-primary opacity-90",
         )}
         aria-hidden="true"
       />
@@ -91,10 +91,10 @@ export function LanguageSwitcher({
               isActive
                 ? isOverHero
                   ? "bg-white text-brand-ink font-bold shadow-sm"
-                  : "bg-foreground text-background font-bold shadow-sm"
+                  : "bg-primary text-white font-bold shadow-sm"
                 : isOverHero
                   ? "text-white/75 hover:bg-white/10 hover:text-white"
-                  : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                  : "text-slate-600 hover:bg-white hover:text-slate-950",
             )}
             aria-pressed={isActive}
             aria-label={`Switch language to ${LOCALE_LABELS[loc].label}`}
