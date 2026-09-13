@@ -1,5 +1,9 @@
 "use client";
+
 import { useEffect, useState } from "react";
+import { AlertCircle, Clock, UserCheck, Activity, Database } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+
 type Log = {
   id: string;
   action: string;
@@ -9,9 +13,11 @@ type Log = {
   actor?: { name: string; email: string };
   requestId?: string;
 };
+
 export function AuditLogManager() {
   const [logs, setLogs] = useState<Log[]>([]);
   const [error, setError] = useState("");
+
   useEffect(() => {
     fetch("/api/admin/audit-logs?limit=50", { cache: "no-store" })
       .then(async (r) => {
@@ -28,39 +34,71 @@ export function AuditLogManager() {
       })
       .catch((e) => setError(e.message));
   }, []);
+
   return (
-    <section className="overflow-hidden rounded-md border border-border bg-background shadow-sm">
+    <section className="overflow-hidden rounded-2xl border border-border bg-card shadow-xs">
       {error && (
-        <p className="mx-4 mt-3 flex justify-between bg-destructive/10 px-3 py-2.5 text-xs text-destructive">
-          {error}
-        </p>
+        <div className="m-4 flex items-center gap-2 rounded-xl bg-destructive/10 p-3 text-sm text-destructive">
+          <AlertCircle className="size-4 shrink-0" />
+          <span>{error}</span>
+        </div>
       )}
-      <div className="w-full overflow-x-auto [&_table]:min-w-full [&_table]:border-collapse [&_th]:h-10 [&_th]:border-b [&_th]:border-border [&_th]:bg-muted [&_th]:px-4 [&_th]:text-left [&_th]:text-xs [&_td]:h-16 [&_td]:border-b [&_td]:border-border [&_td]:px-4 [&_td]:text-sm [&_td]:text-muted-foreground [&_td_img]:h-[38px] [&_td_img]:w-[54px] [&_td_img]:object-cover">
-        <table>
-          <thead>
+      <div className="w-full overflow-x-auto">
+        <table className="w-full text-left text-sm">
+          <thead className="border-b border-border/80 bg-muted/40 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             <tr>
-              <th>THỜI GIAN</th>
-              <th>NGƯỜI THỰC HIỆN</th>
-              <th>THAO TÁC</th>
-              <th>TÀI NGUYÊN</th>
-              <th>REQUEST ID</th>
+              <th className="px-5 py-3.5">Thời gian</th>
+              <th className="px-5 py-3.5">Người thực hiện</th>
+              <th className="px-5 py-3.5">Thao tác</th>
+              <th className="px-5 py-3.5">Tài nguyên</th>
+              <th className="px-5 py-3.5">Request ID</th>
             </tr>
           </thead>
-          <tbody>
-            {logs.map((x) => (
-              <tr key={x.id}>
-                <td>{new Date(x.createdAt).toLocaleString("vi-VN")}</td>
-                <td>
-                  {x.actor?.name ?? "Hệ thống"}
-                  <small>{x.actor?.email}</small>
+          <tbody className="divide-y divide-border/60">
+            {logs.length === 0 ? (
+              <tr>
+                <td colSpan={5} className="py-12 text-center text-muted-foreground">
+                  Chưa có nhật ký hoạt động nào.
                 </td>
-                <td>{x.action}</td>
-                <td>
-                  {x.resource} {x.resourceId}
-                </td>
-                <td>{x.requestId}</td>
               </tr>
-            ))}
+            ) : (
+              logs.map((x) => (
+                <tr key={x.id} className="hover:bg-muted/20 transition-colors">
+                  <td className="px-5 py-4 whitespace-nowrap text-xs text-muted-foreground">
+                    <div className="flex items-center gap-1.5">
+                      <Clock className="size-3 text-muted-foreground" />
+                      <span>{new Date(x.createdAt).toLocaleString("vi-VN")}</span>
+                    </div>
+                  </td>
+                  <td className="px-5 py-4">
+                    <div className="flex items-center gap-1.5 font-medium text-foreground">
+                      <UserCheck className="size-3.5 text-primary" />
+                      <span>{x.actor?.name ?? "Hệ thống"}</span>
+                    </div>
+                    {x.actor?.email && (
+                      <small className="block text-xs text-muted-foreground mt-0.5">
+                        {x.actor.email}
+                      </small>
+                    )}
+                  </td>
+                  <td className="px-5 py-4">
+                    <Badge variant="outline" className="font-mono text-xs border-primary/30 bg-primary/5 text-primary">
+                      <Activity className="size-3 mr-1" />
+                      {x.action}
+                    </Badge>
+                  </td>
+                  <td className="px-5 py-4 font-mono text-xs text-foreground">
+                    <span className="flex items-center gap-1">
+                      <Database className="size-3 text-muted-foreground" />
+                      {x.resource} {x.resourceId ? `(${x.resourceId})` : ""}
+                    </span>
+                  </td>
+                  <td className="px-5 py-4 font-mono text-xs text-muted-foreground">
+                    {x.requestId ? x.requestId.slice(0, 12) : "—"}
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>

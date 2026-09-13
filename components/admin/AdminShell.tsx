@@ -2,10 +2,11 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { LogOut, Menu, Search, LayoutDashboard, FileText, Layers, GraduationCap, Wrench, Folder, Mail, Users, FileClock, Settings, Sparkles } from "lucide-react";
+import { LogOut, Menu, Search, LayoutDashboard, FileText, Layers, GraduationCap, Wrench, Folder, Mail, Users, FileClock, Settings, Sparkles, RotateCw, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { can, currentAdmin, type AdminIdentity } from "@/features/admin/auth";
+import { toast } from "sonner";
 
 const navigation = [
   { href: "/admin", label: "Tổng quan", icon: LayoutDashboard },
@@ -129,6 +130,23 @@ export function AdminShell({
     router.refresh();
   }
 
+  const [revalidating, setRevalidating] = useState(false);
+
+  async function handlePurgeCache() {
+    setRevalidating(true);
+    const toastId = toast.loading("Đang xóa bộ nhớ đệm (ISR Cache)...");
+    try {
+      const res = await fetch("/api/admin/revalidate", { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Lỗi khi xóa cache");
+      toast.success(data.data?.message || "Đã làm mới bộ nhớ đệm toàn bộ website thành công!", { id: toastId });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Xóa cache thất bại", { id: toastId });
+    } finally {
+      setRevalidating(false);
+    }
+  }
+
   return (
     <div className="admin-workspace min-h-screen bg-background lg:grid lg:grid-cols-[260px_minmax(0,1fr)]">
       <aside
@@ -217,7 +235,20 @@ export function AdminShell({
             </kbd>
           </button>
 
-          <div className="flex items-center gap-3 md:gap-5">
+          <div className="flex items-center gap-2.5 md:gap-3">
+            {/* 1-Click Cache Purge Button */}
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={revalidating}
+              onClick={() => void handlePurgeCache()}
+              title="Làm mới toàn bộ bộ nhớ đệm (ISR Cache) của website"
+              className="gap-1.5 text-xs text-amber-600 dark:text-amber-400 border-amber-300/60 dark:border-amber-700/60 hover:bg-amber-50 dark:hover:bg-amber-950/40"
+            >
+              <RotateCw className={`size-3.5 ${revalidating ? "animate-spin" : ""}`} />
+              <span className="hidden sm:inline">{revalidating ? "Đang xóa cache…" : "Làm mới Cache"}</span>
+            </Button>
+
             <Link
               className="hidden rounded-lg border border-border/80 bg-card px-3 py-1.5 text-xs font-semibold text-foreground shadow-sm transition-colors hover:border-primary/40 hover:text-primary sm:block"
               href="/"

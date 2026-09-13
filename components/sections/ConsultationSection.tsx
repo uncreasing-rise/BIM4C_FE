@@ -13,6 +13,7 @@ import { ConsultationForm } from "@/features/contact/components/ConsultationForm
 import { CONTACT_EMAIL, ROUTES } from "@/constants/routes";
 import { useLanguage } from "@/lib/i18n/context";
 import type { Dictionary } from "@/lib/i18n/types";
+import { SocialLinks } from "@/components/shared/SocialLinks";
 
 function OfficesAndVatCards({ t, locale }: { t: Dictionary; locale: string }) {
   return (
@@ -184,6 +185,13 @@ export function ConsultationSection() {
             >
               <Mail className="size-4 text-primary" /> {CONTACT_EMAIL}
             </a>
+          </div>
+
+          <div className="mt-4 flex items-center gap-3">
+            <span className="text-xs font-semibold text-white/50 uppercase tracking-wider">
+              {locale === "vi" ? "Mạng xã hội:" : "Socials:"}
+            </span>
+            <SocialLinks variant="icons" />
           </div>
 
           <ul className="mt-6 hidden gap-3 border-t border-white/10 pt-5 lg:grid">

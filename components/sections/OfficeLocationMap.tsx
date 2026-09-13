@@ -1,16 +1,17 @@
 "use client";
 
-import { MapPin, Navigation, Clock, Phone, Copy, ExternalLink } from "lucide-react";
+import { MapPin, Navigation, Clock, Phone, Copy, ExternalLink, Share2 } from "lucide-react";
 import { toast } from "sonner";
 import { useLanguage } from "@/lib/i18n/context";
+import { SocialLinks } from "@/components/shared/SocialLinks";
 
 const MAP_EMBED_URL =
-  "https://www.google.com/maps/embed?pb=!1m13!1m8!1m3!1d3834.3491422166603!2d108.178271!3d16.047362!3m2!1i1024!2i768!4f13.1!3m2!1m1!2zMTbCsDAyJzQ5LjEiTiAxMDjCsDEwJzQ2LjkiRQ!5e0!3m2!1sen!2sus!4v1789290479739!5m2!1sen!2sus";
+  "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3834.137999729389!2d108.175353!3d16.0583271!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3142191a5fa78e25%3A0x912b24f65ae888fd!2zMjAgQuG6r2MgU8ahbiwgQW4gS2jDqiwgxJDDoCBO4bq1bmcgNTUwMDAwLCBWaeG7h3QgTmFt!5e0!3m2!1svi!2s!4v1789315062797!5m2!1svi!2s";
 
 const GOOGLE_MAPS_DIRECTION_URL =
-  "https://www.google.com/maps/dir/?api=1&destination=16.047362,108.178271";
+  "https://www.google.com/maps/dir/?api=1&destination=16.0583271,108.175353";
 
-const HEADQUARTERS_ADDRESS = "20 Bắc Sơn, Phường Hoà An, Quận Cẩm Lệ, Thành phố Đà Nẵng, Việt Nam";
+const HEADQUARTERS_ADDRESS = "20 Bắc Sơn, An Khê, Đà Nẵng 550000, Việt Nam";
 
 export function OfficeLocationMap() {
   const { t, locale } = useLanguage();
@@ -35,7 +36,7 @@ export function OfficeLocationMap() {
                 navigator.clipboard.writeText(HEADQUARTERS_ADDRESS);
                 toast.success(
                   isVi
-                    ? "Đã sao chép địa chỉ Trụ sở chính: 20 Bắc Sơn, Cẩm Lệ, Đà Nẵng"
+                    ? "Đã sao chép địa chỉ: 20 Bắc Sơn, An Khê, Đà Nẵng 550000, Việt Nam"
                     : "Headquarters address copied to clipboard"
                 );
               }}
@@ -67,7 +68,7 @@ export function OfficeLocationMap() {
                 <span className="relative inline-flex size-2 rounded-full bg-emerald-500" />
               </span>
               <span className="font-mono font-bold text-foreground">
-                GPS: 16°02&apos;49.1&quot;N 108°10&apos;46.9&quot;E
+                GPS: 16°03&apos;30.0&quot;N 108°10&apos;31.3&quot;E
               </span>
               <span className="text-muted-foreground/40">|</span>
               <span className="text-muted-foreground">{t.contactPage.mapSection.distanceAirport}</span>
@@ -79,7 +80,7 @@ export function OfficeLocationMap() {
           </div>
 
           {/* Map & Telemetry HUD Overlay Grid */}
-          <div className="relative w-full h-[400px] sm:h-[480px] lg:h-[540px] bg-muted">
+          <div className="relative w-full h-[420px] sm:h-[480px] lg:h-[540px] bg-muted">
             <iframe
               src={MAP_EMBED_URL}
               width="100%"
@@ -89,7 +90,7 @@ export function OfficeLocationMap() {
               loading="lazy"
               referrerPolicy="strict-origin-when-cross-origin"
               title={isVi ? "Bản đồ vị trí Trụ sở chính BIM4C Đà Nẵng" : "BIM4C Da Nang Headquarters Map"}
-              className="w-full h-full grayscale-[15%] contrast-[105%]"
+              className="w-full h-full grayscale-[10%] contrast-[105%]"
             />
 
             {/* Floating ConTech Telemetry Card (Bottom-Left on Desktop) */}
@@ -116,9 +117,7 @@ export function OfficeLocationMap() {
                 <p className="mt-1 flex items-start gap-2 text-xs text-slate-300 leading-relaxed">
                   <MapPin className="size-4 shrink-0 text-teal-400 mt-0.5" />
                   <span>
-                    {isVi
-                      ? "20 Bắc Sơn, Phường Hoà An, Quận Cẩm Lệ, TP Đà Nẵng"
-                      : "20 Bac Son, Hoa An Ward, Cam Le District, Da Nang City"}
+                    {HEADQUARTERS_ADDRESS}
                   </span>
                 </p>
 
@@ -136,13 +135,35 @@ export function OfficeLocationMap() {
                     rel="noopener noreferrer"
                     className="flex items-center gap-1 text-teal-300 hover:text-white transition-colors font-medium"
                   >
-                    <span>{isVi ? "Mở trong Google Maps" : "Open Maps"}</span>
+                    <span>{isVi ? "Mở Google Maps" : "Open Maps"}</span>
                     <ExternalLink className="size-3" />
                   </a>
                 </div>
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Social Networks & Digital Channels Section */}
+        <div className="mt-12">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wider text-primary flex items-center gap-1.5">
+                <Share2 className="size-3.5" />
+                {isVi ? "Mạng xã hội & Kênh kết nối" : "Social Media & Networks"}
+              </p>
+              <h3 className="text-xl font-bold text-foreground mt-1">
+                {isVi ? "Kết nối với BIM4C trên các nền tảng" : "Connect with BIM4C across platforms"}
+              </h3>
+            </div>
+            <p className="text-xs text-muted-foreground max-w-sm">
+              {isVi
+                ? "Theo dõi chúng tôi để cập nhật bài viết chuyên môn, video kỹ thuật BIM và các sự kiện ngành mới nhất."
+                : "Follow us to stay updated with professional insights, BIM tutorials, and industry events."}
+            </p>
+          </div>
+
+          <SocialLinks variant="cards" />
         </div>
       </div>
     </section>

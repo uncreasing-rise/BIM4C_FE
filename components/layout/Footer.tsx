@@ -1,10 +1,11 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import { ArrowUpRight, Mail, MapPin, Phone } from "lucide-react";
 import { CONTACT_EMAIL, ROUTES } from "@/constants/routes";
 import { NewsletterForm } from "@/features/contact/components/NewsletterForm";
 import { useLanguage } from "@/lib/i18n/context";
+import { SocialLinks } from "@/components/shared/SocialLinks";
 
 export function Footer() {
   const { t, locale } = useLanguage();
@@ -52,6 +53,14 @@ export function Footer() {
               <Phone className="size-4 text-teal-300" />
               +84 28 7300 4068
             </a>
+          </div>
+
+          {/* Social Links Icons */}
+          <div className="mt-6 pt-4 border-t border-white/10">
+            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">
+              {locale === "vi" ? "Mạng xã hội" : "Connect with us"}
+            </p>
+            <SocialLinks variant="icons" />
           </div>
         </div>
         <div>

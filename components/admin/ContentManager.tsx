@@ -17,6 +17,9 @@ import { CategoryManager } from "./CategoryManager";
 import { ContentBlockEditor } from "./ContentBlockEditor";
 import { MediaPicker } from "./MediaPicker";
 import { BilingualFormTabs } from "./BilingualFormTabs";
+import { LivePreviewModal } from "./LivePreviewModal";
+import { Sparkles, Eye, Wand2, RefreshCw } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import {
   contentBlocksSchema,
@@ -89,6 +92,8 @@ export function ContentManager({
   const [saving, setSaving] = useState(false);
   const [feedback, setFeedback] = useState("");
   const [dirty, setDirty] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [aiBusy, setAiBusy] = useState(false);
   const [newCurriculum, setNewCurriculum] = useState({
     title: "",
     description: "",
@@ -243,6 +248,106 @@ export function ContentManager({
       });
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function handleAiTranslate() {
+    if (!editor) return;
+    setAiBusy(true);
+    const toastId = toast.loading("Trợ lý AI đang dịch thuật nội dung...");
+    try {
+      const isTranslatingToVi = adminLangTab === "en";
+      const sourceText = isTranslatingToVi
+        ? [editor.title, editor.description, editor.eyebrow, editor.highlights?.join("\n")].filter(Boolean).join("\n---\n")
+        : [editor.title_vi, editor.description_vi, editor.eyebrow_vi, editor.highlights_vi?.join("\n")].filter(Boolean).join("\n---\n");
+
+      if (!sourceText.trim()) {
+        toast.error("Vui lòng nhập tiêu đề hoặc mô tả trước khi dịch AI.", { id: toastId });
+        return;
+      }
+
+      const res = await fetch("/api/admin/ai/translate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          text: sourceText,
+          targetLang: isTranslatingToVi ? "vi" : "en",
+          context: `BIM4C Enterprise ${contentType}`,
+        }),
+      });
+
+      const resData = await res.json().catch(() => null);
+      if (!res.ok) throw new Error(resData?.message || "Lỗi dịch AI");
+
+      const translated = resData?.data?.translatedText || "";
+      const parts = translated.split("\n---\n").map((p: string) => p.trim());
+
+      if (isTranslatingToVi) {
+        update({
+          title_vi: parts[0] || editor.title,
+          description_vi: parts[1] || editor.description,
+          eyebrow_vi: parts[2] || editor.eyebrow,
+          highlights_vi: parts[3] ? parts[3].split("\n").filter(Boolean) : editor.highlights_vi,
+        });
+        setAdminLangTab("vi");
+        toast.success("✨ Đã dịch sang Tiếng Việt thành công!", { id: toastId });
+      } else {
+        update({
+          title: parts[0] || editor.title_vi || "",
+          description: parts[1] || editor.description_vi || "",
+          eyebrow: parts[2] || editor.eyebrow_vi || "",
+          highlights: parts[3] ? parts[3].split("\n").filter(Boolean) : editor.highlights,
+        });
+        setAdminLangTab("en");
+        toast.success("✨ Đã dịch sang Tiếng Anh thành công!", { id: toastId });
+      }
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Lỗi dịch AI", { id: toastId });
+    } finally {
+      setAiBusy(false);
+    }
+  }
+
+  async function handleAiSeo() {
+    if (!editor) return;
+    setAiBusy(true);
+    const toastId = toast.loading("AI đang phân tích và tối ưu SEO metadata...");
+    try {
+      const activeTitle = adminLangTab === "vi" ? (editor.title_vi || editor.title) : editor.title;
+      const activeDesc = adminLangTab === "vi" ? (editor.description_vi || editor.description) : editor.description;
+
+      const res = await fetch("/api/admin/ai/seo", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: activeTitle,
+          description: activeDesc,
+          lang: adminLangTab,
+        }),
+      });
+
+      const resData = await res.json().catch(() => null);
+      if (!res.ok) throw new Error(resData?.message || "Lỗi tạo SEO AI");
+
+      const seoData = resData?.data;
+      if (seoData) {
+        if (adminLangTab === "vi") {
+          update({
+            seoTitle_vi: seoData.seoTitle,
+            seoDescription_vi: seoData.seoDescription,
+          });
+        } else {
+          update({
+            seoTitle: seoData.seoTitle,
+            seoDescription: seoData.seoDescription,
+          });
+        }
+        toast.success("✨ Đã tự động điền SEO Title & Description tối ưu!", { id: toastId });
+      }
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Lỗi tạo SEO AI", { id: toastId });
+    } finally {
+      setAiBusy(false);
     }
   }
 
@@ -603,16 +708,47 @@ export function ContentManager({
             aria-label="Đóng"
           />
           <aside className="fixed inset-y-0 right-0 z-[60] flex w-full max-w-[780px] flex-col bg-background shadow-2xl [&>header]:flex [&>header]:items-center [&>header]:justify-between [&>header]:border-b [&>header]:border-border [&>header]:p-5 [&>footer]:mt-auto [&>footer]:flex [&>footer]:justify-end [&>footer]:gap-2 [&>footer]:border-t [&>footer]:border-border [&>footer]:p-4">
-            <header>
+            <header className="flex items-center justify-between border-b border-border p-5 bg-card">
               <div>
-                <p>
+                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   {editor.id ? "CHỈNH SỬA NỘI DUNG" : "TẠO NỘI DUNG MỚI"}
                 </p>
-                <h2>{editor.title || "Nội dung chưa đặt tên"}</h2>
+                <h2 className="text-lg font-bold text-foreground">{editor.title || "Nội dung chưa đặt tên"}</h2>
               </div>
-              <button onClick={closeEditor} aria-label="Đóng trình soạn thảo">
-                ×
-              </button>
+              <div className="flex items-center gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPreviewOpen(true)}
+                  className="gap-1.5 text-xs font-semibold"
+                >
+                  <Eye className="size-3.5 text-teal-500" /> Live Preview
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={aiBusy}
+                  onClick={handleAiTranslate}
+                  className="gap-1.5 text-xs font-semibold border-primary/30 hover:bg-primary/5 text-primary"
+                >
+                  <Sparkles className="size-3.5 text-primary" /> {adminLangTab === "en" ? "AI Dịch sang VI" : "AI Dịch sang EN"}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={aiBusy}
+                  onClick={handleAiSeo}
+                  className="gap-1.5 text-xs font-semibold"
+                >
+                  <Wand2 className="size-3.5 text-amber-500" /> Gợi ý SEO
+                </Button>
+                <button onClick={closeEditor} aria-label="Đóng trình soạn thảo" className="size-8 rounded-lg text-lg text-muted-foreground hover:bg-muted">
+                  ×
+                </button>
+              </div>
             </header>
             <div className="grid flex-1 gap-4 overflow-y-auto p-5 [&_label]:grid [&_label]:gap-1.5 [&_label]:text-sm [&_input]:min-h-10 [&_input]:border [&_input]:border-border [&_input]:px-3 [&_select]:min-h-10 [&_select]:border [&_select]:border-border [&_select]:px-3 [&_textarea]:border [&_textarea]:border-border [&_textarea]:p-3">
               <BilingualFormTabs
@@ -1308,6 +1444,14 @@ export function ContentManager({
               </button>
             </footer>
           </aside>
+          {editor && (
+            <LivePreviewModal
+              content={editor}
+              lang={adminLangTab}
+              isOpen={previewOpen}
+              onClose={() => setPreviewOpen(false)}
+            />
+          )}
         </>
       )}
     </>
