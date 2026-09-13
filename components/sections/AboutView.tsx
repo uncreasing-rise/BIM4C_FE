@@ -1,5 +1,6 @@
 "use client";
 
+import { usePublicMotion } from "@/components/motion/hooks/use-public-motion";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -9,25 +10,22 @@ import {
   Layers3,
   Users,
   Leaf,
-  Award,
-  ShieldCheck,
-  TrendingUp,
-  BadgeCheck,
   Briefcase,
-  Copy,
-  ExternalLink,
+  BadgeCheck,
+  ShieldCheck,
+  Award,
+  BarChart3,
+  Building2,
 } from "lucide-react";
-import { toast } from "sonner";
 import { PageHero } from "@/components/shared/PageHero";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { ROUTES } from "@/constants/routes";
 import { Partners } from "@/components/sections/Partners";
-import { ExpertiseStrip } from "@/components/sections/ExpertiseStrip";
 import { DeliveryProcess } from "@/components/sections/DeliveryProcess";
 import { useLanguage } from "@/lib/i18n/context";
 
 export function AboutView() {
+  usePublicMotion();
   const { t, locale } = useLanguage();
 
   const values = [
@@ -35,59 +33,67 @@ export function AboutView() {
       icon: Compass,
       title: t.aboutPage.values.integrity.title,
       text: t.aboutPage.values.integrity.desc,
+      color: "text-blue-500",
+      bg: "bg-blue-500/10",
     },
     {
       icon: Layers3,
       title: t.aboutPage.values.innovation.title,
       text: t.aboutPage.values.innovation.desc,
+      color: "text-teal-500",
+      bg: "bg-teal-500/10",
     },
     {
       icon: Users,
       title: t.aboutPage.values.collaboration.title,
       text: t.aboutPage.values.collaboration.desc,
+      color: "text-indigo-500",
+      bg: "bg-indigo-500/10",
     },
     {
       icon: Leaf,
       title: t.aboutPage.values.sustainability.title,
       text: t.aboutPage.values.sustainability.desc,
+      color: "text-emerald-500",
+      bg: "bg-emerald-500/10",
     },
   ];
 
   return (
     <>
       <PageHero
+        breadcrumbs={[{ label: t.navigation.about }]}
         eyebrow={t.aboutPage.eyebrow}
         title={t.aboutPage.heroTitle}
         description={t.aboutPage.heroDesc}
-        image="/images/news-project-coordination.webp"
+        image="/images/project-matrix.jpg"
         variant="about"
       />
-      <ExpertiseStrip />
 
-      {/* Enterprise Track Record & Milestones Bar */}
+      {/* Track Record Metrics Bento */}
       {t.aboutPage.trackRecord && (
-        <section className="border-y border-border/80 bg-muted/40 py-12 lg:py-16">
+        <section className="py-12 border-b bg-card/40">
           <div className="site-container">
-            <div className="mb-8 text-center md:text-left">
-              <p className="eyebrow">{t.aboutPage.trackRecord.eyebrow}</p>
-              <h2 className="text-2xl font-bold tracking-tight md:text-3xl text-foreground">
+            <div className="mb-8 text-center max-w-2xl mx-auto">
+              <p className="eyebrow justify-center">{t.aboutPage.trackRecord.eyebrow}</p>
+              <h2 className="section-title text-2xl md:text-3xl mt-1">
                 {t.aboutPage.trackRecord.title}
               </h2>
             </div>
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-              {t.aboutPage.trackRecord.metrics.map((metric) => (
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {t.aboutPage.trackRecord.metrics.map((metric, idx) => (
                 <div
-                  key={metric.label}
-                  className="relative overflow-hidden rounded-2xl border bg-card p-6 shadow-xs transition-all hover:shadow-md hover:border-primary/40"
+                  key={idx}
+                  className="group relative rounded-2xl border bg-card p-6 shadow-xs transition-all duration-300 hover:border-primary/40 hover:shadow-md"
                   data-motion="tile"
                 >
-                  <p className="font-mono text-3xl font-black tracking-tight text-primary lg:text-4xl">
+                  <div className="text-3xl md:text-4xl font-black tracking-tight text-primary">
                     {metric.value}
-                  </p>
-                  <h3 className="mt-2 text-base font-semibold text-foreground">
+                  </div>
+                  <h3 className="mt-2 text-base font-bold text-foreground">
                     {metric.label}
                   </h3>
-                  <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
+                  <p className="mt-1 text-sm text-muted-foreground leading-relaxed">
                     {metric.subtext}
                   </p>
                 </div>
@@ -97,196 +103,175 @@ export function AboutView() {
         </section>
       )}
 
-      <section className="py-12 lg:py-16">
-        <div className="site-container grid gap-8 lg:grid-cols-2 lg:items-center lg:gap-12">
-          <div>
-            <p className="eyebrow">{t.aboutPage.whoWeAreEyebrow}</p>
-            <h2 className="section-title">{t.aboutPage.whoWeAreTitle}</h2>
-            <p className="mt-5 text-base leading-8 text-muted-foreground">
+      {/* Who We Are Story */}
+      <section className="py-16 lg:py-24">
+        <div className="site-container grid gap-12 lg:grid-cols-12 lg:items-center">
+          <div className="lg:col-span-6 space-y-6">
+            <div>
+              <p className="eyebrow">{t.aboutPage.whoWeAreEyebrow}</p>
+              <h2 className="section-title mt-2">{t.aboutPage.whoWeAreTitle}</h2>
+            </div>
+            <p className="text-base md:text-lg leading-relaxed text-muted-foreground">
               {t.aboutPage.whoWeAreP1}
             </p>
-            <p className="mt-3 text-sm leading-7 text-muted-foreground">
+            <p className="text-base leading-relaxed text-muted-foreground">
               {t.aboutPage.whoWeAreP2}
             </p>
-            <ul className="mt-5 grid gap-3 border-t pt-5">
-              {[
-                t.aboutPage.check1,
-                t.aboutPage.check2,
-                t.aboutPage.check3,
-              ].map((item) => (
-                <li key={item} className="flex gap-3 text-sm">
-                  <Check className="size-4 shrink-0 text-primary" />
-                  {item}
-                </li>
-              ))}
-            </ul>
-            <Button asChild className="mt-6 rounded-lg">
-              <Link href={ROUTES.services}>
-                {t.common.exploreExpertise} <ArrowUpRight />
-              </Link>
-            </Button>
-          </div>
-          <figure className="relative overflow-hidden rounded-2xl shadow-lg border">
-            <Image
-              src="/images/about.jpg"
-              alt="BIM4C engineering specialists coordinating federated CDE models"
-              width={900}
-              height={680}
-              sizes="(max-width:1023px) 100vw, 50vw"
-              className="aspect-[4/3] w-full object-cover"
-            />
-            <figcaption className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-brand-ink/90 via-brand-ink/50 to-transparent px-6 pb-5 pt-12 text-sm text-white">
-              {locale === "vi"
-                ? "Đội ngũ chuyên gia BIM4C trong quy trình điều phối mô hình và chuyển đổi số dự án."
-                : "BIM4C engineering specialists coordinating federated CDE models and digital delivery."}
-            </figcaption>
-          </figure>
-        </div>
 
-        {/* Corporate Legal Identity & Verification Block */}
-        <div className="site-container mt-12">
-          <div className="rounded-2xl border border-border/80 bg-muted/40 p-6 sm:p-8 backdrop-blur-xs">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-border/60 pb-5">
-              <div>
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
-                  <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
-                  {t.footer.enterpriseInfo.taxStatus}
-                </span>
-                <h3 className="mt-2 text-xl font-bold text-foreground">
-                  {t.footer.enterpriseInfo.companyName}
-                </h3>
-                <p className="text-xs text-muted-foreground">
-                  {t.footer.enterpriseInfo.internationalName} ({t.footer.enterpriseInfo.shortName})
-                </p>
-              </div>
-              <div className="flex flex-wrap items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    navigator.clipboard.writeText("0402225839");
-                    toast.success(
-                      locale === "vi"
-                        ? "Đã sao chép mã số thuế: 0402225839"
-                        : "Copied Tax ID: 0402225839"
-                    );
-                  }}
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-semibold text-foreground shadow-2xs hover:bg-muted"
-                >
-                  <Copy className="size-3.5 text-primary" />
-                  <span>MST: 0402225839</span>
-                </button>
-                <a
-                  href="https://masothue.com/0402225839-cong-ty-co-phan-xay-dung-cong-nghe-bim4c"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-primary/20 bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary hover:bg-primary/20 transition-colors"
-                >
-                  <span>{locale === "vi" ? "Xem hồ sơ Thuế" : "Verify Registry"}</span>
-                  <ExternalLink className="size-3.5" />
-                </a>
-              </div>
-            </div>
-            <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 text-xs">
-              <div>
-                <span className="text-muted-foreground">{locale === "vi" ? "Đại diện pháp luật:" : "Legal Representative:"}</span>
-                <p className="mt-0.5 font-bold text-foreground">{t.footer.enterpriseInfo.legalRepresentative} (CEO)</p>
-              </div>
-              <div>
-                <span className="text-muted-foreground">{locale === "vi" ? "Trụ sở chính (Đà Nẵng):" : "Corporate Headquarters:"}</span>
-                <p className="mt-0.5 text-foreground">{t.footer.enterpriseInfo.headquarters}</p>
-              </div>
-              <div>
-                <span className="text-muted-foreground">{locale === "vi" ? "Địa chỉ thuế:" : "Tax Registration Address:"}</span>
-                <p className="mt-0.5 text-foreground">{t.footer.enterpriseInfo.taxAddress}</p>
+            <ul className="space-y-3 pt-2">
+              {[t.aboutPage.check1, t.aboutPage.check2, t.aboutPage.check3].map(
+                (item, idx) => (
+                  <li key={idx} className="flex items-center gap-3">
+                    <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
+                      <Check className="size-3.5 stroke-[3]" />
+                    </span>
+                    <span className="text-sm font-semibold text-foreground">
+                      {item}
+                    </span>
+                  </li>
+                )
+              )}
+            </ul>
+          </div>
+
+          <div className="lg:col-span-6">
+            <div className="relative overflow-hidden rounded-2xl border shadow-xl group">
+              <div className="relative aspect-[4/3] w-full">
+                <Image
+                  src="/images/project-matrix.jpg"
+                  alt="BIM4C Engineering Team"
+                  fill
+                  sizes="(max-width: 1024px) 100vw, 50vw"
+                  className="object-cover transition-transform duration-700 group-hover:scale-105"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                <div className="absolute bottom-6 left-6 right-6 text-white">
+                  <div className="inline-flex items-center gap-2 rounded-md bg-white/20 backdrop-blur-md px-3 py-1 text-xs font-bold uppercase tracking-wider text-white border border-white/20 mb-2">
+                    <ShieldCheck className="size-4" /> ISO 19650 Standardized
+                  </div>
+                  <p className="text-base font-bold text-white/95">
+                    Hệ thống dữ liệu CDE và mô hình thông tin chuẩn xác cho dự án xây dựng hiện đại
+                  </p>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      <section className="technical-grid bg-brand-ink py-12 text-white lg:py-16">
+      {/* Core Values */}
+      <section className="py-16 bg-muted/40 border-y">
         <div className="site-container">
-          <header className="mb-7 flex flex-col justify-between gap-4 md:flex-row md:items-end">
-            <div>
-              <p className="eyebrow">{t.aboutPage.guidesEyebrow}</p>
-              <h2 className="section-title">{t.aboutPage.guidesTitle}</h2>
-            </div>
-            <p className="max-w-sm text-sm leading-7 text-slate-300">
+          <div className="max-w-2xl mb-12">
+            <p className="eyebrow">{t.aboutPage.guidesEyebrow}</p>
+            <h2 className="section-title mt-1">{t.aboutPage.guidesTitle}</h2>
+            <p className="mt-3 text-base text-muted-foreground leading-relaxed">
               {t.aboutPage.guidesDesc}
             </p>
-          </header>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {values.map(({ icon: Icon, title, text }) => (
-              <article
-                key={title}
-                className="rounded-xl border border-white/15 bg-white/[.04] p-5 transition-all hover:bg-white/[.08] hover:border-teal-400/40"
-              >
-                <Icon className="size-6 text-teal-300" />
-                <h3 className="mt-4 text-xl font-semibold">{title}</h3>
-                <p className="mt-2 text-sm leading-7 text-slate-300">{text}</p>
-              </article>
-            ))}
+          </div>
+
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {values.map((v, i) => {
+              const Icon = v.icon;
+              return (
+                <div
+                  key={i}
+                  className="rounded-2xl border bg-card p-6 shadow-xs transition-all duration-300 hover:shadow-md hover:border-primary/40 flex flex-col justify-between"
+                  data-motion="tile"
+                >
+                  <div>
+                    <span className={`grid size-12 place-items-center rounded-xl ${v.bg} ${v.color} mb-4`}>
+                      <Icon className="size-6" />
+                    </span>
+                    <h3 className="text-lg font-bold text-foreground">
+                      {v.title}
+                    </h3>
+                    <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                      {v.text}
+                    </p>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       </section>
 
-      {/* Leadership & Certified Engineering Specialists */}
-      <section className="py-12 lg:py-20 bg-background">
+      {/* Leadership & Expert Team */}
+      <section className="py-16 lg:py-24">
         <div className="site-container">
-          <div className="max-w-2xl mb-10">
+          <div className="max-w-2xl mb-12">
             <p className="eyebrow">{t.aboutPage.teamEyebrow}</p>
-            <h2 className="section-title">{t.aboutPage.teamTitle}</h2>
-            <p className="mt-4 text-base leading-7 text-muted-foreground">
+            <h2 className="section-title mt-1">{t.aboutPage.teamTitle}</h2>
+            <p className="mt-3 text-base leading-relaxed text-muted-foreground">
               {t.aboutPage.teamDesc}
             </p>
           </div>
-          <div className="grid gap-6 md:grid-cols-2">
+
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {t.aboutPage.teamMembers.map((member) => (
               <article
                 key={member.name}
-                className="group relative flex flex-col justify-between rounded-2xl border bg-card p-6 shadow-xs transition-all duration-300 hover:shadow-lg hover:border-primary/40"
+                className="group relative aspect-[3/4] w-full overflow-hidden rounded-2xl border border-border/80 bg-slate-950 shadow-md transition-all duration-500 hover:shadow-2xl hover:border-primary/60"
                 data-motion="tile"
               >
-                <div>
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <h3 className="text-xl font-bold text-foreground">
-                        {member.name}
-                      </h3>
-                      <p className="mt-1 text-sm font-semibold text-primary">
-                        {member.role}
-                      </p>
-                    </div>
-                    <span className="grid size-12 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary group-hover:bg-primary group-hover:text-white transition-colors">
-                      <Briefcase className="size-6" />
-                    </span>
-                  </div>
+                {/* Full-Card Portrait Image */}
+                <Image
+                  src={member.image || "/images/about.jpg"}
+                  alt={member.name}
+                  fill
+                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                  className="object-cover object-top transition-transform duration-700 ease-out group-hover:scale-105"
+                />
 
-                  <div className="mt-4 inline-flex items-center gap-1.5 rounded-md border border-teal-500/30 bg-teal-500/10 px-2.5 py-1 text-xs font-semibold text-teal-700 dark:text-teal-300">
-                    <BadgeCheck className="size-4 shrink-0 text-teal-600 dark:text-teal-400" />
-                    <span>{member.cert}</span>
-                  </div>
+                {/* Ambient Gradient Scrim */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-transparent transition-all duration-500 group-hover:from-black/95 group-hover:via-black/60 pointer-events-none" />
 
-                  <p className="mt-4 text-sm leading-6 text-muted-foreground">
-                    {member.spec}
+                {/* Bottom Content: Name + Role, Expanding Specs on Hover */}
+                <div className="absolute inset-x-0 bottom-0 p-5 sm:p-6 flex flex-col justify-end text-white z-10 pointer-events-none">
+                  <h3 className="text-lg sm:text-xl font-bold tracking-tight text-white">
+                    {member.name}
+                  </h3>
+
+                  <p className="mt-1 text-xs sm:text-sm font-medium text-teal-300 tracking-wide">
+                    {member.role}
                   </p>
+
+                  {/* Smooth Expandable Drawer on Hover */}
+                  <div className="grid grid-rows-[0fr] opacity-0 transition-all duration-500 ease-out group-hover:grid-rows-[1fr] group-hover:opacity-100 group-hover:mt-3">
+                    <div className="overflow-hidden space-y-2 border-t border-white/20 pt-3">
+                      {member.cert && (
+                        <p className="text-xs font-semibold text-white/90 leading-tight">
+                          {member.cert}
+                        </p>
+                      )}
+                      {member.spec && (
+                        <p className="text-xs leading-relaxed text-slate-300">
+                          {member.spec}
+                        </p>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </article>
             ))}
           </div>
         </div>
       </section>
+
       <DeliveryProcess />
       <Partners compact />
-      <section className="py-12 lg:py-16">
-        <div className="site-container flex flex-col items-start justify-between gap-5 rounded-xl md:flex-row md:items-center">
-          <div>
+
+      {/* Bottom CTA */}
+      <section className="py-16 border-t bg-card/60">
+        <div className="site-container flex flex-col items-start justify-between gap-6 rounded-2xl border bg-card p-8 md:p-12 md:flex-row md:items-center shadow-lg">
+          <div className="max-w-xl">
             <p className="eyebrow">{t.aboutPage.ctaEyebrow}</p>
-            <h2 className="section-title">{t.aboutPage.ctaTitle}</h2>
+            <h2 className="section-title text-2xl md:text-3xl mt-1">{t.aboutPage.ctaTitle}</h2>
           </div>
-          <Button asChild size="lg" className="rounded-lg">
+          <Button asChild size="lg" className="rounded-xl font-semibold shadow-md shrink-0">
             <Link href={ROUTES.contact}>
-              {t.common.discussProject} <ArrowUpRight />
+              {t.common.discussProject} <ArrowUpRight className="ml-1.5 size-4" />
             </Link>
           </Button>
         </div>

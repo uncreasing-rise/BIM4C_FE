@@ -123,9 +123,25 @@ export function ContentManager({
           adminContentApi.categories(contentType, signal),
         ]);
         if (signal?.aborted) return;
-        setItems(result.data.map((x) => ({ ...x, type: contentType })));
-        setTotalPages(result.meta.totalPages || 1);
-        setCategories(categoryResult.data);
+        const list = Array.isArray(result?.data)
+          ? result.data
+          : Array.isArray(result)
+            ? result
+            : Array.isArray((result as unknown as { items: AdminContent[] })?.items)
+              ? (result as unknown as { items: AdminContent[] }).items
+              : [];
+        setItems(list.map((x) => ({ ...x, type: contentType })));
+        const totalPages = Number(
+          result?.meta?.totalPages ??
+            Math.max(1, Math.ceil((result?.meta?.total ?? list.length) / 20)),
+        );
+        setTotalPages(totalPages || 1);
+        const catList = Array.isArray(categoryResult?.data)
+          ? categoryResult.data
+          : Array.isArray(categoryResult)
+            ? categoryResult
+            : [];
+        setCategories(catList);
       } catch (error) {
         if (signal?.aborted) return;
         setFeedback(
@@ -571,7 +587,7 @@ export function ContentManager({
               →
             </button>
           </div>
-          <span>Dữ liệu từ PostgreSQL</span>
+          <span>Nội dung đã lưu</span>
         </footer>
       </section>
 

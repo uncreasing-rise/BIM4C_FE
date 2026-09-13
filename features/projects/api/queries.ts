@@ -119,11 +119,36 @@ export async function getProjectsPage(
   } catch (error) {
     if (canDeferBuildData(error) || process.env.NODE_ENV !== "production") {
       console.warn("Backend /projects list error, falling back to mockProjects:", error);
-      const totalPages = Math.max(1, Math.ceil(mockProjects.length / limit));
+      const categoryBySlug: Record<string, string> = {
+        "lumi-hanoi": "high-rise",
+        "the-matrix-one-giai-doan-2": "high-rise",
+        elysian: "high-rise",
+        "tt-avio": "low-rise",
+        "greenfield-smart-factory": "industrial",
+        "northgate-logistics-hub": "industrial",
+        "central-park-residences": "infrastructure",
+        "metro-depot-digital-coordination": "infrastructure",
+      };
+      const filtered = mockProjects.filter(
+        (project) =>
+          (!params.search ||
+            `${project.title} ${project.description}`
+              .toLowerCase()
+              .includes(params.search.toLowerCase())) &&
+          (!params.category ||
+            categoryBySlug[project.slug] ===
+              params.category.toLowerCase().replace(/\s+/g, "-")) &&
+          (!params.location || project.location === params.location) &&
+          (!params.year || project.year === params.year) &&
+          (!params.status ||
+            toEnglishLabel(project.status).toLowerCase() ===
+              params.status.toLowerCase()),
+      );
+      const totalPages = Math.max(1, Math.ceil(filtered.length / limit));
       const safePage = Math.min(page, totalPages);
       return {
-        items: mockProjects.slice((safePage - 1) * limit, safePage * limit),
-        meta: { page: safePage, limit, total: mockProjects.length, totalPages },
+        items: filtered.slice((safePage - 1) * limit, safePage * limit),
+        meta: { page: safePage, limit, total: filtered.length, totalPages },
       };
     }
     throw error;

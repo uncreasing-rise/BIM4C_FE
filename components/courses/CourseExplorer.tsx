@@ -19,6 +19,15 @@ import type { PageMeta } from "@/features/shared/types/pagination";
 import { useLanguage } from "@/lib/i18n/context";
 import { localizeContentList } from "@/lib/i18n/localize";
 
+const COURSE_BASE_CATEGORIES = [
+  "Nền tảng",
+  "Chuyên sâu",
+  "Quản lý",
+  "Chuyên ngành",
+  "Thực chiến",
+  "Quản trị thông tin",
+];
+
 export function CourseExplorer({
   courses: rawCourses,
   meta,
@@ -38,12 +47,15 @@ export function CourseExplorer({
   const { searchParams, query, setQuery, update, reset, pending } =
     useCatalogFilters();
   const categoryParam = searchParams.get("category") ?? "All";
-  const category = toLocalizedLabel(categoryParam, locale);
+  const category =
+    categoryParam === "All" || categoryParam === "Tất cả"
+      ? t.common.all
+      : toLocalizedLabel(categoryParam, locale);
 
   const allLabel = t.common.all;
   const categories = [
     allLabel,
-    ...new Set(courses.map(courseCategory).filter(Boolean)),
+    ...COURSE_BASE_CATEGORIES.map((cat) => toLocalizedLabel(cat, locale)),
   ];
 
   const pages = meta.totalPages;
@@ -60,9 +72,7 @@ export function CourseExplorer({
         <header className="mb-6 flex flex-col justify-between gap-4 border-b pb-6 md:flex-row md:items-end">
           <div>
             <p className="eyebrow">{t.coursesPage.eyebrow}</p>
-            <h2 className="text-3xl font-semibold tracking-tight md:text-4xl">
-              {t.coursesPage.catalogueTitle}
-            </h2>
+            <h2 className="section-title">{t.coursesPage.catalogueTitle}</h2>
           </div>
           <p className="max-w-lg text-base leading-7 text-muted-foreground">
             {t.coursesPage.catalogueDesc}
@@ -71,7 +81,7 @@ export function CourseExplorer({
         <CatalogCategories
           ariaLabel={t.coursesPage.catalogueTitle}
           items={categories}
-          value={category === "All" ? allLabel : category}
+          value={category}
           onChange={(value) =>
             update("category", value === allLabel ? "All" : value)
           }
@@ -86,12 +96,10 @@ export function CourseExplorer({
         </CatalogFilterBar>
         <div className="mb-6 flex items-center justify-between gap-4">
           <p role="status" className="text-sm text-muted-foreground">
-            <strong className="font-semibold text-foreground">
-              {meta.total}
-            </strong>{" "}
             {t.coursesPage.programmesCount(meta.total)}
           </p>
-          {(query || (categoryParam !== "All" && categoryParam !== allLabel)) && (
+          {(query ||
+            (categoryParam !== "All" && categoryParam !== allLabel)) && (
             <Button variant="ghost" onClick={reset}>
               {t.common.clearFilters}
             </Button>

@@ -2,10 +2,10 @@ import type { IconName } from "@/types/icon";
 
 export const companyStats: { value: string; label: string; icon: IconName }[] =
   [
-    { value: "2004", label: "Năm thành lập", icon: "building" },
-    { value: "180+", label: "Dự án lớn", icon: "compass" },
-    { value: "1000+", label: "Chuyên gia", icon: "people" },
-    { value: "9042", label: "Học viên BIM", icon: "education" },
+    { value: "150+", label: "Dự án bàn giao", icon: "compass" },
+    { value: "99.8%", label: "Xử lý xung đột", icon: "building" },
+    { value: "5,000+", label: "Học viên đào tạo", icon: "education" },
+    { value: "ISO 19650", label: "Tiêu chuẩn quy trình", icon: "people" },
   ];
 
 export const heroSlides = [

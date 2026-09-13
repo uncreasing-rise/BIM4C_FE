@@ -3,19 +3,27 @@ import type { NextConfig } from "next";
 const mediaOrigin = process.env.NEXT_PUBLIC_CDN_URL;
 
 function mediaPatterns(): NonNullable<NextConfig["images"]>["remotePatterns"] {
-  if (!mediaOrigin) return [];
-
-  const origin = new URL(mediaOrigin);
-  const base = {
-    protocol: origin.protocol.replace(":", "") as "http" | "https",
-    hostname: origin.hostname,
-    port: origin.port,
-  };
-
-  return [
-    { ...base, pathname: "/storage/v1/object/public/**" },
-    { ...base, pathname: "/images/**" },
+  const patterns: NonNullable<NextConfig["images"]>["remotePatterns"] = [
+    { protocol: "https", hostname: "*.supabase.co", pathname: "/storage/v1/object/public/**" },
+    { protocol: "https", hostname: "*.supabase.in", pathname: "/storage/v1/object/public/**" },
+    { protocol: "https", hostname: "images.unsplash.com" },
   ];
+
+  if (mediaOrigin) {
+    try {
+      const origin = new URL(mediaOrigin);
+      patterns.push({
+        protocol: origin.protocol.replace(":", "") as "http" | "https",
+        hostname: origin.hostname,
+        port: origin.port || undefined,
+        pathname: "/**",
+      });
+    } catch {
+      // Ignore invalid URL
+    }
+  }
+
+  return patterns;
 }
 
 const nextConfig: NextConfig = {

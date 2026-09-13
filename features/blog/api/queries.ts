@@ -71,6 +71,34 @@ export async function getPostBySlug(
   }
 }
 
+import { toEnglishLabel, toVietnameseLabel } from "@/lib/utils/public-labels";
+
+function matchBlogCategory(item: ContentEntry, targetCategory?: string): boolean {
+  if (!targetCategory || targetCategory === "All" || targetCategory === "Tất cả") return true;
+  const targetLower = targetCategory.toLowerCase().trim();
+  const rawCat = (item.category || item.eyebrow).trim();
+  const enCat = toEnglishLabel(rawCat).toLowerCase();
+  const viCat = toVietnameseLabel(rawCat).toLowerCase();
+  const rawCatLower = rawCat.toLowerCase();
+  const targetEn = toEnglishLabel(targetCategory).toLowerCase();
+  const targetVi = toVietnameseLabel(targetCategory).toLowerCase();
+
+  return (
+    rawCatLower === targetLower ||
+    rawCatLower === targetEn ||
+    rawCatLower === targetVi ||
+    enCat === targetLower ||
+    enCat === targetEn ||
+    enCat === targetVi ||
+    viCat === targetLower ||
+    viCat === targetEn ||
+    viCat === targetVi ||
+    item.eyebrow.toLowerCase().includes(targetLower) ||
+    item.eyebrow.toLowerCase().includes(targetEn) ||
+    item.eyebrow.toLowerCase().includes(targetVi)
+  );
+}
+
 export async function getPostsPage(
   params: ContentQueryParams & { strict?: boolean } = {},
 ): Promise<PageResult<ContentEntry>> {
@@ -83,7 +111,7 @@ export async function getPostsPage(
           `${post.title} ${post.description}`
             .toLowerCase()
             .includes(params.search.toLowerCase())) &&
-        (!params.category || post.eyebrow === params.category),
+        matchBlogCategory(post, params.category),
     );
     const totalPages = Math.max(1, Math.ceil(filtered.length / limit));
     const safePage = Math.min(page, totalPages);
@@ -112,11 +140,19 @@ export async function getPostsPage(
   } catch (error) {
     if (!params.strict && (canDeferBuildData(error) || process.env.NODE_ENV !== "production")) {
       console.warn("Backend /posts list error, falling back to blogEntries:", error);
-      const totalPages = Math.max(1, Math.ceil(blogEntries.length / limit));
+      const filtered = blogEntries.filter(
+        (post) =>
+          (!params.search ||
+            `${post.title} ${post.description}`
+              .toLowerCase()
+              .includes(params.search.toLowerCase())) &&
+          matchBlogCategory(post, params.category),
+      );
+      const totalPages = Math.max(1, Math.ceil(filtered.length / limit));
       const safePage = Math.min(page, totalPages);
       return {
-        items: blogEntries.slice((safePage - 1) * limit, safePage * limit),
-        meta: { page: safePage, limit, total: blogEntries.length, totalPages },
+        items: filtered.slice((safePage - 1) * limit, safePage * limit),
+        meta: { page: safePage, limit, total: filtered.length, totalPages },
       };
     }
     throw error;

@@ -8,15 +8,19 @@ import {
   SITE_NAME,
 } from "@/lib/seo/site";
 import "./globals.css";
-import { Geist } from "next/font/google";
+import { Manrope } from "next/font/google";
 import { cn } from "@/lib/utils";
 import { LanguageProvider } from "@/lib/i18n/context";
-import { DEFAULT_LOCALE, LOCALE_COOKIE_NAME, type Locale } from "@/lib/i18n/config";
+import {
+  DEFAULT_LOCALE,
+  LOCALE_COOKIE_NAME,
+  type Locale,
+} from "@/lib/i18n/config";
 import { Toaster } from "sonner";
 
-const geist = Geist({
-  subsets: ["latin", "latin-ext"],
-  variable: "--font-sans",
+const fontSans = Manrope({
+  subsets: ["latin", "vietnamese"],
+  variable: "--font-bim4c",
   display: "swap",
 });
 
@@ -69,7 +73,7 @@ export default async function RootLayout({
     <html
       lang={locale}
       data-scroll-behavior="smooth"
-      className={cn("font-sans", geist.variable)}
+      className={cn("font-sans", fontSans.variable)}
       suppressHydrationWarning
     >
       <body suppressHydrationWarning>

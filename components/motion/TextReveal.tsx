@@ -63,7 +63,7 @@ export function TextReveal({
 
   return (
     <Component
-      ref={containerRef as any}
+      ref={containerRef as unknown as React.Ref<HTMLHeadingElement>}
       className={cn("inline-flex flex-wrap gap-x-1.5 gap-y-0.5", className)}
     >
       {words.map((word, idx) => (

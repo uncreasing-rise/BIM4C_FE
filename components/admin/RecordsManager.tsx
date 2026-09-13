@@ -19,8 +19,15 @@ export function RecordsManager({ kind }: { kind: RecordKind }) {
     try {
       const result = await adminRecordsApi.list(kind, search, status, page, signal);
       if (signal?.aborted) return;
-      setItems(result.data);
-      setPages(result.meta.totalPages || 1);
+      const list = Array.isArray(result?.data)
+        ? result.data
+        : Array.isArray(result)
+          ? result
+          : Array.isArray((result as unknown as { items: AdminRecord[] })?.items)
+            ? (result as unknown as { items: AdminRecord[] }).items
+            : [];
+      setItems(list);
+      setPages(result?.meta?.totalPages || 1);
     } catch (e) {
       if (signal?.aborted) return;
       setError(e instanceof Error ? e.message : "Không thể tải dữ liệu");

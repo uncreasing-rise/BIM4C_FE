@@ -18,6 +18,15 @@ import type { PageMeta } from "@/features/shared/types/pagination";
 import { useLanguage } from "@/lib/i18n/context";
 import { localizeContentList } from "@/lib/i18n/localize";
 
+const SERVICE_BASE_CATEGORIES = [
+  "Tư vấn BIM",
+  "Đào tạo",
+  "Thiết kế",
+  "Tư vấn giám sát",
+  "BIM Coordination",
+  "Digital Twin & Dữ liệu tài sản",
+];
+
 const pageSize = 6;
 
 export function ServiceExplorer({
@@ -33,17 +42,16 @@ export function ServiceExplorer({
   const allLabel = t.common.all;
   const categories = [
     allLabel,
-    ...new Set(
-      services.map((service) =>
-        toLocalizedLabel(service.category || service.eyebrow, locale),
-      ),
-    ),
+    ...SERVICE_BASE_CATEGORIES.map((cat) => toLocalizedLabel(cat, locale)),
   ];
 
   const { searchParams, query, setQuery, update, reset, pending } =
     useCatalogFilters();
   const categoryParam = searchParams.get("category") ?? "All";
-  const category = toLocalizedLabel(categoryParam, locale);
+  const category =
+    categoryParam === "All" || categoryParam === "Tất cả"
+      ? allLabel
+      : toLocalizedLabel(categoryParam, locale);
 
   const pages = meta.totalPages;
   const page = meta.page;
@@ -83,7 +91,8 @@ export function ServiceExplorer({
               onChange={setQuery}
             />
           </CatalogFilterBar>
-          {(query || (categoryParam !== "All" && categoryParam !== allLabel)) && (
+          {(query ||
+            (categoryParam !== "All" && categoryParam !== allLabel)) && (
             <button
               className="mb-4 min-h-11 rounded-lg px-3 text-sm font-semibold text-primary hover:bg-muted"
               onClick={reset}
@@ -96,16 +105,13 @@ export function ServiceExplorer({
             role="status"
             aria-live="polite"
           >
-            <strong className="font-semibold text-foreground">
-              {meta.total}
-            </strong>{" "}
             {t.servicesPage.matchingCount(meta.total)}
           </p>
           {visible.length ? (
             <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
               {visible.map((service, index) => (
                 <article
-                  className="service-card group relative flex flex-col overflow-hidden rounded-2xl border bg-card shadow-xs transition-all duration-300 hover:-translate-y-1 hover:border-primary/40 hover:shadow-xl focus-within:ring-2 focus-within:ring-primary"
+                  className="service-card group relative flex flex-col overflow-hidden rounded-2xl border bg-card transition-colors duration-200 hover:border-primary/40 focus-within:ring-2 focus-within:ring-primary"
                   data-motion="tile"
                   key={service.slug}
                 >

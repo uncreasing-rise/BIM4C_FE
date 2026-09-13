@@ -13,6 +13,7 @@ import { canDeferBuildData } from "@/lib/config/build";
 import { unwrapPage } from "@/features/shared/mappers/response.mapper";
 import type { PageResult } from "@/features/shared/types/pagination";
 import type { ContentQueryParams } from "@/features/shared/types/query";
+import { toEnglishLabel, toVietnameseLabel } from "@/lib/utils/public-labels";
 
 export async function getCourses(
   options: { strict?: boolean; limit?: number } = {},
@@ -34,6 +35,32 @@ export async function getCourses(
   }
 }
 
+function matchCourseCategory(item: ContentEntry, targetCategory?: string): boolean {
+  if (!targetCategory || targetCategory === "All" || targetCategory === "Tất cả") return true;
+  const targetLower = targetCategory.toLowerCase().trim();
+  const rawCat = (item.category || item.eyebrow.split("·")[0] || item.eyebrow).trim();
+  const enCat = toEnglishLabel(rawCat).toLowerCase();
+  const viCat = toVietnameseLabel(rawCat).toLowerCase();
+  const rawCatLower = rawCat.toLowerCase();
+  const targetEn = toEnglishLabel(targetCategory).toLowerCase();
+  const targetVi = toVietnameseLabel(targetCategory).toLowerCase();
+
+  return (
+    rawCatLower === targetLower ||
+    rawCatLower === targetEn ||
+    rawCatLower === targetVi ||
+    enCat === targetLower ||
+    enCat === targetEn ||
+    enCat === targetVi ||
+    viCat === targetLower ||
+    viCat === targetEn ||
+    viCat === targetVi ||
+    item.eyebrow.toLowerCase().includes(targetLower) ||
+    item.eyebrow.toLowerCase().includes(targetEn) ||
+    item.eyebrow.toLowerCase().includes(targetVi)
+  );
+}
+
 export async function getCoursesPage(
   params: ContentQueryParams = {},
 ): Promise<PageResult<ContentEntry>> {
@@ -46,8 +73,7 @@ export async function getCoursesPage(
           `${item.title} ${item.description}`
             .toLowerCase()
             .includes(params.search.toLowerCase())) &&
-        (!params.category ||
-          (item.category || item.eyebrow) === params.category),
+        matchCourseCategory(item, params.category),
     );
     const totalPages = Math.max(1, Math.ceil(filtered.length / limit));
     const safePage = Math.min(page, totalPages);
@@ -76,11 +102,19 @@ export async function getCoursesPage(
   } catch (error) {
     if (canDeferBuildData(error) || process.env.NODE_ENV !== "production") {
       console.warn("Backend /courses list error, falling back to courseEntries:", error);
-      const totalPages = Math.max(1, Math.ceil(courseEntries.length / limit));
+      const filtered = courseEntries.filter(
+        (item) =>
+          (!params.search ||
+            `${item.title} ${item.description}`
+              .toLowerCase()
+              .includes(params.search.toLowerCase())) &&
+          matchCourseCategory(item, params.category),
+      );
+      const totalPages = Math.max(1, Math.ceil(filtered.length / limit));
       const safePage = Math.min(page, totalPages);
       return {
-        items: courseEntries.slice((safePage - 1) * limit, safePage * limit),
-        meta: { page: safePage, limit, total: courseEntries.length, totalPages },
+        items: filtered.slice((safePage - 1) * limit, safePage * limit),
+        meta: { page: safePage, limit, total: filtered.length, totalPages },
       };
     }
     throw error;

@@ -18,6 +18,15 @@ import { useLanguage } from "@/lib/i18n/context";
 import { localizeContentList } from "@/lib/i18n/localize";
 import { cn } from "@/lib/utils";
 
+const BLOG_BASE_CATEGORIES = [
+  "Dự án",
+  "Công nghệ",
+  "Đào tạo",
+  "An toàn",
+  "Chuyên môn",
+  "Con người",
+];
+
 export function BlogExplorer({
   posts: rawPosts,
   meta,
@@ -31,13 +40,16 @@ export function BlogExplorer({
   const allLabel = t.common.all;
   const categories = [
     allLabel,
-    ...new Set(posts.map((item) => toLocalizedLabel(item.eyebrow, locale))),
+    ...BLOG_BASE_CATEGORIES.map((cat) => toLocalizedLabel(cat, locale)),
   ];
 
   const { searchParams, query, setQuery, update, reset, pending } =
     useCatalogFilters();
   const categoryParam = searchParams.get("category") ?? "All";
-  const category = toLocalizedLabel(categoryParam, locale);
+  const category =
+    categoryParam === "All" || categoryParam === "Tất cả"
+      ? allLabel
+      : toLocalizedLabel(categoryParam, locale);
 
   const pages = meta.totalPages;
   const page = meta.page;
@@ -51,9 +63,7 @@ export function BlogExplorer({
         <header className="mb-8 grid gap-4 border-b pb-8 md:grid-cols-[.8fr_1.2fr] md:items-end">
           <div>
             <p className="eyebrow">{t.blogPage.catalogueEyebrow}</p>
-            <h2 className="text-3xl font-semibold tracking-[-.04em] md:text-5xl">
-              {t.blogPage.catalogueTitle}
-            </h2>
+            <h2 className="section-title">{t.blogPage.catalogueTitle}</h2>
           </div>
           <p className="max-w-xl text-sm leading-7 text-muted-foreground md:justify-self-end">
             {t.blogPage.catalogueDesc}
@@ -85,9 +95,6 @@ export function BlogExplorer({
           </button>
         )}
         <p role="status" className="mb-5 text-sm text-muted-foreground">
-          <strong className="font-semibold text-foreground">
-            {meta.total}
-          </strong>{" "}
           {t.blogPage.matchingCount(meta.total)}
         </p>
         {visible.length ? (
@@ -105,7 +112,10 @@ export function BlogExplorer({
                 <Link
                   className="absolute inset-0 z-10 rounded-[14px] focus-visible:outline-2 focus-visible:outline-offset-[-3px] focus-visible:outline-primary"
                   href={ROUTES.blogDetail(item.slug)}
-                  aria-label={(locale === "vi" ? "Xem bài viết: " : "View article: ") + item.title}
+                  aria-label={
+                    (locale === "vi" ? "Xem bài viết: " : "View article: ") +
+                    item.title
+                  }
                 />
                 <div
                   className={

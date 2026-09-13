@@ -1,6 +1,5 @@
 "use client";
 
-import { Building2, HardHat, PencilRuler, CheckCircle2, ShieldCheck, Zap } from "lucide-react";
 import { useLanguage } from "@/lib/i18n/context";
 
 export function ExpertiseStrip() {
@@ -11,22 +10,22 @@ export function ExpertiseStrip() {
     {
       num: "150+",
       label: isVi ? "Dự án BIM đã bàn giao" : "BIM Projects Delivered",
-      sub: isVi ? "Đô thị & Cao tầng" : "High-rise & Complex",
+      sub: isVi ? "Cao tầng & Hạ tầng kỹ thuật" : "High-rise & Infrastructure",
     },
     {
       num: "99.8%",
-      label: isVi ? "Độ chính xác mô hình" : "Model Accuracy",
-      sub: isVi ? "Chuẩn LOD 300 - 500" : "LOD 300 - 500 Specs",
+      label: isVi ? "Tỷ lệ xử lý xung đột mô hình" : "Clash Resolution Rate",
+      sub: isVi ? "Xử lý va chạm trước thi công" : "Pre-construction coordination",
     },
     {
       num: "5,000+",
-      label: isVi ? "Kỹ sư & Quản lý đào tạo" : "Engineers Certified",
-      sub: isVi ? "Academy chuẩn quốc tế" : "International Curriculum",
+      label: isVi ? "Lượt kỹ sư & học viên đào tạo" : "Engineers & Trainees Trained",
+      sub: isVi ? "Chương trình thực tế BIM4C" : "Hands-on BIM Curriculum",
     },
     {
       num: "100%",
-      label: isVi ? "Chuẩn OpenBIM ISO 19650" : "ISO 19650 Compliant",
-      sub: isVi ? "Không phụ thuộc phần mềm" : "Software Agnostic",
+      label: isVi ? "Quy trình chuẩn ISO 19650" : "ISO 19650 Standard Workflow",
+      sub: isVi ? "OpenBIM & CDE phối hợp" : "OpenBIM & CDE Coordination",
     },
   ];
 
@@ -40,7 +39,7 @@ export function ExpertiseStrip() {
               className={`flex flex-col justify-center ${idx !== 0 ? "md:pl-6" : ""}`}
             >
               <div className="flex items-baseline gap-1">
-                <span className="text-2xl font-extrabold tracking-tight text-foreground sm:text-3xl lg:text-4xl bg-gradient-to-r from-primary via-teal-600 to-teal-500 bg-clip-text text-transparent">
+                <span className="text-2xl font-black tracking-tight text-primary sm:text-3xl lg:text-4xl">
                   {stat.num}
                 </span>
               </div>

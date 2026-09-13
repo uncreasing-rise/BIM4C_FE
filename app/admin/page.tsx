@@ -6,7 +6,7 @@ export default function AdminDashboard() {
   return (
     <AdminShell
       title="Tổng quan"
-      description="Dữ liệu quản trị trực tiếp từ PostgreSQL."
+      description="Quản lý nội dung, theo dõi liên hệ và đăng ký khóa học."
       action={
         <Link
           className="inline-flex min-h-[42px] items-center justify-center gap-2 rounded bg-primary px-[18px] text-xs font-semibold text-white transition hover:bg-primary"

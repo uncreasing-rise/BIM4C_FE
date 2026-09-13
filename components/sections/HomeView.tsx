@@ -1,12 +1,13 @@
 "use client";
 
+import { usePublicMotion } from "@/components/motion/hooks/use-public-motion";
+
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, ArrowUpRight, Check, Layers3, Mail } from "lucide-react";
+import { ArrowRight, ArrowUpRight, Check, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ROUTES, CONTACT_EMAIL } from "@/constants/routes";
 import { Partners } from "@/components/sections/Partners";
-import { ExpertiseStrip } from "@/components/sections/ExpertiseStrip";
 import { ProjectCarousel } from "@/components/projects/ProjectCarousel";
 import { DeliveryProcess } from "@/components/sections/DeliveryProcess";
 import { BimInteractiveHeroVisual } from "@/components/sections/BimInteractiveHeroVisual";
@@ -15,12 +16,14 @@ import { localizeContentList } from "@/lib/i18n/localize";
 import { toLocalizedLabel } from "@/lib/utils/public-labels";
 import type { ContentEntry } from "@/types/content";
 import type { Project } from "@/features/projects/types/project";
+import type { StrategicPartner } from "@/features/homepage/types";
 
 interface HomeViewProps {
   rawProjects: Project[];
   rawServices: ContentEntry[];
   rawPosts: ContentEntry[];
   rawCourses: ContentEntry[];
+  rawPartners?: StrategicPartner[];
 }
 
 export function HomeView({
@@ -28,7 +31,9 @@ export function HomeView({
   rawServices,
   rawPosts,
   rawCourses,
+  rawPartners,
 }: HomeViewProps) {
+  usePublicMotion();
   const { t, locale } = useLanguage();
 
   const isVi = locale === "vi";
@@ -36,10 +41,6 @@ export function HomeView({
   const services = localizeContentList(rawServices, locale);
   const posts = localizeContentList(rawPosts, locale);
   const courses = localizeContentList(rawCourses, locale);
-
-  const featured =
-    projects.find((project) => project.category === (isVi ? "Nhà cao tầng" : "High-rise")) ??
-    projects[0];
 
   const servicePriority = ["tu-van-bim", "bim-coordination", "thiet-ke"];
   const orderedServices = [...services].sort((a, b) => {
@@ -54,88 +55,118 @@ export function HomeView({
     <main>
       <section
         data-home-section="hero"
-        className="page-hero home-hero technical-grid relative overflow-hidden bg-brand-ink text-white"
+        className="home-hero relative overflow-hidden bg-brand-ink text-white pt-24 pb-16 lg:pt-32 lg:pb-24"
       >
-        <Image
-          src={featured?.image ?? "/images/news-digital-twin.webp"}
-          alt=""
-          fill
-          priority
-          sizes="100vw"
-          className="pointer-events-none object-cover opacity-15 lg:hidden"
-        />
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute -right-40 top-0 size-[40rem] rounded-full bg-teal-500/10 blur-[100px]"
-        />
-        <div
-          className="site-container relative grid items-center gap-7 py-8 lg:grid-cols-[1.05fr_.95fr] lg:gap-12"
-          data-motion="hero"
-        >
-          <div className="min-w-0">
-            <p className="mb-5 flex items-center gap-3 text-xs font-semibold uppercase tracking-[.16em] text-teal-200">
-              <span className="size-2 rounded-full bg-teal-300" />
-              {t.hero.badge}
-            </p>
-            <h1 className="max-w-xl text-balance text-[clamp(2.4rem,4vw,3.65rem)] font-semibold leading-[1.08] tracking-[-.045em]">
-              {t.hero.titleMain}
-              <br />
-              <span className="text-teal-300">{t.hero.titleHighlight}</span>
-            </h1>
-            <p className="mt-5 max-w-lg text-base leading-7 text-slate-300 md:text-lg md:leading-8">
-              {t.hero.description}
-            </p>
-            <div className="mt-7 flex flex-wrap gap-3">
-              <Button
-                asChild
-                size="lg"
-                className="rounded-lg px-4"
-                data-motion="magnetic"
-              >
-                <Link href={ROUTES.contact}>
-                  {t.hero.ctaPrimary} <ArrowUpRight />
-                </Link>
-              </Button>
-              <Button
-                asChild
-                variant="outline"
-                size="lg"
-                className="rounded-lg border-white/25 bg-transparent px-4 text-white hover:bg-white/10 hover:text-white"
-                data-motion="magnetic"
-              >
-                <Link href={ROUTES.projects}>{t.hero.ctaSecondary}</Link>
-              </Button>
-            </div>
-            <div className="mt-7 hidden flex-wrap gap-x-5 gap-y-2 border-t border-white/15 pt-5 text-xs text-slate-300 md:flex">
-              {[
-                t.hero.featureBimStrategy,
-                t.hero.featureCoordination,
-                t.hero.featureDigitalHandover,
-              ].map((label) => (
-                <span key={label} className="flex items-center gap-2">
-                  <Check className="size-3.5 text-teal-300" />
-                  {label}
+        {/* Ambient background glows */}
+        <div className="pointer-events-none absolute -left-40 top-1/4 size-[500px] rounded-full bg-teal-500/10 blur-[120px]" />
+        <div className="pointer-events-none absolute -right-40 top-1/3 size-[500px] rounded-full bg-emerald-500/10 blur-[120px]" />
+
+        <div className="site-container relative">
+          <div className="grid items-center gap-12 lg:grid-cols-[1.05fr_1.15fr] lg:gap-14">
+            {/* Left Hero Content */}
+            <div className="home-hero-copy flex flex-col justify-center" data-motion="hero">
+              {/* Tech Kicker Pill */}
+              <div className="inline-flex items-center gap-2 rounded-full border border-teal-500/30 bg-teal-500/10 px-3.5 py-1.5 text-xs font-semibold text-teal-300 backdrop-blur-md w-fit mb-6">
+                <span className="relative flex size-2">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-teal-400 opacity-75" />
+                  <span className="relative inline-flex size-2 rounded-full bg-teal-500" />
                 </span>
-              ))}
+                <span>
+                  {isVi
+                    ? "Công nghệ số hóa công trình chuẩn ISO 19650"
+                    : "ISO 19650 Construction Technology"}
+                </span>
+              </div>
+
+              {/* Headline */}
+              <h1 className="text-4xl font-extrabold tracking-[-0.04em] sm:text-5xl lg:text-[3.6rem] leading-[1.08] text-white">
+                {isVi ? "Kết nối dữ liệu." : "Connected data."}
+                <br />
+                <span className="bg-gradient-to-r from-teal-300 via-teal-200 to-emerald-400 bg-clip-text text-transparent">
+                  {isVi ? "Kiến tạo công trình." : "Better buildings."}
+                </span>
+              </h1>
+
+              {/* Subtitle */}
+              <p className="mt-5 max-w-xl text-base leading-relaxed text-slate-300 sm:text-lg">
+                {isVi
+                  ? "Tư vấn chiến lược BIM, điều phối mô hình đa bộ môn và quản lý dữ liệu số CDE — đồng hành tin cậy từ thiết kế, thi công đến vận hành."
+                  : "BIM consulting, multidisciplinary model coordination and CDE information governance — from concept through operations."}
+              </p>
+
+              {/* Action Buttons */}
+              <div className="mt-8 flex flex-wrap items-center gap-3.5">
+                <Button
+                  asChild
+                  size="lg"
+                  className="rounded-xl px-6 font-bold bg-primary hover:bg-primary-hover text-white shadow-lg shadow-teal-900/40 hover:shadow-teal-900/60 transition-all hover:scale-[1.02]"
+                >
+                  <Link href={ROUTES.contact}>
+                    {t.hero.ctaPrimary}
+                    <ArrowUpRight className="size-4 ml-1.5" />
+                  </Link>
+                </Button>
+                <Button
+                  asChild
+                  variant="outline"
+                  size="lg"
+                  className="rounded-xl border-white/20 bg-white/[0.05] text-white hover:bg-white/10 hover:text-white backdrop-blur-md transition-all hover:scale-[1.02]"
+                >
+                  <Link href={ROUTES.bimViewer}>
+                    {isVi ? "Trải nghiệm BIM 3D" : "Explore BIM in 3D"}
+                  </Link>
+                </Button>
+              </div>
+
+              {/* Metrics Strip */}
+              <div className="mt-10 grid grid-cols-3 gap-4 border-t border-white/10 pt-6">
+                <div>
+                  <strong className="block text-2xl font-black text-white sm:text-3xl font-mono">
+                    100+
+                  </strong>
+                  <span className="mt-0.5 block text-xs text-slate-400">
+                    {isVi ? "Dự án bàn giao" : "Delivered Projects"}
+                  </span>
+                </div>
+                <div>
+                  <strong className="block text-2xl font-black text-teal-300 sm:text-3xl font-mono">
+                    0 Clash
+                  </strong>
+                  <span className="mt-0.5 block text-xs text-slate-400">
+                    {isVi ? "Xung đột thi công" : "Clash Free Delivery"}
+                  </span>
+                </div>
+                <div>
+                  <strong className="block text-2xl font-black text-emerald-400 sm:text-3xl font-mono">
+                    LOD 400
+                  </strong>
+                  <span className="mt-0.5 block text-xs text-slate-400">
+                    {isVi ? "Độ chính xác chế tạo" : "Fabrication Precision"}
+                  </span>
+                </div>
+              </div>
             </div>
-          </div>
-          <div className="relative hidden min-w-0 lg:block" data-motion="tile">
-            <BimInteractiveHeroVisual featuredProject={featured} />
+
+            {/* Right Hero Interactive 3D BIM Stage */}
+            <div className="min-w-0" data-motion="slide-in">
+              <BimInteractiveHeroVisual featuredProject={projects[0]} />
+            </div>
           </div>
         </div>
       </section>
 
-      <ExpertiseStrip />
 
       <section
         id="services"
         data-home-section="services"
-        className="services-section py-12 lg:py-14"
+        className="services-section py-16 lg:py-20"
       >
         <div className="site-container">
-          <header className="mb-8 flex flex-col justify-between gap-5 md:flex-row md:items-end">
+          <header className="mb-8 flex flex-col justify-between gap-5 md:flex-row md:items-end" data-motion="reveal">
             <div>
-              <p className="eyebrow">{isVi ? "Năng lực chuyên môn" : "Our expertise"}</p>
+              <p className="eyebrow">
+                {isVi ? "Năng lực chuyên môn" : "Our expertise"}
+              </p>
               <h2 className="section-title">
                 {isVi ? (
                   <>
@@ -160,19 +191,18 @@ export function HomeView({
               </p>
               <Link
                 href={ROUTES.services}
-                className="mt-3 inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-primary"
+                className="mt-3 inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-primary hover:underline underline-offset-4"
               >
                 {t.common.exploreExpertise} <ArrowUpRight className="size-4" />
               </Link>
             </div>
           </header>
-          <div className="grid gap-5 md:grid-cols-3" data-motion="reveal">
+          <div className="grid gap-6 md:grid-cols-3">
             {orderedServices.slice(0, 3).map((service, index) => {
-              const bimDim = index === 0 ? "3D & 4D BIM" : index === 1 ? "COORDINATION / CDE" : "5D & 7D ASSET";
               return (
                 <article
                   key={service.slug}
-                  className="service-card glow-card-teal group relative flex flex-col overflow-hidden rounded-2xl border border-border/80 bg-card transition-all duration-300 hover:border-primary/50"
+                  className="service-card group relative flex flex-col overflow-hidden rounded-2xl border border-border/80 bg-card transition-all duration-300 hover:border-primary/50 hover:shadow-xl hover:-translate-y-1.5"
                   data-motion="tile"
                 >
                   <div className="relative aspect-[16/9] overflow-hidden bg-muted">
@@ -181,18 +211,15 @@ export function HomeView({
                       alt=""
                       fill
                       sizes="(max-width:767px) 100vw, 33vw"
-                      className="object-cover transition-transform duration-700 group-hover:scale-105"
+                      className="object-cover transition-transform duration-500 group-hover:scale-105"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-brand-ink/80 via-transparent to-transparent opacity-60 group-hover:opacity-40 transition-opacity" />
-                    
-                    <span className="absolute left-3 top-3 rounded-md bg-brand-ink/90 backdrop-blur-md px-2.5 py-1 font-mono text-[11px] font-bold text-teal-300 border border-teal-500/30">
-                      {bimDim}
-                    </span>
-                    <span className="absolute right-3 top-3 rounded-md bg-black/60 backdrop-blur-md px-2 py-1 font-mono text-[11px] text-white/90">
-                      0{index + 1}
-                    </span>
+                    <div className="absolute inset-0 bg-gradient-to-t from-brand-ink/60 via-transparent to-transparent opacity-40 group-hover:opacity-20 transition-opacity" />
                   </div>
                   <div className="flex flex-1 flex-col p-6">
+                    <span className="service-index" aria-hidden="true">
+                      0{index + 1}
+                      <span> / BIM4C</span>
+                    </span>
                     <h3 className="text-xl font-bold tracking-tight text-foreground group-hover:text-primary transition-colors">
                       <Link
                         className="after:absolute after:inset-0"
@@ -206,7 +233,10 @@ export function HomeView({
                     </p>
                     <ul className="mb-5 mt-5 space-y-2 border-t border-border/60 pt-4">
                       {service.highlights.slice(0, 2).map((item) => (
-                        <li key={item} className="flex gap-2 text-xs leading-5 text-foreground/85">
+                        <li
+                          key={item}
+                          className="flex gap-2 text-xs leading-5 text-foreground/85"
+                        >
                           <Check className="mt-0.5 size-3.5 shrink-0 text-primary" />
                           {item}
                         </li>
@@ -222,12 +252,12 @@ export function HomeView({
             })}
           </div>
           {services.length > 3 && (
-            <div className="mt-5 grid divide-y rounded-xl border border-border/80 bg-muted/40 md:grid-cols-3 md:divide-x md:divide-y-0">
+            <div className="mt-6 grid divide-y rounded-2xl border border-border/80 bg-muted/40 md:grid-cols-3 md:divide-x md:divide-y-0 shadow-xs" data-motion="reveal">
               {orderedServices.slice(3, 6).map((service) => (
                 <Link
                   href={ROUTES.serviceDetail(service.slug)}
                   key={service.slug}
-                  className="flex min-h-20 items-center justify-between gap-4 px-5 py-4 text-sm font-semibold transition-colors hover:bg-muted/80 hover:text-primary"
+                  className="flex min-h-20 items-center justify-between gap-4 px-6 py-4 text-sm font-semibold transition-colors hover:bg-muted/80 hover:text-primary"
                 >
                   <span className="truncate">{service.title}</span>
                   <ArrowRight className="size-4 shrink-0 text-primary" />
@@ -243,24 +273,29 @@ export function HomeView({
         data-home-section="projects"
         className="bg-brand-ink py-16 text-white lg:py-20 relative overflow-hidden"
       >
-        {/* Background mesh grid */}
-        <div className="pointer-events-none absolute inset-0 tech-grid-pattern opacity-40" aria-hidden="true" />
         <div className="site-container relative">
-          <header className="mb-10 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+          <header className="mb-10 flex flex-col justify-between gap-4 sm:flex-row sm:items-end" data-motion="reveal">
             <div>
-              <p className="eyebrow text-teal-300">{isVi ? "Kinh nghiệm thực chiến" : "Selected experience"}</p>
+              <p className="eyebrow text-teal-300">
+                {isVi ? "Kinh nghiệm thực chiến" : "Selected experience"}
+              </p>
               <h2 className="section-title text-white">
-                {isVi ? "Dự án thực tế. Năng lực kết nối." : "Real projects. Connected expertise."}
+                {isVi
+                  ? "Dự án thực tế. Năng lực kết nối."
+                  : "Real projects. Connected expertise."}
               </h2>
             </div>
             <Link
               href={ROUTES.projects}
               className="inline-flex min-h-11 shrink-0 items-center gap-2 text-sm font-semibold text-teal-300 hover:text-teal-200"
             >
-              {isVi ? "Tất cả dự án" : "All projects"} <ArrowUpRight className="size-4" />
+              {isVi ? "Tất cả dự án" : "All projects"}{" "}
+              <ArrowUpRight className="size-4" />
             </Link>
           </header>
-          <ProjectCarousel projects={projects.slice(0, 3)} />
+          <div data-motion="reveal">
+            <ProjectCarousel projects={projects.slice(0, 3)} />
+          </div>
         </div>
       </section>
 
@@ -268,7 +303,7 @@ export function HomeView({
 
       <section data-home-section="academy" className="py-16 lg:py-20">
         <div className="site-container">
-          <div className="grid overflow-hidden rounded-3xl border border-border/80 bg-card shadow-lg lg:grid-cols-[.9fr_1.1fr]">
+          <div className="academy-panel grid overflow-hidden rounded-3xl border border-border/80 bg-card lg:grid-cols-[.9fr_1.1fr] shadow-lg" data-motion="reveal">
             <div className="relative min-h-72 lg:min-h-full">
               <Image
                 src="/images/news-bim-training.webp"
@@ -278,15 +313,6 @@ export function HomeView({
                 className="object-cover"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-brand-ink/95 via-brand-ink/40 to-transparent" />
-              
-              <div className="absolute top-6 left-6 flex flex-wrap gap-2">
-                <span className="rounded-full border border-white/20 bg-black/60 px-3 py-1 font-mono text-[11px] font-semibold text-teal-300 backdrop-blur-md">
-                  ISO 19650 CERTIFIED
-                </span>
-                <span className="rounded-full border border-white/20 bg-black/60 px-3 py-1 font-mono text-[11px] font-semibold text-white backdrop-blur-md">
-                  REVIT • NAVISWORKS • DYNAMO
-                </span>
-              </div>
 
               <p className="absolute bottom-6 left-6 right-6 text-sm font-medium text-white/90">
                 {isVi
@@ -298,7 +324,9 @@ export function HomeView({
               <div>
                 <p className="eyebrow">BIM4C ACADEMY</p>
                 <h2 className="section-title">
-                  {isVi ? "Nâng cao năng lực chuyên môn đội ngũ." : "Build your team’s next BIM capability."}
+                  {isVi
+                    ? "Nâng cao năng lực chuyên môn đội ngũ."
+                    : "Build your team’s next BIM capability."}
                 </h2>
                 <p className="mt-3 text-sm leading-7 text-muted-foreground">
                   {isVi
@@ -317,7 +345,10 @@ export function HomeView({
                           {course.title}
                         </span>
                         <span className="mt-0.5 block text-xs font-medium text-muted-foreground">
-                          {toLocalizedLabel(course.duration || course.eyebrow, locale)}
+                          {toLocalizedLabel(
+                            course.duration || course.eyebrow,
+                            locale,
+                          )}
                         </span>
                       </div>
                       <ArrowUpRight className="size-4 shrink-0 text-muted-foreground transition-transform group-hover:text-primary group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
@@ -329,60 +360,75 @@ export function HomeView({
                 href={ROUTES.courses}
                 className="mt-6 inline-flex min-h-11 items-center gap-2 text-sm font-bold text-primary hover:underline underline-offset-4"
               >
-                {isVi ? "Khám phá tất cả chương trình đào tạo" : "Browse all programmes"} <ArrowRight className="size-4" />
+                {isVi
+                  ? "Khám phá tất cả chương trình đào tạo"
+                  : "Browse all programmes"}{" "}
+                <ArrowRight className="size-4" />
               </Link>
             </div>
           </div>
         </div>
       </section>
 
-      <Partners compact />
+      <Partners compact customPartners={rawPartners} />
 
-      <section data-home-section="news" className="py-14 lg:py-16">
+      <section data-home-section="news" className="py-16 lg:py-20">
         <div className="site-container">
-          <header className="mb-7 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+          <header className="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-end" data-motion="reveal">
             <div>
-              <p className="eyebrow">{isVi ? "Góc nhìn & Bài viết" : "From our journal"}</p>
+              <p className="eyebrow">
+                {isVi ? "Góc nhìn & Bài viết" : "From our journal"}
+              </p>
               <h2 className="section-title">
-                {isVi ? "Giải pháp chuyển đổi số hiệu quả." : "Ideas for better project delivery."}
+                {isVi
+                  ? "Giải pháp chuyển đổi số hiệu quả."
+                  : "Ideas for better project delivery."}
               </h2>
             </div>
             <Link
               href={ROUTES.blog}
-              className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-primary"
+              className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-primary hover:underline underline-offset-4"
             >
-              {isVi ? "Tất cả bài viết" : "All insights"} <ArrowUpRight className="size-4" />
+              {isVi ? "Tất cả bài viết" : "All insights"}{" "}
+              <ArrowUpRight className="size-4" />
             </Link>
           </header>
           <div className="grid gap-6 md:grid-cols-3">
             {posts.slice(0, 3).map((post) => (
-              <article className="group relative min-w-0" key={post.slug}>
-                <div className="relative aspect-[16/9] overflow-hidden rounded-xl bg-muted">
-                  <Image
-                    src={post.image}
-                    alt=""
-                    fill
-                    sizes="(max-width:767px) 100vw, 33vw"
-                    className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
-                  />
+              <article
+                className="group relative min-w-0 flex flex-col justify-between rounded-2xl border bg-card p-4 shadow-xs transition-all duration-300 hover:shadow-xl hover:border-primary/50 hover:-translate-y-1.5"
+                key={post.slug}
+                data-motion="tile"
+              >
+                <div>
+                  <div className="relative aspect-[16/9] overflow-hidden rounded-xl bg-muted">
+                    <Image
+                      src={post.image}
+                      alt=""
+                      fill
+                      sizes="(max-width:767px) 100vw, 33vw"
+                      className="object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
+                  </div>
+                  <p className="mt-4 text-xs font-semibold text-primary">
+                    {toLocalizedLabel(post.eyebrow, locale)}
+                    <span className="text-muted-foreground font-normal"> · {post.meta}</span>
+                  </p>
+                  <h3 className="mt-2 text-xl font-bold leading-snug tracking-tight text-foreground group-hover:text-primary transition-colors">
+                    <Link
+                      className="after:absolute after:inset-0"
+                      href={ROUTES.blogDetail(post.slug)}
+                    >
+                      {post.title}
+                    </Link>
+                  </h3>
+                  <p className="mt-2 line-clamp-2 text-sm leading-6 text-muted-foreground">
+                    {post.description}
+                  </p>
                 </div>
-                <p className="mt-4 text-xs font-medium text-primary">
-                  {toLocalizedLabel(post.eyebrow, locale)}
-                  <span className="text-muted-foreground"> · {post.meta}</span>
-                </p>
-                <h3 className="mt-2 text-xl font-semibold leading-snug tracking-tight">
-                  <Link
-                    className="after:absolute after:inset-0"
-                    href={ROUTES.blogDetail(post.slug)}
-                  >
-                    {post.title}
-                  </Link>
-                </h3>
-                <p className="mt-2 line-clamp-2 text-sm leading-6 text-muted-foreground">
-                  {post.description}
-                </p>
-                <span className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-primary">
-                  {t.common.readMore} <ArrowUpRight className="size-4" />
+                <span className="mt-4 inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-primary pt-3 border-t">
+                  <span>{t.common.readMore}</span>
+                  <ArrowUpRight className="size-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
                 </span>
               </article>
             ))}
@@ -390,39 +436,55 @@ export function HomeView({
         </div>
       </section>
 
-      <section data-home-section="cta" className="pb-14 lg:pb-16">
+      <section data-home-section="cta" className="py-16 lg:py-24 relative overflow-hidden">
         <div className="site-container">
-          <div className="relative grid gap-7 overflow-hidden rounded-2xl bg-primary p-7 text-white sm:p-10 lg:grid-cols-[1fr_auto] lg:items-center">
-            <div>
-              <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-white/80">
-                {isVi ? "Dự án của bạn. Hợp tác cùng chúng tôi." : "Your project. Our next conversation."}
-              </p>
-              <h2 className="max-w-xl text-3xl font-semibold leading-tight tracking-tight sm:text-4xl">
-                {isVi ? "Lộ trình rõ ràng hơn cho bước tiến tiếp theo." : "Let’s make your next step clearer."}
-              </h2>
-              <p className="mt-3 max-w-lg text-sm leading-6 text-white/85">
+          <div
+            className="relative overflow-hidden rounded-3xl border border-teal-500/30 bg-gradient-to-br from-slate-950 via-[#082631] to-slate-950 p-8 sm:p-12 lg:p-16 text-white shadow-2xl grid gap-8 lg:grid-cols-[1.3fr_0.7fr] lg:items-center"
+            data-motion="reveal"
+          >
+            {/* Ambient Background Glow */}
+            <div className="pointer-events-none absolute -right-24 -top-24 size-96 rounded-full bg-teal-500/20 blur-3xl" />
+            <div className="pointer-events-none absolute -left-24 -bottom-24 size-80 rounded-full bg-teal-500/10 blur-3xl" />
+
+            {/* Left Content */}
+            <div className="relative z-10">
+              <div className="inline-flex items-center gap-2 rounded-full bg-teal-500/15 border border-teal-500/30 px-3.5 py-1 text-xs font-bold uppercase tracking-wider text-teal-300 mb-4">
+                <span className="size-2 rounded-full bg-teal-400 animate-pulse" />
+                {isVi ? "Bắt đầu từ câu hỏi đúng" : "Start with the right question"}
+              </div>
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold leading-[1.15] tracking-tight text-white max-w-2xl">
                 {isVi
-                  ? "Chia sẻ kế hoạch của bạn. Chúng tôi sẽ giúp xác định đúng phạm vi và giải pháp hỗ trợ."
-                  : "Tell us what you are planning. We will help you define the right scope and support."}
+                  ? "Cùng làm rõ bước tiếp theo cho dự án của bạn."
+                  : "Make the next step clear for your project."}
+              </h2>
+              <p className="mt-4 max-w-xl text-base sm:text-lg leading-relaxed text-slate-300">
+                {isVi
+                  ? "Chia sẻ bối cảnh, mục tiêu hoặc vấn đề đang cần giải quyết. Đội ngũ chuyên gia BIM4C sẽ cùng bạn xác định phạm vi phù hợp nhất."
+                  : "Share the context, goal or issue you are working through. We will help define the right scope together."}
               </p>
             </div>
-            <div className="flex flex-col items-start gap-4">
-              <Button
-                asChild
-                size="lg"
-                className="rounded-lg bg-white text-brand-ink shadow-none hover:bg-white/90"
+
+            {/* Right Action */}
+            <div className="relative z-10 flex flex-col items-start lg:items-end justify-center lg:border-l lg:border-white/15 lg:pl-12 space-y-4">
+              <Link
+                href={ROUTES.contact}
+                className="group inline-flex w-full sm:w-auto items-center justify-center gap-3 rounded-2xl bg-teal-400 px-8 py-4 text-base font-bold text-slate-950 shadow-xl shadow-teal-400/25 hover:bg-teal-300 hover:shadow-teal-400/40 hover:-translate-y-1 transition-all duration-300"
               >
-                <Link href={ROUTES.contact}>
-                  {t.common.discussProject} <ArrowUpRight />
-                </Link>
-              </Button>
+                <span>{t.common.discussProject}</span>
+                <ArrowUpRight className="size-5 transition-transform duration-300 group-hover:translate-x-1 group-hover:-translate-y-1" />
+              </Link>
+              
               <a
                 href={ROUTES.contactEmail}
-                className="inline-flex items-center gap-2 text-sm text-white underline-offset-4 hover:underline"
+                className="inline-flex items-center gap-2 text-sm font-semibold text-slate-300 hover:text-teal-300 transition-colors"
               >
-                <Mail className="size-4" />
+                <Mail className="size-4 text-teal-400" />
                 {CONTACT_EMAIL}
               </a>
+
+              <p className="text-xs text-slate-400">
+                {isVi ? "✓ Phản hồi trong vòng 24 giờ làm việc" : "✓ Response within 24 business hours"}
+              </p>
             </div>
           </div>
         </div>

@@ -1,5 +1,4 @@
 import { getMediaUrl } from "@/lib/utils/media";
-import { englishContent } from "@/lib/content/english-content";
 import { getSafeVideoUrl } from "@/lib/utils/safe-url";
 import type { ContentEntry } from "@/types/content";
 import type { ContentEntryDto } from "../types/content-dto";
@@ -56,10 +55,19 @@ export function mapContentDto(dto: ContentEntryDto): ContentEntry {
     videoUrl: getSafeVideoUrl(section.videoUrl),
   }));
   const legacyBlocks: ContentBlock[] = sections.flatMap((section, index) => {
-    const prefix = `legacy-${index}`;
+    const slug = section.title
+      ? section.title
+          .toLowerCase()
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "")
+          .replace(/đ/g, "d")
+          .replace(/[^a-z0-9\s-]/g, "")
+          .trim()
+          .replace(/\s+/g, "-")
+      : `section-${index + 1}`;
     const blocks: ContentBlock[] = [
       {
-        id: `${prefix}-text`,
+        id: slug,
         type: "rich-text",
         heading: section.title,
         content: section.body,
@@ -67,39 +75,39 @@ export function mapContentDto(dto: ContentEntryDto): ContentEntry {
     ];
     if (section.images?.length === 1)
       blocks.push({
-        id: `${prefix}-image`,
+        id: `${slug}-image`,
         type: "image",
         image: section.images[0],
       });
     if ((section.images?.length ?? 0) > 1)
       blocks.push({
-        id: `${prefix}-gallery`,
+        id: `${slug}-gallery`,
         type: "gallery",
         images: section.images!,
       });
     if (section.unorderedList?.length)
       blocks.push({
-        id: `${prefix}-list`,
+        id: `${slug}-features`,
         type: "feature-list",
         items: section.unorderedList,
         ordered: false,
       });
     if (section.orderedList?.length)
       blocks.push({
-        id: `${prefix}-ordered`,
+        id: `${slug}-steps`,
         type: "feature-list",
         items: section.orderedList,
         ordered: true,
       });
     if (section.quote)
       blocks.push({
-        id: `${prefix}-quote`,
+        id: `${slug}-quote`,
         type: "quote",
         quote: section.quote,
       });
     if (section.videoUrl)
       blocks.push({
-        id: `${prefix}-video`,
+        id: `${slug}-video`,
         type: "video",
         url: section.videoUrl,
       });

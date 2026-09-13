@@ -1,5 +1,7 @@
 "use client";
 
+import { usePublicMotion } from "@/components/motion/hooks/use-public-motion";
+
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PageHero } from "@/components/shared/PageHero";
@@ -8,6 +10,7 @@ import { ROUTES } from "@/constants/routes";
 import { useLanguage } from "@/lib/i18n/context";
 
 export function LegalDetailView({ slug }: { slug: string }) {
+  usePublicMotion();
   const { t, locale } = useLanguage();
   const document = getLegalDocument(slug, locale);
   if (!document) notFound();
@@ -15,6 +18,10 @@ export function LegalDetailView({ slug }: { slug: string }) {
   return (
     <main>
       <PageHero
+        breadcrumbs={[
+          { label: t.navigation.legal, href: ROUTES.legal },
+          { label: document.title },
+        ]}
         eyebrow={t.legalPage.sectionEyebrow}
         title={document.title}
         description={document.summary}

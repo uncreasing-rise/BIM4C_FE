@@ -24,7 +24,7 @@ import { useLanguage } from "@/lib/i18n/context";
 
 interface CommandItem {
   id: string;
-  category: "navigation" | "action" | "legal";
+  category: "navigation" | "project" | "service" | "course" | "blog" | "action" | "legal";
   title: string;
   subtitle?: string;
   icon: React.ComponentType<{ className?: string }>;
@@ -44,15 +44,17 @@ export function CommandMenu({ isOpen, onClose }: CommandMenuProps) {
   const [query, setQuery] = useState("");
   const [selectedIndex, setSelectedIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const previousFocusRef = useRef<HTMLElement | null>(null);
 
   const items: CommandItem[] = useMemo(
     () => [
-      // Navigation
+      // Quick Navigation
       {
         id: "nav-bim-viewer",
         category: "navigation",
-        title: isVi ? "3D OpenBIM Viewer (Mô hình trực quan)" : "3D OpenBIM Viewer (Live Model)",
-        subtitle: isVi ? "Kiểm tra IFC, BCF và phân tích xung đột" : "Inspect IFC, BCF & clash matrix",
+        title: isVi ? "3D OpenBIM Viewer (Mô hình trực quan)" : "3D OpenBIM Viewer (Interactive Model)",
+        subtitle: isVi ? "Kiểm tra IFC, BCF và phân tích không gian" : "Inspect IFC, BCF & spatial coordination",
         icon: Boxes,
         keywords: ["bim", "viewer", "3d", "ifc", "bcf", "clash", "model", "mo hinh"],
         action: () => {
@@ -63,10 +65,10 @@ export function CommandMenu({ isOpen, onClose }: CommandMenuProps) {
       {
         id: "nav-projects",
         category: "navigation",
-        title: isVi ? "Dự án Thực chiến BIM" : "Enterprise Projects & Case Studies",
-        subtitle: isVi ? "50+ dự án cao ốc, hạ tầng và công nghiệp" : "50+ high-rise, infrastructure & industrial",
+        title: isVi ? "Tất cả Dự án Thực chiến" : "All Projects & Case Studies",
+        subtitle: isVi ? "Khám phá danh mục dự án cao ốc, hạ tầng của BIM4C" : "Explore high-rise and infrastructure portfolio",
         icon: FolderGit2,
-        keywords: ["du an", "projects", "case study", "cao tang", "ha tang"],
+        keywords: ["du an", "projects", "case study", "portfolio"],
         action: () => {
           router.push(ROUTES.projects);
           onClose();
@@ -75,7 +77,7 @@ export function CommandMenu({ isOpen, onClose }: CommandMenuProps) {
       {
         id: "nav-services",
         category: "navigation",
-        title: isVi ? "Giải pháp & Dịch vụ Tư vấn BIM" : "BIM Solutions & Consulting",
+        title: isVi ? "Dịch vụ & Giải pháp Tư vấn BIM" : "BIM Consulting & Solutions",
         subtitle: isVi ? "Chiến lược ISO 19650, CDE, Phối hợp MEP & 5D" : "ISO 19650 Strategy, CDE, MEP & 5D Cost",
         icon: Building2,
         keywords: ["dich vu", "services", "tu van", "coordination", "cde", "iso 19650"],
@@ -87,8 +89,8 @@ export function CommandMenu({ isOpen, onClose }: CommandMenuProps) {
       {
         id: "nav-courses",
         category: "navigation",
-        title: isVi ? "BIM4C Academy (Đào tạo Kỹ sư)" : "BIM4C Academy (Enterprise Training)",
-        subtitle: isVi ? "Revit, Navisworks, OpenBIM và cấp chứng chỉ" : "Revit, Navisworks, OpenBIM certification",
+        title: isVi ? "BIM4C Academy (Đào tạo Kỹ sư)" : "BIM4C Academy (Professional Training)",
+        subtitle: isVi ? "Chương trình đào tạo Revit, Navisworks, OpenBIM thực chiến" : "Practical Revit, Navisworks & OpenBIM curriculum",
         icon: GraduationCap,
         keywords: ["khoa hoc", "courses", "academy", "dao tao", "chung chi", "revit"],
         action: () => {
@@ -100,7 +102,7 @@ export function CommandMenu({ isOpen, onClose }: CommandMenuProps) {
         id: "nav-blog",
         category: "navigation",
         title: isVi ? "Góc nhìn & Bài viết Kỹ thuật" : "Insights & Technical Journal",
-        subtitle: isVi ? "Kinh nghiệm thực tế từ các công trình" : "Field-tested AEC digital methods",
+        subtitle: isVi ? "Kinh nghiệm thực tế từ các công trình và chuyển đổi số" : "Field-tested AEC digital methods and lessons",
         icon: FileText,
         keywords: ["blog", "bai viet", "tin tuc", "insights", "chuyen doi so"],
         action: () => {
@@ -112,11 +114,151 @@ export function CommandMenu({ isOpen, onClose }: CommandMenuProps) {
         id: "nav-about",
         category: "navigation",
         title: isVi ? "Về BIM4C (Ban Lãnh đạo & Năng lực)" : "About BIM4C (Leadership & Capability)",
-        subtitle: isVi ? "CEO Trần Ngọc Hiếu và đội ngũ chuyên gia" : "CEO Tran Ngoc Hieu & senior specialists",
+        subtitle: isVi ? "Đội ngũ chuyên gia và năng lực thực chiến" : "Executive team & engineering capability",
         icon: ShieldCheck,
         keywords: ["gioi thieu", "about", "tran ngoc hieu", "lanh dao", "doi ngu"],
         action: () => {
           router.push(ROUTES.about);
+          onClose();
+        },
+      },
+
+      // Real Projects & Case Studies
+      {
+        id: "proj-lumi-hanoi",
+        category: "project",
+        title: "Lumi Hanoi",
+        subtitle: isVi ? "Dự án Căn hộ cao cấp CapitaLand · LOD 400 & Điều phối MEP" : "CapitaLand Luxury Residential · LOD 400 & MEP Coordination",
+        icon: Building2,
+        keywords: ["lumi", "hanoi", "capitaland", "can ho", "cao tang", "lod 400", "residential"],
+        action: () => {
+          router.push(ROUTES.projectDetail("lumi-hanoi"));
+          onClose();
+        },
+      },
+      {
+        id: "proj-metropole",
+        category: "project",
+        title: "The Metropole Thủ Thiêm",
+        subtitle: isVi ? "Tổ hợp phức hợp đô thị Thủ Thiêm · CDE & Phối hợp không gian" : "Thu Thiem Complex Development · CDE & Clash Governance",
+        icon: Building2,
+        keywords: ["metropole", "thu thiem", "tphcm", "phuc hop", "cde"],
+        action: () => {
+          router.push(ROUTES.projectDetail("the-metropole-thu-thiem"));
+          onClose();
+        },
+      },
+      {
+        id: "proj-lotte-mall",
+        category: "project",
+        title: "Lotte Mall West Lake",
+        subtitle: isVi ? "Đại siêu thị & Khách sạn cao cấp · Phối hợp 3D/4D tiến độ" : "Commercial Mall & Hotel · 3D/4D Schedule Simulation",
+        icon: Building2,
+        keywords: ["lotte", "mall", "west lake", "tay ho", "thuong mai", "4d"],
+        action: () => {
+          router.push(ROUTES.projectDetail("lotte-mall-west-lake"));
+          onClose();
+        },
+      },
+      {
+        id: "proj-masterise",
+        category: "project",
+        title: "Masterise Centre Point",
+        subtitle: isVi ? "Khu căn hộ cao tầng Vinhomes Grand Park · Chuẩn LOD 350 - 400" : "High-rise Complex · LOD 350 - 400 Modeling",
+        icon: Building2,
+        keywords: ["masterise", "centre point", "vinhomes", "grand park", "thu duc"],
+        action: () => {
+          router.push(ROUTES.projectDetail("masterise-centre-point"));
+          onClose();
+        },
+      },
+
+      // Real Services
+      {
+        id: "srv-consulting",
+        category: "service",
+        title: isVi ? "Tư vấn Chiến lược BIM & Lập BEP" : "BIM Strategy & BEP Consulting",
+        subtitle: isVi ? "Thiết lập kế hoạch thực hiện BIM, ma trận LOD và tiêu chuẩn ISO 19650" : "BEP setup, LOD matrix & ISO 19650 compliance roadmap",
+        icon: Building2,
+        keywords: ["tu van bim", "bep", "eir", "chien luoc", "strategy", "iso 19650"],
+        action: () => {
+          router.push(ROUTES.serviceDetail("tu-van-bim"));
+          onClose();
+        },
+      },
+      {
+        id: "srv-coordination",
+        category: "service",
+        title: isVi ? "Điều phối Xung đột Đa bộ môn (Clash Coordination)" : "Multidiscipline Clash Coordination",
+        subtitle: isVi ? "Kiểm soát và giải quyết 100% va chạm Kiến trúc, Kết cấu, MEP trên CDE" : "Resolve Architecture, Structure & MEP clashes in CDE",
+        icon: Boxes,
+        keywords: ["coordination", "clash", "xung dot", "mep", "dieu phoi", "navisworks"],
+        action: () => {
+          router.push(ROUTES.serviceDetail("bim-coordination"));
+          onClose();
+        },
+      },
+      {
+        id: "srv-design-qto",
+        category: "service",
+        title: isVi ? "Mô hình hóa & Bóc tách Khối lượng (QTO / 5D)" : "Modeling & Quantity Takeoff (QTO / 5D)",
+        subtitle: isVi ? "Bóc tách khối lượng tự động và lập dự toán chính xác từ mô hình BIM" : "Accurate automated cost & quantity extraction from BIM",
+        icon: Building2,
+        keywords: ["qto", "boc tach", "khoi luong", "5d", "du toan", "thiet ke"],
+        action: () => {
+          router.push(ROUTES.serviceDetail("thiet-ke"));
+          onClose();
+        },
+      },
+
+      // Real Courses
+      {
+        id: "crs-foundation",
+        category: "course",
+        title: isVi ? "Khóa học BIM Foundation (Nhập môn Thực chiến)" : "BIM Foundation (Hands-on Fundamentals)",
+        subtitle: isVi ? "Làm quen tư duy ISO 19650, OpenBIM và đọc hiểu mô hình 3D" : "Master ISO 19650 mindset, OpenBIM and 3D model navigation",
+        icon: GraduationCap,
+        keywords: ["foundation", "nhap mon", "co ban", "can ban", "khoa hoc"],
+        action: () => {
+          router.push(ROUTES.courseDetail("bim-foundation"));
+          onClose();
+        },
+      },
+      {
+        id: "crs-coordinator",
+        category: "course",
+        title: isVi ? "Khóa học BIM Coordinator (Điều phối viên Chuyên nghiệp)" : "BIM Coordinator Professional Course",
+        subtitle: isVi ? "Quản lý va chạm Navisworks, ma trận BCF và vận hành CDE dự án" : "Master Navisworks clash matrices, BCF tracking & CDE workflows",
+        icon: GraduationCap,
+        keywords: ["coordinator", "dieu phoi", "navisworks", "bcf", "nang cao"],
+        action: () => {
+          router.push(ROUTES.courseDetail("bim-coordinator"));
+          onClose();
+        },
+      },
+      {
+        id: "crs-revit-arch",
+        category: "course",
+        title: isVi ? "Khóa học Revit Architecture & Structure" : "Revit Architecture & Structure Course",
+        subtitle: isVi ? "Triển khai mô hình chuẩn LOD 300 - 400 và xuất hồ sơ bản vẽ kỹ thuật" : "Production-grade modeling LOD 300 - 400 & documentation",
+        icon: GraduationCap,
+        keywords: ["revit", "kien truc", "ket cau", "architecture", "structure"],
+        action: () => {
+          router.push(ROUTES.courseDetail("revit-kien-truc-ket-cau"));
+          onClose();
+        },
+      },
+
+      // Real Blog Article
+      {
+        id: "art-safety",
+        category: "blog",
+        title: isVi ? "Dữ liệu số nâng cao an toàn công trường" : "Digital Data for Enhanced Jobsite Safety",
+        subtitle: isVi ? "Phân tích phương pháp ứng dụng mô hình 3D trong giám sát an toàn thi công" : "Leveraging 3D BIM data to mitigate construction safety risks",
+        icon: FileText,
+        keywords: ["an toan", "safety", "cong truong", "du lieu so", "bai viet"],
+        action: () => {
+          router.push(ROUTES.blogDetail("du-lieu-so-nang-cao-an-toan-cong-truong"));
           onClose();
         },
       },
@@ -204,18 +346,34 @@ export function CommandMenu({ isOpen, onClose }: CommandMenuProps) {
     );
   }, [items, query]);
 
+  // Lock body scroll when open
   useEffect(() => {
     if (isOpen) {
-      setQuery("");
-      setSelectedIndex(0);
-      setTimeout(() => inputRef.current?.focus(), 50);
+      const originalOverflow = document.body.style.overflow;
+      document.body.style.overflow = "hidden";
+      return () => {
+        document.body.style.overflow = originalOverflow;
+      };
     }
   }, [isOpen]);
 
+  // Focus trap & focus restoration
   useEffect(() => {
-    setSelectedIndex(0);
-  }, [query]);
+    if (isOpen) {
+      previousFocusRef.current = document.activeElement as HTMLElement | null;
+      const timer = setTimeout(() => {
+        setQuery("");
+        setSelectedIndex(0);
+        inputRef.current?.focus();
+      }, 20);
+      return () => {
+        clearTimeout(timer);
+        previousFocusRef.current?.focus();
+      };
+    }
+  }, [isOpen]);
 
+  // Keyboard navigation & Focus Trapping
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (!isOpen) return;
@@ -223,7 +381,35 @@ export function CommandMenu({ isOpen, onClose }: CommandMenuProps) {
       if (e.key === "Escape") {
         e.preventDefault();
         onClose();
-      } else if (e.key === "ArrowDown") {
+        return;
+      }
+
+      if (e.key === "Tab") {
+        const dialog = dialogRef.current;
+        if (!dialog) return;
+        const focusableElements = dialog.querySelectorAll<HTMLElement>(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+        if (focusableElements.length === 0) return;
+
+        const firstElement = focusableElements[0];
+        const lastElement = focusableElements[focusableElements.length - 1];
+
+        if (e.shiftKey) {
+          if (document.activeElement === firstElement) {
+            e.preventDefault();
+            lastElement.focus();
+          }
+        } else {
+          if (document.activeElement === lastElement) {
+            e.preventDefault();
+            firstElement.focus();
+          }
+        }
+        return;
+      }
+
+      if (e.key === "ArrowDown") {
         e.preventDefault();
         setSelectedIndex((prev) => (prev + 1) % (filteredItems.length || 1));
       } else if (e.key === "ArrowUp") {
@@ -249,6 +435,10 @@ export function CommandMenu({ isOpen, onClose }: CommandMenuProps) {
       onClick={onClose}
     >
       <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label={isVi ? "Menu tìm kiếm và điều hướng nhanh" : "Quick Search & Navigation Menu"}
         className="relative w-full max-w-2xl overflow-hidden rounded-2xl border border-white/20 bg-brand-ink/95 shadow-2xl backdrop-blur-2xl text-white"
         onClick={(e) => e.stopPropagation()}
       >
@@ -259,17 +449,22 @@ export function CommandMenu({ isOpen, onClose }: CommandMenuProps) {
             ref={inputRef}
             type="text"
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            onChange={(e) => {
+              setQuery(e.target.value);
+              setSelectedIndex(0);
+            }}
             placeholder={
               isVi
-                ? "Tìm kiếm nhanh dự án, dịch vụ, mô hình 3D, mã số thuế..."
-                : "Search modules, projects, 3D viewer, tax ID..."
+                ? "Tìm kiếm nhanh dự án, dịch vụ, khóa học, bài viết, MST..."
+                : "Search projects, services, courses, articles, tax ID..."
             }
+            aria-label={isVi ? "Ô tìm kiếm nhanh" : "Quick search input"}
             className="flex-1 bg-transparent text-sm text-white placeholder-zinc-400 focus:outline-none"
           />
           <button
             type="button"
             onClick={onClose}
+            aria-label={isVi ? "Đóng tìm kiếm" : "Close search"}
             className="rounded-lg p-1 text-zinc-400 hover:bg-white/10 hover:text-white transition-colors"
           >
             <X className="size-4" />

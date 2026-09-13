@@ -25,7 +25,14 @@ export function UsersManager() {
   const load = useCallback(async (signal?: AbortSignal) => {
     try {
       const result = await api(`?search=${encodeURIComponent(search)}`, { signal });
-      if (!signal?.aborted) setItems(result.data);
+      if (!signal?.aborted) {
+        const list = Array.isArray(result?.data)
+          ? result.data
+          : Array.isArray(result)
+            ? result
+            : [];
+        setItems(list);
+      }
     } catch (e) {
       if (signal?.aborted) return;
       setError(e instanceof Error ? e.message : "Không thể tải");

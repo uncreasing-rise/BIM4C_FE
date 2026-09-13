@@ -1,6 +1,6 @@
 "use client";
 
-import { ProjectRow } from "@/components/projects/ProjectRow";
+import { ProjectCard } from "@/components/projects/ProjectCard";
 import { useCatalogFilters } from "@/components/shared/useCatalogFilters";
 import { EmptyState } from "@/components/ui/EmptyState";
 import {
@@ -21,6 +21,16 @@ import { toLocalizedLabel } from "@/lib/utils/public-labels";
 import type { PageMeta } from "@/features/shared/types/pagination";
 import { useLanguage } from "@/lib/i18n/context";
 import { localizeContentList } from "@/lib/i18n/localize";
+
+const ALL_PROJECT_LOCATIONS = [
+  "Hà Nội",
+  "TP. Hồ Chí Minh",
+  "Bình Dương",
+  "Nghệ An",
+  "Bắc Ninh",
+];
+const ALL_PROJECT_YEARS = ["2026", "2025"];
+const ALL_PROJECT_STATUSES = ["In delivery", "Completed", "Planned"];
 
 export function ProjectExplorer({
   projects: rawProjects,
@@ -86,23 +96,21 @@ export function ProjectExplorer({
           <CatalogSelect
             label={t.projectsPage.locationFilter}
             value={location}
-            values={[...new Set(projects.map((item) => item.location))]}
+            values={ALL_PROJECT_LOCATIONS}
             onChange={(value) => update("location", value)}
             formatLabel={formatFilterLabel}
           />
           <CatalogSelect
             label={t.projectsPage.yearFilter}
             value={year}
-            values={[...new Set(projects.map((item) => item.year))]
-              .sort()
-              .reverse()}
+            values={ALL_PROJECT_YEARS}
             onChange={(value) => update("year", value)}
             formatLabel={formatFilterLabel}
           />
           <CatalogSelect
             label={t.projectsPage.statusFilter}
             value={status}
-            values={[...new Set(projects.map((item) => item.status))]}
+            values={ALL_PROJECT_STATUSES}
             onChange={(value) => update("status", value)}
             formatLabel={formatFilterLabel}
           />
@@ -132,16 +140,16 @@ export function ProjectExplorer({
             {t.projectsPage.resetFilters}
           </button>
         </div>
-        <div className="border-t">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 pt-6" id="project-grid">
           {visible.map((project, index) => (
-            <ProjectRow
+            <ProjectCard
               key={project.slug}
               project={project}
               number={(page - 1) * PROJECT_PAGE_SIZE + index + 1}
             />
           ))}
           {visible.length === 0 && (
-            <div className="md:col-span-2">
+            <div>
               <EmptyState
                 title={
                   hasFilters

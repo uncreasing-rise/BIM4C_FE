@@ -80,32 +80,32 @@ export function ConsultationForm({
   }
 
   const labelClass = "grid gap-2";
-  const captionClass = "text-xs font-medium text-white/85";
+  const captionClass = "text-xs font-bold uppercase tracking-wider text-slate-200";
   const inputClass =
-    "h-12 w-full min-w-0 rounded-xl border border-white/30 bg-white/[.06] px-4 text-base text-white shadow-none outline-none transition placeholder:text-white/65 hover:border-white/50 focus-visible:border-white focus-visible:ring-3 focus-visible:ring-white/30";
+    "h-12 w-full min-w-0 rounded-xl border border-slate-700 bg-slate-900/90 px-4 text-base text-white shadow-inner outline-none transition placeholder:text-slate-400 hover:border-slate-500 focus-visible:border-teal-400 focus-visible:ring-2 focus-visible:ring-teal-400/40";
 
   if (status === "success") {
     return (
       <div
-        className="rounded-xl border border-teal-200/25 bg-teal-200/10 p-6"
+        className="rounded-xl border border-teal-400/30 bg-teal-950/40 p-6"
         role="status"
         aria-live="polite"
       >
         <CheckCircle2
-          className="mb-4 size-9 text-teal-200"
+          className="mb-4 size-9 text-teal-300"
           aria-hidden="true"
         />
-        <h3 className="text-xl font-semibold text-white">
+        <h3 className="text-xl font-bold text-white">
           {t.forms.thankYouTitle}
         </h3>
-        <p className="mt-3 text-sm leading-7 text-white/85">{message}</p>
-        <p className="mt-3 text-sm leading-7 text-white/75">
+        <p className="mt-3 text-sm leading-7 text-slate-200">{message}</p>
+        <p className="mt-3 text-sm leading-7 text-slate-300">
           {t.forms.thankYouDesc}
         </p>
         <Button
           type="button"
           variant="outline"
-          className="mt-5 border-white/30 bg-transparent text-white hover:bg-white/10 hover:text-white"
+          className="mt-5 border-teal-400/40 bg-teal-950/60 text-teal-200 hover:bg-teal-900/80 hover:text-white"
           onClick={() => {
             setStatus("idle");
             setMessage("");
@@ -144,7 +144,7 @@ export function ConsultationForm({
           {fieldErrors.name && (
             <p
               id="consultation-name-error"
-              className="text-xs text-red-100"
+              className="text-xs text-rose-400 font-medium"
               role="alert"
             >
               {fieldErrors.name}
@@ -168,7 +168,7 @@ export function ConsultationForm({
           {fieldErrors.phone && (
             <p
               id="consultation-phone-error"
-              className="text-xs text-red-100"
+              className="text-xs text-rose-400 font-medium"
               role="alert"
             >
               {fieldErrors.phone}
@@ -193,7 +193,7 @@ export function ConsultationForm({
           {fieldErrors.email && (
             <p
               id="consultation-email-error"
-              className="text-xs text-red-100"
+              className="text-xs text-rose-400 font-medium"
               role="alert"
             >
               {fieldErrors.email}
@@ -217,7 +217,7 @@ export function ConsultationForm({
             {fieldErrors.company && (
               <p
                 id="consultation-company-error"
-                className="text-xs text-red-100"
+                className="text-xs text-rose-400 font-medium"
                 role="alert"
               >
                 {fieldErrors.company}
@@ -230,7 +230,7 @@ export function ConsultationForm({
         <span className={captionClass}>{t.forms.message}</span>
         <Textarea
           id="consultation-message"
-          className="min-h-32 w-full min-w-0 resize-y rounded-xl border border-white/30 bg-white/[.06] p-4 text-base leading-6 text-white shadow-none outline-none transition placeholder:text-white/65 hover:border-white/50 focus-visible:border-white focus-visible:ring-3 focus-visible:ring-white/30"
+          className="min-h-28 w-full min-w-0 resize-y rounded-xl border border-slate-700 bg-slate-900/90 p-4 text-base leading-6 text-white shadow-inner outline-none transition placeholder:text-slate-400 hover:border-slate-500 focus-visible:border-teal-400 focus-visible:ring-2 focus-visible:ring-teal-400/40"
           name="message"
           rows={compact ? 3 : 4}
           required
@@ -243,7 +243,7 @@ export function ConsultationForm({
         {fieldErrors.message && (
           <p
             id="consultation-message-error"
-            className="text-xs text-red-100"
+            className="text-xs text-rose-400 font-medium"
             role="alert"
           >
             {fieldErrors.message}
@@ -251,7 +251,7 @@ export function ConsultationForm({
         )}
       </label>
       <label
-        className="flex items-start gap-3 text-xs leading-5 text-white/75"
+        className="flex items-start gap-3 text-xs leading-5 text-slate-200 font-medium"
         htmlFor="consultation-consent"
       >
         <input
@@ -259,7 +259,7 @@ export function ConsultationForm({
           name="consent"
           type="checkbox"
           required
-          className="mt-1 size-4 accent-primary"
+          className="mt-1 size-4 accent-teal-400 rounded"
           aria-invalid={Boolean(fieldErrors.consent)}
           aria-describedby={
             fieldErrors.consent ? "consultation-consent-error" : undefined
@@ -268,7 +268,7 @@ export function ConsultationForm({
         <span>
           {t.forms.consentLabel}{" "}
           <Link
-            className="text-primary underline"
+            className="text-teal-300 font-bold underline hover:text-teal-200"
             href={ROUTES.legalDetail("chinh-sach-bao-mat")}
             target="_blank"
           >
@@ -280,31 +280,31 @@ export function ConsultationForm({
       {fieldErrors.consent && (
         <p
           id="consultation-consent-error"
-          className="text-xs text-red-100"
+          className="text-xs text-rose-400 font-medium"
           role="alert"
         >
           {fieldErrors.consent}
         </p>
       )}
       <div
-        className={`flex flex-col gap-4 border-t border-white/10 pt-5 ${compact ? "" : "sm:items-start"}`}
+        className={`flex flex-col gap-3 border-t border-white/15 pt-5 ${compact ? "" : "sm:items-start"}`}
       >
         <Button
           type="submit"
           size="lg"
-          className={`min-h-12 max-w-full rounded-full ${compact ? "w-full" : "w-full sm:w-auto"}`}
+          className={`min-h-12 max-w-full rounded-xl bg-teal-400 hover:bg-teal-300 text-slate-950 font-bold shadow-lg shadow-teal-500/25 transition-all ${compact ? "w-full" : "w-full sm:w-auto px-8"}`}
           disabled={status === "sending"}
         >
           {status === "sending" ? t.forms.submitting : t.forms.submitEnquiry}
           <span>→</span>
         </Button>
-        <small className="text-xs leading-5 text-white/75">
+        <small className="text-xs leading-5 text-slate-300 font-medium">
           {t.forms.dataProtectionNote}
         </small>
       </div>
       {message && (
         <p
-          className="m-0 col-span-full rounded-lg bg-red-300/15 px-3 py-3 text-sm leading-6 text-red-100"
+          className="m-0 col-span-full rounded-lg bg-red-500/20 border border-red-500/40 px-3 py-3 text-sm leading-6 text-red-200 font-medium"
           role={status === "error" ? "alert" : "status"}
         >
           {message}

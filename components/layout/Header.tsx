@@ -46,9 +46,12 @@ export function Header() {
   useEffect(() => {
     const updateHeader = () =>
       setOverHero(
-        window.scrollY < 72 &&
+        window.scrollY < 40 &&
           Boolean(
-            document.querySelector("main > section:first-child.bg-brand-ink"),
+            document.querySelector(".page-hero") ||
+              document.querySelector(".home-hero") ||
+              document.querySelector("main > section:first-child.bg-brand-ink") ||
+              document.querySelector("#main-content section:first-child.bg-brand-ink"),
           ),
       );
     updateHeader();
@@ -65,62 +68,12 @@ export function Header() {
   return (
     <header
       className={cn(
-        "fixed inset-x-0 top-0 z-50 transition-all duration-300",
+        "site-header fixed inset-x-0 top-0 z-50 transition-all duration-300",
         overHero
-          ? "border-transparent bg-transparent text-white"
-          : "border-b border-slate-200/80 bg-white/95 text-slate-900 shadow-md backdrop-blur-xl supports-[backdrop-filter]:bg-white/90",
+          ? "border-b border-transparent bg-transparent text-white"
+          : "border-b border-border bg-white/95 text-foreground backdrop-blur-xl shadow-xs",
       )}
     >
-      {/* Enterprise Operational Status Ribbon */}
-      <div
-        className={cn(
-          "hidden border-b px-4 py-1 text-[11px] lg:flex lg:items-center lg:justify-between transition-colors",
-          overHero
-            ? "border-white/10 bg-black/45 text-slate-300 backdrop-blur-md"
-            : "border-slate-200/80 bg-slate-100/90 text-slate-600 backdrop-blur-md",
-        )}
-      >
-        <div className="site-container flex w-full items-center justify-between">
-          <div className="flex items-center gap-3">
-            <span className="flex items-center gap-1.5 font-semibold">
-              <span className="size-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              <span className={overHero ? "text-emerald-300" : "text-emerald-700"}>
-                OpenBIM Cloud v2.4
-              </span>
-            </span>
-            <span className="opacity-30">|</span>
-            <span className="font-mono text-[10.5px]">ISO 19650-2 · IFC 4x3 Certified</span>
-            <span className="opacity-30">|</span>
-            <span className="text-[10.5px]">
-              {locale === "vi" ? "Đà Nẵng · Hà Nội · TP.HCM" : "Da Nang · Hanoi · HCMC"}
-            </span>
-          </div>
-
-          <div className="flex items-center gap-4">
-            <span className="font-mono text-[11px]">
-              MST:{" "}
-              <strong className={overHero ? "text-teal-300 font-bold" : "text-teal-700 font-bold"}>
-                0402225839
-              </strong>
-            </span>
-            <span className="opacity-30">|</span>
-            <button
-              type="button"
-              onClick={() => setCommandOpen(true)}
-              className={cn(
-                "flex items-center gap-1.5 rounded-md px-2 py-0.5 font-mono text-[10.5px] font-medium transition-colors border",
-                overHero
-                  ? "bg-white/10 hover:bg-white/20 text-white border-white/20"
-                  : "bg-white hover:bg-slate-200/80 text-slate-800 border-slate-300 shadow-2xs",
-              )}
-            >
-              <Search className="size-3" />
-              <span>{locale === "vi" ? "Lệnh nhanh" : "Command"}</span>
-              <kbd className="rounded bg-black/20 px-1 py-0.2 text-[9px] font-sans">⌘K</kbd>
-            </button>
-          </div>
-        </div>
-      </div>
       <div className="site-container flex h-20 items-center justify-between gap-4">
         <Link
           href={ROUTES.home}
@@ -165,30 +118,21 @@ export function Header() {
             </svg>
           </div>
           <span className="leading-none">
-            <span className="flex items-center gap-1">
-              <strong
-                className={cn(
-                  "block text-[17px] font-black tracking-[.18em]",
-                  overHero ? "text-white" : "text-slate-950",
-                )}
-              >
-                BIM<span className={overHero ? "text-teal-400" : "text-teal-600"}>4C</span>
-              </strong>
-              <span
-                className={cn(
-                  "rounded px-1.5 py-0.5 font-mono text-[9px] font-bold",
-                  overHero
-                    ? "bg-teal-500/20 text-teal-300 border border-teal-500/30"
-                    : "bg-teal-500/15 text-teal-700 border border-teal-600/30",
-                )}
-              >
-                PRO
+            <strong
+              className={cn(
+                "block text-[17px] font-black tracking-[.14em]",
+                overHero ? "text-white" : "text-slate-950",
+              )}
+            >
+              BIM
+              <span className={overHero ? "text-teal-400" : "text-teal-600"}>
+                4C
               </span>
-            </span>
+            </strong>
             <small
               className={cn(
-                "mt-1 hidden text-[9.5px] font-semibold tracking-[.12em] sm:block",
-                overHero ? "text-white/75" : "text-slate-600",
+                "mt-0.5 hidden text-[10px] font-medium tracking-[.12em] sm:block",
+                overHero ? "text-white/65" : "text-slate-500",
               )}
             >
               {t.navigation.tagline}
@@ -197,10 +141,8 @@ export function Header() {
         </Link>
         <nav
           className={cn(
-            "hidden items-center gap-1 rounded-full border p-1 backdrop-blur-md lg:flex transition-all duration-300",
-            overHero
-              ? "border-white/15 bg-black/30 shadow-lg"
-              : "border-slate-200/90 bg-slate-100/90 shadow-inner",
+            "desktop-navigation hidden items-center gap-1 xl:flex",
+            overHero ? "text-white" : "text-foreground",
           )}
           aria-label="Main navigation"
         >
@@ -213,79 +155,57 @@ export function Header() {
                 key={item.href}
                 aria-current={isCurrentPage ? "page" : undefined}
                 className={cn(
-                  "rounded-full px-4 py-1.5 text-[13px] font-semibold transition-all duration-200",
+                  "nav-link px-3 py-3 text-[13px] font-medium transition-colors duration-200",
                   overHero
                     ? isCurrentPage
-                      ? "bg-white text-brand-ink font-bold shadow-sm"
+                      ? "text-teal-200"
                       : "text-white/85 hover:bg-white/10 hover:text-white"
                     : isCurrentPage
-                      ? "bg-primary text-white font-bold shadow-md shadow-primary/30"
+                      ? "text-primary"
                       : "text-slate-700 hover:bg-white hover:text-slate-950 font-medium",
                 )}
               >
                 {item.label}
-                {"is3D" in item && item.is3D && (
-                  <span
-                    className={cn(
-                      "ml-1.5 rounded-full px-1.5 py-0.2 font-mono text-[9px] font-bold border",
-                      isCurrentPage
-                        ? "bg-white/20 text-white border-white/30"
-                        : overHero
-                          ? "bg-teal-500/25 text-teal-300 border-teal-500/40"
-                          : "bg-teal-600/15 text-teal-700 border-teal-600/30",
-                    )}
-                  >
-                    3D
-                  </span>
-                )}
               </Link>
             );
           })}
         </nav>
-        <div className="hidden items-center gap-3 lg:flex">
+        <div className="hidden items-center gap-3 xl:flex">
           <button
             type="button"
             onClick={() => setCommandOpen(true)}
-            className={cn(
-              "flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-medium border transition-all",
-              overHero
-                ? "border-white/20 bg-black/30 text-white hover:bg-white/15"
-                : "border-slate-200 bg-slate-100/90 text-slate-700 hover:bg-slate-200/90",
-            )}
-            title="Search (⌘K)"
+            className="grid size-11 place-items-center rounded-lg hover:bg-primary/10"
+            aria-label={locale === "vi" ? "Tìm kiếm" : "Search"}
           >
-            <Search className="size-3.5 text-teal-400" />
-            <span className="hidden xl:inline">{locale === "vi" ? "Tìm kiếm" : "Search"}</span>
-            <kbd className="rounded bg-black/20 px-1 py-0.2 font-mono text-[9px] text-zinc-300">
-              ⌘K
-            </kbd>
+            <Search className="size-4" />
           </button>
           <LanguageSwitcher isOverHero={overHero} />
           <Button
             asChild
             className={cn(
-              "rounded-full px-5 font-bold transition-all duration-300 shadow-md",
+              "rounded-lg px-5 font-semibold transition-colors duration-200 shadow-none",
               overHero
                 ? "bg-white text-brand-ink hover:bg-teal-50 hover:text-brand-ink shadow-teal-900/30"
                 : "bg-primary text-white hover:bg-primary-hover shadow-primary/30",
             )}
           >
             <Link href={ROUTES.contact}>
-              {t.navigation.requestConsultation} <ArrowUpRight className="size-4 ml-1" />
+              {t.navigation.requestConsultation}{" "}
+              <ArrowUpRight className="size-4 ml-1" />
             </Link>
           </Button>
         </div>
-        <div className="flex items-center gap-1.5 sm:gap-2 lg:hidden">
+        <div className="flex items-center gap-1.5 sm:gap-2 xl:hidden">
           <button
             type="button"
             onClick={() => setCommandOpen(true)}
             className={cn(
-              "inline-flex size-9 items-center justify-center rounded-lg border transition-colors",
+              "inline-flex size-11 items-center justify-center rounded-lg border transition-colors",
               overHero
                 ? "border-white/20 bg-black/30 text-white hover:bg-white/15"
                 : "border-slate-200 bg-slate-100 text-slate-800 hover:bg-slate-200",
             )}
-            aria-label="Open command palette"
+            aria-label={locale === "vi" ? "Tìm kiếm" : "Search"}
           >
             <Search className="size-4 text-teal-400" />
           </button>
@@ -297,7 +217,7 @@ export function Header() {
           <Link
             href={ROUTES.contact}
             className={cn(
-              "inline-flex min-h-9 items-center rounded-lg px-2.5 text-xs font-bold",
+              "inline-flex min-h-11 items-center rounded-lg px-2.5 text-xs font-semibold",
               overHero
                 ? "bg-white/10 text-white hover:bg-white/20"
                 : "bg-primary text-white hover:bg-primary-hover shadow-xs",
@@ -311,24 +231,32 @@ export function Header() {
                 variant="ghost"
                 size="icon"
                 className={cn(
-                  "size-9 lg:hidden",
+                  "size-11 xl:hidden",
                   overHero
                     ? "text-white hover:bg-white/10 hover:text-white"
                     : "text-slate-900 hover:bg-slate-100 hover:text-slate-950",
                 )}
-                aria-label="Open navigation menu"
+                aria-label={
+                  locale === "vi"
+                    ? "Mở menu điều hướng"
+                    : "Open navigation menu"
+                }
                 aria-haspopup="dialog"
               >
                 <Menu className="size-5" />
               </Button>
             </SheetTrigger>
             <SheetContent className="overflow-y-auto p-6">
-              <SheetTitle className="mb-2 text-left">{t.navigation.exploreBim4c}</SheetTitle>
+              <SheetTitle className="mb-2 text-left">
+                {t.navigation.exploreBim4c}
+              </SheetTitle>
               <p className="mb-5 text-sm leading-6 text-muted-foreground">
                 {t.hero.badge}
               </p>
               <div className="mb-4 flex items-center justify-between border-b pb-4">
-                <span className="text-xs font-medium text-muted-foreground">Language / Ngôn ngữ:</span>
+                <span className="text-xs font-medium text-muted-foreground">
+                  Language / Ngôn ngữ:
+                </span>
                 <LanguageSwitcher />
               </div>
               <nav className="grid gap-2">

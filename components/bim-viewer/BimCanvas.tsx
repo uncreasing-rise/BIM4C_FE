@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef, useState, useCallback } from "react";
+import React, { useEffect, useRef, useCallback } from "react";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import type {
@@ -131,7 +131,6 @@ export function BimCanvas({
     scene.add(gridHelper);
 
     // 7. Render & FPS Loop
-    let lastTime = performance.now();
     let frameCount = 0;
     let lastFpsUpdate = performance.now();
 
@@ -294,7 +293,6 @@ export function BimCanvas({
       const initPos = initialPositionsRef.current.get(id);
       if (!initPos) return;
 
-      const elem = mesh.userData.element as BimElementData;
       // Displace upwards based on vertical position and explode factor
       const yMultiplier = Math.max(0.2, initPos.y * 0.45);
       const xMultiplier = Math.sign(initPos.x) * Math.abs(initPos.x * 0.15);

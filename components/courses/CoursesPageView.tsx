@@ -1,5 +1,7 @@
 "use client";
 
+import { usePublicMotion } from "@/components/motion/hooks/use-public-motion";
+
 import { PageHero } from "@/components/shared/PageHero";
 import { CourseExplorer } from "@/components/courses/CourseExplorer";
 import type { ContentEntry } from "@/types/content";
@@ -13,11 +15,13 @@ export function CoursesPageView({
   courses: ContentEntry[];
   meta: PageMeta;
 }) {
+  usePublicMotion();
   const { t } = useLanguage();
 
   return (
     <main>
       <PageHero
+        breadcrumbs={[{ label: t.navigation.courses }]}
         eyebrow={t.coursesPage.eyebrow}
         title={t.coursesPage.title}
         description={t.coursesPage.description}

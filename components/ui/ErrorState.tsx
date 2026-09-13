@@ -1,6 +1,5 @@
 "use client";
 import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useLanguage } from "@/lib/i18n/context";
 import { AlertTriangle, RotateCcw } from "lucide-react";
 

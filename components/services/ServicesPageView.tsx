@@ -1,5 +1,7 @@
 "use client";
 
+import { usePublicMotion } from "@/components/motion/hooks/use-public-motion";
+
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -19,11 +21,13 @@ export function ServicesPageView({
   services: ContentEntry[];
   meta: PageMeta;
 }) {
+  usePublicMotion();
   const { t } = useLanguage();
 
   return (
     <main>
       <PageHero
+        breadcrumbs={[{ label: t.navigation.services }]}
         eyebrow={t.servicesPage.eyebrow}
         title={t.servicesPage.title}
         description={t.servicesPage.description}

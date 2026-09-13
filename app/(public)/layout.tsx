@@ -1,6 +1,9 @@
 import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
 import { MotionSystem } from "@/components/motion/MotionSystem";
+import { SlideScrollSystem } from "@/components/motion/SlideScrollSystem";
+import { SmoothScroll } from "@/components/motion/SmoothScroll";
+import { SectionWheelSnap } from "@/components/motion/SectionWheelSnap";
 import { ScrollProgress } from "@/components/motion/ScrollProgress";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { organizationSchema, websiteSchema } from "@/lib/seo/structured-data";
@@ -21,6 +24,9 @@ export default function PublicLayout({
       </a>
       <JsonLd data={[organizationSchema(), websiteSchema()]} />
       <MotionSystem />
+      <SmoothScroll />
+      <SectionWheelSnap />
+      <SlideScrollSystem />
       <Header />
       <div id="main-content" tabIndex={-1} className="outline-none">
         {children}

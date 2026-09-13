@@ -15,8 +15,8 @@ function load(path) {
   if (cache.has(filename)) return cache.get(filename);
   if (filename.endsWith(".json"))
     return JSON.parse(readFileSync(filename, "utf8"));
-  const module = { exports: {} };
-  cache.set(filename, module.exports);
+  const cjsModule = { exports: {} };
+  cache.set(filename, cjsModule.exports);
   const source = ts.transpileModule(readFileSync(filename, "utf8"), {
     compilerOptions: {
       module: ts.ModuleKind.CommonJS,
@@ -32,10 +32,10 @@ function load(path) {
         : require(name);
   new Function("require", "module", "exports", source)(
     localRequire,
-    module,
-    module.exports,
+    cjsModule,
+    cjsModule.exports,
   );
-  return module.exports;
+  return cjsModule.exports;
 }
 
 test("All returns every project and localized filters match legacy values", () => {

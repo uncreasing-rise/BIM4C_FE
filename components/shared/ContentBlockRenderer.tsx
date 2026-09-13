@@ -13,15 +13,16 @@ export function ContentBlockRenderer({ blocks }: { blocks: ContentBlock[] }) {
     <div className="space-y-12">
       {blocks.map((block) => {
         switch (block.type) {
-          case "rich-text":
+          case "rich-text": {
+            const anchorId = block.id ? block.id.replace(/^block-/, "") : "";
             return (
               <section
-                className="scroll-mt-28"
-                id={`block-${block.id}`}
+                className="scroll-mt-28 sm:scroll-mt-32"
+                id={anchorId || undefined}
                 key={block.id}
               >
                 {block.heading && (
-                  <h2 className="mb-5 text-3xl font-semibold tracking-[-.035em]">
+                  <h2 className="mb-5 text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
                     {block.heading}
                   </h2>
                 )}
@@ -35,6 +36,7 @@ export function ContentBlockRenderer({ blocks }: { blocks: ContentBlock[] }) {
                 </div>
               </section>
             );
+          }
           case "image":
             return (
               <figure className="overflow-hidden rounded-2xl" key={block.id}>

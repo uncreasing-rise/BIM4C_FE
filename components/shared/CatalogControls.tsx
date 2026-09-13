@@ -3,7 +3,7 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { ChevronLeft, ChevronRight, Search } from "lucide-react";
+import { ChevronLeft, ChevronRight, Search, SlidersHorizontal, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -30,33 +30,44 @@ export function CatalogCategories({
   formatLabel?: (item: string) => string;
 }) {
   return (
-    <nav
-      className="flex max-w-full items-center gap-2 overflow-x-auto pb-3 pt-2 [scrollbar-width:thin] [scrollbar-color:var(--border)_transparent]"
-      aria-label={ariaLabel}
-    >
-      {items.map((item) => (
-        <Button
-          variant="ghost"
-          className={cn(
-            "min-h-11 shrink-0 rounded-full border px-4 text-muted-foreground shadow-none hover:border-primary/30 hover:bg-primary/5 hover:text-primary",
-            value === item &&
-              "border-primary bg-primary text-primary-foreground hover:bg-primary-hover hover:text-primary-foreground",
-          )}
-          aria-pressed={value === item}
-          onClick={() => onChange(item)}
-          key={item}
-        >
-          {formatLabel(item)}
-        </Button>
-      ))}
-    </nav>
+    <div className="relative mb-3">
+      <nav
+        className="flex max-w-full items-center gap-2 overflow-x-auto pb-2 pt-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+        aria-label={ariaLabel}
+      >
+        {items.map((item) => {
+          const isSelected =
+            value === item ||
+            value.toLowerCase() === item.toLowerCase() ||
+            formatLabel(value).toLowerCase() === formatLabel(item).toLowerCase();
+          return (
+            <button
+              key={item}
+              type="button"
+              className={cn(
+                "min-h-10 shrink-0 rounded-full px-4 py-2 font-semibold text-xs sm:text-sm transition-all duration-200 border shadow-2xs whitespace-nowrap",
+                isSelected
+                  ? "border-primary bg-primary text-white shadow-md shadow-teal-900/20 ring-2 ring-primary/20"
+                  : "border-border bg-card text-foreground hover:border-primary/40 hover:bg-primary/5 hover:text-primary",
+              )}
+              aria-pressed={isSelected}
+              onClick={() => onChange(item)}
+            >
+              {formatLabel(item)}
+            </button>
+          );
+        })}
+      </nav>
+    </div>
   );
 }
 
 export function CatalogFilterBar({ children }: { children: ReactNode }) {
   return (
-    <div className="mb-7 mt-3 grid grid-cols-1 gap-2 rounded-2xl border bg-card p-2 shadow-sm md:[&:has(>:nth-child(2))]:grid-cols-2 lg:[&:has(>:nth-child(3))]:grid-cols-[1.6fr_1fr_1fr] lg:[&:has(>:nth-child(4))]:grid-cols-[1.5fr_1fr_1fr_1fr]">
-      {children}
+    <div className="mb-6 rounded-2xl border border-border bg-card p-2 sm:p-2.5 shadow-xs">
+      <div className="flex flex-col md:flex-row items-stretch md:items-center gap-2.5 w-full">
+        {children}
+      </div>
     </div>
   );
 }
@@ -73,17 +84,27 @@ export function CatalogSearch({
   onChange: (value: string) => void;
 }) {
   return (
-    <label className="relative block">
+    <div className="relative min-w-0 w-full md:flex-1">
       <span className="sr-only">{label}</span>
-      <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+      <Search className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
       <Input
         type="search"
-        className="h-12 rounded-xl border-0 bg-muted/55 pl-10 shadow-none focus-visible:bg-background"
+        className="h-11 w-full rounded-xl border border-border bg-muted/40 pl-10 pr-9 text-sm text-foreground font-medium placeholder:text-muted-foreground shadow-none transition-colors focus-visible:bg-card focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/20"
         value={value}
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
       />
-    </label>
+      {value && (
+        <button
+          type="button"
+          onClick={() => onChange("")}
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+          aria-label="Clear search"
+        >
+          <X className="size-4" />
+        </button>
+      )}
+    </div>
   );
 }
 
@@ -101,24 +122,26 @@ export function CatalogSelect({
   formatLabel?: (item: string) => string;
 }) {
   return (
-    <div className="min-w-0 rounded-xl bg-muted/55 px-3 pb-1.5 pt-2">
+    <div className="min-w-0 w-full md:w-auto md:min-w-[140px] lg:min-w-[155px] shrink-0 rounded-xl border border-border bg-muted/40 px-3 py-1.5 transition-colors focus-within:bg-card focus-within:border-primary">
       <span
         aria-hidden="true"
-        className="block text-xs font-medium text-muted-foreground"
+        className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground"
       >
         {label}
       </span>
       <Select value={value} onValueChange={onChange}>
         <SelectTrigger
-          className="h-9! w-full rounded-lg border-0 bg-transparent px-0 shadow-none"
+          className="h-6 w-full rounded-none border-0 bg-transparent p-0 text-xs sm:text-sm font-semibold text-foreground shadow-none focus:ring-0 [&>svg]:size-3.5"
           aria-label={label}
         >
           <SelectValue placeholder={label} />
         </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="All">{formatLabel("All")}</SelectItem>
+        <SelectContent className="rounded-xl border border-border bg-popover shadow-xl">
+          <SelectItem value="All" className="font-semibold text-xs sm:text-sm">
+            {formatLabel("All")}
+          </SelectItem>
           {values.map((item) => (
-            <SelectItem value={item} key={item}>
+            <SelectItem value={item} key={item} className="font-medium text-xs sm:text-sm">
               {formatLabel(item)}
             </SelectItem>
           ))}
@@ -145,6 +168,7 @@ export function CatalogPagination({
   const changePage = (trigger: HTMLElement) => {
     scrollToElementTop(trigger.closest("section"));
   };
+
   const href = (number: number) => {
     const params = new URLSearchParams(searchParams.toString());
     if (number === 1) params.delete("page");
@@ -161,75 +185,87 @@ export function CatalogPagination({
   );
 
   return (
-    <nav
-      className="mt-12 flex justify-center gap-2 border-t pt-8"
-      aria-label={ariaLabel}
-    >
-      <Button
-        asChild
-        variant="outline"
-        size="icon"
-        className="size-11 rounded-full aria-disabled:pointer-events-none aria-disabled:opacity-40"
-        aria-label={page === 1 ? "Already on the first page" : "Previous page"}
+    <div className="sticky bottom-6 z-40 mt-12 flex justify-center pointer-events-none">
+      <nav
+        className="pointer-events-auto flex items-center gap-1.5 rounded-full border border-border bg-card/90 dark:bg-slate-950/90 p-1.5 shadow-2xl backdrop-blur-xl ring-1 ring-black/5"
+        aria-label={ariaLabel}
       >
-        <Link
-          aria-disabled={page === 1}
-          tabIndex={page === 1 ? -1 : undefined}
-          href={href(Math.max(1, page - 1))}
-          scroll={false}
-          onClick={(event) => {
-            if (page === 1) event.preventDefault();
-            else changePage(event.currentTarget);
-          }}
+        {/* Previous Page Button */}
+        <Button
+          asChild
+          variant="ghost"
+          size="icon"
+          className="size-9 rounded-full hover:bg-muted text-foreground aria-disabled:pointer-events-none aria-disabled:opacity-30"
+          aria-label={page === 1 ? "Already on the first page" : "Previous page"}
         >
-          <ChevronLeft />
-        </Link>
-      </Button>
-      {pageItems.map((number, index) => (
-        <span className="contents" key={number}>
-          {index > 0 && number - pageItems[index - 1] > 1 && (
-            <span className="grid size-10 place-items-center text-muted-foreground">
-              …
-            </span>
-          )}
-          <Button
-            asChild
-            variant={page === number ? "default" : "outline"}
-            size="icon"
-            className="size-11 rounded-full"
-            aria-label={`Page ${number}`}
-            aria-current={page === number ? "page" : undefined}
+          <Link
+            aria-disabled={page === 1}
+            tabIndex={page === 1 ? -1 : undefined}
+            href={href(Math.max(1, page - 1))}
+            scroll={false}
+            onClick={(event) => {
+              if (page === 1) event.preventDefault();
+              else changePage(event.currentTarget);
+            }}
           >
-            <Link
-              href={href(number)}
-              scroll={false}
-              onClick={(event) => changePage(event.currentTarget)}
+            <ChevronLeft className="size-4" />
+          </Link>
+        </Button>
+
+        {/* Page Numbers */}
+        {pageItems.map((number, index) => (
+          <span className="contents" key={number}>
+            {index > 0 && number - pageItems[index - 1] > 1 && (
+              <span className="grid size-8 place-items-center text-xs text-muted-foreground font-mono">
+                …
+              </span>
+            )}
+            <Button
+              asChild
+              variant={page === number ? "default" : "ghost"}
+              size="icon"
+              className={cn(
+                "size-9 rounded-full text-xs font-bold transition-all",
+                page === number
+                  ? "bg-primary text-white shadow-md shadow-teal-900/30 ring-2 ring-primary/20"
+                  : "text-foreground hover:bg-muted",
+              )}
+              aria-label={`Page ${number}`}
+              aria-current={page === number ? "page" : undefined}
             >
-              {number}
-            </Link>
-          </Button>
-        </span>
-      ))}
-      <Button
-        asChild
-        variant="outline"
-        size="icon"
-        className="size-11 rounded-full aria-disabled:pointer-events-none aria-disabled:opacity-40"
-        aria-label={page === pages ? "Already on the last page" : "Next page"}
-      >
-        <Link
-          aria-disabled={page === pages}
-          tabIndex={page === pages ? -1 : undefined}
-          href={href(Math.min(pages, page + 1))}
-          scroll={false}
-          onClick={(event) => {
-            if (page === pages) event.preventDefault();
-            else changePage(event.currentTarget);
-          }}
+              <Link
+                href={href(number)}
+                scroll={false}
+                onClick={(event) => changePage(event.currentTarget)}
+              >
+                {number}
+              </Link>
+            </Button>
+          </span>
+        ))}
+
+        {/* Next Page Button */}
+        <Button
+          asChild
+          variant="ghost"
+          size="icon"
+          className="size-9 rounded-full hover:bg-muted text-foreground aria-disabled:pointer-events-none aria-disabled:opacity-30"
+          aria-label={page === pages ? "Already on the last page" : "Next page"}
         >
-          <ChevronRight />
-        </Link>
-      </Button>
-    </nav>
+          <Link
+            aria-disabled={page === pages}
+            tabIndex={page === pages ? -1 : undefined}
+            href={href(Math.min(pages, page + 1))}
+            scroll={false}
+            onClick={(event) => {
+              if (page === pages) event.preventDefault();
+              else changePage(event.currentTarget);
+            }}
+          >
+            <ChevronRight className="size-4" />
+          </Link>
+        </Button>
+      </nav>
+    </div>
   );
 }

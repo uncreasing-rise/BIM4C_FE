@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { LogOut, Menu, Search, Command, ArrowRight, PlusCircle, LayoutDashboard, FileText, Layers, GraduationCap, Wrench, Folder, Mail, Users, FileClock, Settings, Sparkles } from "lucide-react";
+import { LogOut, Menu, Search, LayoutDashboard, FileText, Layers, GraduationCap, Wrench, Folder, Mail, Users, FileClock, Settings, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { can, currentAdmin, type AdminIdentity } from "@/features/admin/auth";
@@ -130,7 +130,7 @@ export function AdminShell({
   }
 
   return (
-    <div className="min-h-screen bg-muted/20 lg:grid lg:grid-cols-[260px_minmax(0,1fr)]">
+    <div className="admin-workspace min-h-screen bg-background lg:grid lg:grid-cols-[260px_minmax(0,1fr)]">
       <aside
         id="admin-sidebar"
         className={`fixed inset-y-0 left-0 z-50 flex w-[260px] flex-col border-r border-white/10 bg-brand-ink px-4 pb-5 text-white transition-transform lg:translate-x-0 ${
@@ -141,7 +141,7 @@ export function AdminShell({
           <Link className="flex items-center gap-2 text-2xl font-bold tracking-tight" href="/">
             <span>BIM<span className="text-primary">4C</span></span>
             <span className="rounded bg-teal-500/20 px-1.5 py-0.5 font-mono text-[10px] font-bold text-teal-300 border border-teal-500/30">
-              STUDIO
+              CMS
             </span>
           </Link>
         </div>

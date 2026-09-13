@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { DetailPage } from "@/components/shared/DetailPage";
+import { CourseDetailView } from "@/components/courses/CourseDetailView";
 import { ROUTES } from "@/constants/routes";
 import { getCourseBySlug, getCourses } from "@/features/courses/api/queries";
 import { getContentMetadata } from "@/features/shared/seo/content-metadata";
@@ -31,9 +31,8 @@ export default async function CourseDetail({
   if (!entry) notFound();
   return (
     <main>
-      <DetailPage
+      <CourseDetailView
         entry={entry}
-        kind="course"
         related={selectRelatedContent(entry, courses)}
         backHref={ROUTES.courses}
       />

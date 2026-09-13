@@ -379,6 +379,20 @@ export function BimControlsOverlay({
               {v.clashes.count(clashes.length)}
             </p>
 
+            {clashes.length === 0 && (
+              <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4 text-center">
+                <CheckCircle2 className="size-6 text-emerald-400 mx-auto mb-2" />
+                <p className="font-semibold text-white text-xs">
+                  {locale === "vi" ? "Không có dữ liệu xung đột" : "No Clash Data"}
+                </p>
+                <p className="mt-1 text-[11px] text-slate-400 leading-relaxed">
+                  {locale === "vi"
+                    ? "Mô hình hiện tại chưa thiết lập ma trận va chạm BCF hoặc không phát hiện giao cắt không gian."
+                    : "Current model has no active BCF clash matrix configured or no intersections detected."}
+                </p>
+              </div>
+            )}
+
             {clashes.map((clash) => {
               const isSelected = clash.id === activeClashId;
               return (

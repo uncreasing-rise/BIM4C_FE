@@ -1,8 +1,6 @@
 import { mapContentDto } from "@/features/shared/mappers/content.mapper";
 import type { ContentEntryDto } from "@/features/shared/types/content-dto";
 import type { Project } from "../types/project";
-import { englishContent } from "@/lib/content/english-content";
-import { toEnglishLabel } from "@/lib/utils/public-labels";
 
 export interface ProjectDto extends ContentEntryDto {
   category: string | { name: string };

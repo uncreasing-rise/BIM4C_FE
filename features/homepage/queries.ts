@@ -41,7 +41,36 @@ export async function getHomepageContent(): Promise<{
       partners: (await partnersResponse.json()) as StrategicPartner[],
     };
   } catch (error) {
-    if (isProductionBuild()) return { slides: [], partners: [] };
-    throw error;
+    if (isProductionBuild()) {
+      return {
+        slides: heroSlides.map((slide, index) => ({
+          ...slide,
+          title: slide.title.join(" "),
+          alt: slide.eyebrow,
+          sortOrder: index,
+          isActive: true,
+        })),
+        partners: strategicPartners.map((partner, index) => ({
+          ...partner,
+          sortOrder: index,
+          isActive: true,
+        })),
+      };
+    }
+    console.warn("Homepage API unavailable, using curated content:", error);
+    return {
+      slides: heroSlides.map((slide, index) => ({
+        ...slide,
+        title: slide.title.join(" "),
+        alt: slide.eyebrow,
+        sortOrder: index,
+        isActive: true,
+      })),
+      partners: strategicPartners.map((partner, index) => ({
+        ...partner,
+        sortOrder: index,
+        isActive: true,
+      })),
+    };
   }
 }

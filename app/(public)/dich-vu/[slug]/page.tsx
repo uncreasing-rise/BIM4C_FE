@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { DetailPage } from "@/components/shared/DetailPage";
+import { ServiceDetailView } from "@/components/services/ServiceDetailView";
 import { ROUTES } from "@/constants/routes";
 import { getServiceBySlug, getServices } from "@/features/services/api/queries";
 import { getContentMetadata } from "@/features/shared/seo/content-metadata";
@@ -32,9 +32,8 @@ export default async function ServiceDetail({
   if (!entry) notFound();
   return (
     <main>
-      <DetailPage
+      <ServiceDetailView
         entry={entry}
-        kind="service"
         related={selectRelatedContent(entry, services)}
         backHref={ROUTES.services}
       />

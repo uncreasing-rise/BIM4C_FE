@@ -1,6 +1,6 @@
 "use client";
 
-import { MapPin, Navigation, Clock, Phone, Copy, ExternalLink, ShieldCheck, Plane } from "lucide-react";
+import { MapPin, Navigation, Clock, Phone, Copy, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import { useLanguage } from "@/lib/i18n/context";
 

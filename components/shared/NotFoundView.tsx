@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/lib/i18n/context";
 
 export function NotFoundView() {
-  const { t, locale } = useLanguage();
+  const { locale } = useLanguage();
   const isVi = locale === "vi";
 
   return (

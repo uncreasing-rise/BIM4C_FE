@@ -62,7 +62,7 @@ export function ServiceGuide({
         </div>
         <div
           id="service-recommendation"
-          className="technical-grid flex flex-col rounded-2xl bg-brand-ink p-6 text-white sm:p-8"
+          className="flex flex-col rounded-2xl bg-brand-ink p-6 text-white sm:p-8"
           aria-live="polite"
           aria-atomic="true"
         >

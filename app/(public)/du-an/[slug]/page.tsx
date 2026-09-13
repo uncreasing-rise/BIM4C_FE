@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { DetailPage } from "@/components/shared/DetailPage";
+import { ProjectDetailView } from "@/components/projects/ProjectDetailView";
 import { ROUTES } from "@/constants/routes";
 import { getProjectBySlug, getProjects } from "@/features/projects/api/queries";
 import { getContentMetadata } from "@/features/shared/seo/content-metadata";
@@ -31,9 +31,8 @@ export default async function ProjectDetail({
   if (!entry) notFound();
   return (
     <main>
-      <DetailPage
+      <ProjectDetailView
         entry={entry}
-        kind="project"
         related={selectRelatedContent(entry, projects)}
         backHref={ROUTES.projects}
       />

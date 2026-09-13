@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { DetailPage } from "@/components/shared/DetailPage";
+import { BlogDetailView } from "@/components/blog/BlogDetailView";
 import { ROUTES } from "@/constants/routes";
 import { getPostBySlug, getPosts } from "@/features/blog/api/queries";
 import { getContentMetadata } from "@/features/shared/seo/content-metadata";
@@ -34,9 +34,8 @@ export default async function BlogDetail({
   const related = selectRelatedContent(entry, candidates);
   return (
     <main>
-      <DetailPage
+      <BlogDetailView
         entry={entry}
-        kind="article"
         related={related}
         backHref={ROUTES.blog}
       />

@@ -1,5 +1,7 @@
 "use client";
 
+import { usePublicMotion } from "@/components/motion/hooks/use-public-motion";
+
 import { PageHero } from "@/components/shared/PageHero";
 import { ProjectExplorer } from "@/components/projects/ProjectExplorer";
 import type { Project } from "@/features/projects/types/project";
@@ -13,15 +15,17 @@ export function ProjectsPageView({
   projects: Project[];
   meta: PageMeta;
 }) {
+  usePublicMotion();
   const { t } = useLanguage();
 
   return (
     <main>
       <PageHero
+        breadcrumbs={[{ label: t.navigation.projects }]}
         eyebrow={t.projectsPage.eyebrow}
         title={t.projectsPage.title}
         description={t.projectsPage.description}
-        image="/images/news-project-coordination.webp"
+        image="/images/project-lumi.jpg"
       />
       <ProjectExplorer projects={projects} meta={meta} />
     </main>

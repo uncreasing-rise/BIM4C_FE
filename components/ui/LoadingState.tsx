@@ -37,7 +37,7 @@ export function CatalogLoadingState({
 }) {
   return (
     <main aria-busy="true" aria-label={label}>
-      <section className="page-hero technical-grid flex items-center bg-brand-ink">
+      <section className="page-hero flex items-center bg-brand-ink">
         <div className="site-container space-y-5 py-8" aria-hidden="true">
           <Skeleton className="h-4 w-32 bg-white/20" />
           <Skeleton className="h-12 w-3/4 max-w-xl bg-white/20" />

@@ -69,23 +69,26 @@ export function CourseRegistrationForm({
     }
   }
 
-  const labelClass = "grid gap-[7px]";
+  const labelClass = "grid gap-2";
   const inputClass =
-    "h-[46px] w-full border border-white/25 bg-background/[.07] px-[13px] text-base text-white outline-none focus:border-white focus:bg-background/10";
+    "h-12 w-full min-w-0 rounded-xl border border-slate-700 bg-slate-900/90 px-4 text-base text-white shadow-inner outline-none transition placeholder:text-slate-400 hover:border-slate-500 focus-visible:border-teal-400 focus-visible:ring-2 focus-visible:ring-teal-400/40";
 
   return (
     <form
-      className="grid gap-[18px]"
+      className="grid gap-5"
       onSubmit={submit}
       noValidate
       aria-busy={status === "sending"}
     >
-      <h3 className="text-2xl font-semibold text-white">
-        {t.detailPage.enquireProgramme}
-      </h3>
-      <p className="text-white/70">{courseTitle}</p>
+      <div>
+        <h3 className="text-xl font-bold text-white">
+          {t.detailPage.enquireProgramme}
+        </h3>
+        <p className="text-sm font-semibold text-teal-300 mt-1">{courseTitle}</p>
+      </div>
+
       <label className={labelClass} htmlFor="course-registration-name">
-        <span className="text-xs font-semibold uppercase tracking-[.06em] text-white/70">
+        <span className="text-xs font-bold uppercase tracking-wider text-slate-200">
           {t.forms.fullName}
         </span>
         <Input
@@ -112,7 +115,7 @@ export function CourseRegistrationForm({
       </label>
 
       <label className={labelClass} htmlFor="course-registration-phone">
-        <span className="text-xs font-semibold uppercase tracking-[.06em] text-white/70">
+        <span className="text-xs font-bold uppercase tracking-wider text-slate-200">
           {t.forms.phone}
         </span>
         <Input
@@ -139,7 +142,7 @@ export function CourseRegistrationForm({
         )}
       </label>
       <label className={labelClass} htmlFor="course-registration-email">
-        <span className="text-xs font-semibold uppercase tracking-[.06em] text-white/70">
+        <span className="text-xs font-bold uppercase tracking-wider text-slate-200">
           {t.forms.workEmail}
         </span>
         <Input
@@ -166,7 +169,7 @@ export function CourseRegistrationForm({
         )}
       </label>
       <label
-        className="flex items-start gap-3 text-xs leading-5 text-white/75"
+        className="flex items-start gap-3 text-xs leading-5 text-slate-200 font-medium"
         htmlFor="course-registration-consent"
       >
         <input
@@ -174,7 +177,7 @@ export function CourseRegistrationForm({
           name="consent"
           type="checkbox"
           required
-          className="mt-1 size-4 accent-primary"
+          className="mt-1 size-4 accent-teal-400 rounded"
           aria-invalid={Boolean(fieldErrors.consent)}
           aria-describedby={
             fieldErrors.consent
@@ -185,7 +188,7 @@ export function CourseRegistrationForm({
         <span>
           {t.forms.consentLabel}{" "}
           <Link
-            className="text-primary underline"
+            className="text-teal-300 font-bold underline hover:text-teal-200"
             href={ROUTES.legalDetail("chinh-sach-bao-mat")}
             target="_blank"
           >
@@ -204,16 +207,19 @@ export function CourseRegistrationForm({
         </p>
       )}
       <Button
-        className="min-h-12 w-full rounded-xl"
         type="submit"
+        size="lg"
+        className="min-h-12 w-full rounded-xl bg-teal-400 hover:bg-teal-300 text-slate-950 font-bold shadow-lg shadow-teal-500/25 transition-all"
         disabled={status === "sending"}
       >
-        {status === "sending" ? t.forms.submitting : t.forms.submitRegistration}
-        <span className="ml-[18px]">→</span>
+        {status === "sending"
+          ? t.forms.submitting
+          : t.forms.submitRegistration}
+        <span>→</span>
       </Button>
-      <p className="text-xs leading-5 text-white/75">
-        {t.forms.registrationNotice}
-      </p>
+      <small className="text-xs leading-5 text-slate-300 font-medium">
+        {t.forms.dataProtectionNote}
+      </small>
       {message && (
         <p
           className={`m-0 px-[11px] py-[9px] text-xs rounded-lg ${status === "success" ? "bg-emerald-300/15 text-emerald-300" : "bg-rose-500/15 text-rose-300"}`}

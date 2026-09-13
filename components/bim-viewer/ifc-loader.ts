@@ -28,7 +28,6 @@ export async function parseIfcFileToBimModel(
   });
 
   const elements: BimElementData[] = [];
-  let elementIdx = 1;
 
   // List of common IFC structural and architectural entities to extract
   const ifcEntities = [
@@ -55,10 +54,10 @@ export async function parseIfcFileToBimModel(
         const guid = properties.GlobalId?.value || `GUID-${expressID}`;
         const name = properties.Name?.value || `${entityMeta.name} #${expressID}`;
 
-        // Try extracting real 3D geometry matrix from web-ifc FlatMesh
-        let posX = (Math.random() - 0.5) * 16;
-        let posY = Math.random() * 12;
-        let posZ = (Math.random() - 0.5) * 16;
+        // Extract real 3D geometry matrix from web-ifc FlatMesh
+        let posX = 0;
+        let posY = 0;
+        let posZ = 0;
         let sizeX = 1.0;
         let sizeY = 3.0;
         let sizeZ = 1.0;
@@ -81,7 +80,7 @@ export async function parseIfcFileToBimModel(
             }
           }
         } catch {
-          // Fallback to parametric placement if FlatMesh is not computed for this line
+          // Fallback to origin if FlatMesh is not computed for this line
         }
 
         if (entityMeta.name.includes("Slab")) {
@@ -137,27 +136,19 @@ export async function parseIfcFileToBimModel(
   }
 
   api.CloseModel(modelID);
+  onProgress?.(100);
+
+  if (elements.length === 0) {
+    throw new Error("Không thể trích xuất cấu kiện 3D từ tệp IFC này. Tệp có thể rỗng hoặc sử dụng schema không được hỗ trợ.");
+  }
 
   return {
     id: `uploaded-${Date.now()}`,
     nameKey: "tower",
-    description: `Mô hình IFC: ${file.name} (Bóc tách ${elements.length} cấu kiện buildingSMART)`,
+    description: `Mô hình IFC: ${file.name} (${elements.length} cấu kiện trích xuất thực tế qua Web-IFC)`,
     elementsCount: elements.length,
-    elements: elements.length > 0 ? elements : [],
-    clashes: [
-      {
-        id: "clash-upload-01",
-        title: "Kiểm tra xung đột tự động mô hình IFC",
-        description: "Hệ thống tự động phát hiện các vị trí giao cắt không gian giữa cấu kiện Kết cấu và Cơ điện.",
-        severity: "high",
-        disciplineA: "MEP",
-        elementA: "Hệ thống Ống gió",
-        disciplineB: "Structure",
-        elementB: "Dầm Kết Cấu",
-        point: [0, 3, 0],
-        status: "open",
-      },
-    ],
+    elements: elements,
+    clashes: [],
     defaultCamera: {
       position: [24, 20, 24],
       target: [0, 5, 0],

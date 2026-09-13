@@ -33,7 +33,7 @@ export function BackToTop() {
       onClick={scrollToTop}
       aria-label={t.common.backToTop}
       className={cn(
-        "fixed bottom-6 right-6 z-40 flex size-11 items-center justify-center rounded-full border border-white/20 bg-brand-ink/90 text-white shadow-xl backdrop-blur-md transition-all duration-300 hover:bg-primary hover:scale-110 active:scale-95",
+        "fixed bottom-20 right-5 lg:bottom-8 lg:right-8 z-40 flex size-11 items-center justify-center rounded-full border border-white/20 bg-brand-ink/90 text-white shadow-xl backdrop-blur-md transition-all duration-300 hover:bg-primary hover:scale-110 active:scale-95",
         "animate-in fade-in zoom-in-75 duration-200",
       )}
     >

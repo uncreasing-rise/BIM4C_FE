@@ -1,7 +1,20 @@
 "use client";
+
 import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { adminMediaApi, type AdminMedia } from "@/features/admin/api/media";
+import {
+  UploadCloud,
+  Search,
+  Copy,
+  Trash2,
+  Check,
+  Loader2,
+  ImageIcon,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
 
 export function MediaLibrary() {
   const [items, setItems] = useState<AdminMedia[]>([]);
@@ -9,18 +22,31 @@ export function MediaLibrary() {
   const [search, setSearch] = useState("");
   const [feedback, setFeedback] = useState("");
   const [busy, setBusy] = useState(false);
-  const input = useRef<HTMLInputElement>(null);
-  const load = useCallback(async (signal?: AbortSignal) => {
-    try {
-      const result = await adminMediaApi.list(search, signal);
-      if (!signal?.aborted) setItems(result.data);
-    } catch (error) {
-      if (signal?.aborted) return;
-      setFeedback(
-        error instanceof Error ? error.message : "Không thể tải media",
-      );
-    }
-  }, [search]);
+  const [copied, setCopied] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const load = useCallback(
+    async (signal?: AbortSignal) => {
+      try {
+        const result = await adminMediaApi.list(search, signal);
+        const list = Array.isArray(result?.data)
+          ? result.data
+          : Array.isArray(result)
+            ? result
+            : Array.isArray((result as unknown as { items: AdminMedia[] })?.items)
+              ? (result as unknown as { items: AdminMedia[] }).items
+              : [];
+        if (!signal?.aborted) setItems(list);
+      } catch (error) {
+        if (signal?.aborted) return;
+        setFeedback(
+          error instanceof Error ? error.message : "Không thể tải media",
+        );
+      }
+    },
+    [search],
+  );
+
   useEffect(() => {
     const controller = new AbortController();
     const timer = window.setTimeout(() => void load(controller.signal), 250);
@@ -29,20 +55,25 @@ export function MediaLibrary() {
       controller.abort();
     };
   }, [load]);
+
   async function upload(file?: File) {
     if (!file || busy) return;
     setBusy(true);
+    const toastId = toast.loading("Đang tải ảnh lên Supabase Storage...");
     try {
-      await adminMediaApi.upload(file, "");
-      setFeedback("Đã tải tệp lên.");
+      await adminMediaApi.upload(file, file.name.replace(/\.[^/.]+$/, ""));
+      toast.success("Đã tải tệp lên thành công!", { id: toastId });
       await load();
     } catch (error) {
-      setFeedback(error instanceof Error ? error.message : "Không thể tải tệp");
+      toast.error(error instanceof Error ? error.message : "Không thể tải tệp", {
+        id: toastId,
+      });
     } finally {
       setBusy(false);
-      if (input.current) input.current.value = "";
+      if (inputRef.current) inputRef.current.value = "";
     }
   }
+
   async function saveAlt() {
     if (!selected || busy) return;
     setBusy(true);
@@ -53,132 +84,213 @@ export function MediaLibrary() {
       );
       setSelected(result.data);
       await load();
-      setFeedback("Đã cập nhật mô tả ảnh.");
+      toast.success("Đã cập nhật mô tả ảnh.");
     } catch (error) {
-      setFeedback(
-        error instanceof Error ? error.message : "Không thể cập nhật",
-      );
+      toast.error(error instanceof Error ? error.message : "Không thể cập nhật");
     } finally {
       setBusy(false);
     }
   }
+
   async function remove() {
     if (!selected || busy || !window.confirm(`Xóa “${selected.filename}”?`))
       return;
     setBusy(true);
+    const toastId = toast.loading("Đang xóa tệp khỏi Supabase...");
     try {
       await adminMediaApi.remove(selected.id);
       setSelected(null);
       await load();
+      toast.success("Đã xóa tệp thành công.", { id: toastId });
     } catch (error) {
-      setFeedback(error instanceof Error ? error.message : "Không thể xóa");
+      toast.error(error instanceof Error ? error.message : "Không thể xóa", {
+        id: toastId,
+      });
     } finally {
       setBusy(false);
     }
   }
+
+  const copyUrl = (url: string) => {
+    navigator.clipboard.writeText(url);
+    setCopied(true);
+    toast.success("Đã sao chép liên kết ảnh vào bộ nhớ tạm!");
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   return (
-    <section className="overflow-hidden rounded-md border border-border bg-background shadow-sm">
+    <section className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
       {feedback && (
-        <div className="mx-4 mt-3 flex justify-between bg-primary/10 px-3 py-2.5 text-xs text-primary">
+        <div className="mx-4 mt-3 flex justify-between rounded-lg bg-destructive/10 px-3.5 py-2.5 text-xs font-semibold text-destructive">
           {feedback}
-          <button onClick={() => setFeedback("")} aria-label="Đóng thông báo">×</button>
+          <button onClick={() => setFeedback("")} aria-label="Đóng thông báo">
+            ×
+          </button>
         </div>
       )}
-      <div className="flex flex-wrap items-center gap-3 border-b border-border p-4 [&_label]:flex [&_label]:h-10 [&_label]:flex-1 [&_label]:items-center [&_label]:border [&_label]:border-border [&_label]:px-3 [&_input]:flex-1 [&_input]:outline-none [&>button]:min-h-10 [&>button]:bg-primary [&>button]:px-4 [&>button]:text-white">
-        <label>
-          <span>⌕</span>
-          <input
+
+      {/* Top Header & Upload Bar */}
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border p-4 sm:p-5">
+        <div className="relative min-w-[240px] flex-1">
+          <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Tìm kiếm tệp..."
+            placeholder="Tìm kiếm tệp theo tên..."
+            className="pl-9"
           />
-        </label>
+        </div>
+
         <input
-          ref={input}
+          ref={inputRef}
           hidden
           type="file"
           accept="image/*"
           onChange={(e) => void upload(e.target.files?.[0])}
         />
-        <button disabled={busy} onClick={() => input.current?.click()}>
-          ↑ {busy ? "Đang xử lý…" : "Tải tệp lên"}
-        </button>
+
+        <Button
+          disabled={busy}
+          onClick={() => inputRef.current?.click()}
+          className="gap-2 font-semibold shadow-xs"
+        >
+          {busy ? (
+            <Loader2 className="size-4 animate-spin" />
+          ) : (
+            <UploadCloud className="size-4" />
+          )}
+          {busy ? "Đang tải lên…" : "Tải ảnh mới"}
+        </Button>
       </div>
-      <div className="grid min-w-0 grid-cols-1 lg:grid-cols-[1fr_320px]">
-        <div className="grid min-w-0 grid-cols-2 gap-3 p-4 md:grid-cols-3 xl:grid-cols-4 [&>button]:min-w-0 [&>button]:border [&>button]:border-border [&>button]:bg-background [&>button]:p-2 [&>button>span]:relative [&>button>span]:block [&>button>span]:aspect-square [&_img]:object-cover [&_strong]:block [&_strong]:truncate [&_strong]:text-xs [&_small]:text-xs [&_small]:text-muted-foreground">
+
+      {/* 2-Column: Grid & Detail Inspector */}
+      <div className="grid min-w-0 grid-cols-1 lg:grid-cols-[1fr_340px]">
+        <div className="grid min-w-0 grid-cols-2 gap-4 p-4 sm:p-6 md:grid-cols-3 xl:grid-cols-4">
           {items.map((item) => (
             <button
-              className={
+              className={`group relative overflow-hidden rounded-xl border bg-background p-2.5 text-left transition-all hover:border-primary hover:shadow-md ${
                 selected?.id === item.id
-                  ? "border-primary ring-2 ring-primary/20"
-                  : ""
-              }
+                  ? "border-primary ring-2 ring-primary/20 bg-primary/5"
+                  : "border-border"
+              }`}
               onClick={() => setSelected(item)}
               key={item.id}
             >
-              <span>
-                <Image src={item.url} alt={item.alt ?? ""} fill sizes="220px" />
-              </span>
-              <strong>{item.filename}</strong>
-              <small>
+              <div className="relative aspect-square w-full overflow-hidden rounded-lg bg-muted">
+                <Image
+                  src={item.url}
+                  alt={item.alt ?? ""}
+                  fill
+                  sizes="220px"
+                  className="object-cover transition-transform group-hover:scale-105"
+                />
+              </div>
+              <p className="mt-2 block truncate text-xs font-semibold text-foreground">
+                {item.filename}
+              </p>
+              <span className="block text-[11px] text-muted-foreground">
                 {item.mimeType} · {(item.size / 1024 / 1024).toFixed(1)} MB
-              </small>
+              </span>
             </button>
           ))}
+
+          {!items.length && (
+            <div className="col-span-full py-16 text-center text-sm text-muted-foreground">
+              <ImageIcon className="mx-auto size-8 text-muted-foreground/50 mb-2" />
+              Chưa có tệp nào trong thư viện media. Hãy nhấn "Tải ảnh mới" để đưa ảnh lên Supabase.
+            </div>
+          )}
         </div>
+
+        {/* Selected Media Inspector Drawer */}
         {selected && (
-          <aside className="relative border-l border-border p-4 [&>div]:relative [&>div]:aspect-square [&_img]:object-contain [&_h3]:mt-3 [&_h3]:text-sm [&_label]:grid [&_label]:gap-1 [&_input]:border [&_input]:border-border [&_input]:p-2">
-            <button onClick={() => setSelected(null)} aria-label="Đóng chi tiết media">×</button>
-            <div>
+          <aside className="border-t lg:border-t-0 lg:border-l border-border p-5 sm:p-6 space-y-4 bg-muted/20">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-bold text-foreground">Chi tiết tệp</h3>
+              <button
+                onClick={() => setSelected(null)}
+                className="text-muted-foreground hover:text-foreground text-sm font-bold p-1"
+                aria-label="Đóng chi tiết media"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="relative aspect-square w-full overflow-hidden rounded-xl bg-slate-950/20 border">
               <Image
                 src={selected.url}
                 alt={selected.alt ?? ""}
                 fill
                 sizes="320px"
+                className="object-contain"
               />
             </div>
-            <h3>{selected.filename}</h3>
-            <dl>
+
+            <div>
+              <p className="font-semibold text-sm break-all text-foreground">
+                {selected.filename}
+              </p>
+              <Button
+                variant="outline"
+                size="sm"
+                className="mt-2 w-full gap-1.5 text-xs font-semibold"
+                onClick={() => copyUrl(selected.url)}
+              >
+                {copied ? <Check className="size-3.5 text-emerald-500" /> : <Copy className="size-3.5" />}
+                {copied ? "Đã sao chép URL!" : "Sao chép URL Supabase"}
+              </Button>
+            </div>
+
+            <dl className="grid grid-cols-2 gap-2 text-xs border-y py-3 text-muted-foreground">
               <div>
-                <dt>Định dạng</dt>
-                <dd>{selected.mimeType}</dd>
+                <dt className="text-[11px] uppercase tracking-wider font-semibold">Định dạng</dt>
+                <dd className="font-medium text-foreground">{selected.mimeType}</dd>
               </div>
               <div>
-                <dt>Dung lượng</dt>
-                <dd>{(selected.size / 1024 / 1024).toFixed(2)} MB</dd>
+                <dt className="text-[11px] uppercase tracking-wider font-semibold">Dung lượng</dt>
+                <dd className="font-medium text-foreground">
+                  {(selected.size / 1024 / 1024).toFixed(2)} MB
+                </dd>
               </div>
-              <div>
-                <dt>Ngày tải lên</dt>
-                <dd>
-                  {new Intl.DateTimeFormat("vi-VN").format(
+              <div className="col-span-2 mt-1">
+                <dt className="text-[11px] uppercase tracking-wider font-semibold">Ngày tải lên</dt>
+                <dd className="font-medium text-foreground">
+                  {new Intl.DateTimeFormat("vi-VN", { dateStyle: "medium", timeStyle: "short" }).format(
                     new Date(selected.createdAt),
                   )}
                 </dd>
               </div>
             </dl>
-            <label>
-              Văn bản thay thế
-              <input
+
+            <div className="space-y-2">
+              <label className="text-xs font-semibold text-foreground">
+                Văn bản thay thế (Alt text)
+              </label>
+              <Input
                 value={selected.alt ?? ""}
                 onChange={(e) =>
                   setSelected({ ...selected, alt: e.target.value })
                 }
+                placeholder="Nhập mô tả ảnh cho SEO..."
               />
-            </label>
-            <button
+            </div>
+
+            <Button
               disabled={busy}
-              className="inline-flex min-h-[42px] items-center justify-center gap-2 rounded bg-primary px-[18px] text-xs font-semibold text-white hover:bg-primary disabled:opacity-50"
+              className="w-full font-semibold shadow-xs"
               onClick={() => void saveAlt()}
             >
-              Lưu mô tả
-            </button>
-            <button
+              Lưu mô tả ảnh
+            </Button>
+
+            <Button
               disabled={busy}
-              className="mt-2 w-full border border-red-300 p-2 text-xs text-red-600"
+              variant="destructive"
+              className="w-full gap-1.5 font-semibold"
               onClick={() => void remove()}
             >
-              Xóa khỏi thư viện
-            </button>
+              <Trash2 className="size-4" /> Xóa khỏi Supabase
+            </Button>
           </aside>
         )}
       </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef, useCallback } from "react";
+import React, { useState, useRef } from "react";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -8,9 +8,7 @@ import {
   ShieldCheck,
   Upload,
   Box,
-  Activity,
   Layers,
-  Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ROUTES } from "@/constants/routes";
@@ -141,11 +139,11 @@ export function BimViewerPage() {
   const [isDragging, setIsDragging] = useState<boolean>(false);
 
   const processUploadedFile = async (file: File) => {
-    if (!file.name.toLowerCase().endsWith(".ifc") && !file.name.toLowerCase().endsWith(".frag")) {
+    if (!file.name.toLowerCase().endsWith(".ifc")) {
       toast.error(
         locale === "vi"
-          ? "Vui lòng chọn tệp định dạng .ifc hoặc .frag OpenBIM."
-          : "Please select an .ifc or .frag OpenBIM file.",
+          ? "Vui lòng chọn tệp định dạng .ifc tiêu chuẩn OpenBIM."
+          : "Please select a standard .ifc OpenBIM file.",
       );
       return;
     }
@@ -167,27 +165,12 @@ export function BimViewerPage() {
       );
     } catch (err) {
       toast.dismiss(toastId);
-      const fallbackModel: BimModelDefinition = {
-        id: `custom-${Date.now()}`,
-        nameKey: "tower",
-        description: `Mô hình IFC: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`,
-        elementsCount: SAMPLE_BIM_MODELS.tower.elements.length,
-        elements: SAMPLE_BIM_MODELS.tower.elements.map((elem, i) => ({
-          ...elem,
-          id: `custom-elem-${i}`,
-          guid: `IFC-${file.name.slice(0, 4).toUpperCase()}-${i * 107}`,
-        })),
-        clashes: SAMPLE_BIM_MODELS.tower.clashes,
-        defaultCamera: {
-          position: [24, 20, 24],
-          target: [0, 6, 0],
-        },
-      };
-      setCustomModel(fallbackModel);
-      toast.success(
+      console.error("IFC parse error:", err);
+      toast.error(
         locale === "vi"
-          ? `Đã tải mô hình: ${file.name}`
-          : `Loaded model: ${file.name}`,
+          ? `Không thể xử lý tệp IFC "${file.name}": ${err instanceof Error ? err.message : "Định dạng không được hỗ trợ hoặc tệp bị hỏng."}`
+          : `Failed to process IFC file "${file.name}": ${err instanceof Error ? err.message : "Unsupported schema or corrupted file."}`,
+        { duration: 5000 },
       );
     }
   };
@@ -238,8 +221,8 @@ export function BimViewerPage() {
             <div className="grid size-7 place-items-center rounded-lg bg-teal-500/20 text-teal-300 border border-teal-500/30">
               <Box className="size-4" />
             </div>
-            <div>
-              <h1 className="text-xs sm:text-sm font-bold text-white leading-none">
+            <div className="min-w-0">
+              <h1 className="text-xs sm:text-sm font-bold text-white leading-tight truncate max-w-[130px] sm:max-w-none">
                 {v.title}
               </h1>
               <p className="hidden md:block text-[10px] text-teal-400/80 font-mono mt-0.5">
@@ -255,7 +238,7 @@ export function BimViewerPage() {
             type="file"
             ref={fileInputRef}
             onChange={handleFileUpload}
-            accept=".ifc,.frag"
+            accept=".ifc"
             className="hidden"
           />
           <Button
@@ -267,20 +250,28 @@ export function BimViewerPage() {
           >
             <Upload className="size-3.5 mr-1.5" />
             <span className="hidden sm:inline">{v.uploadIfc}</span>
-            <span className="sm:hidden">Upload</span>
+            <span className="sm:hidden">{locale === "vi" ? "Tải lên" : "Upload"}</span>
           </Button>
 
           {/* Toggle Property Inspector button */}
           <Button
             type="button"
-            onClick={() => setIsInspectorOpen((prev) => !prev)}
+            onClick={() => {
+              setIsInspectorOpen((prev) => {
+                const nextState = !prev;
+                if (nextState && typeof window !== "undefined" && window.innerWidth < 1024) {
+                  setActiveTool("orbit");
+                }
+                return nextState;
+              });
+            }}
             variant="outline"
             size="sm"
             className="rounded-xl border-white/15 bg-white/5 text-xs font-semibold text-slate-300 hover:bg-white/10 hover:text-white"
           >
             <Layers className="size-3.5 mr-1.5 text-teal-400" />
             <span className="hidden sm:inline">{v.properties.title}</span>
-            <span className="sm:hidden">Props</span>
+            <span className="sm:hidden">{locale === "vi" ? "Thuộc tính" : "Props"}</span>
           </Button>
         </div>
       </header>
@@ -300,8 +291,8 @@ export function BimViewerPage() {
             </div>
             <h3 className="text-xl font-bold text-white">
               {locale === "vi"
-                ? "Thả tệp .IFC hoặc .FRAG vào đây"
-                : "Drop .IFC or .FRAG file here"}
+                ? "Thả tệp mô hình .IFC vào đây"
+                : "Drop .IFC model file here"}
             </h3>
             <p className="mt-1 text-xs text-teal-300/80">
               {locale === "vi"

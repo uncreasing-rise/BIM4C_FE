@@ -69,29 +69,42 @@ export function Dashboard() {
       </div>
     );
 
-  const domains = [stats.projects, stats.posts, stats.courses, stats.services];
-  const total = domains.reduce((n, x) => n + x.total, 0);
+  const domains = [
+    stats.projects,
+    stats.posts,
+    stats.courses,
+    stats.services,
+  ].filter(Boolean);
+
+  const total = domains.reduce((n, x) => n + (x?.total ?? 0), 0);
   const published = domains.reduce(
     (n, x) =>
       n +
-      (x.byStatus.published ?? 0) +
-      (x.byStatus.planned ?? 0) +
-      (x.byStatus.in_progress ?? 0) +
-      (x.byStatus.completed ?? 0),
+      (x?.byStatus?.published ?? x?.byStatus?.PUBLISHED ?? 0) +
+      (x?.byStatus?.planned ?? x?.byStatus?.PLANNED ?? 0) +
+      (x?.byStatus?.in_progress ?? x?.byStatus?.IN_PROGRESS ?? 0) +
+      (x?.byStatus?.completed ?? x?.byStatus?.COMPLETED ?? 0),
     0,
   );
-  const drafts = domains.reduce((n, x) => n + (x.byStatus.draft ?? 0), 0);
+  const drafts = domains.reduce(
+    (n, x) => n + (x?.byStatus?.draft ?? x?.byStatus?.DRAFT ?? 0),
+    0,
+  );
   const leads =
-    stats.contacts.reduce((n, x) => n + x._count, 0) +
-    stats.registrations.reduce((n, x) => n + x._count, 0);
+    (Array.isArray(stats.contacts)
+      ? stats.contacts.reduce((n, x) => n + (x?._count ?? 0), 0)
+      : 0) +
+    (Array.isArray(stats.registrations)
+      ? stats.registrations.reduce((n, x) => n + (x?._count ?? 0), 0)
+      : 0);
 
   const cards = [
     {
       title: "Tổng nội dung",
       value: total,
-      sub: "PostgreSQL Data",
+      sub: "Dự án, bài viết, dịch vụ và khóa học",
       icon: Database,
-      badge: "Đồng bộ",
+      badge: "Nội dung",
       color: "from-teal-500/20 to-teal-500/5 text-primary border-primary/20",
     },
     {
@@ -99,7 +112,7 @@ export function Dashboard() {
       value: published,
       sub: `${total ? Math.round((published / total) * 100) : 0}% tổng dữ liệu`,
       icon: CheckCircle2,
-      badge: "Trực tuyến",
+      badge: "Đã đăng",
       color: "from-emerald-500/20 to-emerald-500/5 text-emerald-500 border-emerald-500/20",
     },
     {
@@ -115,7 +128,7 @@ export function Dashboard() {
       value: leads,
       sub: "Từ Website & Academy",
       icon: Users,
-      badge: "Live leads",
+      badge: "Yêu cầu",
       color: "from-blue-500/20 to-blue-500/5 text-blue-500 border-blue-500/20",
     },
   ];

@@ -180,7 +180,7 @@ export interface Dictionary {
     teamEyebrow: string;
     teamTitle: string;
     teamDesc: string;
-    teamMembers: { name: string; role: string; cert: string; spec: string }[];
+    teamMembers: { name: string; role: string; cert: string; spec: string; image?: string }[];
     ctaEyebrow: string;
     ctaTitle: string;
   };

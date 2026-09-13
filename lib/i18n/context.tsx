@@ -55,11 +55,14 @@ export function LanguageProvider({
   const [locale, setLocaleState] = useState<Locale>(initialLocale);
 
   useEffect(() => {
-    const savedLocale = getStoredLocale(initialLocale);
-    if (savedLocale !== locale) {
-      setLocaleState(savedLocale);
-    }
-  }, [initialLocale]);
+    const timer = setTimeout(() => {
+      const savedLocale = getStoredLocale(initialLocale);
+      if (savedLocale !== locale) {
+        setLocaleState(savedLocale);
+      }
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [initialLocale, locale]);
 
   const setLocale = useCallback((newLocale: Locale) => {
     if (!SUPPORTED_LOCALES.includes(newLocale)) return;
