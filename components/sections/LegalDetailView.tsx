@@ -20,9 +20,9 @@ export function LegalDetailView({ slug }: { slug: string }) {
         description={document.summary}
         image="/images/news-project-coordination.webp"
       />
-      <article className="bg-white py-16 lg:py-24">
-        <div className="mx-auto grid w-[calc(100%_-_32px)] max-w-[1220px] grid-cols-1 items-start gap-10 md:w-[calc(100%_-_48px)] lg:grid-cols-[280px_minmax(0,1fr)] lg:gap-16">
-          <aside className="border-t-4 border-primary bg-muted p-6 lg:sticky lg:top-[110px]">
+      <article className="bg-background py-16 lg:py-24">
+        <div className="site-container grid grid-cols-1 items-start gap-10 lg:grid-cols-[280px_minmax(0,1fr)] lg:gap-16">
+          <aside className="border-t-4 border-primary bg-muted/60 rounded-xl p-6 lg:sticky lg:top-[110px]">
             <p className="text-xs font-semibold uppercase tracking-wider text-primary">
               {locale === "vi" ? "CẬP NHẬT LẦN CUỐI" : "LAST UPDATED"}
             </p>
@@ -81,7 +81,7 @@ export function LegalDetailView({ slug }: { slug: string }) {
             ))}
           </div>
         </div>
-        <div className="mx-auto mt-12 w-[calc(100%_-_32px)] max-w-[1220px] border-t border-border pt-6 md:w-[calc(100%_-_48px)]">
+        <div className="site-container mt-12 border-t border-border pt-6">
           <Link
             className="text-xs font-semibold uppercase text-primary"
             href={ROUTES.legal}

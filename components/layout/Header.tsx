@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { ArrowUpRight, Menu } from "lucide-react";
+import { ArrowUpRight, Menu, Search } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { ROUTES } from "@/constants/routes";
@@ -15,11 +15,13 @@ import {
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/lib/i18n/context";
 import { LanguageSwitcher } from "@/components/shared/LanguageSwitcher";
+import { CommandMenu } from "@/components/shared/CommandMenu";
 
 export function Header() {
   const pathname = usePathname();
   const [overHero, setOverHero] = useState(true);
-  const { t } = useLanguage();
+  const [commandOpen, setCommandOpen] = useState(false);
+  const { t, locale } = useLanguage();
 
   const navigation = [
     { label: t.navigation.about, href: ROUTES.about },
@@ -29,6 +31,17 @@ export function Header() {
     { label: t.navigation.blog, href: ROUTES.blog },
     { label: t.navigation.bimViewer, href: ROUTES.bimViewer, is3D: true },
   ];
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.key === "k" || e.key === "K") && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        setCommandOpen((open) => !open);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   useEffect(() => {
     const updateHeader = () =>
@@ -58,6 +71,56 @@ export function Header() {
           : "border-b border-slate-200/80 bg-white/95 text-slate-900 shadow-md backdrop-blur-xl supports-[backdrop-filter]:bg-white/90",
       )}
     >
+      {/* Enterprise Operational Status Ribbon */}
+      <div
+        className={cn(
+          "hidden border-b px-4 py-1 text-[11px] lg:flex lg:items-center lg:justify-between transition-colors",
+          overHero
+            ? "border-white/10 bg-black/45 text-slate-300 backdrop-blur-md"
+            : "border-slate-200/80 bg-slate-100/90 text-slate-600 backdrop-blur-md",
+        )}
+      >
+        <div className="site-container flex w-full items-center justify-between">
+          <div className="flex items-center gap-3">
+            <span className="flex items-center gap-1.5 font-semibold">
+              <span className="size-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              <span className={overHero ? "text-emerald-300" : "text-emerald-700"}>
+                OpenBIM Cloud v2.4
+              </span>
+            </span>
+            <span className="opacity-30">|</span>
+            <span className="font-mono text-[10.5px]">ISO 19650-2 · IFC 4x3 Certified</span>
+            <span className="opacity-30">|</span>
+            <span className="text-[10.5px]">
+              {locale === "vi" ? "Đà Nẵng · Hà Nội · TP.HCM" : "Da Nang · Hanoi · HCMC"}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-4">
+            <span className="font-mono text-[11px]">
+              MST:{" "}
+              <strong className={overHero ? "text-teal-300 font-bold" : "text-teal-700 font-bold"}>
+                0402225839
+              </strong>
+            </span>
+            <span className="opacity-30">|</span>
+            <button
+              type="button"
+              onClick={() => setCommandOpen(true)}
+              className={cn(
+                "flex items-center gap-1.5 rounded-md px-2 py-0.5 font-mono text-[10.5px] font-medium transition-colors border",
+                overHero
+                  ? "bg-white/10 hover:bg-white/20 text-white border-white/20"
+                  : "bg-white hover:bg-slate-200/80 text-slate-800 border-slate-300 shadow-2xs",
+              )}
+            >
+              <Search className="size-3" />
+              <span>{locale === "vi" ? "Lệnh nhanh" : "Command"}</span>
+              <kbd className="rounded bg-black/20 px-1 py-0.2 text-[9px] font-sans">⌘K</kbd>
+            </button>
+          </div>
+        </div>
+      </div>
       <div className="site-container flex h-20 items-center justify-between gap-4">
         <Link
           href={ROUTES.home}
@@ -124,7 +187,7 @@ export function Header() {
             </span>
             <small
               className={cn(
-                "mt-1 block text-[9.5px] font-semibold tracking-[.12em]",
+                "mt-1 hidden text-[9.5px] font-semibold tracking-[.12em] sm:block",
                 overHero ? "text-white/75" : "text-slate-600",
               )}
             >
@@ -180,6 +243,23 @@ export function Header() {
           })}
         </nav>
         <div className="hidden items-center gap-3 lg:flex">
+          <button
+            type="button"
+            onClick={() => setCommandOpen(true)}
+            className={cn(
+              "flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-medium border transition-all",
+              overHero
+                ? "border-white/20 bg-black/30 text-white hover:bg-white/15"
+                : "border-slate-200 bg-slate-100/90 text-slate-700 hover:bg-slate-200/90",
+            )}
+            title="Search (⌘K)"
+          >
+            <Search className="size-3.5 text-teal-400" />
+            <span className="hidden xl:inline">{locale === "vi" ? "Tìm kiếm" : "Search"}</span>
+            <kbd className="rounded bg-black/20 px-1 py-0.2 font-mono text-[9px] text-zinc-300">
+              ⌘K
+            </kbd>
+          </button>
           <LanguageSwitcher isOverHero={overHero} />
           <Button
             asChild
@@ -195,12 +275,29 @@ export function Header() {
             </Link>
           </Button>
         </div>
-        <div className="flex items-center gap-2 lg:hidden">
-          <LanguageSwitcher variant="compact" isOverHero={overHero} />
+        <div className="flex items-center gap-1.5 sm:gap-2 lg:hidden">
+          <button
+            type="button"
+            onClick={() => setCommandOpen(true)}
+            className={cn(
+              "inline-flex size-9 items-center justify-center rounded-lg border transition-colors",
+              overHero
+                ? "border-white/20 bg-black/30 text-white hover:bg-white/15"
+                : "border-slate-200 bg-slate-100 text-slate-800 hover:bg-slate-200",
+            )}
+            aria-label="Open command palette"
+          >
+            <Search className="size-4 text-teal-400" />
+          </button>
+          <LanguageSwitcher
+            variant="compact"
+            isOverHero={overHero}
+            className="hidden sm:inline-flex"
+          />
           <Link
             href={ROUTES.contact}
             className={cn(
-              "inline-flex min-h-10 items-center rounded-lg px-3 text-xs font-bold",
+              "inline-flex min-h-9 items-center rounded-lg px-2.5 text-xs font-bold",
               overHero
                 ? "bg-white/10 text-white hover:bg-white/20"
                 : "bg-primary text-white hover:bg-primary-hover shadow-xs",
@@ -214,7 +311,7 @@ export function Header() {
                 variant="ghost"
                 size="icon"
                 className={cn(
-                  "size-10 lg:hidden",
+                  "size-9 lg:hidden",
                   overHero
                     ? "text-white hover:bg-white/10 hover:text-white"
                     : "text-slate-900 hover:bg-slate-100 hover:text-slate-950",
@@ -276,6 +373,7 @@ export function Header() {
           </Sheet>
         </div>
       </div>
+      <CommandMenu isOpen={commandOpen} onClose={() => setCommandOpen(false)} />
     </header>
   );
 }

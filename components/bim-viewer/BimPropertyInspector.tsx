@@ -27,7 +27,7 @@ export function BimPropertyInspector({
   onClose,
   isOpen,
 }: BimPropertyInspectorProps) {
-  const { t } = useLanguage();
+  const { t, locale } = useLanguage();
   const v = t.bimViewerPage.properties;
   const [activeTab, setActiveTab] = useState<"psets" | "tree">("psets");
   const [expandedPsets, setExpandedPsets] = useState<Record<string, boolean>>({
@@ -42,7 +42,7 @@ export function BimPropertyInspector({
 
   return (
     <aside
-      className="pointer-events-auto absolute right-4 top-20 bottom-12 z-30 flex w-80 sm:w-96 flex-col overflow-hidden rounded-2xl border border-white/15 bg-slate-950/90 text-white shadow-2xl backdrop-blur-2xl transition-all duration-300"
+      className="pointer-events-auto absolute inset-x-3 bottom-12 z-30 flex max-h-[65vh] flex-col overflow-hidden rounded-2xl border border-white/15 bg-slate-950/95 text-white shadow-2xl backdrop-blur-2xl transition-all duration-300 sm:inset-x-auto sm:right-4 sm:top-20 sm:bottom-12 sm:max-h-none sm:w-96 sm:bg-slate-950/90"
       data-motion="tile"
     >
       {/* Header */}
@@ -131,7 +131,7 @@ export function BimPropertyInspector({
                     <div className="grid grid-cols-2 gap-2 text-[11px]">
                       {element.dimensions.length && (
                         <div className="bg-black/30 p-2 rounded-lg">
-                          <span className="text-slate-400 block">Dài (L)</span>
+                          <span className="text-slate-400 block">{locale === "vi" ? "Dài (L)" : "Length (L)"}</span>
                           <span className="font-mono font-bold text-white">
                             {element.dimensions.length} m
                           </span>
@@ -139,7 +139,7 @@ export function BimPropertyInspector({
                       )}
                       {element.dimensions.width && (
                         <div className="bg-black/30 p-2 rounded-lg">
-                          <span className="text-slate-400 block">Rộng (W)</span>
+                          <span className="text-slate-400 block">{locale === "vi" ? "Rộng (W)" : "Width (W)"}</span>
                           <span className="font-mono font-bold text-white">
                             {element.dimensions.width} m
                           </span>
@@ -147,7 +147,7 @@ export function BimPropertyInspector({
                       )}
                       {element.dimensions.height && (
                         <div className="bg-black/30 p-2 rounded-lg">
-                          <span className="text-slate-400 block">Cao (H)</span>
+                          <span className="text-slate-400 block">{locale === "vi" ? "Cao (H)" : "Height (H)"}</span>
                           <span className="font-mono font-bold text-white">
                             {element.dimensions.height} m
                           </span>
@@ -155,7 +155,7 @@ export function BimPropertyInspector({
                       )}
                       {element.dimensions.volume && (
                         <div className="bg-black/30 p-2 rounded-lg">
-                          <span className="text-slate-400 block">Thể tích (V)</span>
+                          <span className="text-slate-400 block">{locale === "vi" ? "Thể tích (V)" : "Volume (V)"}</span>
                           <span className="font-mono font-bold text-white">
                             {element.dimensions.volume} m³
                           </span>

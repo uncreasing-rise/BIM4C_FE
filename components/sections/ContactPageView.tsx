@@ -2,6 +2,7 @@
 
 import { PageHero } from "@/components/shared/PageHero";
 import { ConsultationSection } from "@/components/sections/ConsultationSection";
+import { OfficeLocationMap } from "@/components/sections/OfficeLocationMap";
 import { useLanguage } from "@/lib/i18n/context";
 
 export function ContactPageView() {
@@ -16,6 +17,7 @@ export function ContactPageView() {
         image="/images/news-bim-training.webp"
       />
       <ConsultationSection />
+      <OfficeLocationMap />
     </main>
   );
 }

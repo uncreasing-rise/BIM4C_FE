@@ -18,13 +18,13 @@ export function LegalPageView() {
         description={t.legalPage.heroDesc}
         image="/images/news-project-coordination.webp"
       />
-      <section className="bg-muted py-16 lg:py-24">
-        <div className="mx-auto w-[calc(100%_-_32px)] max-w-[1220px] md:w-[calc(100%_-_48px)]">
-          <header className="mb-10 max-w-[760px]">
-            <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-primary">
+      <section className="bg-muted/40 py-16 lg:py-24 border-t border-border/70">
+        <div className="site-container">
+          <header className="mb-10 max-w-2xl">
+            <p className="eyebrow">
               {t.legalPage.sectionEyebrow}
             </p>
-            <h2 className="text-4xl font-semibold text-foreground">
+            <h2 className="section-title">
               {t.legalPage.sectionTitle}
             </h2>
             <p className="mt-4 leading-relaxed text-muted-foreground">

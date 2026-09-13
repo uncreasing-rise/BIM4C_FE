@@ -55,7 +55,7 @@ export function CatalogCategories({
 
 export function CatalogFilterBar({ children }: { children: ReactNode }) {
   return (
-    <div className="mb-7 mt-3 grid grid-cols-1 gap-2 rounded-2xl border bg-card p-2 shadow-sm md:[&:has(>:nth-child(2))]:grid-cols-2 lg:[&:has(>:nth-child(4))]:grid-cols-[1.5fr_1fr_1fr_1fr]">
+    <div className="mb-7 mt-3 grid grid-cols-1 gap-2 rounded-2xl border bg-card p-2 shadow-sm md:[&:has(>:nth-child(2))]:grid-cols-2 lg:[&:has(>:nth-child(3))]:grid-cols-[1.6fr_1fr_1fr] lg:[&:has(>:nth-child(4))]:grid-cols-[1.5fr_1fr_1fr_1fr]">
       {children}
     </div>
   );

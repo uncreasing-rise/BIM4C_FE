@@ -45,7 +45,12 @@ export function BimViewerPage() {
   // Active Tool & Selection State
   const [activeTool, setActiveTool] = useState<BimTool>("orbit");
   const [selectedElement, setSelectedElement] = useState<BimElementData | null>(null);
-  const [isInspectorOpen, setIsInspectorOpen] = useState<boolean>(true);
+  const [isInspectorOpen, setIsInspectorOpen] = useState<boolean>(() => {
+    if (typeof window !== "undefined") {
+      return window.innerWidth >= 1024;
+    }
+    return false;
+  });
 
   // Tool specific states
   const [activeViewPreset, setActiveViewPreset] = useState<BimViewPreset | null>("perspective");
@@ -293,8 +298,16 @@ export function BimViewerPage() {
             <div className="mb-4 grid size-16 place-items-center rounded-2xl bg-teal-500/20 text-teal-300 border border-teal-500/40 animate-bounce">
               <Upload className="size-8" />
             </div>
-            <h3 className="text-xl font-bold text-white">Thả tệp .IFC hoặc .FRAG vào đây</h3>
-            <p className="mt-1 text-xs text-teal-300/80">Trình duyệt sẽ tự động bóc tách và nạp mô hình 3D ngay lập tức</p>
+            <h3 className="text-xl font-bold text-white">
+              {locale === "vi"
+                ? "Thả tệp .IFC hoặc .FRAG vào đây"
+                : "Drop .IFC or .FRAG file here"}
+            </h3>
+            <p className="mt-1 text-xs text-teal-300/80">
+              {locale === "vi"
+                ? "Trình duyệt sẽ tự động bóc tách và nạp mô hình 3D ngay lập tức"
+                : "The browser will automatically parse and load the 3D model instantly"}
+            </p>
           </div>
         )}
 

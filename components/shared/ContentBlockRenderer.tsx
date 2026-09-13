@@ -1,10 +1,14 @@
+"use client";
+
 import Image from "next/image";
 import { ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getSafeVideoUrl } from "@/lib/utils/safe-url";
+import { useLanguage } from "@/lib/i18n/context";
 import type { ContentBlock } from "@/features/shared/schemas/content-block.schema";
 
 export function ContentBlockRenderer({ blocks }: { blocks: ContentBlock[] }) {
+  const { locale } = useLanguage();
   return (
     <div className="space-y-12">
       {blocks.map((block) => {
@@ -129,7 +133,7 @@ export function ContentBlockRenderer({ blocks }: { blocks: ContentBlock[] }) {
                 )}
                 <Button asChild variant="outline">
                   <a href={safeUrl} target="_blank" rel="noopener noreferrer">
-                    Watch video <ExternalLink />
+                    {locale === "vi" ? "Xem video" : "Watch video"} <ExternalLink />
                   </a>
                 </Button>
               </section>

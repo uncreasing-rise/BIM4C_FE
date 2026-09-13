@@ -39,9 +39,9 @@ export function Partners({ compact = false }: { compact?: boolean }) {
       {/* Marquee Container with Left & Right Gradient Fades */}
       <div className="relative w-full overflow-hidden py-4">
         {/* Left Fade Mask */}
-        <div className="pointer-events-none absolute left-0 inset-y-0 z-20 w-24 sm:w-40 bg-gradient-to-r from-brand-ink via-brand-ink/80 to-transparent" />
+        <div className="pointer-events-none absolute left-0 inset-y-0 z-20 w-8 sm:w-20 md:w-36 lg:w-44 bg-gradient-to-r from-brand-ink via-brand-ink/80 to-transparent" />
         {/* Right Fade Mask */}
-        <div className="pointer-events-none absolute right-0 inset-y-0 z-20 w-24 sm:w-40 bg-gradient-to-l from-brand-ink via-brand-ink/80 to-transparent" />
+        <div className="pointer-events-none absolute right-0 inset-y-0 z-20 w-8 sm:w-20 md:w-36 lg:w-44 bg-gradient-to-l from-brand-ink via-brand-ink/80 to-transparent" />
 
         <div className="animate-marquee flex items-center gap-6">
           {marqueeItems.map((partner, index) => (

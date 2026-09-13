@@ -20,7 +20,7 @@ type NewsletterField = "email" | "consent";
 
 export function NewsletterForm() {
   const formId = useId();
-  const { t } = useLanguage();
+  const { t, locale } = useLanguage();
   const [status, setStatus] = useState<FormStatus>("idle");
   const [message, setMessage] = useState("");
   const [consent, setConsent] = useState(false);
@@ -51,13 +51,18 @@ export function NewsletterForm() {
       );
       setStatus("success");
       setMessage(result.message);
-      toast.success(result.message || "Thank you for subscribing to BIM4C updates!");
+      toast.success(
+        result.message ||
+          (locale === "vi"
+            ? "Cảm ơn bạn đã đăng ký nhận tin từ BIM4C!"
+            : "Thank you for subscribing to BIM4C updates!"),
+      );
       form.reset();
       setConsent(false);
     } catch (error) {
       setStatus("error");
       if (error instanceof z.ZodError) {
-        setFieldErrors(getZodFieldErrors<NewsletterField>(error));
+        setFieldErrors(getZodFieldErrors<NewsletterField>(error, locale));
         const field = error.issues[0]?.path[0];
         if (field === "email")
           document.getElementById(`${formId}-newsletter-email`)?.focus();
@@ -68,7 +73,9 @@ export function NewsletterForm() {
       const errText =
         error instanceof ApiError
           ? error.message
-          : "We could not subscribe you right now.";
+          : locale === "vi"
+            ? "Không thể đăng ký lúc này. Vui lòng thử lại sau."
+            : "We could not subscribe you right now.";
       setMessage(errText);
       toast.error(errText);
     } finally {
@@ -108,25 +115,29 @@ export function NewsletterForm() {
           disabled={status === "submitting"}
           aria-label={t.footer.subscribeButton}
         >
-          {status === "submitting" ? "…" : "→"}
+          {status === "submitting" ? (
+            <span className="inline-block size-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+          ) : (
+            "→"
+          )}
         </Button>
       </div>
       {fieldErrors.email && (
         <p
           id={`${formId}-newsletter-email-error`}
-          className="mt-2 text-xs text-red-200"
+          className="mt-2 text-xs font-medium text-rose-400"
           role="alert"
         >
           {fieldErrors.email}
         </p>
       )}
       <Label
-        className="mt-3 flex items-start gap-2 text-xs leading-normal text-white/70"
+        className="mt-3 flex items-start gap-2 text-xs leading-normal text-white/70 cursor-pointer"
         htmlFor={`${formId}-newsletter-consent`}
       >
         <Checkbox
           id={`${formId}-newsletter-consent`}
-          className="mt-0.5"
+          className="mt-0.5 border-white/50 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
           name="consent"
           required
           checked={consent}
@@ -153,7 +164,7 @@ export function NewsletterForm() {
       {fieldErrors.consent && (
         <p
           id={`${formId}-newsletter-consent-error`}
-          className="mt-2 text-xs text-red-200"
+          className="mt-2 text-xs font-medium text-rose-400"
           role="alert"
         >
           {fieldErrors.consent}
@@ -161,7 +172,7 @@ export function NewsletterForm() {
       )}
       {message && (
         <p
-          className={`mt-3 text-xs ${status === "error" ? "text-red-200" : "text-emerald-200"}`}
+          className={`mt-3 text-xs p-2 rounded-lg ${status === "error" ? "bg-rose-500/15 text-rose-300" : "bg-emerald-500/15 text-emerald-300"}`}
           role={status === "error" ? "alert" : "status"}
         >
           {message}

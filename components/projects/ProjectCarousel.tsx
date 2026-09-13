@@ -73,11 +73,11 @@ export function ProjectCarousel({ projects }: { projects: Project[] }) {
             aria-selected={active === index}
             aria-label={`Show project ${index + 1}: ${project.title}`}
             onClick={() => select(index)}
-            className="group flex min-h-6 items-center gap-2"
+            className="group flex min-h-10 py-3 items-center gap-2 cursor-pointer"
             tabIndex={active === index ? 0 : -1}
           >
             <span
-              className={`h-1 rounded-full transition-all ${active === index ? "w-10 bg-teal-300" : "w-5 bg-white/25 group-hover:bg-white/50"}`}
+              className={`h-1.5 rounded-full transition-all duration-300 ${active === index ? "w-10 bg-teal-300" : "w-5 bg-white/30 group-hover:bg-white/60"}`}
             />
           </button>
         ))}

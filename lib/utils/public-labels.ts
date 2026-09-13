@@ -76,10 +76,15 @@ const viToEnLabels: Record<string, string> = {
   // Locations
   "Hà Nội": "Hanoi",
   "TP. Hồ Chí Minh": "Ho Chi Minh City",
+  "Đà Nẵng": "Da Nang",
   "Bình Dương": "Binh Duong",
   "Nghệ An": "Nghe An",
   "Bắc Ninh": "Bac Ninh",
   "Hải Phòng": "Hai Phong",
+  "Quảng Nam": "Quang Nam",
+  "Đồng Nai": "Dong Nai",
+  "Khánh Hòa": "Khanh Hoa",
+  "Cần Thơ": "Can Tho",
   Khác: "Other",
 
   // Common filters & Project categories

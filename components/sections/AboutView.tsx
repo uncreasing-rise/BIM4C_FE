@@ -14,7 +14,10 @@ import {
   TrendingUp,
   BadgeCheck,
   Briefcase,
+  Copy,
+  ExternalLink,
 } from "lucide-react";
+import { toast } from "sonner";
 import { PageHero } from "@/components/shared/PageHero";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -25,7 +28,7 @@ import { DeliveryProcess } from "@/components/sections/DeliveryProcess";
 import { useLanguage } from "@/lib/i18n/context";
 
 export function AboutView() {
-  const { t } = useLanguage();
+  const { t, locale } = useLanguage();
 
   const values = [
     {
@@ -125,17 +128,79 @@ export function AboutView() {
           </div>
           <figure className="relative overflow-hidden rounded-2xl shadow-lg border">
             <Image
-              src="/images/news-project-coordination.webp"
-              alt="Construction professionals reviewing project information together"
+              src="/images/about.jpg"
+              alt="BIM4C engineering specialists coordinating federated CDE models"
               width={900}
               height={680}
               sizes="(max-width:1023px) 100vw, 50vw"
               className="aspect-[4/3] w-full object-cover"
             />
             <figcaption className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-brand-ink/90 via-brand-ink/50 to-transparent px-6 pb-5 pt-12 text-sm text-white">
-              {t.aboutPage.heroDesc}
+              {locale === "vi"
+                ? "Đội ngũ chuyên gia BIM4C trong quy trình điều phối mô hình và chuyển đổi số dự án."
+                : "BIM4C engineering specialists coordinating federated CDE models and digital delivery."}
             </figcaption>
           </figure>
+        </div>
+
+        {/* Corporate Legal Identity & Verification Block */}
+        <div className="site-container mt-12">
+          <div className="rounded-2xl border border-border/80 bg-muted/40 p-6 sm:p-8 backdrop-blur-xs">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-border/60 pb-5">
+              <div>
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+                  <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
+                  {t.footer.enterpriseInfo.taxStatus}
+                </span>
+                <h3 className="mt-2 text-xl font-bold text-foreground">
+                  {t.footer.enterpriseInfo.companyName}
+                </h3>
+                <p className="text-xs text-muted-foreground">
+                  {t.footer.enterpriseInfo.internationalName} ({t.footer.enterpriseInfo.shortName})
+                </p>
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    navigator.clipboard.writeText("0402225839");
+                    toast.success(
+                      locale === "vi"
+                        ? "Đã sao chép mã số thuế: 0402225839"
+                        : "Copied Tax ID: 0402225839"
+                    );
+                  }}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-semibold text-foreground shadow-2xs hover:bg-muted"
+                >
+                  <Copy className="size-3.5 text-primary" />
+                  <span>MST: 0402225839</span>
+                </button>
+                <a
+                  href="https://masothue.com/0402225839-cong-ty-co-phan-xay-dung-cong-nghe-bim4c"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-primary/20 bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary hover:bg-primary/20 transition-colors"
+                >
+                  <span>{locale === "vi" ? "Xem hồ sơ Thuế" : "Verify Registry"}</span>
+                  <ExternalLink className="size-3.5" />
+                </a>
+              </div>
+            </div>
+            <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 text-xs">
+              <div>
+                <span className="text-muted-foreground">{locale === "vi" ? "Đại diện pháp luật:" : "Legal Representative:"}</span>
+                <p className="mt-0.5 font-bold text-foreground">{t.footer.enterpriseInfo.legalRepresentative} (CEO)</p>
+              </div>
+              <div>
+                <span className="text-muted-foreground">{locale === "vi" ? "Trụ sở chính (Đà Nẵng):" : "Corporate Headquarters:"}</span>
+                <p className="mt-0.5 text-foreground">{t.footer.enterpriseInfo.headquarters}</p>
+              </div>
+              <div>
+                <span className="text-muted-foreground">{locale === "vi" ? "Địa chỉ thuế:" : "Tax Registration Address:"}</span>
+                <p className="mt-0.5 text-foreground">{t.footer.enterpriseInfo.taxAddress}</p>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 

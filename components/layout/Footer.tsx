@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { ArrowUpRight, Mail, MapPin, Phone, ShieldCheck, Award, Globe, Building } from "lucide-react";
+import { toast } from "sonner";
 import { CONTACT_EMAIL, ROUTES } from "@/constants/routes";
 import { NewsletterForm } from "@/features/contact/components/NewsletterForm";
 import { useLanguage } from "@/lib/i18n/context";
@@ -46,20 +47,71 @@ export function Footer() {
             </span>
           </Link>
 
-          <p className="mt-4 text-xs font-semibold uppercase tracking-wider text-teal-300">
-            {t.footer.enterpriseInfo.companyName}
-          </p>
+          {/* Corporate Legal Identity Badge */}
+          <div className="mt-4 rounded-xl border border-white/10 bg-white/[0.03] p-3.5 backdrop-blur-sm">
+            <div className="flex items-center justify-between gap-2">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 px-2 py-0.5 text-[10px] font-semibold text-emerald-300">
+                <span className="size-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                {t.footer.enterpriseInfo.taxStatus}
+              </span>
+              <a
+                href="https://masothue.com/0402225839-cong-ty-co-phan-xay-dung-cong-nghe-bim4c"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 text-[11px] text-teal-300 hover:text-white transition-colors"
+                title={isVi ? "Xem hồ sơ thuế quốc gia" : "View national tax record"}
+              >
+                <span>{isVi ? "Tra cứu hồ sơ" : "Verify Registry"}</span>
+                <ArrowUpRight className="size-3" />
+              </a>
+            </div>
 
-          <p className="mt-2 text-xs text-zinc-400">
-            {t.footer.enterpriseInfo.businessCode}
-          </p>
+            <p className="mt-2 text-xs font-bold text-white tracking-wide leading-snug">
+              {t.footer.enterpriseInfo.companyName}
+            </p>
+            <p className="text-[11px] text-zinc-400">
+              {t.footer.enterpriseInfo.internationalName} ({t.footer.enterpriseInfo.shortName})
+            </p>
 
-          <p className="mt-4 max-w-md text-xs leading-6 text-zinc-300">
+            {/* 1-Click Copy MST */}
+            <div className="mt-3 flex items-center justify-between gap-2 rounded-lg bg-black/40 border border-white/10 px-2.5 py-1.5 text-xs">
+              <span className="font-mono text-[11px] text-zinc-300">
+                MST: <strong className="text-teal-300 tracking-wider font-bold">0402225839</strong>
+              </span>
+              <button
+                type="button"
+                onClick={() => {
+                  navigator.clipboard.writeText("0402225839");
+                  toast.success(
+                    isVi
+                      ? "Đã sao chép mã số thuế: 0402225839"
+                      : "Copied Tax ID: 0402225839 to clipboard"
+                  );
+                }}
+                className="flex items-center gap-1 rounded bg-teal-500/20 px-2 py-0.5 text-[10px] font-semibold text-teal-200 transition-colors hover:bg-teal-500/30 hover:text-white"
+              >
+                <span>{isVi ? "Sao chép" : "Copy"}</span>
+              </button>
+            </div>
+
+            <div className="mt-2 text-[11px] text-zinc-400 space-y-0.5">
+              <p>
+                <span className="text-zinc-500">{isVi ? "Người đại diện:" : "Representative:"}</span>{" "}
+                <span className="text-zinc-300 font-medium">{t.footer.enterpriseInfo.legalRepresentative}</span>
+              </p>
+              <p className="text-[10.5px] text-zinc-400">
+                <span className="text-zinc-500">{isVi ? "Địa chỉ thuế:" : "Tax address:"}</span>{" "}
+                {t.footer.enterpriseInfo.taxAddress}
+              </p>
+            </div>
+          </div>
+
+          <p className="mt-3 max-w-md text-xs leading-5 text-zinc-300">
             {t.footer.description}
           </p>
 
           {/* Office Locations */}
-          <div className="mt-6 space-y-2.5 text-xs text-zinc-300 border-t border-white/10 pt-5">
+          <div className="mt-4 space-y-2 text-xs text-zinc-300 border-t border-white/10 pt-4">
             <p className="flex items-start gap-2.5 leading-5">
               <Building className="size-4 shrink-0 text-teal-400 mt-0.5" />
               <span>{t.footer.enterpriseInfo.headquarters}</span>

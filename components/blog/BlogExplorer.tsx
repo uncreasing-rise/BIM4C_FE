@@ -16,6 +16,7 @@ import { toLocalizedLabel } from "@/lib/utils/public-labels";
 import type { PageMeta } from "@/features/shared/types/pagination";
 import { useLanguage } from "@/lib/i18n/context";
 import { localizeContentList } from "@/lib/i18n/localize";
+import { cn } from "@/lib/utils";
 
 export function BlogExplorer({
   posts: rawPosts,
@@ -104,7 +105,7 @@ export function BlogExplorer({
                 <Link
                   className="absolute inset-0 z-10 rounded-[14px] focus-visible:outline-2 focus-visible:outline-offset-[-3px] focus-visible:outline-primary"
                   href={ROUTES.blogDetail(item.slug)}
-                  aria-label={"View " + item.title}
+                  aria-label={(locale === "vi" ? "Xem bài viết: " : "View article: ") + item.title}
                 />
                 <div
                   className={
@@ -133,7 +134,14 @@ export function BlogExplorer({
                   <p className="mb-2.5 text-[10px] font-semibold uppercase tracking-[.1em] text-primary">
                     {toLocalizedLabel(item.eyebrow, locale)}
                   </p>
-                  <h3 className="line-clamp-2 text-[21px] font-semibold leading-[1.3] tracking-[-.015em] text-foreground">
+                  <h3
+                    className={cn(
+                      "font-semibold leading-[1.3] tracking-[-.015em] text-foreground group-hover:text-primary transition-colors",
+                      index === 0
+                        ? "text-2xl sm:text-3xl line-clamp-3"
+                        : "text-sm sm:text-base lg:text-lg line-clamp-2",
+                    )}
+                  >
                     {item.title}
                   </h3>
                   <p

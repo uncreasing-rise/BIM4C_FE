@@ -68,16 +68,16 @@ export function BimToolbar({
   ];
 
   return (
-    <div className="pointer-events-none absolute inset-x-0 top-4 z-20 flex flex-col items-center gap-3 px-4 sm:px-6">
+    <div className="pointer-events-none absolute inset-x-0 top-3 sm:top-4 z-20 flex flex-col items-center gap-3 px-2 sm:px-6">
       {/* Top Main Toolbar */}
-      <div className="pointer-events-auto flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-white/15 bg-slate-950/80 px-3 py-2 text-white shadow-2xl backdrop-blur-xl">
+      <div className="pointer-events-auto flex max-w-full items-center justify-start sm:justify-between gap-2 sm:gap-3 overflow-x-auto rounded-2xl border border-white/15 bg-slate-950/90 px-2.5 sm:px-3 py-2 text-white shadow-2xl backdrop-blur-xl [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
         {/* Model Selector */}
-        <div className="flex items-center gap-2 border-r border-white/10 pr-3">
+        <div className="flex items-center gap-2 border-r border-white/10 pr-2 sm:pr-3 shrink-0">
           <FolderOpen className="size-4 text-teal-400" />
           <select
             value={selectedModelId}
             onChange={(e) => onSelectModel(e.target.value)}
-            className="rounded-lg border border-white/10 bg-slate-900/90 px-2.5 py-1.5 text-xs font-semibold text-white focus:outline-none focus:ring-1 focus:ring-teal-400"
+            className="rounded-lg border border-white/10 bg-slate-900/90 px-2 py-1 sm:px-2.5 sm:py-1.5 text-xs font-semibold text-white focus:outline-none focus:ring-1 focus:ring-teal-400"
             aria-label={v.selectModel}
           >
             <option value="tower">{v.models.tower}</option>
@@ -87,7 +87,7 @@ export function BimToolbar({
         </div>
 
         {/* Action Tools */}
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1 shrink-0">
           {tools.map((item) => {
             const Icon = item.icon;
             const isActive = activeTool === item.id;
@@ -99,7 +99,7 @@ export function BimToolbar({
                 title={item.label}
                 aria-label={item.label}
                 className={cn(
-                  "relative flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 text-xs font-semibold transition-all duration-200",
+                  "relative flex items-center gap-1.5 rounded-xl px-2 sm:px-2.5 py-1.5 text-xs font-semibold transition-all duration-200 shrink-0",
                   isActive
                     ? "bg-teal-500 text-slate-950 shadow-md shadow-teal-500/30"
                     : "text-slate-300 hover:bg-white/10 hover:text-white",
@@ -125,7 +125,7 @@ export function BimToolbar({
         </div>
 
         {/* View Presets & Utility Controls */}
-        <div className="flex items-center gap-1.5 border-l border-white/10 pl-3">
+        <div className="flex items-center gap-1 sm:gap-1.5 border-l border-white/10 pl-2 sm:pl-3 shrink-0">
           <div className="hidden lg:flex items-center gap-1 bg-white/5 p-0.5 rounded-xl">
             {viewPresets.map((preset) => (
               <button

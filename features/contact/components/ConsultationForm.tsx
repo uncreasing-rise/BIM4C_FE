@@ -24,7 +24,7 @@ export function ConsultationForm({
   compact?: boolean;
   subject?: string;
 }) {
-  const { t } = useLanguage();
+  const { t, locale } = useLanguage();
   const [status, setStatus] = useState<
     "idle" | "sending" | "success" | "error"
   >("idle");
@@ -61,7 +61,7 @@ export function ConsultationForm({
     } catch (error) {
       setStatus("error");
       if (error instanceof ZodError) {
-        setFieldErrors(getZodFieldErrors<ContactField>(error));
+        setFieldErrors(getZodFieldErrors<ContactField>(error, locale));
         const field = error.issues[0]?.path[0];
         if (typeof field === "string") {
           (form.elements.namedItem(field) as HTMLElement | null)?.focus();
@@ -71,7 +71,9 @@ export function ConsultationForm({
       const errText =
         error instanceof Error
           ? error.message
-          : "An error occurred while sending your enquiry.";
+          : locale === "vi"
+            ? "Đã có lỗi xảy ra khi gửi thông tin của bạn."
+            : "An error occurred while sending your enquiry.";
       setMessage(errText);
       toast.error(errText);
     }

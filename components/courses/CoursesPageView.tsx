@@ -24,13 +24,13 @@ export function CoursesPageView({
         image="/images/news-bim-training.webp"
       />
       <CourseExplorer courses={courses} meta={meta} />
-      <section className="bg-muted py-14 text-foreground lg:py-16">
-        <div className="mx-auto grid w-[calc(100%_-_32px)] max-w-[1200px] gap-9 md:w-[calc(100%_-_48px)] lg:grid-cols-[.7fr_1.3fr] lg:gap-20">
+      <section className="bg-muted/40 py-14 text-foreground lg:py-16 border-t border-border/70">
+        <div className="site-container grid gap-9 lg:grid-cols-[.75fr_1.25fr] lg:gap-16">
           <header>
-            <p className="mb-2 text-[10px] font-semibold uppercase tracking-[.14em] text-primary">
+            <p className="eyebrow">
               {t.coursesPage.howWeTeachEyebrow}
             </p>
-            <h2 className="text-[30px] font-semibold leading-[1.16] tracking-[-.025em] md:text-[40px]">
+            <h2 className="section-title">
               {t.coursesPage.howWeTeachTitle}
             </h2>
           </header>
@@ -40,13 +40,13 @@ export function CoursesPageView({
                 className="grid gap-2 border-b border-border py-5 sm:grid-cols-[34px_180px_1fr] sm:gap-5"
                 key={title}
               >
-                <span className="text-[10px] font-semibold text-primary">
+                <span className="text-xs font-semibold text-primary">
                   0{index + 1}
                 </span>
-                <h3 className="text-[17px] font-semibold text-foreground">
+                <h3 className="text-base font-bold text-foreground">
                   {title}
                 </h3>
-                <p className="text-[14px] leading-[1.65] text-muted-foreground">
+                <p className="text-sm leading-relaxed text-muted-foreground">
                   {text}
                 </p>
               </article>

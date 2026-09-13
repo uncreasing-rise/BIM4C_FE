@@ -68,7 +68,12 @@ export function ProjectRow({
             </span>
           )}
         </div>
-        <h3 className="mt-2.5 text-2xl font-bold leading-tight tracking-tight text-foreground group-hover:text-primary transition-colors lg:text-3xl">
+        <h3
+          className={cn(
+            "mt-2.5 text-2xl font-bold leading-tight tracking-tight group-hover:text-primary transition-colors lg:text-3xl",
+            dark ? "text-white" : "text-foreground",
+          )}
+        >
           <Link
             href={ROUTES.projectDetail(project.slug)}
             className="after:absolute after:inset-0 after:rounded-2xl"
@@ -95,7 +100,12 @@ export function ProjectRow({
             <dt className={dark ? "text-slate-400" : "text-muted-foreground"}>
               {t.projectsPage.location}
             </dt>
-            <dd className="mt-1 font-semibold leading-5 text-foreground">
+            <dd
+              className={cn(
+                "mt-1 font-semibold leading-5",
+                dark ? "text-slate-100" : "text-foreground",
+              )}
+            >
               {toLocalizedLabel(project.location, locale)}
             </dd>
           </div>
@@ -103,7 +113,12 @@ export function ProjectRow({
             <dt className={dark ? "text-slate-400" : "text-muted-foreground"}>
               {t.projectsPage.status}
             </dt>
-            <dd className="mt-1 font-semibold leading-5 text-foreground">
+            <dd
+              className={cn(
+                "mt-1 font-semibold leading-5",
+                dark ? "text-slate-100" : "text-foreground",
+              )}
+            >
               {toLocalizedLabel(project.status, locale)}
             </dd>
           </div>
@@ -112,7 +127,12 @@ export function ProjectRow({
               <dt className={dark ? "text-slate-400" : "text-muted-foreground"}>
                 {t.common.investor}
               </dt>
-              <dd className="mt-1 font-semibold leading-5 text-foreground truncate">
+              <dd
+                className={cn(
+                  "mt-1 font-semibold leading-5 truncate",
+                  dark ? "text-slate-100" : "text-foreground",
+                )}
+              >
                 {project.investor}
               </dd>
             </div>

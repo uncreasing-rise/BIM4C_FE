@@ -57,7 +57,7 @@ export function BimControlsOverlay({
   onFocusClash,
   activeClashId,
 }: BimControlsOverlayProps) {
-  const { t } = useLanguage();
+  const { t, locale } = useLanguage();
   const v = t.bimViewerPage;
 
   if (activeTool === "orbit") return null;
@@ -90,7 +90,9 @@ export function BimControlsOverlay({
           <div className="mt-4 space-y-4 text-xs">
             {/* Enable Toggle */}
             <div className="flex items-center justify-between">
-              <span className="font-semibold text-slate-300">Kích hoạt mặt cắt</span>
+              <span className="font-semibold text-slate-300">
+                {locale === "vi" ? "Kích hoạt mặt cắt" : "Enable Cross-Section"}
+              </span>
               <input
                 type="checkbox"
                 checked={clipPlanes.enabled}
@@ -231,8 +233,12 @@ export function BimControlsOverlay({
             ) : measurement?.p1 ? (
               <div className="rounded-xl border border-white/10 bg-black/30 p-3 text-center">
                 <Crosshair className="size-5 text-teal-400 mx-auto mb-1 animate-pulse" />
-                <span className="text-slate-300 font-semibold">Đã chọn điểm 1.</span>
-                <span className="block text-[11px] text-slate-400 mt-0.5">Click chọn điểm thứ 2 để đo.</span>
+                <span className="text-slate-300 font-semibold">
+                  {locale === "vi" ? "Đã chọn điểm 1." : "Point 1 selected."}
+                </span>
+                <span className="block text-[11px] text-slate-400 mt-0.5">
+                  {locale === "vi" ? "Click chọn điểm thứ 2 để đo khoảng cách." : "Click 2nd point to measure distance."}
+                </span>
               </div>
             ) : null}
 
@@ -292,7 +298,7 @@ export function BimControlsOverlay({
               onClick={() => onChangeExplodeFactor(0)}
               className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-white/10 bg-white/5 py-1.5 text-xs font-semibold text-slate-300 hover:bg-white/10"
             >
-              <RotateCcw className="size-3.5" /> Thu gọn mô hình
+              <RotateCcw className="size-3.5" /> {locale === "vi" ? "Thu gọn mô hình" : "Collapse Model"}
             </button>
           </div>
         </div>

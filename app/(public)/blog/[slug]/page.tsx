@@ -39,7 +39,6 @@ export default async function BlogDetail({
         kind="article"
         related={related}
         backHref={ROUTES.blog}
-        backLabel="All insights"
       />
     </main>
   );

@@ -137,9 +137,15 @@ export interface Dictionary {
     privacyPolicyLink: string;
     enterpriseInfo: {
       companyName: string;
+      internationalName: string;
+      shortName: string;
+      taxId: string;
       businessCode: string;
+      taxStatus: string;
+      taxAddress: string;
       headquarters: string;
       branchOffice: string;
+      legalRepresentative: string;
       certificationsTitle: string;
       isoCert: string;
       buildingSmartCert: string;
@@ -280,9 +286,35 @@ export interface Dictionary {
     enquiryDesc: string;
     responseTime: string;
     officesTitle: string;
+    danangHq: { title: string; address: string; phone: string; note: string };
     hanoiHq: { title: string; address: string; phone: string };
     hcmcBranch: { title: string; address: string; phone: string };
-    taxInfo: { label: string; code: string };
+    taxInfo: {
+      label: string;
+      code: string;
+      status: string;
+      representative: string;
+      taxAddress: string;
+    };
+    vatBilling: {
+      title: string;
+      desc: string;
+      company: string;
+      taxId: string;
+      taxAddress: string;
+      bankName: string;
+      accountNumber: string;
+      accountHolder: string;
+    };
+    mapSection: {
+      eyebrow: string;
+      title: string;
+      desc: string;
+      directionsBtn: string;
+      copyAddressBtn: string;
+      workingHours: string;
+      distanceAirport: string;
+    };
   };
   detailPage: {
     onThisPage: string;

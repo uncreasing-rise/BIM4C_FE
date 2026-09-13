@@ -37,7 +37,6 @@ export default async function ServiceDetail({
         kind="service"
         related={selectRelatedContent(entry, services)}
         backHref={ROUTES.services}
-        backLabel="All solutions"
       />
     </main>
   );

@@ -36,7 +36,6 @@ export default async function CourseDetail({
         kind="course"
         related={selectRelatedContent(entry, courses)}
         backHref={ROUTES.courses}
-        backLabel="All programmes"
       />
     </main>
   );

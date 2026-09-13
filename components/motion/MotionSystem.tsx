@@ -153,34 +153,36 @@ export function MotionSystem() {
             );
           });
 
-        // Magnetic element handlers
-        root
-          .querySelectorAll<HTMLElement>("[data-motion='magnetic']")
-          .forEach((element) => {
-            const move = (event: PointerEvent) => {
-              const bounds = element.getBoundingClientRect();
-              gsap.to(element, {
-                x: (event.clientX - bounds.left - bounds.width / 2) * 0.2,
-                y: (event.clientY - bounds.top - bounds.height / 2) * 0.2,
-                duration: 0.3,
-                ease: "power2.out",
-              });
-            };
-            const leave = () =>
-              gsap.to(element, {
-                x: 0,
-                y: 0,
-                duration: 0.55,
-                ease: "elastic.out(1, 0.4)",
-              });
+        // Magnetic element handlers (only on mouse/fine pointer devices, avoid touch scroll displacement)
+        if (typeof window !== "undefined" && window.matchMedia("(pointer: fine)").matches) {
+          root
+            .querySelectorAll<HTMLElement>("[data-motion='magnetic']")
+            .forEach((element) => {
+              const move = (event: PointerEvent) => {
+                const bounds = element.getBoundingClientRect();
+                gsap.to(element, {
+                  x: (event.clientX - bounds.left - bounds.width / 2) * 0.2,
+                  y: (event.clientY - bounds.top - bounds.height / 2) * 0.2,
+                  duration: 0.3,
+                  ease: "power2.out",
+                });
+              };
+              const leave = () =>
+                gsap.to(element, {
+                  x: 0,
+                  y: 0,
+                  duration: 0.55,
+                  ease: "elastic.out(1, 0.4)",
+                });
 
-            element.addEventListener("pointermove", move);
-            element.addEventListener("pointerleave", leave);
-            cleanups.push(() => {
-              element.removeEventListener("pointermove", move);
-              element.removeEventListener("pointerleave", leave);
+              element.addEventListener("pointermove", move);
+              element.addEventListener("pointerleave", leave);
+              cleanups.push(() => {
+                element.removeEventListener("pointermove", move);
+                element.removeEventListener("pointerleave", leave);
+              });
             });
-          });
+        }
       });
     }, root);
 

@@ -10,10 +10,7 @@ export default function GlobalError({
 }) {
   return (
     <main className="site-container pb-16 pt-32">
-      <ErrorState
-        message="This content is temporarily unavailable. Please try again."
-        onRetry={retry}
-      />
+      <ErrorState onRetry={retry} />
     </main>
   );
 }

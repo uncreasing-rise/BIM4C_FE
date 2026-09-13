@@ -47,22 +47,65 @@ test("i18n config exports primary English and secondary Vietnamese locales", () 
   assert.equal(LOCALE_LABELS.vi.code, "VI");
 });
 
-test("English and Vietnamese dictionaries have identical top-level structure and keys", () => {
+test("English and Vietnamese dictionaries have identical deep structure and keys", () => {
   const { enDictionary } = load("lib/i18n/dictionaries/en");
   const { viDictionary } = load("lib/i18n/dictionaries/vi");
 
   assert.ok(enDictionary);
   assert.ok(viDictionary);
 
-  const enKeys = Object.keys(enDictionary).sort();
-  const viKeys = Object.keys(viDictionary).sort();
-  assert.deepEqual(enKeys, viKeys);
+  function assertDeepKeys(enObj, viObj, path = "") {
+    const enKeys = Object.keys(enObj).sort();
+    const viKeys = Object.keys(viObj).sort();
+    assert.deepEqual(
+      enKeys,
+      viKeys,
+      `Keys do not match at path: "${path || "root"}"`,
+    );
 
-  for (const key of enKeys) {
-    const enSubKeys = Object.keys(enDictionary[key]).sort();
-    const viSubKeys = Object.keys(viDictionary[key]).sort();
-    assert.deepEqual(enSubKeys, viSubKeys, `Dictionary section "${key}" keys do not match`);
+    for (const key of enKeys) {
+      const currentPath = path ? `${path}.${key}` : key;
+      const enVal = enObj[key];
+      const viVal = viObj[key];
+
+      assert.equal(
+        typeof enVal,
+        typeof viVal,
+        `Type mismatch at path: "${currentPath}"`,
+      );
+
+      if (
+        typeof enVal === "object" &&
+        enVal !== null &&
+        !Array.isArray(enVal)
+      ) {
+        assertDeepKeys(enVal, viVal, currentPath);
+      }
+    }
   }
+
+  assertDeepKeys(enDictionary, viDictionary);
+});
+
+test("getZodFieldErrors translates validation messages accurately for vi and en", () => {
+  const { getZodFieldErrors } = load("features/contact/utils/zod-errors");
+  const mockZodError = {
+    issues: [
+      { path: ["name"], message: "Please enter your full name." },
+      { path: ["email"], message: "Please enter a valid email address." },
+      { path: ["consent"], message: "You must agree to the Privacy Policy." },
+    ],
+  };
+
+  const enErrors = getZodFieldErrors(mockZodError, "en");
+  assert.equal(enErrors.name, "Please enter your full name.");
+  assert.equal(enErrors.email, "Please enter a valid email address.");
+  assert.equal(enErrors.consent, "You must agree to the Privacy Policy.");
+
+  const viErrors = getZodFieldErrors(mockZodError, "vi");
+  assert.equal(viErrors.name, "Vui lòng nhập họ và tên của bạn.");
+  assert.equal(viErrors.email, "Vui lòng nhập địa chỉ email hợp lệ.");
+  assert.equal(viErrors.consent, "Bạn cần đồng ý với Chính sách bảo mật.");
 });
 
 test("localizeContent accurately returns English translated vs raw Vietnamese content", () => {

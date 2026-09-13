@@ -20,7 +20,7 @@ export function CourseRegistrationForm({
   courseId: string;
   courseTitle: string;
 }) {
-  const { t } = useLanguage();
+  const { t, locale } = useLanguage();
   const [status, setStatus] = useState<
     "idle" | "sending" | "success" | "error"
   >("idle");
@@ -51,7 +51,7 @@ export function CourseRegistrationForm({
     } catch (error) {
       setStatus("error");
       if (error instanceof ZodError) {
-        setFieldErrors(getZodFieldErrors<CourseField>(error));
+        setFieldErrors(getZodFieldErrors<CourseField>(error, locale));
         const field = error.issues[0]?.path[0];
         if (typeof field === "string") {
           (form.elements.namedItem(field) as HTMLElement | null)?.focus();
@@ -61,7 +61,9 @@ export function CourseRegistrationForm({
       const errText =
         error instanceof Error
           ? error.message
-          : "An error occurred while submitting your registration.";
+          : locale === "vi"
+            ? "Đã có lỗi xảy ra khi gửi đăng ký khóa học. Vui lòng thử lại."
+            : "An error occurred while submitting your registration.";
       setMessage(errText);
       toast.error(errText);
     }
@@ -101,7 +103,7 @@ export function CourseRegistrationForm({
         {fieldErrors.name && (
           <p
             id="course-registration-name-error"
-            className="text-xs text-red-100"
+            className="text-xs font-medium text-rose-400"
             role="alert"
           >
             {fieldErrors.name}
@@ -129,7 +131,7 @@ export function CourseRegistrationForm({
         {fieldErrors.phone && (
           <p
             id="course-registration-phone-error"
-            className="text-xs text-red-100"
+            className="text-xs font-medium text-rose-400"
             role="alert"
           >
             {fieldErrors.phone}
@@ -156,7 +158,7 @@ export function CourseRegistrationForm({
         {fieldErrors.email && (
           <p
             id="course-registration-email-error"
-            className="text-xs text-red-100"
+            className="text-xs font-medium text-rose-400"
             role="alert"
           >
             {fieldErrors.email}
@@ -195,7 +197,7 @@ export function CourseRegistrationForm({
       {fieldErrors.consent && (
         <p
           id="course-registration-consent-error"
-          className="text-xs text-red-100"
+          className="text-xs font-medium text-rose-400"
           role="alert"
         >
           {fieldErrors.consent}
@@ -214,7 +216,7 @@ export function CourseRegistrationForm({
       </p>
       {message && (
         <p
-          className={`m-0 px-[11px] py-[9px] text-xs ${status === "success" ? "bg-emerald-300/15 text-emerald-100" : "bg-red-300/15 text-red-100"}`}
+          className={`m-0 px-[11px] py-[9px] text-xs rounded-lg ${status === "success" ? "bg-emerald-300/15 text-emerald-300" : "bg-rose-500/15 text-rose-300"}`}
           role={status === "error" ? "alert" : "status"}
         >
           {message}

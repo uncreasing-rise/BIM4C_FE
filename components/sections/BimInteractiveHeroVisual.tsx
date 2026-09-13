@@ -136,27 +136,30 @@ export function BimInteractiveHeroVisual({
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
       >
-        {/* Top Control Bar with Model Switcher */}
-        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 bg-white/[0.04] px-4 py-2.5 text-xs">
+        {/* Top Control Bar with Model Switcher & Telemetry HUD */}
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 bg-white/[0.04] px-4 py-2 text-xs">
           <div className="flex items-center gap-2">
-            <span className="relative flex size-2.5">
+            <span className="relative flex size-2">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-teal-400 opacity-75" />
-              <span className="relative inline-flex size-2.5 rounded-full bg-teal-400" />
+              <span className="relative inline-flex size-2 rounded-full bg-teal-400" />
             </span>
-            <span className="font-bold tracking-wider text-teal-300 text-[11px]">
-              BIM 4D/5D CDE VIEWER
+            <span className="font-mono text-[10.5px] font-bold tracking-wider text-teal-300">
+              OPENBIM ENGINE v2.4
             </span>
-            <span className="hidden text-white/30 sm:inline">|</span>
-            <span className="hidden text-[11px] text-slate-300 sm:inline">
-              {t.hero.bimViewport.coordinateSystem}
-            </span>
+            <div className="hidden sm:flex items-center gap-1.5 font-mono text-[9.5px] text-zinc-400 border-l border-white/10 pl-2">
+              <span className="text-teal-400/90 font-semibold">60 FPS</span>
+              <span>·</span>
+              <span>1.2M TRIS</span>
+              <span>·</span>
+              <span className="text-emerald-400 font-semibold">0 CLASH</span>
+            </div>
           </div>
 
           {/* Layer Selector */}
-          <div className="flex items-center gap-1 rounded-lg border border-white/15 bg-black/50 p-0.5" role="tablist">
+          <div className="flex items-center gap-1 rounded-lg border border-white/15 bg-black/60 p-0.5" role="tablist">
             {(
               [
-                { id: "all", label: isVi ? "Tất cả" : "All" },
+                { id: "all", label: isVi ? "Tổng thể" : "All" },
                 { id: "arch", label: isVi ? "Kiến trúc" : "Arch" },
                 { id: "struct", label: isVi ? "Kết cấu" : "Struct" },
                 { id: "mep", label: "MEP" },
@@ -172,7 +175,7 @@ export function BimInteractiveHeroVisual({
                   setActiveLayer(tab.id);
                 }}
                 className={cn(
-                  "rounded px-2.5 py-1 text-[11px] font-semibold transition-all",
+                  "rounded px-2 py-0.5 font-mono text-[10px] font-semibold transition-all",
                   activeLayer === tab.id
                     ? "bg-primary text-white shadow-xs"
                     : "text-white/70 hover:text-white hover:bg-white/10",
@@ -316,13 +319,19 @@ export function BimInteractiveHeroVisual({
         </div>
 
         {/* Bottom Status Ticker */}
-        <div className="flex items-center justify-between border-t border-white/10 bg-white/[0.03] px-4 py-2.5 text-[11px] text-slate-300">
-          <div className="flex items-center gap-2 font-medium">
-            <Radio className="size-3 text-teal-400 animate-pulse" />
-            <span>{t.hero.bimViewport.liveModelStatus}</span>
+        <div className="flex items-center justify-between border-t border-white/10 bg-white/[0.03] px-4 py-2 text-[11px] text-slate-300">
+          <div className="flex items-center gap-3 font-mono text-[10px]">
+            <div className="flex items-center gap-1.5 font-medium text-slate-300">
+              <Radio className="size-3 text-teal-400 animate-pulse" />
+              <span>{t.hero.bimViewport.liveModelStatus}</span>
+            </div>
+            <span className="hidden md:inline text-white/20">|</span>
+            <span className="hidden md:inline text-zinc-400">
+              POS: [X:+124.8m Y:+45.2m Z:+18.0m]
+            </span>
           </div>
-          <span className="text-teal-300 font-medium">
-            {isVi ? "Rê chuột để tương tác không gian 3D" : "Hover to tilt 3D perspective"}
+          <span className="font-mono text-[10px] text-teal-300 font-medium">
+            {isVi ? "Tọa độ WGS84 · Tỷ lệ 1:100" : "WGS84 Grid · 1:100 Scale"}
           </span>
         </div>
       </div>
