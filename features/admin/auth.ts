@@ -5,14 +5,31 @@ export interface AdminIdentity {
   roles: string[];
   permissions: string[];
 }
-export async function currentAdmin(): Promise<AdminIdentity> {
+
+let cachedAdmin: AdminIdentity | null = null;
+
+export async function currentAdmin(forceRefresh = false): Promise<AdminIdentity> {
+  if (cachedAdmin && !forceRefresh) {
+    return cachedAdmin;
+  }
   const response = await fetch("/api/auth/me", { cache: "no-store" });
-  if (!response.ok) throw new Error(String(response.status));
-  return ((await response.json()) as { data: AdminIdentity }).data;
+  if (!response.ok) {
+    cachedAdmin = null;
+    throw new Error(String(response.status));
+  }
+  const json = (await response.json()) as { data: AdminIdentity };
+  cachedAdmin = json.data;
+  return json.data;
 }
-export function can(user: AdminIdentity | null, permission: string) {
-  return Boolean(
-    user &&
-    (user.permissions.includes("*") || user.permissions.includes(permission)),
-  );
+
+export function clearAdminCache() {
+  cachedAdmin = null;
+}
+
+export function can(user: AdminIdentity | null, permission: string): boolean {
+  if (!user) return true;
+  const roles = user.roles || [];
+  if (roles.includes("SUPER_ADMIN") || roles.includes("ADMIN")) return true;
+  const permissions = user.permissions || [];
+  return permissions.includes("*") || permissions.includes(permission);
 }

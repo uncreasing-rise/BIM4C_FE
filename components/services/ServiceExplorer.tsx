@@ -142,10 +142,10 @@ export function ServiceExplorer({
                       {service.description}
                     </p>
                     <ul className="mb-5 mt-4 grid gap-2 border-t pt-4">
-                      {service.highlights.slice(0, 3).map((item) => (
+                      {service.highlights.slice(0, 3).map((item, i) => (
                         <li
                           className="flex items-start gap-2 text-xs text-muted-foreground"
-                          key={item}
+                          key={`${service.id}-hl-${i}`}
                         >
                           <Check className="size-4 shrink-0 text-primary mt-0.5" />
                           <span>{item}</span>

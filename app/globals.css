@@ -959,10 +959,12 @@ html[data-scroll-deck="true"] {
   input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
 .admin-workspace select {
   min-height: 40px;
-  border-radius: 8px;
+  border-radius: 10px;
+  background-color: var(--card);
 }
 .admin-workspace textarea {
-  border-radius: 8px;
+  border-radius: 10px;
+  background-color: var(--card);
 }
 .admin-workspace table {
   width: 100%;

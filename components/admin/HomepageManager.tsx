@@ -1,80 +1,99 @@
 "use client";
+
 import Image from "next/image";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { adminMediaApi } from "@/features/admin/api/media";
+import { revalidateCmsCache } from "@/features/admin/api/revalidate";
 import type { HeroSlide, StrategicPartner } from "@/features/homepage/types";
+import { MediaPicker } from "./MediaPicker";
+import {
+  Sparkles,
+  Handshake,
+  Plus,
+  Edit2,
+  Trash2,
+  MoveUp,
+  MoveDown,
+  Eye,
+  EyeOff,
+  Check,
+  X,
+  ExternalLink,
+  Layers,
+  Save,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
+
 type Resource = "slides" | "partners";
 type Item = HeroSlide | StrategicPartner;
 const isSlide = (item: Item): item is HeroSlide => "title" in item;
 
 export function HomepageManager() {
-  const [tab, setTab] = useState<Resource>("slides"),
-    [items, setItems] = useState<Item[]>([]),
-    [selectedId, setSelectedId] = useState<string>(),
-    [editing, setEditing] = useState<Item | null>(null),
-    [loading, setLoading] = useState(true),
-    [saving, setSaving] = useState(false),
-    [feedback, setFeedback] = useState(""),
-    [mediaPaths, setMediaPaths] = useState<string[]>([]);
+  const [tab, setTab] = useState<Resource>("slides");
+  const [items, setItems] = useState<Item[]>([]);
+  const [selectedId, setSelectedId] = useState<string>();
+  const [editing, setEditing] = useState<Item | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
   const load = useCallback(async () => {
     setLoading(true);
     try {
       const response = await fetch(`/api/admin/homepage/${tab}`, {
         cache: "no-store",
       });
-      if (!response.ok)
+      if (!response.ok) {
         throw new Error(
           (await response.json().catch(() => null))?.message ??
             "Không thể tải dữ liệu",
         );
+      }
       const data = (await response.json()) as Item[];
       setItems(data);
       setSelectedId((current) =>
         data.some((item) => item.id === current) ? current : data[0]?.id,
       );
-      setFeedback("");
     } catch (error) {
       setItems([]);
-      setFeedback(
-        error instanceof Error ? error.message : "Không thể tải dữ liệu",
-      );
+      toast.error(error instanceof Error ? error.message : "Không thể tải dữ liệu");
     } finally {
       setLoading(false);
     }
   }, [tab]);
+
   useEffect(() => {
     const timer = window.setTimeout(() => void load(), 0);
     return () => window.clearTimeout(timer);
   }, [load]);
-  useEffect(() => {
-    void adminMediaApi
-      .list()
-      .then((result) => setMediaPaths(result.data.map((item) => item.url)))
-      .catch(() => setMediaPaths([]));
-  }, []);
+
   const selected = useMemo(
     () => items.find((item) => item.id === selectedId) ?? items[0],
     [items, selectedId],
   );
+
   const endpoint = (item?: Item) =>
     `/api/admin/homepage/${tab}${item?.id ? `/${item.id}` : ""}`;
+
   const fresh = (): Item =>
     tab === "slides"
       ? {
-          eyebrow: "BIM4C CONSTRUCTION",
+          eyebrow: "BIM4C ENTERPRISE",
           title: "",
-          image: mediaPaths[0] ?? "/images/news-project-coordination.webp",
-          alt: "",
+          image: "/images/news-project-coordination.webp",
+          alt: "BIM4C Hero Slide",
           sortOrder: items.length,
           isActive: true,
         }
       : {
           name: "",
-          logo: mediaPaths[0] ?? "/images/news-project-coordination.webp",
+          logo: "/images/news-project-coordination.webp",
           website: "",
           sortOrder: items.length,
           isActive: true,
         };
+
   const mutate = async (url: string, init: RequestInit, message: string) => {
     try {
       const response = await fetch(url, init);
@@ -82,56 +101,68 @@ export function HomepageManager() {
       const body = (await response.json().catch(() => null)) as {
         message?: string;
       } | null;
-      setFeedback(body?.message ?? message);
+      toast.error(body?.message ?? message);
     } catch {
-      setFeedback("Không thể kết nối đến máy chủ.");
+      toast.error("Không thể kết nối đến máy chủ.");
     }
     return false;
   };
+
   const save = async () => {
     if (!editing) return;
-    if (isSlide(editing) && (!editing.title.trim() || !editing.alt.trim()))
-      return setFeedback("Tiêu đề và mô tả ảnh là bắt buộc.");
-    if (!isSlide(editing) && !editing.name.trim())
-      return setFeedback("Tên đối tác là bắt buộc.");
+    if (isSlide(editing) && (!editing.title.trim() || !editing.alt.trim())) {
+      toast.error("Tiêu đề và mô tả ảnh là bắt buộc.");
+      return;
+    }
+    if (!isSlide(editing) && !editing.name.trim()) {
+      toast.error("Tên đối tác là bắt buộc.");
+      return;
+    }
     setSaving(true);
+    const toastId = toast.loading("Đang lưu...");
     try {
-      if (
-        !(await mutate(
-          endpoint(editing),
-          {
-            method: editing.id ? "PATCH" : "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(editing),
-          },
-          "Không thể lưu dữ liệu.",
-        ))
-      )
-        return;
+      const ok = await mutate(
+        endpoint(editing),
+        {
+          method: editing.id ? "PATCH" : "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(editing),
+        },
+        "Không thể lưu dữ liệu.",
+      );
+      if (!ok) return;
       setEditing(null);
-      setFeedback("Đã cập nhật trang chủ.");
+      toast.success("Đã cập nhật trang chủ thành công!", { id: toastId });
+      void revalidateCmsCache();
       await load();
     } finally {
       setSaving(false);
     }
   };
+
   const remove = async (item: Item) => {
     if (
       !item.id ||
       !window.confirm(`Xóa “${isSlide(item) ? item.title : item.name}”?`)
     )
       return;
+    const toastId = toast.loading("Đang xóa...");
     if (
       await mutate(
         endpoint(item),
         { method: "DELETE" },
         "Không thể xóa nội dung.",
       )
-    )
+    ) {
+      toast.success("Đã xóa nội dung!", { id: toastId });
+      void revalidateCmsCache();
       await load();
+    }
   };
+
   const toggle = async (item: Item) => {
     if (!item.id) return;
+    const toastId = toast.loading("Đang cập nhật trạng thái...");
     if (
       await mutate(
         endpoint(item),
@@ -142,9 +173,13 @@ export function HomepageManager() {
         },
         "Không thể cập nhật trạng thái.",
       )
-    )
+    ) {
+      toast.success("Đã đổi trạng thái hiển thị!", { id: toastId });
+      void revalidateCmsCache();
       await load();
+    }
   };
+
   const move = async (index: number, direction: -1 | 1) => {
     const target = index + direction;
     if (target < 0 || target >= items.length) return;
@@ -169,352 +204,408 @@ export function HomepageManager() {
       )
         return;
     }
+    toast.success("Đã thay đổi thứ tự!");
+    void revalidateCmsCache();
     await load();
   };
+
   return (
-    <section className="overflow-hidden rounded-md border border-border bg-background shadow-sm">
-      <header className="flex flex-col gap-2 border-b border-border p-4 sm:flex-row sm:justify-between [&>div]:flex [&>div]:gap-1.5 [&_button]:min-h-[38px] [&_button]:border [&_button]:border-border [&_button]:px-3">
-        <div>
+    <section className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm space-y-6 p-6">
+      {/* Tab Switcher & Add Button Header */}
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 border-b border-border pb-5">
+        <div className="flex items-center gap-2 bg-muted/60 p-1.5 rounded-xl border border-border">
           <button
-            className={
+            type="button"
+            className={`flex items-center gap-2 rounded-lg px-4 py-2 text-xs font-bold transition-all ${
               tab === "slides"
-                ? "border-primary bg-primary/10 text-primary"
-                : ""
-            }
+                ? "bg-background text-primary shadow-xs"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
             onClick={() => {
               setTab("slides");
               setEditing(null);
             }}
           >
-            Slide trang chủ
+            <Sparkles className="size-3.5" />
+            <span>Hero Slides Trang chủ</span>
           </button>
           <button
-            className={
+            type="button"
+            className={`flex items-center gap-2 rounded-lg px-4 py-2 text-xs font-bold transition-all ${
               tab === "partners"
-                ? "border-primary bg-primary/10 text-primary"
-                : ""
-            }
+                ? "bg-background text-primary shadow-xs"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
             onClick={() => {
               setTab("partners");
               setEditing(null);
             }}
           >
-            Đối tác chiến lược
+            <Handshake className="size-3.5" />
+            <span>Đối tác chiến lược</span>
           </button>
         </div>
-        <button
-          className="inline-flex min-h-[42px] items-center justify-center gap-2 rounded bg-primary px-[18px] text-xs font-semibold text-white hover:bg-primary disabled:opacity-50"
+
+        <Button
           onClick={() => setEditing(fresh())}
+          className="gap-2 bg-primary text-white text-xs font-semibold h-10 px-4"
         >
-          ＋ Thêm {tab === "slides" ? "slide" : "đối tác"}
-        </button>
-      </header>
-      {feedback && (
-        <div className="mx-4 mt-3 flex justify-between bg-primary/10 px-3 py-2.5 text-xs text-primary">
-          {feedback}
-          <button onClick={() => setFeedback("")} aria-label="Đóng thông báo">×</button>
-        </div>
-      )}
+          <Plus className="size-4" />
+          <span>Thêm {tab === "slides" ? "Slide" : "Đối tác"} mới</span>
+        </Button>
+      </div>
+
       {loading ? (
-        <div className="p-16 text-center text-muted-foreground">
-          Đang tải nội dung trang chủ…
+        <div className="p-16 text-center text-xs text-muted-foreground">
+          Đang tải dữ liệu trang chủ…
         </div>
       ) : items.length === 0 ? (
-        <div className="p-12 text-center text-sm text-muted-foreground">
-          <b>◇</b>
-          <h3>Chưa có nội dung</h3>
-          <p>Thêm nội dung đầu tiên hoặc kiểm tra cấu hình API.</p>
+        <div className="p-12 text-center text-sm text-muted-foreground border border-dashed rounded-2xl">
+          Chưa có {tab === "slides" ? "slide" : "đối tác"} nào. Nhấn &quot;Thêm mới&quot; ở trên để bắt đầu.
         </div>
       ) : tab === "slides" ? (
-        <>
+        <div className="space-y-6">
+          {/* Live Hero Preview Banner */}
           {selected && isSlide(selected) && (
-            <div className="relative m-4 h-[260px] overflow-hidden text-white md:h-[390px] [&>img]:object-cover [&>div]:absolute [&>div]:inset-0 [&>div]:bg-gradient-to-r [&>div]:from-foreground/90 [&>span]:absolute [&>span]:left-6 [&>span]:top-5 [&>span]:text-xs [&>section]:absolute [&>section]:bottom-8 [&>section]:left-6 [&>section]:max-w-xl [&_h2]:mt-2 [&_h2]:text-3xl [&>button]:absolute [&>button]:bottom-4 [&>button]:right-4 [&>button]:bg-background [&>button]:p-2.5 [&>button]:text-primary">
+            <div className="relative aspect-[21/9] sm:aspect-[24/9] w-full overflow-hidden rounded-2xl border border-border text-white shadow-lg group">
               <Image
                 src={selected.image}
                 alt={selected.alt}
                 fill
-                sizes="1000px"
+                className="object-cover"
+                sizes="(max-width: 1200px) 100vw, 1200px"
               />
-              <div />
-              <span>
-                ĐANG XEM TRƯỚC · SLIDE {items.indexOf(selected) + 1}/
-                {items.length}
-              </span>
-              <section>
-                <p>{selected.eyebrow}</p>
-                <h2>{selected.title}</h2>
-              </section>
-              <button onClick={() => setEditing({ ...selected })}>
-                ✎ Chỉnh sửa slide này
-              </button>
-            </div>
-          )}
-          <div className="grid gap-2 p-4 [&_article]:flex [&_article]:flex-wrap [&_article]:items-center [&_article]:gap-3 [&_article]:border [&_article]:border-border [&_article]:p-2 [&_article>div]:flex [&_article>div]:min-w-0 [&_article>div]:flex-1 [&_article>div]:flex-col [&_nav]:flex [&_nav]:gap-1 [&_nav_button]:h-8 [&_nav_button]:min-w-8 [&_nav_button]:border [&_nav_button]:border-border">
-            {items.map(
-              (item, index) =>
-                isSlide(item) && (
-                  <article
-                    className={
-                      item.id === selected?.id ? "border-primary" : ""
-                    }
-                    key={item.id}
-                    onClick={() => setSelectedId(item.id)}
-                  >
-                    <Image src={item.image} alt="" width={120} height={76} />
-                    <div>
-                      <span>SLIDE {String(index + 1).padStart(2, "0")}</span>
-                      <strong>{item.title}</strong>
-                      <small>
-                        {item.isActive ? "● Đang hiển thị" : "○ Đang ẩn"}
-                      </small>
-                    </div>
-                    <nav>
-                      <button
-                        disabled={index === 0}
-                        aria-label={`Di chuyển slide ${index + 1} lên`}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          void move(index, -1);
-                        }}
-                      >
-                        ↑
-                      </button>
-                      <button
-                        disabled={index === items.length - 1}
-                        aria-label={`Di chuyển slide ${index + 1} xuống`}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          void move(index, 1);
-                        }}
-                      >
-                        ↓
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          void toggle(item);
-                        }}
-                      >
-                        {item.isActive ? "Ẩn" : "Hiện"}
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setEditing({ ...item });
-                        }}
-                      >
-                        Sửa
-                      </button>
-                      <button
-                        className="text-red-600"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          void remove(item);
-                        }}
-                      >
-                        Xóa
-                      </button>
-                    </nav>
-                  </article>
-                ),
-            )}
-          </div>
-        </>
-      ) : (
-        <div className="grid grid-cols-1 gap-3 p-4 sm:grid-cols-2 lg:grid-cols-3 [&_article]:border [&_article]:border-border [&_article]:p-3.5 [&_article>div]:relative [&_article>div]:my-2 [&_article>div]:h-24 [&_article>div]:bg-muted [&_img]:object-contain [&_nav]:mt-3 [&_nav]:flex [&_nav]:gap-1 [&_nav_button]:h-8 [&_nav_button]:min-w-8 [&_nav_button]:border [&_nav_button]:border-border">
-          {items.map(
-            (item, index) =>
-              !isSlide(item) && (
-                <article
-                  className={!item.isActive ? "opacity-50" : ""}
-                  key={item.id}
-                >
-                  <span>{String(index + 1).padStart(2, "0")}</span>
-                  <div>
-                    <Image src={item.logo} alt={item.name} fill sizes="220px" />
-                  </div>
-                  <strong>{item.name}</strong>
-                  <small>{item.isActive ? "Đang hiển thị" : "Đang ẩn"}</small>
-                  <nav>
-                    <button
-                      disabled={index === 0}
-                      aria-label={`Di chuyển đối tác ${item.name} lên`}
-                      onClick={() => move(index, -1)}
-                    >
-                      ↑
-                    </button>
-                    <button
-                      disabled={index === items.length - 1}
-                      aria-label={`Di chuyển đối tác ${item.name} xuống`}
-                      onClick={() => move(index, 1)}
-                    >
-                      ↓
-                    </button>
-                    <button onClick={() => toggle(item)}>
-                      {item.isActive ? "Ẩn" : "Hiện"}
-                    </button>
-                    <button onClick={() => setEditing({ ...item })}>Sửa</button>
-                    <button
-                      className="text-red-600"
-                      onClick={() => remove(item)}
-                    >
-                      Xóa
-                    </button>
-                  </nav>
-                </article>
-              ),
-          )}
-        </div>
-      )}
-      {editing && (
-        <>
-          <button
-            className="fixed inset-0 z-50 bg-foreground/45"
-            onClick={() => setEditing(null)}
-            aria-label="Đóng"
-          />
-          <aside className="fixed inset-y-0 right-0 z-[60] flex w-full max-w-[600px] flex-col bg-background shadow-2xl [&>header]:flex [&>header]:justify-between [&>header]:border-b [&>header]:border-border [&>header]:p-5 [&>footer]:mt-auto [&>footer]:flex [&>footer]:justify-end [&>footer]:gap-2 [&>footer]:border-t [&>footer]:border-border [&>footer]:p-4">
-            <header>
-              <div>
-                <p>{editing.id ? "CHỈNH SỬA" : "THÊM MỚI"}</p>
-                <h2>
-                  {isSlide(editing) ? "Slide trang chủ" : "Đối tác chiến lược"}
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/40 to-transparent" />
+              <div className="absolute top-4 left-4 rounded-full bg-black/60 backdrop-blur-md px-3 py-1 text-[11px] font-mono text-teal-300 border border-white/10">
+                XEM TRƯỚC SLIDE {items.indexOf(selected) + 1}/{items.length}
+              </div>
+              <div className="absolute bottom-6 left-6 right-6 max-w-2xl space-y-2">
+                <span className="rounded bg-teal-500/20 px-2 py-0.5 text-xs font-bold text-teal-300 border border-teal-500/30">
+                  {selected.eyebrow}
+                </span>
+                <h2 className="text-xl sm:text-2xl font-extrabold leading-tight text-white drop-shadow-md">
+                  {selected.title}
                 </h2>
               </div>
-              <button onClick={() => setEditing(null)} aria-label="Đóng trình soạn thảo">×</button>
-            </header>
-            <div className="grid flex-1 gap-4 overflow-y-auto p-5 [&_label]:grid [&_label]:gap-1.5 [&_label]:text-xs [&_input]:border [&_input]:border-border [&_input]:p-2.5 [&_select]:border [&_select]:border-border [&_select]:p-2.5 [&_textarea]:border [&_textarea]:border-border [&_textarea]:p-2.5">
-              <div className="relative h-[230px] bg-muted [&_img]:object-contain">
-                <Image
-                  src={isSlide(editing) ? editing.image : editing.logo}
-                  alt=""
-                  fill
-                  sizes="600px"
-                />
+              <Button
+                onClick={() => setEditing({ ...selected })}
+                className="absolute bottom-6 right-6 gap-2 bg-white text-slate-950 hover:bg-slate-100 font-bold text-xs"
+              >
+                <Edit2 className="size-3.5" />
+                <span>Chỉnh sửa slide này</span>
+              </Button>
+            </div>
+          )}
+
+          {/* Slide Cards Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {items.map((item, index) => {
+              if (!isSlide(item)) return null;
+              const isCurrent = item.id === selected?.id;
+              return (
+                <div
+                  key={item.id}
+                  onClick={() => setSelectedId(item.id)}
+                  className={`group flex items-center gap-4 rounded-2xl border p-4 cursor-pointer transition-all ${
+                    isCurrent
+                      ? "border-primary bg-primary/5 ring-2 ring-primary/20"
+                      : "border-border bg-muted/20 hover:border-border hover:bg-muted/40"
+                  }`}
+                >
+                  <div className="relative size-16 shrink-0 overflow-hidden rounded-xl border border-border bg-muted">
+                    <Image src={item.image} alt={item.alt} fill className="object-cover" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] font-mono font-bold text-primary">
+                        SLIDE {String(index + 1).padStart(2, "0")}
+                      </span>
+                      <span className={`inline-flex items-center rounded-full px-2 py-0.2 text-[10px] font-semibold ${
+                        item.isActive ? "bg-emerald-500/15 text-emerald-500" : "bg-slate-500/15 text-slate-400"
+                      }`}>
+                        {item.isActive ? "Đang hiển thị" : "Đang ẩn"}
+                      </span>
+                    </div>
+                    <div className="font-bold text-sm text-foreground truncate mt-1">
+                      {item.title}
+                    </div>
+                    <div className="text-xs text-muted-foreground truncate">{item.eyebrow}</div>
+                  </div>
+                  <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      disabled={index === 0}
+                      onClick={() => void move(index, -1)}
+                      className="size-8 text-muted-foreground hover:text-foreground"
+                    >
+                      <MoveUp className="size-3.5" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      disabled={index === items.length - 1}
+                      onClick={() => void move(index, 1)}
+                      className="size-8 text-muted-foreground hover:text-foreground"
+                    >
+                      <MoveDown className="size-3.5" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => void toggle(item)}
+                      className="size-8 text-muted-foreground hover:text-foreground"
+                      title={item.isActive ? "Ẩn slide" : "Hiện slide"}
+                    >
+                      {item.isActive ? <Eye className="size-3.5" /> : <EyeOff className="size-3.5" />}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setEditing({ ...item })}
+                      className="size-8 text-muted-foreground hover:text-primary"
+                    >
+                      <Edit2 className="size-3.5" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => void remove(item)}
+                      className="size-8 text-destructive hover:bg-destructive/10"
+                    >
+                      <Trash2 className="size-3.5" />
+                    </Button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      ) : (
+        /* Partners Grid */
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {items.map((item, index) => {
+            if (isSlide(item)) return null;
+            return (
+              <div
+                key={item.id}
+                className="flex flex-col justify-between rounded-2xl border border-border bg-card p-5 shadow-xs transition hover:border-primary/40 space-y-4"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="font-mono text-xs text-muted-foreground font-bold">
+                    #{String(index + 1).padStart(2, "0")}
+                  </span>
+                  <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                    item.isActive ? "bg-emerald-500/15 text-emerald-500" : "bg-slate-500/15 text-slate-400"
+                  }`}>
+                    {item.isActive ? "Đang hiển thị" : "Đang ẩn"}
+                  </span>
+                </div>
+
+                <div className="relative h-20 w-full rounded-xl bg-muted/30 border border-border p-2 flex items-center justify-center">
+                  <Image src={item.logo} alt={item.name} fill className="object-contain p-2" />
+                </div>
+
+                <div>
+                  <div className="font-bold text-sm text-foreground truncate">{item.name}</div>
+                  {item.website && (
+                    <a
+                      href={item.website}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs text-primary hover:underline flex items-center gap-1 mt-0.5 truncate"
+                    >
+                      <span>{item.website}</span>
+                      <ExternalLink className="size-3" />
+                    </a>
+                  )}
+                </div>
+
+                <div className="flex items-center justify-end gap-1 border-t border-border pt-3">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    disabled={index === 0}
+                    onClick={() => move(index, -1)}
+                    className="size-7 text-muted-foreground"
+                  >
+                    <MoveUp className="size-3.5" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    disabled={index === items.length - 1}
+                    onClick={() => move(index, 1)}
+                    className="size-7 text-muted-foreground"
+                  >
+                    <MoveDown className="size-3.5" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => toggle(item)}
+                    className="size-7 text-muted-foreground"
+                  >
+                    {item.isActive ? <Eye className="size-3.5" /> : <EyeOff className="size-3.5" />}
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setEditing({ ...item })}
+                    className="size-7 text-muted-foreground hover:text-primary"
+                  >
+                    <Edit2 className="size-3.5" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => remove(item)}
+                    className="size-7 text-destructive hover:bg-destructive/10"
+                  >
+                    <Trash2 className="size-3.5" />
+                  </Button>
+                </div>
               </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Slide / Partner Edit Modal */}
+      {editing && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-150">
+          <div className="relative w-full max-w-lg rounded-3xl border border-border bg-card shadow-2xl p-6 sm:p-8 space-y-5 animate-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between border-b border-border pb-4">
+              <div>
+                <span className="text-[10px] font-bold font-mono uppercase text-primary">
+                  {editing.id ? "CHỈNH SỬA" : "THÊM MỚI"}
+                </span>
+                <h3 className="text-lg font-bold text-foreground">
+                  {isSlide(editing) ? "Slide Banner Trang Chủ" : "Đối tác Chiến lược"}
+                </h3>
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setEditing(null)}
+                className="size-8 text-muted-foreground"
+              >
+                <X className="size-4" />
+              </Button>
+            </div>
+
+            {/* Form Fields */}
+            <div className="space-y-4">
               {isSlide(editing) ? (
                 <>
-                  <label>
-                    Nhãn nhỏ
-                    <input
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      Nhãn nhỏ (Eyebrow)
+                    </label>
+                    <Input
                       value={editing.eyebrow}
-                      maxLength={160}
-                      onChange={(e) =>
-                        setEditing({ ...editing, eyebrow: e.target.value })
-                      }
+                      onChange={(e) => setEditing({ ...editing, eyebrow: e.target.value })}
+                      placeholder="BIM4C ENTERPRISE"
                     />
-                  </label>
-                  <label>
-                    Tiêu đề chính <em>*</em>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      Tiêu đề chính (Title) *
+                    </label>
                     <textarea
-                      rows={3}
+                      rows={2}
                       value={editing.title}
-                      maxLength={240}
-                      onChange={(e) =>
-                        setEditing({ ...editing, title: e.target.value })
-                      }
+                      onChange={(e) => setEditing({ ...editing, title: e.target.value })}
+                      placeholder="Tiêu đề slide..."
+                      className="w-full rounded-xl border border-border bg-background p-3 text-sm text-foreground outline-none focus:border-primary"
                     />
-                  </label>
-                  <label>
-                    Mô tả ảnh <em>*</em>
-                    <input
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      Mô tả ảnh (Alt) *
+                    </label>
+                    <Input
                       value={editing.alt}
-                      maxLength={240}
-                      onChange={(e) =>
-                        setEditing({ ...editing, alt: e.target.value })
-                      }
+                      onChange={(e) => setEditing({ ...editing, alt: e.target.value })}
+                      placeholder="Mô tả cho công cụ tìm kiếm..."
                     />
-                  </label>
-                  <label>
-                    Ảnh nền
-                    <select
-                      value={editing.image}
-                      onChange={(e) =>
-                        setEditing({ ...editing, image: e.target.value })
-                      }
-                    >
-                      {mediaPaths.map((path) => (
-                        <option key={path}>{path}</option>
-                      ))}
-                    </select>
-                  </label>
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                        Hình ảnh Slide
+                      </label>
+                      <MediaPicker
+                        label="Chọn ảnh từ Thư viện"
+                        onSelect={(media) => setEditing({ ...editing, image: media.url })}
+                      />
+                    </div>
+                    <div className="relative aspect-[21/9] w-full rounded-xl overflow-hidden border border-border bg-muted">
+                      <Image src={editing.image} alt={editing.alt} fill className="object-cover" />
+                    </div>
+                  </div>
                 </>
               ) : (
                 <>
-                  <label>
-                    Tên đối tác <em>*</em>
-                    <input
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      Tên đối tác / Thương hiệu *
+                    </label>
+                    <Input
                       value={editing.name}
-                      maxLength={180}
-                      onChange={(e) =>
-                        setEditing({ ...editing, name: e.target.value })
-                      }
+                      onChange={(e) => setEditing({ ...editing, name: e.target.value })}
+                      placeholder="Ví dụ: Autodesk, Vinaconex..."
                     />
-                  </label>
-                  <label>
-                    Website
-                    <input
-                      type="url"
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      Website liên kết
+                    </label>
+                    <Input
                       value={editing.website ?? ""}
-                      onChange={(e) =>
-                        setEditing({ ...editing, website: e.target.value })
-                      }
+                      onChange={(e) => setEditing({ ...editing, website: e.target.value })}
+                      placeholder="https://..."
                     />
-                  </label>
-                  <label>
-                    Logo
-                    <select
-                      value={editing.logo}
-                      onChange={(e) =>
-                        setEditing({ ...editing, logo: e.target.value })
-                      }
-                    >
-                      {mediaPaths.map((path) => (
-                        <option key={path}>{path}</option>
-                      ))}
-                    </select>
-                  </label>
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                        Logo đối tác
+                      </label>
+                      <MediaPicker
+                        label="Chọn logo từ Thư viện"
+                        onSelect={(media) => setEditing({ ...editing, logo: media.url })}
+                      />
+                    </div>
+                    <div className="relative h-24 w-full rounded-xl overflow-hidden border border-border bg-muted/40 flex items-center justify-center p-3">
+                      <Image src={editing.logo} alt={editing.name} fill className="object-contain p-2" />
+                    </div>
+                  </div>
                 </>
               )}
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-[120px_1fr]">
-                <label>
-                  Vị trí
-                  <input
-                    type="number"
-                    min="0"
-                    value={editing.sortOrder}
-                    onChange={(e) =>
-                      setEditing({
-                        ...editing,
-                        sortOrder: Number(e.target.value),
-                      })
-                    }
-                  />
-                </label>
-                <label className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    checked={editing.isActive}
-                    onChange={(e) =>
-                      setEditing({ ...editing, isActive: e.target.checked })
-                    }
-                  />
-                  <span>Hiển thị trên website</span>
-                </label>
-              </div>
             </div>
-            <footer>
-              <button onClick={() => setEditing(null)}>Hủy</button>
-              <button
-                className="inline-flex min-h-[42px] items-center justify-center gap-2 rounded bg-primary px-[18px] text-xs font-semibold text-white hover:bg-primary disabled:opacity-50"
+
+            {/* Modal Actions */}
+            <div className="flex items-center justify-end gap-3 border-t border-border pt-4">
+              <Button variant="ghost" onClick={() => setEditing(null)} className="text-xs">
+                Hủy
+              </Button>
+              <Button
                 disabled={saving}
-                onClick={save}
+                onClick={() => void save()}
+                className="gap-2 bg-primary text-white font-bold text-xs px-5"
               >
-                {saving ? "Đang lưu…" : "Lưu thay đổi"}
-              </button>
-            </footer>
-          </aside>
-        </>
+                <Save className="size-3.5" />
+                <span>{saving ? "Đang lưu..." : "Lưu thay đổi"}</span>
+              </Button>
+            </div>
+          </div>
+        </div>
       )}
     </section>
   );

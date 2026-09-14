@@ -1,4 +1,5 @@
 import type { PageResult } from "../types";
+
 export interface AdminMedia {
   id: string;
   url: string;
@@ -10,6 +11,7 @@ export interface AdminMedia {
   alt: string | null;
   createdAt: string;
 }
+
 async function parse<T>(response: Response): Promise<T> {
   if (!response.ok) {
     const body = (await response.json().catch(() => null)) as {
@@ -21,14 +23,19 @@ async function parse<T>(response: Response): Promise<T> {
     ? (undefined as T)
     : ((await response.json()) as T);
 }
+
 export const adminMediaApi = {
-  list: async (search = "", signal?: AbortSignal) =>
-    parse<PageResult<AdminMedia>>(
-      await fetch(`/api/admin/media?search=${encodeURIComponent(search)}`, {
+  list: async (search = "", signal?: AbortSignal) => {
+    const qs = search.trim()
+      ? `?search=${encodeURIComponent(search.trim())}`
+      : "";
+    return parse<PageResult<AdminMedia>>(
+      await fetch(`/api/admin/media${qs}`, {
         cache: "no-store",
         signal,
       }),
-    ),
+    );
+  },
   upload: async (file: File, alt: string) => {
     const body = new FormData();
     body.set("file", file);

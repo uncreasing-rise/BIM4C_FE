@@ -1,4 +1,5 @@
 import type { PageResult } from "../types";
+
 export interface AdminRecord {
   id: string;
   name?: string;
@@ -16,8 +17,10 @@ export interface AdminRecord {
   privacyPolicyVersion?: string | null;
   consentSource?: string | null;
 }
+
 export type RecordKind =
   "contacts" | "course-registrations" | "newsletter/subscriptions";
+
 async function parse<T>(response: Response): Promise<T> {
   if (!response.ok) {
     const b = (await response.json().catch(() => null)) as {
@@ -29,6 +32,15 @@ async function parse<T>(response: Response): Promise<T> {
     ? (undefined as T)
     : (response.json() as Promise<T>);
 }
+
+const queryString = (input: Record<string, string | number | undefined>) => {
+  const q = new URLSearchParams();
+  Object.entries(input).forEach(([k, v]) => {
+    if (v !== undefined && v !== "") q.set(k, String(v));
+  });
+  return q.toString();
+};
+
 export const adminRecordsApi = {
   list: async (
     kind: RecordKind,
@@ -36,13 +48,19 @@ export const adminRecordsApi = {
     status: string,
     page: number,
     signal?: AbortSignal,
-  ) =>
-    parse<PageResult<AdminRecord>>(
-      await fetch(
-        `/api/admin/${kind}?page=${page}&search=${encodeURIComponent(search)}&status=${encodeURIComponent(status)}`,
-        { cache: "no-store", signal },
-      ),
-    ),
+  ) => {
+    const qs = queryString({
+      page,
+      search: search.trim() || undefined,
+      status: status || undefined,
+    });
+    return parse<PageResult<AdminRecord>>(
+      await fetch(`/api/admin/${kind}${qs ? `?${qs}` : ""}`, {
+        cache: "no-store",
+        signal,
+      }),
+    );
+  },
   update: async (kind: RecordKind, id: string, body: unknown) =>
     parse<{ data: AdminRecord }>(
       await fetch(`/api/admin/${kind}/${id}`, {

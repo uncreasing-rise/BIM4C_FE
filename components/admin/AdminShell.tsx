@@ -1,11 +1,31 @@
 "use client";
+
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { LogOut, Menu, Search, LayoutDashboard, FileText, Layers, GraduationCap, Wrench, Folder, Mail, Users, FileClock, Settings, Sparkles, RotateCw, Zap } from "lucide-react";
+import {
+  LogOut,
+  Menu,
+  Search,
+  LayoutDashboard,
+  FileText,
+  Layers,
+  GraduationCap,
+  Wrench,
+  Folder,
+  Mail,
+  Users,
+  FileClock,
+  Settings,
+  Sparkles,
+  RotateCw,
+  ExternalLink,
+  X,
+  Shield,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { can, currentAdmin, type AdminIdentity } from "@/features/admin/auth";
+import { can, currentAdmin, clearAdminCache, type AdminIdentity } from "@/features/admin/auth";
 import { toast } from "sonner";
 
 const navigation = [
@@ -59,14 +79,23 @@ export function AdminShell({
   const [user, setUser] = useState<AdminIdentity | null>(null);
   const [commandOpen, setCommandOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [revalidating, setRevalidating] = useState(false);
 
   useEffect(() => {
+    let active = true;
     currentAdmin()
-      .then(setUser)
-      .catch(() =>
-        router.replace(`/admin/login?next=${encodeURIComponent(pathname)}`),
-      );
-  }, [pathname, router]);
+      .then((data) => {
+        if (active) setUser(data);
+      })
+      .catch(() => {
+        if (active) {
+          router.replace(`/admin/login?next=${encodeURIComponent(pathname)}`);
+        }
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   // Global Ctrl+K / Cmd+K listener
   useEffect(() => {
@@ -90,7 +119,7 @@ export function AdminShell({
       )
     : allLinks;
 
-  const links = (
+  const renderNavLinks = (
     items: Array<{
       href: string;
       label: string;
@@ -107,22 +136,27 @@ export function AdminShell({
         return (
           <Link
             onClick={() => setOpen(false)}
-            className={`group relative flex min-h-[42px] items-center gap-3 rounded-lg px-3 text-sm font-medium transition-all ${
+            className={`group relative flex min-h-[42px] items-center gap-3 rounded-xl px-3 py-2 text-xs font-semibold transition-all duration-150 ${
               active
-                ? "bg-primary/20 text-teal-300 font-semibold shadow-sm border-l-2 border-primary"
-                : "text-slate-300 hover:bg-white/10 hover:text-white"
+                ? "bg-gradient-to-r from-teal-500/20 to-teal-500/5 text-teal-300 shadow-xs border-l-2 border-teal-400 font-bold"
+                : "text-slate-300 hover:bg-white/5 hover:text-white"
             }`}
             href={item.href}
             prefetch={false}
             key={item.href}
           >
-            <Icon className={`size-4 transition-transform group-hover:scale-110 ${active ? "text-primary" : "text-slate-400 group-hover:text-white"}`} />
-            <span>{item.label}</span>
+            <Icon
+              className={`size-4 transition-transform duration-150 group-hover:scale-110 ${
+                active ? "text-teal-400" : "text-slate-400 group-hover:text-teal-300"
+              }`}
+            />
+            <span className="truncate">{item.label}</span>
           </Link>
         );
       });
 
   async function logout() {
+    clearAdminCache();
     setUser(null);
     setOpen(false);
     await fetch("/api/auth/logout", { method: "POST" });
@@ -130,16 +164,14 @@ export function AdminShell({
     router.refresh();
   }
 
-  const [revalidating, setRevalidating] = useState(false);
-
   async function handlePurgeCache() {
     setRevalidating(true);
-    const toastId = toast.loading("Đang xóa bộ nhớ đệm (ISR Cache)...");
+    const toastId = toast.loading("Đang làm mới bộ nhớ đệm (ISR Cache)...");
     try {
       const res = await fetch("/api/admin/revalidate", { method: "POST" });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Lỗi khi xóa cache");
-      toast.success(data.data?.message || "Đã làm mới bộ nhớ đệm toàn bộ website thành công!", { id: toastId });
+      toast.success(data.data?.message || "Đã làm mới bộ nhớ đệm toàn bộ website!", { id: toastId });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Xóa cache thất bại", { id: toastId });
     } finally {
@@ -148,57 +180,81 @@ export function AdminShell({
   }
 
   return (
-    <div className="admin-workspace min-h-screen bg-background lg:grid lg:grid-cols-[260px_minmax(0,1fr)]">
+    <div className="admin-workspace min-h-screen bg-slate-50/60 dark:bg-background lg:grid lg:grid-cols-[260px_minmax(0,1fr)]">
+      {/* Sidebar Navigation */}
       <aside
         id="admin-sidebar"
-        className={`fixed inset-y-0 left-0 z-50 flex w-[260px] flex-col border-r border-white/10 bg-brand-ink px-4 pb-5 text-white transition-transform lg:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-50 flex w-[260px] flex-col border-r border-white/10 bg-[#04181f] px-4 pb-5 text-white transition-transform duration-200 lg:translate-x-0 ${
           open ? "translate-x-0" : "-translate-x-full"
         }`}
       >
-        <div className="flex h-[76px] flex-col justify-center border-b border-white/10 px-3">
-          <Link className="flex items-center gap-2 text-2xl font-bold tracking-tight" href="/">
-            <span>BIM<span className="text-primary">4C</span></span>
-            <span className="rounded bg-teal-500/20 px-1.5 py-0.5 font-mono text-[10px] font-bold text-teal-300 border border-teal-500/30">
-              CMS
-            </span>
+        {/* Logo Brand Header */}
+        <div className="flex h-[76px] items-center justify-between border-b border-white/10 px-2">
+          <Link className="flex items-center gap-2.5 font-black tracking-tight" href="/admin">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-teal-400 to-teal-600 font-black text-slate-950 shadow-md shadow-teal-500/20">
+              4C
+            </div>
+            <div className="flex flex-col">
+              <div className="flex items-center gap-1.5 leading-none">
+                <span className="text-lg text-white font-extrabold">BIM<span className="text-teal-400">4C</span></span>
+                <span className="rounded bg-teal-500/20 px-1 py-0.2 text-[9px] font-bold font-mono text-teal-300 border border-teal-500/30">
+                  CMS
+                </span>
+              </div>
+              <span className="text-[10px] text-slate-400 font-normal mt-0.5">Control Center</span>
+            </div>
           </Link>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setOpen(false)}
+            className="lg:hidden text-slate-400 hover:text-white"
+          >
+            <X className="size-5" />
+          </Button>
         </div>
-        <nav className="flex-1 space-y-6 overflow-y-auto pt-5">
+
+        {/* Nav Links */}
+        <nav className="flex-1 space-y-6 overflow-y-auto pt-5 pr-1">
           <div>
-            <p className="px-3 mb-2 font-mono text-[11px] font-bold uppercase tracking-wider text-slate-400">
+            <p className="px-3 mb-2 font-mono text-[10px] font-bold uppercase tracking-wider text-slate-400">
               QUẢN TRỊ NỘI DUNG
             </p>
-            <div className="space-y-1">{links(navigation)}</div>
+            <div className="space-y-1">{renderNavLinks(navigation)}</div>
           </div>
           <div>
-            <p className="px-3 mb-2 font-mono text-[11px] font-bold uppercase tracking-wider text-slate-400">
+            <p className="px-3 mb-2 font-mono text-[10px] font-bold uppercase tracking-wider text-slate-400">
               HỆ THỐNG & CÀI ĐẶT
             </p>
-            <div className="space-y-1">{links(system)}</div>
+            <div className="space-y-1">{renderNavLinks(system)}</div>
           </div>
         </nav>
+
+        {/* User Identity Card Footer */}
         <div className="mt-auto flex items-center gap-3 border-t border-white/10 px-2 pt-4">
-          <div className="grid size-9 place-items-center rounded-full bg-primary/20 text-xs font-bold text-teal-300 border border-teal-500/30">
-            {user?.name?.slice(0, 2).toUpperCase() ?? "--"}
+          <div className="grid size-9 place-items-center rounded-xl bg-teal-500/20 text-xs font-bold text-teal-300 border border-teal-500/30">
+            {user?.name?.slice(0, 2).toUpperCase() ?? "AD"}
           </div>
           <span className="flex min-w-0 flex-1 flex-col">
-            <strong className="text-xs font-semibold truncate">{user?.name ?? "Đang tải…"}</strong>
-            <small className="text-[11px] font-mono text-slate-400 truncate">
-              {user?.roles.join(", ")}
+            <strong className="text-xs font-semibold truncate text-slate-100">{user?.name ?? "Admin"}</strong>
+            <small className="text-[10px] font-mono text-teal-400 truncate">
+              {user?.roles?.join(", ") || "Super Admin"}
             </small>
           </span>
           <Button
             variant="ghost"
-            size="icon-sm"
-            className="text-slate-400 hover:bg-white/10 hover:text-white"
+            size="icon"
+            className="text-slate-400 hover:bg-white/10 hover:text-white size-8"
             onClick={() => void logout()}
             aria-label="Đăng xuất"
+            title="Đăng xuất"
           >
             <LogOut className="size-4" />
           </Button>
         </div>
       </aside>
 
+      {/* Mobile Backdrop */}
       {open && (
         <button
           type="button"
@@ -208,35 +264,37 @@ export function AdminShell({
         />
       )}
 
-      <main className="min-w-0 lg:col-start-2">
-        <header className="sticky top-0 z-30 flex h-[70px] items-center justify-between border-b border-border/70 bg-background/90 px-4 backdrop-blur-xl md:px-8">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="lg:hidden"
-            onClick={() => setOpen(true)}
-            aria-label="Mở menu"
-            aria-expanded={open}
-            aria-controls="admin-sidebar"
-          >
-            <Menu className="size-5" />
-          </Button>
+      {/* Main Content Area */}
+      <main className="min-w-0 lg:col-start-2 flex flex-col min-h-screen">
+        {/* Top Sticky Header Bar */}
+        <header className="sticky top-0 z-30 flex h-[70px] items-center justify-between border-b border-slate-200/80 dark:border-border/80 bg-white/95 dark:bg-background/90 px-4 backdrop-blur-xl md:px-8">
+          <div className="flex items-center gap-3 flex-1 max-w-md">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="lg:hidden"
+              onClick={() => setOpen(true)}
+              aria-label="Mở menu"
+            >
+              <Menu className="size-5" />
+            </Button>
 
-          {/* Quick Command Launcher Button */}
-          <button
-            type="button"
-            onClick={() => setCommandOpen(true)}
-            className="flex items-center gap-2.5 rounded-xl border border-border/80 bg-muted/50 px-3.5 py-2 text-xs text-muted-foreground transition-all hover:border-primary/50 hover:bg-muted w-full max-w-sm"
-          >
-            <Search className="size-4 text-primary" />
-            <span className="flex-1 text-left truncate">Tìm kiếm nhanh tính năng...</span>
-            <kbd className="hidden rounded bg-background border border-border px-1.5 py-0.5 font-mono text-[10px] font-semibold text-muted-foreground sm:inline-block">
-              Ctrl K
-            </kbd>
-          </button>
+            {/* Quick Command Search Launcher */}
+            <button
+              type="button"
+              onClick={() => setCommandOpen(true)}
+              className="flex items-center gap-2.5 rounded-xl border border-slate-200/80 dark:border-border/80 bg-slate-100/80 dark:bg-muted/40 px-3.5 py-2 text-xs text-muted-foreground transition-all hover:border-primary/50 hover:bg-slate-100 dark:hover:bg-muted w-full"
+            >
+              <Search className="size-4 text-primary" />
+              <span className="flex-1 text-left truncate">Tìm kiếm nhanh tính năng...</span>
+              <kbd className="hidden rounded bg-white dark:bg-background border border-slate-200 dark:border-border px-1.5 py-0.5 font-mono text-[10px] font-semibold text-muted-foreground sm:inline-block">
+                Ctrl K
+              </kbd>
+            </button>
+          </div>
 
           <div className="flex items-center gap-2.5 md:gap-3">
-            {/* 1-Click Cache Purge Button */}
+            {/* Cache Revalidate Button */}
             <Button
               variant="outline"
               size="sm"
@@ -249,14 +307,17 @@ export function AdminShell({
               <span className="hidden sm:inline">{revalidating ? "Đang xóa cache…" : "Làm mới Cache"}</span>
             </Button>
 
+            {/* Live Website Link */}
             <Link
-              className="hidden rounded-lg border border-border/80 bg-card px-3 py-1.5 text-xs font-semibold text-foreground shadow-sm transition-colors hover:border-primary/40 hover:text-primary sm:block"
+              className="hidden sm:inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-1.5 text-xs font-semibold text-foreground shadow-xs transition hover:border-primary/40 hover:text-primary"
               href="/"
               target="_blank"
               rel="noopener noreferrer"
             >
-              Xem Website ↗
+              <span>Xem Website</span>
+              <ExternalLink className="size-3" />
             </Link>
+
             <Button
               variant="outline"
               size="sm"
@@ -326,13 +387,14 @@ export function AdminShell({
           </div>
         )}
 
-        <div className="mx-auto w-full max-w-[1440px] p-4 md:p-8">
+        {/* Main Content Workspace Container */}
+        <div className="flex-1 mx-auto w-full max-w-[1440px] p-4 md:p-8">
           <header className="mb-7 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <p className="mb-1 text-xs font-semibold tracking-[.12em] text-muted-foreground font-mono">
-                BIM4C // STUDIO ADMIN
+              <p className="mb-1 text-[11px] font-bold tracking-[.12em] text-teal-600 dark:text-teal-400 font-mono uppercase">
+                BIM4C // ENTERPRISE CMS
               </p>
-              <h1 className="mb-1 text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+              <h1 className="mb-1 text-2xl font-extrabold tracking-tight text-foreground sm:text-3xl">
                 {title}
               </h1>
               <span className="text-xs text-muted-foreground">

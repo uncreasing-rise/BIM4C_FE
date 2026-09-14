@@ -159,8 +159,8 @@ export function CourseDetailView({
                     <span>{isVi ? "Chuẩn đầu ra khóa học" : "Key Learning Outcomes"}</span>
                   </h3>
                   <ul className="mt-5 grid gap-3 sm:grid-cols-2">
-                    {entry.learningOutcomes.map((item) => (
-                      <li className="flex items-start gap-2.5 text-sm text-muted-foreground" key={item}>
+                    {entry.learningOutcomes.map((item, i) => (
+                      <li className="flex items-start gap-2.5 text-sm text-muted-foreground" key={`${entry.id}-outcomes-${i}`}>
                         <CheckCircle2 className="size-4 shrink-0 text-teal-600 dark:text-teal-400 mt-0.5" />
                         <span>{item}</span>
                       </li>

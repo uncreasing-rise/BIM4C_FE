@@ -78,8 +78,8 @@ export function LegalDetailView({ slug }: { slug: string }) {
                   ))}
                   {section.items && (
                     <ul className="list-disc space-y-2 pl-5 text-muted-foreground">
-                      {section.items.map((item) => (
-                        <li key={item}>{item}</li>
+                      {section.items.map((item, idx) => (
+                        <li key={`${section.title}-item-${idx}`}>{item}</li>
                       ))}
                     </ul>
                   )}

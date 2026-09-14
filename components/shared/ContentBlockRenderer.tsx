@@ -110,10 +110,10 @@ export function ContentBlockRenderer({ blocks }: { blocks: ContentBlock[] }) {
                 <List
                   className={`grid gap-3 ${block.ordered ? "list-decimal pl-6" : "list-disc pl-6"}`}
                 >
-                  {block.items.map((item) => (
+                  {block.items.map((item, index) => (
                     <li
                       className="pl-2 leading-7 text-muted-foreground"
-                      key={item}
+                      key={`${block.id}-item-${index}`}
                     >
                       {item}
                     </li>

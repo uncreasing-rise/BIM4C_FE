@@ -34,7 +34,8 @@ export function UsersManager() {
 
   const load = useCallback(async (signal?: AbortSignal) => {
     try {
-      const result = await api(`?search=${encodeURIComponent(search)}`, { signal });
+      const qs = search.trim() ? `?search=${encodeURIComponent(search.trim())}` : "";
+      const result = await api(qs, { signal });
       if (!signal?.aborted) {
         const list = Array.isArray(result?.data)
           ? result.data
@@ -106,15 +107,15 @@ export function UsersManager() {
   }
 
   return (
-    <section className="overflow-hidden rounded-2xl border border-border bg-card shadow-xs">
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 border-b border-border/80 p-4 bg-muted/20">
+    <section className="overflow-hidden rounded-2xl border border-slate-200/80 dark:border-border bg-white dark:bg-card shadow-xs">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 border-b border-slate-200/80 dark:border-border p-4 bg-slate-50/60 dark:bg-muted/20">
         <div className="relative flex-1 max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
           <Input
             placeholder="Tìm theo tên hoặc email..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-9 h-10 bg-background"
+            className="pl-9 h-10 bg-white dark:bg-background border-slate-200 dark:border-border"
           />
         </div>
         <Button
@@ -139,11 +140,11 @@ export function UsersManager() {
           <form onSubmit={create} className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Họ và tên</label>
-              <Input name="name" required minLength={2} placeholder="Nguyễn Văn A" className="bg-background" />
+              <Input name="name" required minLength={2} placeholder="Nguyễn Văn A" className="bg-white dark:bg-background border-slate-200 dark:border-border" />
             </div>
             <div>
               <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Địa chỉ Email</label>
-              <Input name="email" required type="email" placeholder="admin@bim4c.com" className="bg-background" />
+              <Input name="email" required type="email" placeholder="admin@bim4c.com" className="bg-white dark:bg-background border-slate-200 dark:border-border" />
             </div>
             <div>
               <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Mật khẩu (tối thiểu 12 ký tự)</label>
@@ -153,14 +154,14 @@ export function UsersManager() {
                 minLength={12}
                 type="password"
                 placeholder="••••••••••••"
-                className="bg-background"
+                className="bg-white dark:bg-background border-slate-200 dark:border-border"
               />
             </div>
             <div>
               <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Vai trò phân quyền</label>
               <select
                 name="role"
-                className="w-full h-10 rounded-lg border border-input bg-background px-3 text-sm text-foreground focus:outline-hidden focus:ring-2 focus:ring-primary"
+                className="w-full h-10 rounded-lg border border-slate-200 dark:border-border bg-white dark:bg-background px-3 text-sm text-foreground focus:outline-hidden focus:ring-2 focus:ring-primary"
               >
                 <option value="EDITOR">EDITOR (Biên tập viên nội dung)</option>
                 <option value="ADMIN">ADMIN (Quản trị viên hệ thống)</option>
@@ -186,7 +187,7 @@ export function UsersManager() {
 
       <div className="w-full overflow-x-auto">
         <table className="w-full text-left text-sm">
-          <thead className="border-b border-border/80 bg-muted/40 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          <thead className="border-b border-slate-200/80 dark:border-border bg-slate-50/80 dark:bg-muted/40 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             <tr>
               <th className="px-5 py-3.5">Người dùng</th>
               <th className="px-5 py-3.5">Vai trò</th>
@@ -194,7 +195,7 @@ export function UsersManager() {
               <th className="px-5 py-3.5 text-right">Thao tác</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-border/60">
+          <tbody className="divide-y divide-slate-200/60 dark:divide-border/60">
             {items.length === 0 ? (
               <tr>
                 <td colSpan={4} className="py-12 text-center text-muted-foreground">
@@ -203,11 +204,11 @@ export function UsersManager() {
               </tr>
             ) : (
               items.map((u) => (
-                <tr key={u.id} className="hover:bg-muted/20 transition-colors">
+                <tr key={u.id} className="hover:bg-slate-50/70 dark:hover:bg-muted/20 transition-colors">
                   <td className="px-5 py-4">
                     <div className="flex items-center gap-2.5">
                       <div className="size-8 rounded-full bg-primary/10 text-primary font-bold flex items-center justify-center text-xs">
-                        {u.name.charAt(0).toUpperCase()}
+                        {(u.name || "A").charAt(0).toUpperCase()}
                       </div>
                       <div>
                         <strong className="block text-foreground">{u.name}</strong>
@@ -217,11 +218,14 @@ export function UsersManager() {
                   </td>
                   <td className="px-5 py-4">
                     <div className="flex flex-wrap gap-1">
-                      {u.roles.map((x) => (
-                        <Badge key={x.role} variant="outline" className="font-mono text-xs">
-                          {x.role}
-                        </Badge>
-                      ))}
+                      {(u.roles || []).map((x, idx) => {
+                        const roleName = typeof x === "string" ? x : x.role;
+                        return (
+                          <Badge key={`${roleName}-${idx}`} variant="outline" className="font-mono text-xs">
+                            {roleName}
+                          </Badge>
+                        );
+                      })}
                     </div>
                   </td>
                   <td className="px-5 py-4">

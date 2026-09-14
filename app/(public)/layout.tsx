@@ -9,6 +9,7 @@ import { JsonLd } from "@/components/seo/JsonLd";
 import { organizationSchema, websiteSchema } from "@/lib/seo/structured-data";
 
 import { BackToTop } from "@/components/shared/BackToTop";
+import { FloatingContactWidget } from "@/components/shared/FloatingContactWidget";
 
 export default function PublicLayout({
   children,
@@ -33,6 +34,7 @@ export default function PublicLayout({
       </div>
       <Footer />
       <BackToTop />
+      <FloatingContactWidget />
     </div>
   );
 }

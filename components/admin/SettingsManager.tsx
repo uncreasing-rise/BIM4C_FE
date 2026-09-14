@@ -18,6 +18,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { ZaloIcon } from "@/components/shared/SocialLinks";
+import { revalidateCmsCache } from "@/features/admin/api/revalidate";
 
 type Settings = {
   companyName: string;
@@ -176,6 +177,7 @@ export function SettingsManager() {
       if (response.ok) {
         toast.success("Đã lưu cài đặt hệ thống thành công!", { id: toastId });
         setMsg("Đã lưu cài đặt.");
+        void revalidateCmsCache();
       } else {
         const err = body?.message ?? "Không thể lưu cài đặt";
         toast.error(err, { id: toastId });
@@ -278,7 +280,7 @@ export function SettingsManager() {
 
   if (loading) {
     return (
-      <div className="rounded-2xl border border-border bg-card p-12 text-center text-sm text-muted-foreground animate-pulse">
+      <div className="rounded-2xl border border-slate-200/80 dark:border-border bg-white dark:bg-card p-12 text-center text-sm text-muted-foreground animate-pulse">
         Đang tải thông tin cấu hình hệ thống…
       </div>
     );
@@ -296,8 +298,8 @@ export function SettingsManager() {
     <form className="space-y-6" onSubmit={save}>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Card 1: Thông tin doanh nghiệp */}
-        <div className="rounded-2xl border border-border bg-card p-6 shadow-xs flex flex-col gap-4">
-          <h3 className="text-base font-semibold text-foreground flex items-center gap-2 border-b border-border/80 pb-3">
+        <div className="rounded-2xl border border-slate-200/80 dark:border-border bg-white dark:bg-card p-6 shadow-xs flex flex-col gap-4">
+          <h3 className="text-base font-semibold text-foreground flex items-center gap-2 border-b border-slate-200/80 dark:border-border/80 pb-3">
             <Building2 className="size-4 text-primary" /> Thông tin doanh nghiệp
           </h3>
           <div>
@@ -305,7 +307,7 @@ export function SettingsManager() {
             <Input
               value={data.companyName ?? ""}
               onChange={(e) => setData({ ...data, companyName: e.target.value })}
-              className="bg-background"
+              className="bg-white dark:bg-background border-slate-200 dark:border-border"
             />
           </div>
           <div>
@@ -314,7 +316,7 @@ export function SettingsManager() {
               type="email"
               value={data.email ?? ""}
               onChange={(e) => setData({ ...data, email: e.target.value })}
-              className="bg-background"
+              className="bg-white dark:bg-background border-slate-200 dark:border-border"
             />
           </div>
           <div>
@@ -322,7 +324,7 @@ export function SettingsManager() {
             <Input
               value={data.phone ?? ""}
               onChange={(e) => setData({ ...data, phone: e.target.value })}
-              className="bg-background"
+              className="bg-white dark:bg-background border-slate-200 dark:border-border"
             />
           </div>
           <div>
@@ -330,14 +332,14 @@ export function SettingsManager() {
             <Input
               value={data.address ?? ""}
               onChange={(e) => setData({ ...data, address: e.target.value })}
-              className="bg-background"
+              className="bg-white dark:bg-background border-slate-200 dark:border-border"
             />
           </div>
         </div>
 
         {/* Card 2: Cấu hình SEO mặc định & Mạng xã hội */}
-        <div className="rounded-2xl border border-border bg-card p-6 shadow-xs flex flex-col gap-4">
-          <h3 className="text-base font-semibold text-foreground flex items-center gap-2 border-b border-border/80 pb-3">
+        <div className="rounded-2xl border border-slate-200/80 dark:border-border bg-white dark:bg-card p-6 shadow-xs flex flex-col gap-4">
+          <h3 className="text-base font-semibold text-foreground flex items-center gap-2 border-b border-slate-200/80 dark:border-border/80 pb-3">
             <Globe className="size-4 text-primary" /> SEO mặc định & Liên kết
           </h3>
           <div>
@@ -345,7 +347,7 @@ export function SettingsManager() {
             <Input
               value={data.defaultSeoTitle ?? ""}
               onChange={(e) => setData({ ...data, defaultSeoTitle: e.target.value })}
-              className="bg-background"
+              className="bg-white dark:bg-background border-slate-200 dark:border-border"
             />
           </div>
           <div>
@@ -354,7 +356,7 @@ export function SettingsManager() {
               rows={3}
               value={data.defaultSeoDescription ?? ""}
               onChange={(e) => setData({ ...data, defaultSeoDescription: e.target.value })}
-              className="bg-background resize-none"
+              className="bg-white dark:bg-background border-slate-200 dark:border-border resize-none"
             />
           </div>
           <div>
@@ -363,7 +365,7 @@ export function SettingsManager() {
               value={data.defaultOgImage ?? ""}
               onChange={(e) => setData({ ...data, defaultOgImage: e.target.value })}
               placeholder="https://.../og-image.jpg"
-              className="bg-background"
+              className="bg-white dark:bg-background border-slate-200 dark:border-border"
             />
           </div>
           <div>
@@ -387,7 +389,7 @@ export function SettingsManager() {
                   setSocialLinksError("JSON chưa hợp lệ.");
                 }
               }}
-              className="font-mono text-xs bg-background"
+              className="font-mono text-xs bg-white dark:bg-background border-slate-200 dark:border-border"
             />
             {socialLinksError && (
               <span id="social-links-error" className="text-xs text-destructive mt-1 block" role="alert">
@@ -398,8 +400,8 @@ export function SettingsManager() {
         </div>
 
         {/* Card 3: Tự động hóa Thông báo Lead (Zalo, Telegram & Email cho Quản trị viên) */}
-        <div className="rounded-2xl border border-border bg-card p-6 shadow-xs flex flex-col gap-4">
-          <div className="flex items-center justify-between border-b border-border/80 pb-3">
+        <div className="rounded-2xl border border-slate-200/80 dark:border-border bg-white dark:bg-card p-6 shadow-xs flex flex-col gap-4">
+          <div className="flex items-center justify-between border-b border-slate-200/80 dark:border-border/80 pb-3">
             <h3 className="text-base font-semibold text-foreground flex items-center gap-2">
               <Zap className="size-4 text-amber-500" /> Báo Lead mới cho Ban Quản trị
             </h3>
@@ -438,7 +440,7 @@ export function SettingsManager() {
                   placeholder="0901 234 567"
                   value={data.zaloAdminPhone ?? ""}
                   onChange={(e) => setData({ ...data, zaloAdminPhone: e.target.value })}
-                  className="bg-background font-mono text-xs h-8"
+                  className="bg-white dark:bg-background border-slate-200 dark:border-border font-mono text-xs h-8"
                 />
               </div>
               <div>
@@ -449,14 +451,14 @@ export function SettingsManager() {
                   placeholder="18293847291029 hoặc Webhook"
                   value={data.zaloWebhookUrl ?? ""}
                   onChange={(e) => setData({ ...data, zaloWebhookUrl: e.target.value })}
-                  className="bg-background font-mono text-xs h-8"
+                  className="bg-white dark:bg-background border-slate-200 dark:border-border font-mono text-xs h-8"
                 />
               </div>
             </div>
           </div>
 
           {/* 2. Telegram Alert cho Quản trị viên */}
-          <div className="rounded-xl border border-border/70 bg-muted/30 p-3.5 space-y-2.5">
+          <div className="rounded-xl border border-slate-200/80 dark:border-border/70 bg-slate-50/70 dark:bg-muted/30 p-3.5 space-y-2.5">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-foreground flex items-center gap-1.5">
                 <Send className="size-3.5 text-sky-500" /> 2. Báo Lead qua Telegram Group
@@ -480,7 +482,7 @@ export function SettingsManager() {
                   placeholder="123456:ABC-DEF..."
                   value={data.telegramBotToken ?? ""}
                   onChange={(e) => setData({ ...data, telegramBotToken: e.target.value })}
-                  className="bg-background font-mono text-xs h-8"
+                  className="bg-white dark:bg-background border-slate-200 dark:border-border font-mono text-xs h-8"
                 />
               </div>
               <div>
@@ -489,14 +491,14 @@ export function SettingsManager() {
                   placeholder="-100192837465"
                   value={data.telegramChatId ?? ""}
                   onChange={(e) => setData({ ...data, telegramChatId: e.target.value })}
-                  className="bg-background font-mono text-xs h-8"
+                  className="bg-white dark:bg-background border-slate-200 dark:border-border font-mono text-xs h-8"
                 />
               </div>
             </div>
           </div>
 
           {/* 3. Email Alert cho Quản trị viên */}
-          <div className="rounded-xl border border-border/70 bg-muted/30 p-3.5 space-y-2">
+          <div className="rounded-xl border border-slate-200/80 dark:border-border/70 bg-slate-50/70 dark:bg-muted/30 p-3.5 space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-foreground flex items-center gap-1.5">
                 <MailCheck className="size-3.5 text-primary" /> 3. Email nhận thông báo Lead mới
@@ -517,14 +519,14 @@ export function SettingsManager() {
               placeholder="admin@bim4c.com"
               value={data.alertEmail ?? ""}
               onChange={(e) => setData({ ...data, alertEmail: e.target.value })}
-              className="bg-background text-xs h-8"
+              className="bg-white dark:bg-background border-slate-200 dark:border-border text-xs h-8"
             />
           </div>
         </div>
 
         {/* Card 4: Email Chào Mừng & Phản hồi Tự động (Auto-responder) */}
-        <div className="rounded-2xl border border-border bg-card p-6 shadow-xs flex flex-col gap-4">
-          <div className="flex items-center justify-between border-b border-border/80 pb-3">
+        <div className="rounded-2xl border border-slate-200/80 dark:border-border bg-white dark:bg-card p-6 shadow-xs flex flex-col gap-4">
+          <div className="flex items-center justify-between border-b border-slate-200/80 dark:border-border/80 pb-3">
             <h3 className="text-base font-semibold text-foreground flex items-center gap-2">
               <MailCheck className="size-4 text-emerald-500" /> Email cảm ơn & Gửi tài liệu tự động
             </h3>
@@ -542,7 +544,7 @@ export function SettingsManager() {
             <Input
               value={data.autoResponderSubject ?? ""}
               onChange={(e) => setData({ ...data, autoResponderSubject: e.target.value })}
-              className="bg-background text-xs"
+              className="bg-white dark:bg-background border-slate-200 dark:border-border text-xs"
             />
           </div>
 
@@ -552,7 +554,7 @@ export function SettingsManager() {
               rows={4}
               value={data.autoResponderBody ?? ""}
               onChange={(e) => setData({ ...data, autoResponderBody: e.target.value })}
-              className="bg-background resize-none text-xs leading-relaxed"
+              className="bg-white dark:bg-background border-slate-200 dark:border-border resize-none text-xs leading-relaxed"
             />
           </div>
 
@@ -564,7 +566,7 @@ export function SettingsManager() {
               value={data.autoResponderBrochureUrl ?? ""}
               onChange={(e) => setData({ ...data, autoResponderBrochureUrl: e.target.value })}
               placeholder="https://bim4c.com/brochure-bim4c-2025.pdf"
-              className="bg-background text-xs font-mono"
+              className="bg-white dark:bg-background border-slate-200 dark:border-border text-xs font-mono"
             />
           </div>
         </div>
