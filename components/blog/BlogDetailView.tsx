@@ -17,6 +17,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { NewsletterForm } from "@/features/contact/components/NewsletterForm";
 import type { ContentEntry } from "@/types/content";
 import { ContentBlockRenderer } from "@/components/shared/ContentBlockRenderer";
+import { TableOfContents } from "@/components/shared/TableOfContents";
 import { PageHero } from "@/components/shared/PageHero";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { breadcrumbSchema, contentSchema } from "@/lib/seo/structured-data";
@@ -136,50 +137,8 @@ export function BlogDetailView({
             </div>
           </div>
 
-          {/* Table of contents - Only displayed if article has 2+ headings */}
-          {headings.length >= 2 && (
-            <div
-              className="mb-10 rounded-2xl border border-border bg-card/60 backdrop-blur p-5 sm:p-6 shadow-xs"
-              data-motion="reveal"
-            >
-              <nav aria-label={t.detailPage.onThisPage}>
-                <div className="flex items-center gap-2 mb-4 pb-3 border-b border-border/70">
-                  <BookOpen className="size-4 text-primary" />
-                  <p className="text-xs font-bold uppercase tracking-wider text-foreground">
-                    {t.detailPage.onThisPage}
-                  </p>
-                </div>
-                <ul className="grid gap-2.5 sm:grid-cols-2">
-                  {headings.map((block, idx) => {
-                    const anchorId = block.id ? block.id.replace(/^block-/, "") : "";
-                    return (
-                      <li key={block.id}>
-                        <a
-                          className="group flex items-start gap-2.5 py-1 text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
-                          href={`#${anchorId}`}
-                          onClick={(e) => {
-                            e.preventDefault();
-                            const el = document.getElementById(anchorId);
-                            if (el) {
-                              el.scrollIntoView({ behavior: "smooth" });
-                              history.pushState(null, "", `#${anchorId}`);
-                            }
-                          }}
-                        >
-                          <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[11px] font-bold text-primary group-hover:bg-primary group-hover:text-white transition-colors">
-                            {idx + 1}
-                          </span>
-                          <span className="underline-offset-4 group-hover:underline leading-snug">
-                            {block.type === "rich-text" ? block.heading : ""}
-                          </span>
-                        </a>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </nav>
-            </div>
-          )}
+          {/* Table of contents */}
+          <TableOfContents blocks={blocks} />
 
           {/* 2-Column: Article Body + Newsletter Subscription */}
           <div className="grid items-start gap-12 lg:grid-cols-[minmax(0,1fr)_20rem] lg:gap-14">

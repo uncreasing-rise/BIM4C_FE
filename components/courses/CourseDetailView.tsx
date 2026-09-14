@@ -20,6 +20,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CourseRegistrationForm } from "@/features/contact/components/CourseRegistrationForm";
 import type { ContentEntry } from "@/types/content";
 import { ContentBlockRenderer } from "@/components/shared/ContentBlockRenderer";
+import { TableOfContents } from "@/components/shared/TableOfContents";
 import { PageHero } from "@/components/shared/PageHero";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { breadcrumbSchema, contentSchema } from "@/lib/seo/structured-data";
@@ -144,6 +145,15 @@ export function CourseDetailView({
               </div>
             ))}
           </dl>
+
+          {/* Table of Contents & Quick Action */}
+          <TableOfContents
+            blocks={blocks}
+            cta={{
+              label: isVi ? "Đăng ký khóa học" : "Register for course",
+              href: "#course-registration",
+            }}
+          />
 
 
           {/* Main 2-Column: Course Content + Registration Form */}

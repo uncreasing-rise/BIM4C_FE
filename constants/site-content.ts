@@ -27,12 +27,12 @@ export const heroSlides = [
 ] as const;
 
 export const strategicPartners = [
-  { name: "Masterise Homes", logo: "/images/partners/masterise.png" },
-  { name: "Gamuda Land", logo: "/images/partners/gamuda.png" },
-  { name: "Ecopark", logo: "/images/partners/ecopark.png" },
-  { name: "Nam Long", logo: "/images/partners/namlong.png" },
-  { name: "MIK Group", logo: "/images/partners/mik.png" },
-  { name: "Bitexco", logo: "/images/partners/bitexco.png" },
+  { name: "Masterise Homes", logo: "/images/partners/transparent/masterise.png" },
+  { name: "Gamuda Land", logo: "/images/partners/transparent/gamuda.png" },
+  { name: "Ecopark", logo: "/images/partners/transparent/ecopark.png" },
+  { name: "Nam Long", logo: "/images/partners/transparent/namlong.png" },
+  { name: "MIK Group", logo: "/images/partners/transparent/mik.png" },
+  { name: "Bitexco", logo: "/images/partners/transparent/bitexco.png" },
 ] as const;
 
 export const governanceMembers = [

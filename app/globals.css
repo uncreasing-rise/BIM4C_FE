@@ -940,21 +940,7 @@ html[data-scroll-deck="true"] {
     min-height: auto;
   }
 }
-.partner-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  border-top: 1px solid var(--border);
-  border-left: 1px solid var(--border);
-}
-.partner-cell {
-  display: grid;
-  place-items: center;
-  min-height: 160px;
-  padding: 2rem;
-  border-right: 1px solid var(--border);
-  border-bottom: 1px solid var(--border);
-  background: var(--card);
-}
+
 .admin-workspace
   input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
 .admin-workspace select {
@@ -1023,15 +1009,7 @@ html[data-scroll-deck="true"] {
     justify-content: center;
   }
 }
-@media (max-width: 639px) {
-  .partner-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  .partner-cell {
-    min-height: 120px;
-    padding: 1.25rem;
-  }
-}
+
 
 /* Unified typography and a single teal palette across the public experience. */
 .public-site {

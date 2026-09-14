@@ -20,6 +20,7 @@ import { ConsultationForm } from "@/features/contact/components/ConsultationForm
 import type { Project } from "@/features/projects/types/project";
 import type { ContentEntry } from "@/types/content";
 import { ContentBlockRenderer } from "@/components/shared/ContentBlockRenderer";
+import { TableOfContents } from "@/components/shared/TableOfContents";
 import { PageHero } from "@/components/shared/PageHero";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { breadcrumbSchema, contentSchema } from "@/lib/seo/structured-data";
@@ -128,35 +129,13 @@ export function ProjectDetailView({
 
 
           {/* Table of Contents & Quick Action */}
-          <div
-            className="mb-8 flex flex-wrap items-center justify-between gap-4 rounded-xl border bg-muted/40 p-4"
-            data-motion="reveal"
-          >
-            <nav aria-label={t.detailPage.onThisPage} className="min-w-0 flex-1">
-              <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                {t.detailPage.onThisPage}
-              </p>
-              <ul className="flex flex-wrap gap-x-5 gap-y-2">
-                {blocks
-                  .filter((block) => block.type === "rich-text" && block.heading)
-                  .map((block) => (
-                    <li key={block.id}>
-                      <a
-                        className="inline-block py-1 text-sm font-medium text-primary underline-offset-4 hover:underline"
-                        href={`#block-${block.id}`}
-                      >
-                        {block.type === "rich-text" ? block.heading : ""}
-                      </a>
-                    </li>
-                  ))}
-              </ul>
-            </nav>
-            <Button asChild className="shrink-0">
-              <a href="#detail-enquiry">
-                {t.detailPage.discussProject} <ArrowUpRight className="size-4 ml-1" />
-              </a>
-            </Button>
-          </div>
+          <TableOfContents
+            blocks={blocks}
+            cta={{
+              label: t.detailPage.discussProject,
+              href: "#project-enquiry",
+            }}
+          />
 
           {/* Main Grid: Case Study Content + Enterprise Consultation */}
           <div className="grid items-start gap-12 lg:grid-cols-[minmax(0,1fr)_22rem] lg:gap-16">

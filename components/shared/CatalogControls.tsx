@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { type ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { ChevronLeft, ChevronRight, Search, SlidersHorizontal, X } from "lucide-react";
@@ -29,25 +29,84 @@ export function CatalogCategories({
   onChange: (value: string) => void;
   formatLabel?: (item: string) => string;
 }) {
+  const navRef = useRef<HTMLElement | null>(null);
+  const activeBtnRef = useRef<HTMLButtonElement | null>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  const checkScroll = useCallback(() => {
+    const el = navRef.current;
+    if (!el) return;
+    const { scrollLeft, scrollWidth, clientWidth } = el;
+    setCanScrollLeft(scrollLeft > 6);
+    setCanScrollRight(scrollLeft + clientWidth < scrollWidth - 6);
+  }, []);
+
+  useEffect(() => {
+    const el = navRef.current;
+    if (!el) return;
+    checkScroll();
+    el.addEventListener("scroll", checkScroll, { passive: true });
+    window.addEventListener("resize", checkScroll);
+    return () => {
+      el.removeEventListener("scroll", checkScroll);
+      window.removeEventListener("resize", checkScroll);
+    };
+  }, [checkScroll, items]);
+
+  useEffect(() => {
+    if (activeBtnRef.current) {
+      activeBtnRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest",
+        inline: "center",
+      });
+    }
+  }, [value]);
+
+  const isItemActive = (item: string) => {
+    const v = value.trim().toLowerCase();
+    const it = item.trim().toLowerCase();
+    const fmtV = formatLabel(value).trim().toLowerCase();
+    const fmtIt = formatLabel(item).trim().toLowerCase();
+    return (
+      v === it ||
+      fmtV === fmtIt ||
+      v === fmtIt ||
+      it === fmtV ||
+      (v === "all" && (it === "all" || it === "tất cả")) ||
+      (v === "tất cả" && (it === "all" || it === "tất cả"))
+    );
+  };
+
   return (
-    <div className="relative mb-3">
+    <div className="relative mb-3.5 group/categories">
+      {/* Left Scroll Gradient Cue for Mobile */}
+      <div
+        className={cn(
+          "pointer-events-none absolute left-0 top-0 bottom-2.5 w-8 bg-gradient-to-r from-background via-background/80 to-transparent z-10 transition-opacity duration-200",
+          canScrollLeft ? "opacity-100" : "opacity-0",
+        )}
+        aria-hidden="true"
+      />
+
       <nav
-        className="flex max-w-full items-center gap-2 overflow-x-auto pb-2 pt-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+        ref={navRef}
+        className="flex max-w-full items-center gap-2 overflow-x-auto pb-2.5 pt-1 px-1 pr-10 sm:pr-4 touch-pan-x overscroll-x-contain [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+        style={{ WebkitOverflowScrolling: "touch" }}
         aria-label={ariaLabel}
       >
         {items.map((item) => {
-          const isSelected =
-            value === item ||
-            value.toLowerCase() === item.toLowerCase() ||
-            formatLabel(value).toLowerCase() === formatLabel(item).toLowerCase();
+          const isSelected = isItemActive(item);
           return (
             <button
               key={item}
+              ref={isSelected ? activeBtnRef : undefined}
               type="button"
               className={cn(
-                "min-h-10 shrink-0 rounded-full px-4 py-2 font-semibold text-xs sm:text-sm transition-all duration-200 border shadow-2xs whitespace-nowrap",
+                "min-h-10 shrink-0 select-none rounded-full px-4 py-2 font-semibold text-xs sm:text-sm transition-all duration-200 border shadow-2xs whitespace-nowrap active:scale-95 touch-manipulation",
                 isSelected
-                  ? "border-primary bg-primary text-white shadow-md shadow-teal-900/20 ring-2 ring-primary/20"
+                  ? "border-primary bg-primary text-white shadow-md shadow-teal-900/20 ring-2 ring-primary/20 scale-[1.02]"
                   : "border-border bg-card text-foreground hover:border-primary/40 hover:bg-primary/5 hover:text-primary",
               )}
               aria-pressed={isSelected}
@@ -58,6 +117,15 @@ export function CatalogCategories({
           );
         })}
       </nav>
+
+      {/* Right Scroll Gradient Cue for Mobile */}
+      <div
+        className={cn(
+          "pointer-events-none absolute right-0 top-0 bottom-2.5 w-12 bg-gradient-to-l from-background via-background/80 to-transparent z-10 transition-opacity duration-200",
+          canScrollRight ? "opacity-100" : "opacity-0",
+        )}
+        aria-hidden="true"
+      />
     </div>
   );
 }
