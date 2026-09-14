@@ -25,7 +25,7 @@ export function ProjectsPageView({
         eyebrow={t.projectsPage.eyebrow}
         title={t.projectsPage.title}
         description={t.projectsPage.description}
-        image="/images/project-lumi.jpg"
+        image="/images/news-project-coordination.webp"
       />
       <ProjectExplorer projects={projects} meta={meta} />
     </main>

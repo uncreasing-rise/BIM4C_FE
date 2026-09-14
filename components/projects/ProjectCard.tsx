@@ -28,7 +28,7 @@ export function ProjectCard({
       {/* Top Image Stage with Zoom & Badges */}
       <div className="relative aspect-[16/10] w-full overflow-hidden bg-slate-950">
         <Image
-          src={project.image || "/images/about.jpg"}
+          src={project.image || "/images/news-project-coordination.webp"}
           alt={project.title}
           fill
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"

@@ -69,7 +69,7 @@ function createBlock(type: ContentBlock["type"]): ContentBlock {
     case "rich-text":
       return { id, type, heading: "", content: "" };
     case "image":
-      return { id, type, image: { url: "/images/image.png", alt: "" } };
+      return { id, type, image: { url: "/images/news-project-coordination.webp", alt: "" } };
     case "gallery":
       return { id, type, images: [] };
     case "quote":

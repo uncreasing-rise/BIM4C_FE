@@ -39,7 +39,7 @@ export function BimInteractiveHeroVisual({
       location: isVi ? "Nam Từ Liêm, Hà Nội" : "Hanoi, Vietnam",
       investor: "MIK Group",
       deliverables: "LOD 400 · MEP Coordination · CDE",
-      image: "/images/project-matrix.jpg",
+      image: "/images/news-digital-twin.webp",
       slug: "the-matrix-one-giai-doan-2",
     },
     {
@@ -50,7 +50,7 @@ export function BimInteractiveHeroVisual({
       location: isVi ? "Tây Mỗ, Hà Nội" : "Hanoi, Vietnam",
       investor: "CapitaLand Development",
       deliverables: "BIM 4D/5D · Clash Detective · IFC4",
-      image: "/images/project-lumi.jpg",
+      image: "/images/news-project-coordination.webp",
       slug: "lumi-ha-noi",
     },
     {
@@ -61,7 +61,7 @@ export function BimInteractiveHeroVisual({
       location: isVi ? "TP. Thủ Đức, TP.HCM" : "HCMC, Vietnam",
       investor: "Gamuda Land",
       deliverables: "Digital Twin · OpenBIM · Scan-to-BIM",
-      image: "/images/project-elysian.jpg",
+      image: "/images/news-site-safety.webp",
       slug: "elysian-thu-duc",
     },
   ];

@@ -66,7 +66,7 @@ export function AboutView() {
         eyebrow={t.aboutPage.eyebrow}
         title={t.aboutPage.heroTitle}
         description={t.aboutPage.heroDesc}
-        image="/images/project-matrix.jpg"
+        image="/images/news-project-coordination.webp"
         variant="about"
       />
 
@@ -138,7 +138,7 @@ export function AboutView() {
             <div className="relative overflow-hidden rounded-2xl border shadow-xl group">
               <div className="relative aspect-[4/3] w-full">
                 <Image
-                  src="/images/project-matrix.jpg"
+                  src="/images/news-digital-twin.webp"
                   alt="BIM4C Engineering Team"
                   fill
                   sizes="(max-width: 1024px) 100vw, 50vw"
@@ -217,7 +217,7 @@ export function AboutView() {
               >
                 {/* Full-Card Portrait Image */}
                 <Image
-                  src={member.image || "/images/about.jpg"}
+                  src={member.image || "/images/team/ceo-hieu.jpg"}
                   alt={member.name}
                   fill
                   sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
