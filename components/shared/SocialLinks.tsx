@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { useLanguage } from "@/lib/i18n/context";
 
 export interface SocialItem {
   id: string;
@@ -12,6 +13,7 @@ export interface SocialItem {
   hoverBg: string;
   hoverBorder: string;
   description: string;
+  description_en: string;
 }
 
 export const LinkedinIcon = ({ className = "size-4" }: { className?: string }) => (
@@ -55,6 +57,7 @@ export const SOCIAL_NETWORKS: SocialItem[] = [
     hoverBg: "hover:bg-[#0A66C2]/15 hover:text-[#0A66C2]",
     hoverBorder: "hover:border-[#0A66C2]/40",
     description: "Cập nhật năng lực doanh nghiệp, dự án tiêu biểu & kết nối B2B",
+    description_en: "Corporate capability updates, featured projects & B2B networking",
   },
   {
     id: "facebook",
@@ -66,6 +69,7 @@ export const SOCIAL_NETWORKS: SocialItem[] = [
     hoverBg: "hover:bg-[#1877F2]/15 hover:text-[#1877F2]",
     hoverBorder: "hover:border-[#1877F2]/40",
     description: "Cộng đồng Kỹ sư BIM, tin tức ngành và lịch đào tạo mới nhất",
+    description_en: "BIM engineering community, industry news & training schedule",
   },
   {
     id: "youtube",
@@ -77,6 +81,7 @@ export const SOCIAL_NETWORKS: SocialItem[] = [
     hoverBg: "hover:bg-[#FF0000]/15 hover:text-[#FF0000]",
     hoverBorder: "hover:border-[#FF0000]/40",
     description: "Video đào tạo kỹ thuật, Demo mô hình 3D Scan & Revit OpenBIM",
+    description_en: "Technical tutorials, 3D laser scan demos & Revit OpenBIM workflows",
   },
   {
     id: "zalo",
@@ -88,6 +93,7 @@ export const SOCIAL_NETWORKS: SocialItem[] = [
     hoverBg: "hover:bg-[#0068FF]/15 hover:text-[#0068FF]",
     hoverBorder: "hover:border-[#0068FF]/40",
     description: "Kênh tư vấn trực tiếp 24/7 và nhận tài liệu lộ trình khóa học",
+    description_en: "24/7 direct consultation channel & syllabus downloads",
   },
   {
     id: "github",
@@ -99,6 +105,7 @@ export const SOCIAL_NETWORKS: SocialItem[] = [
     hoverBg: "hover:bg-white/15 hover:text-white",
     hoverBorder: "hover:border-white/30",
     description: "Mã nguồn mở plugin Dynamo, Revit Scripts & Python tools",
+    description_en: "Open-source Dynamo plugins, Revit scripts & Python tools",
   },
 ];
 
@@ -108,6 +115,7 @@ interface SocialLinksProps {
 }
 
 export function SocialLinks({ variant = "icons", className = "" }: SocialLinksProps) {
+  const { locale } = useLanguage();
   if (variant === "cards") {
     return (
       <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 ${className}`}>
@@ -134,7 +142,7 @@ export function SocialLinks({ variant = "icons", className = "" }: SocialLinksPr
                   </span>
                 </div>
                 <p className="mt-1 text-xs text-muted-foreground line-clamp-2 leading-relaxed">
-                  {item.description}
+                  {locale === "vi" ? item.description : item.description_en}
                 </p>
               </div>
             </a>

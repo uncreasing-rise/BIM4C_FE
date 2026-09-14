@@ -150,7 +150,9 @@ export function AboutView() {
                     <ShieldCheck className="size-4" /> ISO 19650 Standardized
                   </div>
                   <p className="text-base font-bold text-white/95">
-                    Hệ thống dữ liệu CDE và mô hình thông tin chuẩn xác cho dự án xây dựng hiện đại
+                    {locale === "vi"
+                      ? "Hệ thống dữ liệu CDE và mô hình thông tin chuẩn xác cho dự án xây dựng hiện đại"
+                      : "Standardized CDE data environment and accurate information models for modern construction"}
                   </p>
                 </div>
               </div>

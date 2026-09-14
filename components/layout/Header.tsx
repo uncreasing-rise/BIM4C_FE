@@ -255,7 +255,7 @@ export function Header() {
               </p>
               <div className="mb-4 flex items-center justify-between border-b pb-4">
                 <span className="text-xs font-medium text-muted-foreground">
-                  Language / Ngôn ngữ:
+                  {locale === "vi" ? "Ngôn ngữ hiển thị:" : "Language:"}
                 </span>
                 <LanguageSwitcher />
               </div>
