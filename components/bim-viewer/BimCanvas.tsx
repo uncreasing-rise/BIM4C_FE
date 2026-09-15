@@ -1,9 +1,20 @@
-"use client";
+﻿"use client";
 
-import React, { useEffect, useRef, useCallback } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
+import { useLanguage } from "@/lib/i18n/context";
+import {
+  clippingPlanes,
+  createElementMesh,
+  disposeObject,
+  explodedPosition,
+  fitCamera,
+  getModelBounds,
+  visibleHit,
+} from "./viewer-geometry";
 import type {
+  BimClipPlanes,
   BimElementData,
   BimModelDefinition,
   BimTool,
@@ -12,491 +23,450 @@ import type {
   BimDiscipline,
 } from "./types";
 
-interface BimCanvasProps {
+export interface BimCanvasProps {
   model: BimModelDefinition;
   activeTool: BimTool;
   selectedElementId: string | null;
   onSelectElement: (element: BimElementData | null) => void;
   visibleLayers: Record<BimDiscipline, boolean>;
-  clipPlanes: { x: number; y: number; z: number; enabled: boolean };
+  clipPlanes: BimClipPlanes;
   explodeFactor: number;
   activeClashPoint: [number, number, number] | null;
-  activeViewPreset: BimViewPreset | null;
-  onFpsUpdate?: (fps: number) => void;
-  onMeasurementChange?: (measurement: ActiveMeasurement | null) => void;
+  activeViewPreset: BimViewPreset;
+  viewRevision: number;
+  snapshotRevision: number;
+  onSnapshot: (data: string | null) => void;
+  onStats: (stats: { bytes: number; triangles: number }) => void;
+  onMeasurementChange: (measurement: ActiveMeasurement | null) => void;
   activeMeasurement: ActiveMeasurement | null;
 }
 
-export function BimCanvas({
-  model,
-  activeTool,
-  selectedElementId,
-  onSelectElement,
-  visibleLayers,
-  clipPlanes,
-  explodeFactor,
-  activeClashPoint,
-  activeViewPreset,
-  onFpsUpdate,
-  onMeasurementChange,
-  activeMeasurement,
-}: BimCanvasProps) {
+export function BimCanvas(props: BimCanvasProps) {
+  const { locale } = useLanguage();
   const containerRef = useRef<HTMLDivElement>(null);
-  const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
-  const sceneRef = useRef<THREE.Scene | null>(null);
-  const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
-  const controlsRef = useRef<OrbitControls | null>(null);
-  const meshesMapRef = useRef<Map<string, THREE.Mesh>>(new Map());
-  const initialPositionsRef = useRef<Map<string, THREE.Vector3>>(new Map());
-  const animationFrameIdRef = useRef<number | null>(null);
-  const measurementLineRef = useRef<THREE.Line | null>(null);
-  const measurementPointsRef = useRef<THREE.Mesh[]>([]);
-  const clashMarkersRef = useRef<THREE.Group | null>(null);
+  const engineRef = useRef<{ update: (props: BimCanvasProps) => void } | null>(
+    null,
+  );
+  const latestRef = useRef(props);
+  const [error, setError] = useState(false);
+  const [building, setBuilding] = useState(true);
+  const [retry, setRetry] = useState(0);
+  useEffect(() => {
+    latestRef.current = props;
+    engineRef.current?.update(props);
+  }, [props]);
 
-  // Clipping Planes
-  const planeXRef = useRef<THREE.Plane>(new THREE.Plane(new THREE.Vector3(-1, 0, 0), 50));
-  const planeYRef = useRef<THREE.Plane>(new THREE.Plane(new THREE.Vector3(0, -1, 0), 50));
-  const planeZRef = useRef<THREE.Plane>(new THREE.Plane(new THREE.Vector3(0, 0, -1), 50));
-
-  // Initialize Scene, Renderer, Lights, Grid
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
-
-    const width = container.clientWidth;
-    const height = container.clientHeight;
-
-    // 1. Scene
+    const model = props.model;
+    let disposed = false;
+    let frame = 0;
+    let ready = false;
+    let current = latestRef.current;
+    let lastView = -1,
+      lastSnapshot = current.snapshotRevision;
+    let lastClash: BimCanvasProps["activeClashPoint"] = null;
+    let lastMeasurement: ActiveMeasurement | null | undefined;
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color("#090d16");
-    sceneRef.current = scene;
-
-    // 2. Camera
-    const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
-    camera.position.set(...model.defaultCamera.position);
-    cameraRef.current = camera;
-
-    // 3. Renderer
-    const renderer = new THREE.WebGLRenderer({
-      antialias: true,
-      powerPreference: "high-performance",
-      preserveDrawingBuffer: true,
-    });
-    renderer.setSize(width, height);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-    renderer.localClippingEnabled = true;
-    container.replaceChildren(renderer.domElement);
-    rendererRef.current = renderer;
-
-    // 4. Orbit Controls
-    const controls = new OrbitControls(camera, renderer.domElement);
-    controls.enableDamping = true;
-    controls.dampingFactor = 0.05;
-    controls.target.set(...model.defaultCamera.target);
-    controls.maxPolarAngle = Math.PI / 2 + 0.1;
-    controlsRef.current = controls;
-
-    // 5. Lighting Setup (Clean Architectural Lighting)
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.85);
-    scene.add(ambientLight);
-
-    const hemiLight = new THREE.HemisphereLight(0x38bdf8, 0x0f172a, 0.6);
-    hemiLight.position.set(0, 50, 0);
-    scene.add(hemiLight);
-
-    const sunLight = new THREE.DirectionalLight(0xffffff, 1.4);
-    sunLight.position.set(40, 60, 40);
-    sunLight.castShadow = true;
-    sunLight.shadow.mapSize.width = 2048;
-    sunLight.shadow.mapSize.height = 2048;
-    sunLight.shadow.camera.near = 0.5;
-    sunLight.shadow.camera.far = 150;
-    const d = 30;
-    sunLight.shadow.camera.left = -d;
-    sunLight.shadow.camera.right = d;
-    sunLight.shadow.camera.top = d;
-    sunLight.shadow.camera.bottom = -d;
-    sunLight.shadow.bias = -0.0005;
-    scene.add(sunLight);
-
-    const fillLight = new THREE.DirectionalLight(0x06b6d4, 0.4);
-    fillLight.position.set(-30, 20, -30);
-    scene.add(fillLight);
-
-    // 6. Architectural Grid Floor
-    const gridHelper = new THREE.GridHelper(60, 60, 0x0ea5e9, 0x1e293b);
-    gridHelper.position.y = -1.2;
-    scene.add(gridHelper);
-
-    // 7. Render & FPS Loop
-    let frameCount = 0;
-    let lastFpsUpdate = performance.now();
-
-    const animate = (currentTime: number) => {
-      animationFrameIdRef.current = requestAnimationFrame(animate);
-
-      controls.update();
-
-      // Pulse clash markers if any
-      if (clashMarkersRef.current) {
-        const time = currentTime * 0.003;
-        clashMarkersRef.current.children.forEach((marker) => {
-          const scale = 1 + Math.sin(time) * 0.15;
-          marker.scale.set(scale, scale, scale);
-        });
-      }
-
+    // Light drafting background improves contrast without changing model geometry.
+    scene.background = new THREE.Color("#e1e8f0");
+    const group = new THREE.Group(),
+      markers = new THREE.Group(),
+      measurement = new THREE.Group();
+    scene.add(group, markers, measurement);
+    const boundsData = getModelBounds(model);
+    const bounds = new THREE.Box3(
+      new THREE.Vector3(...boundsData.min),
+      new THREE.Vector3(...boundsData.max),
+    );
+    const center = bounds.getCenter(new THREE.Vector3());
+    const span = Math.max(1, bounds.getSize(new THREE.Vector3()).length());
+    const meshes = new Map<string, THREE.Mesh>();
+    const materials = new Map<string, THREE.MeshStandardMaterial>();
+    const geometries = new Map<string, THREE.BufferGeometry>();
+    const highlights = new Map<THREE.Material, THREE.MeshStandardMaterial>();
+    const camera = new THREE.PerspectiveCamera(45, 1, 0.01, span * 20);
+    let renderer: THREE.WebGLRenderer;
+    let controls: OrbitControls;
+    let observer: ResizeObserver;
+    let activePlanes: THREE.Plane[] = [];
+    let interacting = false;
+    const maxPixelRatio = Math.min(window.devicePixelRatio || 1, 2);
+    const requestRender = () => {
+      if (!disposed && !frame && !document.hidden)
+        frame = requestAnimationFrame(render);
+    };
+    function render() {
+      frame = 0;
+      if (disposed || renderer.getContext().isContextLost()) return;
+      if (controls.update()) requestRender();
       renderer.render(scene, camera);
-
-      // FPS tracking
-      frameCount++;
-      if (currentTime - lastFpsUpdate >= 1000) {
-        const fps = Math.round((frameCount * 1000) / (currentTime - lastFpsUpdate));
-        if (onFpsUpdate) onFpsUpdate(fps);
-        frameCount = 0;
-        lastFpsUpdate = currentTime;
-      }
+    }
+    const onContextLost = (e: Event) => {
+      e.preventDefault();
+      setError(true);
     };
-    animate(performance.now());
-
-    // 8. Resize Handler
-    const handleResize = () => {
-      if (!container || !rendererRef.current || !cameraRef.current) return;
-      const w = container.clientWidth;
-      const h = container.clientHeight;
-      cameraRef.current.aspect = w / h;
-      cameraRef.current.updateProjectionMatrix();
-      rendererRef.current.setSize(w, h);
-    };
-    const resizeObserver = new ResizeObserver(handleResize);
-    resizeObserver.observe(container);
-
-    return () => {
-      resizeObserver.disconnect();
-      if (animationFrameIdRef.current) {
-        cancelAnimationFrame(animationFrameIdRef.current);
+    const pointRadius = Math.max(0.015, span * 0.002);
+    const update = (next: BimCanvasProps) => {
+      current = next;
+      if (!ready) return;
+      activePlanes = clippingPlanes(next.clipPlanes);
+      for (const m of [...materials.values(), ...highlights.values()]) {
+        const changed = m.clippingPlanes?.length !== activePlanes.length;
+        m.clippingPlanes = activePlanes;
+        if (changed) m.needsUpdate = true;
       }
-      controls.dispose();
-      renderer.dispose();
-    };
-  }, [model.defaultCamera, onFpsUpdate]);
-
-  // Build BIM Meshes whenever model changes
-  useEffect(() => {
-    const scene = sceneRef.current;
-    if (!scene) return;
-
-    // Clear old meshes
-    meshesMapRef.current.forEach((mesh) => {
-      scene.remove(mesh);
-      mesh.geometry.dispose();
-      if (Array.isArray(mesh.material)) {
-        mesh.material.forEach((m) => m.dispose());
-      } else {
-        mesh.material.dispose();
-      }
-    });
-    meshesMapRef.current.clear();
-    initialPositionsRef.current.clear();
-
-    const activePlanes = [planeXRef.current, planeYRef.current, planeZRef.current];
-
-    model.elements.forEach((elem) => {
-      let geometry: THREE.BufferGeometry;
-      const [sx, sy, sz] = elem.size;
-
-      if (elem.geometryType === "cylinder") {
-        geometry = new THREE.CylinderGeometry(sx / 2, sx / 2, sy, 24);
-      } else if (elem.geometryType === "pipe") {
-        geometry = new THREE.CylinderGeometry(sz / 2, sz / 2, sx, 16);
-        geometry.rotateZ(Math.PI / 2);
-      } else if (elem.geometryType === "truss") {
-        geometry = new THREE.BoxGeometry(sx, sy, sz);
-      } else {
-        geometry = new THREE.BoxGeometry(sx, sy, sz);
-      }
-
-      const isTransparent = elem.ifcType === "IfcCurtainWall";
-      const material = new THREE.MeshStandardMaterial({
-        color: new THREE.Color(elem.color),
-        roughness: isTransparent ? 0.1 : 0.45,
-        metalness: elem.discipline === "mep" ? 0.6 : elem.discipline === "structure" ? 0.2 : 0.1,
-        transparent: isTransparent,
-        opacity: isTransparent ? 0.4 : 1.0,
-        clippingPlanes: activePlanes,
-        clipShadows: true,
-      });
-
-      const mesh = new THREE.Mesh(geometry, material);
-      mesh.position.set(...elem.position);
-      mesh.castShadow = !isTransparent;
-      mesh.receiveShadow = true;
-      mesh.userData = { id: elem.id, element: elem };
-
-      scene.add(mesh);
-      meshesMapRef.current.set(elem.id, mesh);
-      initialPositionsRef.current.set(elem.id, new THREE.Vector3(...elem.position));
-    });
-
-    // Create Clash Markers
-    if (clashMarkersRef.current) {
-      scene.remove(clashMarkersRef.current);
-    }
-    const clashGroup = new THREE.Group();
-    model.clashes.forEach((clash) => {
-      const markerGeo = new THREE.SphereGeometry(0.45, 16, 16);
-      const markerMat = new THREE.MeshBasicMaterial({
-        color: 0xef4444,
-        wireframe: true,
-      });
-      const markerMesh = new THREE.Mesh(markerGeo, markerMat);
-      markerMesh.position.set(...clash.point);
-      markerMesh.userData = { clash };
-      clashGroup.add(markerMesh);
-    });
-    scene.add(clashGroup);
-    clashMarkersRef.current = clashGroup;
-  }, [model]);
-
-  // Update Layer Visibilities
-  useEffect(() => {
-    meshesMapRef.current.forEach((mesh) => {
-      const elem = mesh.userData.element as BimElementData;
-      if (elem) {
-        mesh.visible = visibleLayers[elem.discipline] ?? true;
-      }
-    });
-
-    if (clashMarkersRef.current) {
-      clashMarkersRef.current.visible = visibleLayers.clash;
-    }
-  }, [visibleLayers]);
-
-  // Update Clipping Planes
-  useEffect(() => {
-    if (!clipPlanes.enabled) {
-      planeXRef.current.constant = 1000;
-      planeYRef.current.constant = 1000;
-      planeZRef.current.constant = 1000;
-    } else {
-      planeXRef.current.constant = clipPlanes.x;
-      planeYRef.current.constant = clipPlanes.y;
-      planeZRef.current.constant = clipPlanes.z;
-    }
-  }, [clipPlanes]);
-
-  // Update Exploded View
-  useEffect(() => {
-    meshesMapRef.current.forEach((mesh, id) => {
-      const initPos = initialPositionsRef.current.get(id);
-      if (!initPos) return;
-
-      // Displace upwards based on vertical position and explode factor
-      const yMultiplier = Math.max(0.2, initPos.y * 0.45);
-      const xMultiplier = Math.sign(initPos.x) * Math.abs(initPos.x * 0.15);
-      const zMultiplier = Math.sign(initPos.z) * Math.abs(initPos.z * 0.15);
-
-      mesh.position.set(
-        initPos.x + xMultiplier * explodeFactor,
-        initPos.y + yMultiplier * explodeFactor * 2.5,
-        initPos.z + zMultiplier * explodeFactor,
-      );
-    });
-  }, [explodeFactor]);
-
-  // Highlight Selected Element
-  useEffect(() => {
-    meshesMapRef.current.forEach((mesh, id) => {
-      const isSelected = id === selectedElementId;
-      const mat = mesh.material as THREE.MeshStandardMaterial;
-      if (mat) {
-        if (isSelected) {
-          mat.emissive = new THREE.Color(0x06b6d4);
-          mat.emissiveIntensity = 0.6;
-        } else {
-          mat.emissive = new THREE.Color(0x000000);
-          mat.emissiveIntensity = 0;
-        }
-      }
-    });
-  }, [selectedElementId]);
-
-  // Focus on Clash point
-  useEffect(() => {
-    if (activeClashPoint && cameraRef.current && controlsRef.current) {
-      const [cx, cy, cz] = activeClashPoint;
-      controlsRef.current.target.set(cx, cy, cz);
-      cameraRef.current.position.set(cx + 6, cy + 4, cz + 6);
-      controlsRef.current.update();
-    }
-  }, [activeClashPoint]);
-
-  // Change Camera Preset View
-  useEffect(() => {
-    if (!activeViewPreset || !cameraRef.current || !controlsRef.current) return;
-    const controls = controlsRef.current;
-    const camera = cameraRef.current;
-
-    const target = new THREE.Vector3(...model.defaultCamera.target);
-    controls.target.copy(target);
-
-    switch (activeViewPreset) {
-      case "top":
-        camera.position.set(0, 45, 0.001);
-        break;
-      case "front":
-        camera.position.set(0, target.y, 40);
-        break;
-      case "right":
-        camera.position.set(40, target.y, 0);
-        break;
-      case "isometric":
-        camera.position.set(30, 25, 30);
-        break;
-      case "perspective":
-      default:
-        camera.position.set(...model.defaultCamera.position);
-        break;
-    }
-    controls.update();
-  }, [activeViewPreset, model.defaultCamera]);
-
-  // Render Measurement Visuals
-  useEffect(() => {
-    const scene = sceneRef.current;
-    if (!scene) return;
-
-    // Clean up previous measurement
-    if (measurementLineRef.current) {
-      scene.remove(measurementLineRef.current);
-      measurementLineRef.current.geometry.dispose();
-      (measurementLineRef.current.material as THREE.Material).dispose();
-      measurementLineRef.current = null;
-    }
-    measurementPointsRef.current.forEach((pt) => {
-      scene.remove(pt);
-      pt.geometry.dispose();
-      (pt.material as THREE.Material).dispose();
-    });
-    measurementPointsRef.current = [];
-
-    if (!activeMeasurement?.p1) return;
-
-    const sphereGeo = new THREE.SphereGeometry(0.2, 16, 16);
-    const sphereMat = new THREE.MeshBasicMaterial({ color: 0x14b8a6 });
-
-    // Point 1
-    const s1 = new THREE.Mesh(sphereGeo, sphereMat);
-    s1.position.set(activeMeasurement.p1.x, activeMeasurement.p1.y, activeMeasurement.p1.z);
-    scene.add(s1);
-    measurementPointsRef.current.push(s1);
-
-    // Point 2 & Line
-    if (activeMeasurement.p2) {
-      const s2 = new THREE.Mesh(sphereGeo, sphereMat);
-      s2.position.set(activeMeasurement.p2.x, activeMeasurement.p2.y, activeMeasurement.p2.z);
-      scene.add(s2);
-      measurementPointsRef.current.push(s2);
-
-      const points = [
-        new THREE.Vector3(activeMeasurement.p1.x, activeMeasurement.p1.y, activeMeasurement.p1.z),
-        new THREE.Vector3(activeMeasurement.p2.x, activeMeasurement.p2.y, activeMeasurement.p2.z),
-      ];
-      const lineGeo = new THREE.BufferGeometry().setFromPoints(points);
-      const lineMat = new THREE.LineDashedMaterial({
-        color: 0x14b8a6,
-        dashSize: 0.5,
-        gapSize: 0.2,
-        linewidth: 2,
-      });
-      const line = new THREE.Line(lineGeo, lineMat);
-      line.computeLineDistances();
-      scene.add(line);
-      measurementLineRef.current = line;
-    }
-  }, [activeMeasurement]);
-
-  const pointerDownPosRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
-
-  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
-    pointerDownPosRef.current = { x: e.clientX, y: e.clientY };
-  };
-
-  const handlePointerUp = useCallback(
-    (e: React.PointerEvent<HTMLDivElement>) => {
-      const container = containerRef.current;
-      const camera = cameraRef.current;
-      const scene = sceneRef.current;
-      if (!container || !camera || !scene) return;
-
-      // Only treat as click/selection if pointer didn't drag/orbit (movement < 6px)
-      const dx = Math.abs(e.clientX - pointerDownPosRef.current.x);
-      const dy = Math.abs(e.clientY - pointerDownPosRef.current.y);
-      if (Math.hypot(dx, dy) > 6) return;
-
-      const rect = container.getBoundingClientRect();
-      const x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-      const y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
-
-      const raycaster = new THREE.Raycaster();
-      raycaster.setFromCamera(new THREE.Vector2(x, y), camera);
-
-      const meshes = Array.from(meshesMapRef.current.values()).filter((m) => m.visible);
-      const intersects = raycaster.intersectObjects(meshes, false);
-
-      if (intersects.length > 0) {
-        const hit = intersects[0];
-        const elemData = hit.object.userData.element as BimElementData;
-
-        // If in measurement mode
-        if (activeTool === "measure") {
-          const pt = { x: hit.point.x, y: hit.point.y, z: hit.point.z };
-          if (!activeMeasurement || !activeMeasurement.p1 || (activeMeasurement.p1 && activeMeasurement.p2)) {
-            if (onMeasurementChange) {
-              onMeasurementChange({ p1: pt });
-            }
-          } else if (activeMeasurement.p1 && !activeMeasurement.p2) {
-            const p1 = activeMeasurement.p1;
-            const p2 = pt;
-            const distDx = Math.abs(p2.x - p1.x);
-            const distDy = Math.abs(p2.y - p1.y);
-            const distDz = Math.abs(p2.z - p1.z);
-            const dist = Math.sqrt(distDx * distDx + distDy * distDy + distDz * distDz);
-            if (onMeasurementChange) {
-              onMeasurementChange({
-                p1,
-                p2,
-                distance: parseFloat(dist.toFixed(3)),
-                deltaX: parseFloat(distDx.toFixed(3)),
-                deltaY: parseFloat(distDy.toFixed(3)),
-                deltaZ: parseFloat(distDz.toFixed(3)),
-              });
-            }
+      for (const [id, mesh] of meshes) {
+        const element = mesh.userData.element as BimElementData;
+        mesh.visible = next.visibleLayers[element.discipline];
+        mesh.position.copy(
+          explodedPosition(element, center, next.explodeFactor),
+        );
+        const original = mesh.userData.baseMaterial as
+          THREE.Material | THREE.Material[];
+        const highlight = (m: THREE.Material) => {
+          if (!highlights.has(m)) {
+            const h = (m as THREE.MeshStandardMaterial).clone();
+            h.emissive.setHex(0x06b6d4);
+            h.emissiveIntensity = 0.65;
+            highlights.set(m, h);
           }
-          return;
-        }
-
-        // Selection mode
-        if (elemData) {
-          onSelectElement(elemData);
-        }
-      } else {
-        if (activeTool !== "measure") {
-          onSelectElement(null);
+          const h = highlights.get(m)!;
+          h.clippingPlanes = activePlanes;
+          return h;
+        };
+        mesh.material =
+          id === next.selectedElementId
+            ? Array.isArray(original)
+              ? original.map(highlight)
+              : highlight(original)
+            : original;
+      }
+      markers.visible = next.visibleLayers.clash && next.explodeFactor === 0;
+      group.updateMatrixWorld(true);
+      if (lastView !== next.viewRevision) {
+        const visibleBounds = new THREE.Box3();
+        for (const mesh of meshes.values())
+          if (mesh.visible)
+            visibleBounds.union(
+              mesh.geometry.boundingBox!.clone().applyMatrix4(mesh.matrixWorld),
+            );
+        // Stop residual orbit damping before applying a repeatable view command.
+        controls.enableDamping = false;
+        controls.update();
+        controls.enableDamping = true;
+        controls.target.copy(
+          fitCamera(
+            camera,
+            visibleBounds.isEmpty() ? bounds : visibleBounds,
+            next.activeViewPreset,
+          ),
+        );
+        controls.maxDistance = camera.far * 0.4;
+        controls.update();
+        lastView = next.viewRevision;
+      }
+      if (next.activeClashPoint && next.activeClashPoint !== lastClash) {
+        controls.target.set(...next.activeClashPoint);
+        camera.up.set(0, 1, 0);
+        camera.position
+          .copy(controls.target)
+          .add(new THREE.Vector3(span * 0.15, span * 0.1, span * 0.15));
+        controls.update();
+      }
+      lastClash = next.activeClashPoint;
+      if (next.activeMeasurement !== lastMeasurement) {
+        disposeObject(measurement);
+        lastMeasurement = next.activeMeasurement;
+        const m = next.activeMeasurement;
+        if (m) {
+          const material = new THREE.MeshBasicMaterial({
+            color: 0x14b8a6,
+            depthTest: false,
+          });
+          const geo = new THREE.SphereGeometry(pointRadius, 12, 8);
+          for (const p of [m.p1, m.p2])
+            if (p) {
+              const marker = new THREE.Mesh(geo, material);
+              marker.position.set(p.x, p.y, p.z);
+              marker.renderOrder = 2;
+              measurement.add(marker);
+            }
+          if (m.p2) {
+            const geo = new THREE.BufferGeometry().setFromPoints([
+              new THREE.Vector3(m.p1.x, m.p1.y, m.p1.z),
+              new THREE.Vector3(m.p2.x, m.p2.y, m.p2.z),
+            ]);
+            const line = new THREE.Line(
+              geo,
+              new THREE.LineBasicMaterial({
+                color: 0x14b8a6,
+                depthTest: false,
+              }),
+            );
+            line.renderOrder = 2;
+            measurement.add(line);
+          }
         }
       }
-    },
-    [activeTool, activeMeasurement, onMeasurementChange, onSelectElement],
-  );
+      if (lastSnapshot !== next.snapshotRevision) {
+        lastSnapshot = next.snapshotRevision;
+        try {
+          renderer.render(scene, camera);
+          next.onSnapshot(renderer.domElement.toDataURL("image/png"));
+        } catch {
+          next.onSnapshot(null);
+        }
+      }
+      requestRender();
+    };
+    const down = new Map<number, { x: number; y: number }>();
+    let gesture = false;
+    const pointerDown = (e: PointerEvent) => {
+      if (e.button !== 0) return;
+      down.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (down.size > 1) gesture = true;
+    };
+    const pointerCancel = () => {
+      down.clear();
+      gesture = false;
+    };
+    const pointerUp = (e: PointerEvent) => {
+      const start = down.get(e.pointerId);
+      down.delete(e.pointerId);
+      const multi = gesture;
+      if (!down.size) gesture = false;
+      if (
+        !ready ||
+        !start ||
+        multi ||
+        e.button !== 0 ||
+        Math.hypot(e.clientX - start.x, e.clientY - start.y) > 6
+      )
+        return;
+      const rect = renderer.domElement.getBoundingClientRect();
+      const ray = new THREE.Raycaster();
+      // BVH-backed meshes can stop at the nearest triangle instead of sorting
+      // every triangle in a large model. This affects picking only, never geometry.
+      (ray as THREE.Raycaster & { firstHitOnly?: boolean }).firstHitOnly = true;
+      camera.updateMatrixWorld();
+      ray.setFromCamera(
+        new THREE.Vector2(
+          ((e.clientX - rect.left) / rect.width) * 2 - 1,
+          (-(e.clientY - rect.top) / rect.height) * 2 + 1,
+        ),
+        camera,
+      );
+      // Keep all BVH intersections: the nearest triangle may be clipped away.
+      const hit = visibleHit(
+        ray.intersectObjects(
+          [...meshes.values()].filter((m) => m.visible),
+          false,
+        ),
+        activePlanes,
+      );
+      if (current.activeTool === "measure") {
+        if (!hit) return;
+        const p2 = { x: hit.point.x, y: hit.point.y, z: hit.point.z };
+        const m = current.activeMeasurement;
+        if (!m || m.p2) current.onMeasurementChange({ p1: p2 });
+        else {
+          const p1 = m.p1;
+          const deltaX = Math.abs(p2.x - p1.x),
+            deltaY = Math.abs(p2.y - p1.y),
+            deltaZ = Math.abs(p2.z - p1.z);
+          current.onMeasurementChange({
+            p1,
+            p2,
+            deltaX,
+            deltaY,
+            deltaZ,
+            distance: Math.hypot(deltaX, deltaY, deltaZ),
+          });
+        }
+      } else current.onSelectElement(hit?.object.userData.element ?? null);
+    };
+    const resize = () => {
+      const width = Math.max(1, container.clientWidth),
+        height = Math.max(1, container.clientHeight);
+      camera.aspect = width / height;
+      camera.updateProjectionMatrix();
+      renderer.setSize(width, height);
+      requestRender();
+    };
+    const visibility = () => {
+      if (document.hidden && frame) {
+        cancelAnimationFrame(frame);
+        frame = 0;
+      } else requestRender();
+    };
+    const initialize = async () => {
+      if (disposed) return;
+      setError(false);
+      setBuilding(true);
+      renderer = new THREE.WebGLRenderer({
+        // Keep rendering quality independent of model element count.
+        antialias: true,
+        powerPreference: "high-performance",
+      });
+      renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+      renderer.localClippingEnabled = true;
+      // Keep source IFC colors linear and predictable on the light drafting canvas.
+      renderer.toneMapping = THREE.NoToneMapping;
+      renderer.outputColorSpace = THREE.SRGBColorSpace;
+      container.appendChild(renderer.domElement);
+      renderer.domElement.addEventListener("webglcontextlost", onContextLost);
+      controls = new OrbitControls(camera, renderer.domElement);
+      controls.enableDamping = true;
+      controls.dampingFactor = 0.08;
+      controls.addEventListener("change", requestRender);
+      const interactionStart = () => {
+        if (interacting) return;
+        interacting = true;
+        // Keep full geometry and restore the final pixel ratio after the gesture.
+        // Lowering raster samples during a drag removes frame stalls on 4K screens.
+        renderer.setPixelRatio(Math.min(maxPixelRatio, 1));
+        requestRender();
+      };
+      const interactionEnd = () => {
+        interacting = false;
+        renderer.setPixelRatio(maxPixelRatio);
+        requestRender();
+      };
+      controls.addEventListener("start", interactionStart);
+      controls.addEventListener("end", interactionEnd);
+      scene.add(new THREE.AmbientLight(0xffffff, 0.48));
+      const hemisphere = new THREE.HemisphereLight(0xffffff, 0x64748b, 0.28);
+      hemisphere.position.copy(center).add(new THREE.Vector3(0, span, 0));
+      scene.add(hemisphere);
+      const light = new THREE.DirectionalLight(0xffffff, 0.82);
+      light.position.copy(center).add(new THREE.Vector3(span, span, span));
+      scene.add(light);
+      const grid = new THREE.GridHelper(span * 2, 40, 0x64748b, 0xcbd5e1);
+      grid.position.set(center.x, bounds.min.y - span * 0.005, center.z);
+      scene.add(grid);
+      resize();
+      observer = new ResizeObserver(resize);
+      observer.observe(container);
+      renderer.domElement.addEventListener("pointerdown", pointerDown);
+      renderer.domElement.addEventListener("pointerup", pointerUp);
+      renderer.domElement.addEventListener("pointercancel", pointerCancel);
+      document.addEventListener("visibilitychange", visibility);
+      let lastYield = performance.now();
+      for (const e of model.elements) {
+        if (disposed) return;
+        const mesh = createElementMesh(e, materials, geometries);
+        group.add(mesh);
+        meshes.set(e.id, mesh);
+        if (performance.now() - lastYield > 12) {
+          await new Promise((r) => setTimeout(r, 0));
+          lastYield = performance.now();
+        }
+      }
+      if (disposed) return;
+      for (const clash of model.clashes) {
+        const m = new THREE.Mesh(
+          new THREE.SphereGeometry(pointRadius * 3, 12, 8),
+          new THREE.MeshBasicMaterial({ color: 0xef4444, wireframe: true }),
+        );
+        m.position.set(...clash.point);
+        markers.add(m);
+      }
+      ready = true;
+      update(current);
+      setBuilding(false);
+      let bytes = 0,
+        triangles = 0;
+      const unique = new Set<THREE.BufferGeometry>();
+      for (const mesh of meshes.values()) {
+        triangles += (mesh.geometry.index?.count ?? 0) / 3;
+        unique.add(mesh.geometry);
+      }
+      for (const g of unique) {
+        for (const a of Object.values(g.attributes))
+          bytes += a.array.byteLength;
+        bytes += g.index?.array.byteLength ?? 0;
+      }
+      current.onStats({ bytes, triangles });
+    };
+    engineRef.current = { update };
+    // Defer state changes until after the effect has installed its cleanup.
+    void Promise.resolve()
+      .then(initialize)
+      .catch(() => {
+        if (!disposed) {
+          setError(true);
+          setBuilding(false);
+        }
+      });
+    return () => {
+      disposed = true;
+      ready = false;
+      engineRef.current = null;
+      if (frame) cancelAnimationFrame(frame);
+      observer?.disconnect();
+      document.removeEventListener("visibilitychange", visibility);
+      controls?.removeEventListener("change", requestRender);
+      controls?.dispose();
+      if (renderer) {
+        renderer.domElement.removeEventListener("pointerdown", pointerDown);
+        renderer.domElement.removeEventListener("pointerup", pointerUp);
+        renderer.domElement.removeEventListener("pointercancel", pointerCancel);
+        renderer.domElement.removeEventListener(
+          "webglcontextlost",
+          onContextLost,
+        );
+        renderer.domElement.remove();
+      }
+      disposeObject(scene);
+      materials.forEach((m) => m.dispose());
+      highlights.forEach((m) => m.dispose());
+      geometries.forEach((g) => g.dispose());
+      meshes.clear();
+      renderer?.dispose();
+      renderer?.forceContextLoss();
+    };
+  }, [props.model, retry]);
 
   return (
-    <div
-      ref={containerRef}
-      onPointerDown={handlePointerDown}
-      onPointerUp={handlePointerUp}
-      className="relative size-full cursor-grab active:cursor-grabbing select-none"
-    />
+    <div className="relative min-h-0 flex-1">
+      <div
+        ref={containerRef}
+        className="absolute inset-0 cursor-grab touch-none active:cursor-grabbing"
+        aria-label={
+          locale === "vi"
+            ? "Mô hình 3D: kéo để xoay, cuộn để phóng to"
+            : "3D model: drag to orbit, scroll to zoom"
+        }
+      />
+      {building && !error && (
+        <div
+          role="status"
+          className="pointer-events-none absolute inset-0 grid place-items-center bg-slate-950/70 text-sm"
+        >
+          {locale === "vi" ? "Đang dựng mô hình…" : "Building model…"}
+        </div>
+      )}
+      {error && (
+        <div
+          role="alert"
+          className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-slate-950 p-5 text-center"
+        >
+          <p>
+            {locale === "vi"
+              ? "Không thể hiển thị 3D. Hãy thử lại hoặc kiểm tra hỗ trợ WebGL của trình duyệt."
+              : "3D rendering is unavailable. Retry or check your browser's WebGL support."}
+          </p>
+          <button
+            type="button"
+            onClick={() => setRetry((n) => n + 1)}
+            className="rounded-lg border px-4 py-2"
+          >
+            {locale === "vi" ? "Thử lại" : "Retry"}
+          </button>
+        </div>
+      )}
+    </div>
   );
 }

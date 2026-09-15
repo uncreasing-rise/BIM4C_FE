@@ -1,0 +1,101 @@
+ISO-10303-21;
+HEADER;
+FILE_DESCRIPTION(('ViewDefinition [CoordinationView_V2.0]'),'2;1');
+FILE_NAME('BIM4C-Commercial-Tower.ifc','2026-09-12T16:00:00',('BIM4C Engineering Team'),('BIM4C Construction Technology'),'That Open Engine / Revit IFC','Autodesk Revit 2026','');
+FILE_SCHEMA(('IFC4'));
+ENDSEC;
+
+DATA;
+#1= IFCORGANIZATION($,'BIM4C Corporation',$,$,$);
+#2= IFCAPPLICATION(#1,'2026.1','BIM4C OpenBIM Platform','BIM4C');
+#3= IFCPERSON($,'BIM Manager',$,$,$,$,$,$);
+#4= IFCPERSONANDORGANIZATION(#3,#1,$);
+#5= IFCOWNERHISTORY(#4,#2,$,.ADDED.,$,$,$,1710250000);
+#6= IFCDIRECTION((1.,0.,0.));
+#7= IFCDIRECTION((0.,0.,1.));
+#8= IFCCARTESIANPOINT((0.,0.,0.));
+#9= IFCAXIS2PLACEMENT3D(#8,#7,#6);
+#10= IFCGEOMETRICREPRESENTATIONCONTEXT($,'Model',3,1.E-05,#9,$);
+#11= IFCPROJECT('01AbCdEfGhIjKlMnOpQrSt',#5,'BIM4C Digital Complex',$,$,$,$,(#10),#12);
+#12= IFCUNITASSIGNMENT((#13,#14,#15));
+#13= IFCSIUNIT(*,.LENGTHUNIT.,$,.METRE.);
+#14= IFCSIUNIT(*,.AREAUNIT.,$,.SQUARE_METRE.);
+#15= IFCSIUNIT(*,.VOLUMEUNIT.,$,.CUBIC_METRE.);
+
+/* Spatial Hierarchy */
+#20= IFCSITE('02BcDeFgHiJkLmNoPqRsTu',#5,'BIM4C Smart Hub Site',$,$,#9,$,$,.ELEMENT.,$,$,$,$,$);
+#21= IFCBUILDING('03CdEfGhIjKlMnOpQrStUv',#5,'BIM4C Commercial Tower',$,$,#9,$,$,.ELEMENT.,$,$,$);
+#22= IFCBUILDINGSTOREY('04DeFgHiJkLmNoPqRsTuVw',#5,'Tầng 1 - Ground Floor',$,$,#9,$,$,.ELEMENT.,0.0);
+#23= IFCBUILDINGSTOREY('05EfGhIjKlMnOpQrStUvWx',#5,'Tầng 2 - Office Floor',$,$,#9,$,$,.ELEMENT.,3.6);
+#24= IFCBUILDINGSTOREY('06FgHiJkLmNoPqRsTuVwXy',#5,'Tầng 3 - Sky Garden & MEP',$,$,#9,$,$,.ELEMENT.,7.2);
+
+/* Structural Slabs */
+#30= IFCSLAB('10Slab01GroundFloorLevel',#5,'Sàn Bê Tông C35 Tầng 1 (Ground Slab)',$,$,#9,$,$,.FLOOR.);
+#31= IFCSLAB('11Slab02OfficeFloorLevel',#5,'Sàn Dầm Dự Ứng Lực Tầng 2 (PT Slab)',$,$,#9,$,$,.FLOOR.);
+#32= IFCSLAB('12Slab03RoofPlantLevel0',#5,'Sàn Kỹ Thuật & Mái Tầng 3 (Roof Slab)',$,$,#9,$,$,.ROOF.);
+
+/* Structural Columns */
+#40= IFCCOLUMN('20Col01ConcreteColumnA1',#5,'Cột Bê Tông Vuông C800x800 Trục A-1',$,$,#9,$,$,$);
+#41= IFCCOLUMN('21Col02ConcreteColumnA2',#5,'Cột Bê Tông Vuông C800x800 Trục A-2',$,$,#9,$,$,$);
+#42= IFCCOLUMN('22Col03ConcreteColumnB1',#5,'Cột Bê Tông Vuông C800x800 Trục B-1',$,$,#9,$,$,$);
+#43= IFCCOLUMN('23Col04ConcreteColumnB2',#5,'Cột Bê Tông Vuông C800x800 Trục B-2',$,$,#9,$,$,$);
+
+/* Structural Beams */
+#50= IFCBEAM('30Beam01MainGirderD600',#5,'Dầm Chính Bê Tông C40 D400x700 Trục 1',$,$,#9,$,$,$);
+#51= IFCBEAM('31Beam02MainGirderD600',#5,'Dầm Chính Bê Tông C40 D400x700 Trục 2',$,$,#9,$,$,$);
+#52= IFCBEAM('32Beam03SecondaryBeam0',#5,'Dầm Phụ D300x500 Liên Kết Nhịp 8m',$,$,#9,$,$,$);
+
+/* Architectural Walls & Facade */
+#60= IFCWALLSTANDARDCASE('40Wall01CoreElevatorShaft',#5,'Vách Lõi Bê Tông Thang Máy (Core Wall)',$,$,#9,$,$,$);
+#61= IFCWALL('41Wall02ExteriorFacadeGlass',#5,'Vách Kính Low-E Unitized Facade',$,$,#300,#311,$,$);
+#62= IFCWALL('42Wall03InternalPartition0',#5,'Tường Ngăn Cháy REI 120 Dày 200mm',$,$,#9,$,$,$);
+
+/* MEP HVAC Ductwork & Piping */
+#70= IFCDUCTSEGMENT('50Duct01SupplyAirAHU01M',#5,'Tuyến Ống Gió Cấp Lạnh HVAC AHU-01 (800x400)',$,$,#9,$,$,$);
+#71= IFCDUCTSEGMENT('51Duct02ReturnAirAHU01',#5,'Tuyến Ống Gió Hồi HVAC AHU-01 (600x400)',$,$,#9,$,$,$);
+#72= IFCPIPESEGMENT('52Pipe01ChilledWaterDN15',#5,'Ống Nước Lạnh Chiller Cấp DN150 SCH40',$,$,#9,$,$,$);
+#73= IFCPIPESEGMENT('53Pipe02FireSprinklerDN1',#5,'Ống Cứu Hỏa Tự Động Sprinkler DN100',$,$,#9,$,$,$);
+
+/* Doors & Windows */
+#80= IFCDOOR('60Door01FireRatedDoubleDr',#5,'Cửa Chống Cháy 2 Cánh Thoát Hiểm E120',$,$,#9,$,$,$,$,$);
+#81= IFCWINDOW('61Win01CurtainGlazing01',#5,'Cửa Sổ Nhôm Kính Cách Âm STC 42',$,$,#9,$,$,$,$,$);
+
+/* Property Sets */
+#100= IFCPROPERTYSET('70Pset01WallCommonProps0',#5,'Pset_WallCommon',$,(#101,#102,#103));
+#101= IFCPROPERTYSINGLEVALUE('Reference',$,IFCLABEL('WAL-CORE-200'),$);
+#102= IFCPROPERTYSINGLEVALUE('LoadBearing',$,IFCBOOLEAN(.TRUE.),$);
+#103= IFCPROPERTYSINGLEVALUE('FireRating',$,IFCLABEL('REI 240 (Chống cháy 4h)'),$);
+
+#110= IFCPROPERTYSET('71Pset02DuctCommonProps',#5,'Pset_DuctSegmentTypeCommon',$,(#111,#112));
+#111= IFCPROPERTYSINGLEVALUE('AirFlowRate',$,IFCLABEL('4500 m3/h'),$);
+#112= IFCPROPERTYSINGLEVALUE('Velocity',$,IFCLABEL('6.2 m/s'),$);
+
+#120= IFCPROPERTYSET('72Pset03ColumnProps0000',#5,'Pset_ColumnCommon',$,(#121,#122));
+#121= IFCPROPERTYSINGLEVALUE('StrengthClass',$,IFCLABEL('C40/50'),$);
+#122= IFCPROPERTYSINGLEVALUE('LoadBearing',$,IFCBOOLEAN(.TRUE.),$);
+
+/* Relations */
+#200= IFCRELAGGREGATES('80Rel01ProjectToSite00',#5,$,$,#11,(#20));
+#201= IFCRELAGGREGATES('81Rel02SiteToBuilding0',#5,$,$,#20,(#21));
+#202= IFCRELAGGREGATES('82Rel03BuildingToStorey',#5,$,$,#21,(#22,#23,#24));
+#203= IFCRELCONTAINEDINSPATIALSTRUCTURE('83Rel04StoreyElements1',#5,$,$,(#30,#40,#41,#50,#60,#70,#72,#80),#22);
+#204= IFCRELCONTAINEDINSPATIALSTRUCTURE('84Rel05StoreyElements2',#5,$,$,(#31,#42,#43,#51,#52,#61,#62,#71,#73,#81),#23);
+#205= IFCRELCONTAINEDINSPATIALSTRUCTURE('85Rel06StoreyElements3',#5,$,$,(#32),#24);
+#206= IFCRELDEFINESBYPROPERTIES('86Rel07PsetWallRelat0',#5,$,$,(#60),#100);
+#207= IFCRELDEFINESBYPROPERTIES('87Rel08PsetDuctRelat',#5,$,$,(#70,#71),#110);
+#208= IFCRELDEFINESBYPROPERTIES('88Rel09PsetColRelat0',#5,$,$,(#40,#41,#42,#43),#120);
+
+
+#300=IFCLOCALPLACEMENT($,#9);
+#301=IFCCARTESIANPOINT((0.,0.));
+#302=IFCAXIS2PLACEMENT2D(#301,$);
+#303=IFCRECTANGLEPROFILEDEF(.AREA.,$,#302,2.,1.);
+#304=IFCAXIS2PLACEMENT3D(#8,$,$);
+#305=IFCEXTRUDEDAREASOLID(#303,#304,#7,3.);
+#307=IFCCARTESIANPOINT((5.,0.,0.));
+#308=IFCAXIS2PLACEMENT3D(#307,$,$);
+#306=IFCEXTRUDEDAREASOLID(#303,#308,#7,3.);
+#310=IFCSHAPEREPRESENTATION(#10,'Body','SweptSolid',(#305,#306));
+#311=IFCPRODUCTDEFINITIONSHAPE($,$,(#310));
+ENDSEC;
+END-ISO-10303-21;

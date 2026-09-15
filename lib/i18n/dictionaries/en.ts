@@ -573,22 +573,22 @@ export const enDictionary: Dictionary = {
     readDocument: "Read document",
   },
   bimViewerPage: {
-    badge: "OpenBIM Web Engine (That Open Platform)",
+    badge: "IFC viewer · Three.js & Web-IFC",
     title: "Interactive 3D Web BIM Viewer",
-    subtitle: "Experience browser-based OpenBIM model coordination. Inspect IFC element properties, perform 3D measurements, section planes, and resolve clash issues.",
+    subtitle: "View IFC models, inspect source properties, measure visible surfaces and explore section cuts. Sample issues illustrate coordination workflows.",
     selectModel: "Select Model",
     uploadIfc: "Upload Your .IFC File",
-    uploadIfcNotice: "Models are processed entirely in-browser (Client-side) with 100% data confidentiality.",
+    uploadIfcNotice: "IFC files are processed locally in your browser and are not uploaded to a server.",
     tools: {
       orbit: "Orbit & Select",
       measure: "3D Calipers",
       section: "Section Plane",
       explode: "Exploded View",
       layers: "Discipline Layers",
-      clashes: "Clash Matrix",
+      clashes: "Sample issues",
       reset: "Fit to View",
       fullscreen: "Fullscreen",
-      snapshot: "HD Snapshot",
+      snapshot: "Save 3D image",
     },
     views: {
       perspective: "3D Perspective",
@@ -601,7 +601,7 @@ export const enDictionary: Dictionary = {
       architecture: "Architecture (Arch)",
       structure: "Structure (Struct)",
       mep: "Building Services (MEP)",
-      clashMarkers: "Clash Points (BCF)",
+      clashMarkers: "Sample issue markers",
     },
     sections: {
       title: "Section Plane Slicing",
@@ -632,12 +632,12 @@ export const enDictionary: Dictionary = {
       guid: "Global ID (GUID)",
       storey: "Building Storey",
       psetsTitle: "Property Sets (Psets)",
-      geometryTitle: "Geometry & Quantity Takeoff",
+      geometryTitle: "Geometry and source properties",
       spatialTree: "Spatial Hierarchy Tree",
     },
     clashes: {
-      title: "Clash Detection Matrix (BCF)",
-      count: (count) => `${count} coordination clashes identified`,
+      title: "Sample coordination issues",
+      count: (count) => `${count} sample coordination issues`,
       severity: {
         high: "Critical (High)",
         medium: "Moderate (Medium)",
@@ -654,8 +654,8 @@ export const enDictionary: Dictionary = {
     performance: {
       fps: "FPS",
       elements: "Elements",
-      memory: "WebGL RAM",
-      openBimStandard: "buildingSMART IFC4 & ISO 19650 Ready",
+      memory: "Geometry buffers",
+      openBimStandard: "IFC model viewer",
     },
   },
 };

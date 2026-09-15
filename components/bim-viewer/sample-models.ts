@@ -3,7 +3,13 @@ import type { BimModelDefinition, BimElementData, BimClashItem } from "./types";
 // Generates a complex commercial tower model
 function generateTowerModel(): BimModelDefinition {
   const elements: BimElementData[] = [];
-  const stories = ["Tầng hầm B1", "Tầng 1 (Trệt)", "Tầng 2 - 5 (Văn phòng)", "Tầng 6 - 10 (Thương mại)", "Tầng Mái"];
+  const stories = [
+    "Tầng hầm B1",
+    "Tầng 1 (Trệt)",
+    "Tầng 2 - 5 (Văn phòng)",
+    "Tầng 6 - 10 (Thương mại)",
+    "Tầng Mái",
+  ];
   let elementId = 1;
 
   // Base Foundation Slabs
@@ -16,7 +22,13 @@ function generateTowerModel(): BimModelDefinition {
     storey: "Tầng hầm B1",
     material: "Bê tông C35/45 cốt thép",
     color: "#64748b",
-    dimensions: { length: 24, width: 18, height: 1.2, area: 432, volume: 518.4 },
+    dimensions: {
+      length: 24,
+      width: 18,
+      height: 1.2,
+      area: 432,
+      volume: 518.4,
+    },
     psets: [
       {
         name: "Pset_SlabCommon",
@@ -56,7 +68,13 @@ function generateTowerModel(): BimModelDefinition {
       storey: storeyName,
       material: "Bê tông C30/37",
       color: "#94a3b8",
-      dimensions: { length: 22, width: 16, height: 0.3, area: 352, volume: 105.6 },
+      dimensions: {
+        length: 22,
+        width: 16,
+        height: 0.3,
+        area: 352,
+        volume: 105.6,
+      },
       psets: [
         {
           name: "Pset_SlabCommon",
@@ -86,7 +104,13 @@ function generateTowerModel(): BimModelDefinition {
           storey: storeyName,
           material: "Bê tông cốt thép C40/50",
           color: "#475569",
-          dimensions: { length: 0.8, width: 0.8, height: floorHeight, area: 0.64, volume: 2.3 },
+          dimensions: {
+            length: 0.8,
+            width: 0.8,
+            height: floorHeight,
+            area: 0.64,
+            volume: 2.3,
+          },
           psets: [
             {
               name: "Pset_ColumnCommon",
@@ -114,7 +138,13 @@ function generateTowerModel(): BimModelDefinition {
       storey: storeyName,
       material: "Kính Low-E phản xạ nhiệt 2 lớp + Khung Nhôm Anodize",
       color: "#38bdf8",
-      dimensions: { length: 22.4, width: 16.4, height: floorHeight, area: 280, volume: 28 },
+      dimensions: {
+        length: 22.4,
+        width: 16.4,
+        height: floorHeight,
+        area: 280,
+        volume: 28,
+      },
       psets: [
         {
           name: "Pset_CurtainWallCommon",
@@ -140,7 +170,13 @@ function generateTowerModel(): BimModelDefinition {
       storey: storeyName,
       material: "Bê tông chịu lực C35",
       color: "#cbd5e1",
-      dimensions: { length: 5, width: 4.5, height: floorHeight, area: 22.5, volume: 45 },
+      dimensions: {
+        length: 5,
+        width: 4.5,
+        height: floorHeight,
+        area: 22.5,
+        volume: 45,
+      },
       psets: [
         {
           name: "Pset_WallCommon",
@@ -166,7 +202,13 @@ function generateTowerModel(): BimModelDefinition {
       storey: storeyName,
       material: "Tôn kẽm bọc cách nhiệt PU 25mm",
       color: "#06b6d4",
-      dimensions: { length: 18, width: 0.8, height: 0.4, area: 43.2, volume: 5.76 },
+      dimensions: {
+        length: 18,
+        width: 0.8,
+        height: 0.4,
+        area: 43.2,
+        volume: 5.76,
+      },
       psets: [
         {
           name: "Pset_DuctSegmentTypeCommon",
@@ -192,7 +234,13 @@ function generateTowerModel(): BimModelDefinition {
       storey: storeyName,
       material: "Thép đúc tráng kẽm SCH40",
       color: "#ef4444",
-      dimensions: { length: 18, width: 0.25, height: 0.25, area: 14.1, volume: 0.88 },
+      dimensions: {
+        length: 18,
+        width: 0.25,
+        height: 0.25,
+        area: 14.1,
+        volume: 0.88,
+      },
       psets: [
         {
           name: "Pset_PipeSegmentTypeCommon",
@@ -239,7 +287,8 @@ function generateTowerModel(): BimModelDefinition {
     {
       id: "clash-01",
       title: "Xung đột Ống gió HVAC với Dầm Kết cấu D2 (Tầng 2)",
-      description: "Ống gió chính AHU-02 kích thước 800x400mm va chạm 120mm với dầm bê tông cốt thép trục D-4.",
+      description:
+        "Ống gió chính AHU-02 kích thước 800x400mm va chạm 120mm với dầm bê tông cốt thép trục D-4.",
       severity: "high",
       disciplineA: "MEP HVAC",
       elementA: "Tuyến Ống Gió Cấp Lạnh HVAC AHU-02",
@@ -251,7 +300,8 @@ function generateTowerModel(): BimModelDefinition {
     {
       id: "clash-02",
       title: "Ống cứu hỏa Sprinkler giao cắt thanh Giằng thép (Tầng 3)",
-      description: "Tuyến ống DN150 đi xuyên qua tim thanh giằng chéo gây suy giảm khả năng chịu lực.",
+      description:
+        "Tuyến ống DN150 đi xuyên qua tim thanh giằng chéo gây suy giảm khả năng chịu lực.",
       severity: "high",
       disciplineA: "MEP PCCC",
       elementA: "Tuyến Ống Cứu Hỏa & Chiller DN150",
@@ -263,7 +313,8 @@ function generateTowerModel(): BimModelDefinition {
     {
       id: "clash-03",
       title: "Khoảng tĩnh không đường ống cấp thoát nước (Tầng 1)",
-      description: "Độ cao đáy ống 2.2m không đảm bảo khoảng thông thủy tối thiểu 2.4m của lối vào sảnh.",
+      description:
+        "Độ cao đáy ống 2.2m không đảm bảo khoảng thông thủy tối thiểu 2.4m của lối vào sảnh.",
       severity: "medium",
       disciplineA: "MEP Plumbing",
       elementA: "Ống cấp nước trục đứng",
@@ -277,7 +328,8 @@ function generateTowerModel(): BimModelDefinition {
   return {
     id: "tower",
     nameKey: "tower",
-    description: "Tòa tháp Phức hợp Văn phòng & Thương mại BIM4C đạt chuẩn ISO 19650 với đầy đủ các bộ môn Kiến trúc, Kết cấu bê tông và Hệ thống Cơ điện MEP.",
+    description:
+      "Tòa tháp Phức hợp Văn phòng & Thương mại BIM4C đạt chuẩn ISO 19650 với đầy đủ các bộ môn Kiến trúc, Kết cấu bê tông và Hệ thống Cơ điện MEP.",
     elementsCount: elements.length,
     elements,
     clashes,
@@ -330,7 +382,13 @@ function generateSteelModel(): BimModelDefinition {
         storey: "Tầng Trệt",
         material: "Thép Kết Cấu Q345B / ASTM A572 Gr.50",
         color: "#f59e0b",
-        dimensions: { length: 0.4, width: 0.4, height: 8, area: 0.16, volume: 1.28 },
+        dimensions: {
+          length: 0.4,
+          width: 0.4,
+          height: 8,
+          area: 0.16,
+          volume: 1.28,
+        },
         psets: [
           {
             name: "Pset_SteelElementGeneral",
@@ -359,7 +417,13 @@ function generateSteelModel(): BimModelDefinition {
       storey: "Mái Nhà Xưởng",
       material: "Thép hình ống hộp mạ kẽm",
       color: "#d97706",
-      dimensions: { length: 0.3, width: 18, height: 1.8, area: 32.4, volume: 4.8 },
+      dimensions: {
+        length: 0.3,
+        width: 18,
+        height: 1.8,
+        area: 32.4,
+        volume: 4.8,
+      },
       psets: [
         {
           name: "Pset_MemberCommon",
@@ -379,7 +443,8 @@ function generateSteelModel(): BimModelDefinition {
     {
       id: "clash-steel-01",
       title: "Bulong Neo Chân Cột Xung Đột Cốt Thép Đài Móng",
-      description: "Cụm bulong neo M36 chân cột trục A-2 chạm trực tiếp vào lưới thép chủ đài móng D25@150.",
+      description:
+        "Cụm bulong neo M36 chân cột trục A-2 chạm trực tiếp vào lưới thép chủ đài móng D25@150.",
       severity: "high",
       disciplineA: "Kết cấu thép",
       elementA: "Chân cột H400x400",
@@ -393,7 +458,8 @@ function generateSteelModel(): BimModelDefinition {
   return {
     id: "steel",
     nameKey: "steel",
-    description: "Mô hình Kết cấu Thép nhịp lớn LOD 400 chuẩn bị cho sản xuất chế tạo (Fabrication & Shop Drawing).",
+    description:
+      "Mô hình Kết cấu Thép nhịp lớn LOD 400 chuẩn bị cho sản xuất chế tạo (Fabrication & Shop Drawing).",
     elementsCount: elements.length,
     elements,
     clashes,
@@ -437,7 +503,13 @@ function generateMepModel(): BimModelDefinition {
       storey: "Tầng Hầm B2",
       material: "Thép đúc & Máy nén trục vít",
       color: "#0284c7",
-      dimensions: { length: 4.8, width: 2.2, height: 2.4, area: 10.5, volume: 25.3 },
+      dimensions: {
+        length: 4.8,
+        width: 2.2,
+        height: 2.4,
+        area: 10.5,
+        volume: 25.3,
+      },
       psets: [
         {
           name: "Pset_ChillerCommon",
@@ -465,7 +537,13 @@ function generateMepModel(): BimModelDefinition {
       storey: "Tầng Hầm B2",
       material: "Gang đúc EN-GJL-250",
       color: "#16a34a",
-      dimensions: { length: 1.4, width: 0.9, height: 1.1, area: 1.26, volume: 1.38 },
+      dimensions: {
+        length: 1.4,
+        width: 0.9,
+        height: 1.1,
+        area: 1.26,
+        volume: 1.38,
+      },
       psets: [
         {
           name: "Pset_PumpCommon",
@@ -492,7 +570,13 @@ function generateMepModel(): BimModelDefinition {
     storey: "Tầng Hầm B2",
     material: "Thép carbon ASTM A53 Gr.B bọc cách nhiệt Armaflex 50mm",
     color: "#2563eb",
-    dimensions: { length: 16, width: 0.45, height: 0.45, area: 22.6, volume: 2.54 },
+    dimensions: {
+      length: 16,
+      width: 0.45,
+      height: 0.45,
+      area: 22.6,
+      volume: 2.54,
+    },
     psets: [
       {
         name: "Pset_PipeSegmentTypeCommon",
@@ -511,7 +595,8 @@ function generateMepModel(): BimModelDefinition {
     {
       id: "clash-mep-01",
       title: "Ống Góp Nước Lạnh DN350 Va Chạm Máng Cáp Điện Động Lực",
-      description: "Khoảng cách cách điện giữa ống nước lạnh và thang máng cáp 400x100mm chỉ đạt 40mm (yêu cầu tối thiểu 200mm theo TCVN 9207).",
+      description:
+        "Khoảng cách cách điện giữa ống nước lạnh và thang máng cáp 400x100mm chỉ đạt 40mm (yêu cầu tối thiểu 200mm theo TCVN 9207).",
       severity: "high",
       disciplineA: "MEP Cơ (HVAC)",
       elementA: "Ống Góp Nước Lạnh DN350",
@@ -525,7 +610,8 @@ function generateMepModel(): BimModelDefinition {
   return {
     id: "mep",
     nameKey: "mep",
-    description: "Hệ thống Cơ điện Phòng máy Trung tâm (HVAC Chiller Plant Room & Pumping Station) LOD 400 chuẩn bị bàn giao vận hành COBie.",
+    description:
+      "Hệ thống Cơ điện Phòng máy Trung tâm (HVAC Chiller Plant Room & Pumping Station) LOD 400 chuẩn bị bàn giao vận hành COBie.",
     elementsCount: elements.length,
     elements,
     clashes,

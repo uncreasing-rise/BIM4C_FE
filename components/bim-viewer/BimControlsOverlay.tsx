@@ -1,444 +1,265 @@
-"use client";
-
+﻿"use client";
 import React from "react";
-import {
-  Scissors,
-  Ruler,
-  Sparkles,
-  Layers,
-  AlertTriangle,
-  RotateCcw,
-  CheckCircle2,
-  X,
-  Crosshair,
-} from "lucide-react";
+import { X, RotateCcw, Crosshair } from "lucide-react";
 import { useLanguage } from "@/lib/i18n/context";
-import { cn } from "@/lib/utils";
+import { defaultClip } from "./viewer-geometry";
 import type {
   BimTool,
   BimDiscipline,
   ActiveMeasurement,
   BimClashItem,
+  BimClipPlanes,
+  BimBounds,
 } from "./types";
-
-interface BimControlsOverlayProps {
+interface Props {
   activeTool: BimTool;
   onCloseTool: () => void;
-  // Section Slicing
-  clipPlanes: { x: number; y: number; z: number; enabled: boolean };
-  onChangeClipPlanes: (planes: { x: number; y: number; z: number; enabled: boolean }) => void;
-  // Measurement
+  clipPlanes: BimClipPlanes;
+  onChangeClipPlanes: (planes: BimClipPlanes) => void;
+  bounds: BimBounds;
   measurement: ActiveMeasurement | null;
   onClearMeasurement: () => void;
-  // Exploded View
   explodeFactor: number;
-  onChangeExplodeFactor: (factor: number) => void;
-  // Layers
+  onChangeExplodeFactor: (value: number) => void;
   visibleLayers: Record<BimDiscipline, boolean>;
   onToggleLayer: (layer: BimDiscipline) => void;
-  // Clashes
   clashes: BimClashItem[];
+  isSample: boolean;
   onFocusClash: (clash: BimClashItem) => void;
   activeClashId: string | null;
 }
-
-export function BimControlsOverlay({
-  activeTool,
-  onCloseTool,
-  clipPlanes,
-  onChangeClipPlanes,
-  measurement,
-  onClearMeasurement,
-  explodeFactor,
-  onChangeExplodeFactor,
-  visibleLayers,
-  onToggleLayer,
-  clashes,
-  onFocusClash,
-  activeClashId,
-}: BimControlsOverlayProps) {
+export function BimControlsOverlay(p: Props) {
   const { t, locale } = useLanguage();
+  const vi = locale === "vi";
   const v = t.bimViewerPage;
-
-  if (activeTool === "orbit") return null;
-
+  if (p.activeTool === "orbit") return null;
+  const title =
+    p.activeTool === "section"
+      ? vi
+        ? "Hộp cắt 6 mặt"
+        : "Six-plane section box"
+      : v.tools[p.activeTool];
+  const button =
+    "flex min-h-10 w-full items-center justify-center gap-2 rounded-lg border border-white/15 px-3 text-xs hover:bg-white/10";
   return (
-    <div
-      className="pointer-events-auto absolute left-4 top-20 z-30 w-72 sm:w-80 rounded-2xl border border-white/15 bg-slate-950/90 p-4 text-white shadow-2xl backdrop-blur-2xl transition-all duration-300"
-      data-motion="tile"
+    <section
+      aria-label={title}
+      className="absolute left-2 top-2 z-30 max-h-[calc(100%-1rem)] w-[calc(100%-1rem)] overflow-y-auto rounded-xl border border-white/15 bg-slate-950/95 p-4 text-xs text-slate-200 shadow-xl sm:left-4 sm:top-4 sm:max-h-[calc(100%-2rem)] sm:w-80"
+      onKeyDown={(e) => {
+        if (e.key === "Escape") p.onCloseTool();
+      }}
     >
-      {/* 1. Section Slicing Tool */}
-      {activeTool === "section" && (
-        <div>
-          <div className="flex items-center justify-between border-b border-white/10 pb-3">
-            <div className="flex items-center gap-2">
-              <Scissors className="size-4 text-teal-400" />
-              <h4 className="text-xs font-bold uppercase tracking-wider text-slate-200">
-                {v.sections.title}
-              </h4>
-            </div>
-            <button
-              type="button"
-              onClick={onCloseTool}
-              aria-label="Close"
-              className="rounded-lg p-1 text-slate-400 hover:bg-white/10 hover:text-white"
-            >
-              <X className="size-4" />
-            </button>
-          </div>
-
-          <div className="mt-4 space-y-4 text-xs">
-            {/* Enable Toggle */}
-            <div className="flex items-center justify-between">
-              <span className="font-semibold text-slate-300">
-                {locale === "vi" ? "Kích hoạt mặt cắt" : "Enable Cross-Section"}
-              </span>
-              <input
-                type="checkbox"
-                checked={clipPlanes.enabled}
-                onChange={(e) =>
-                  onChangeClipPlanes({ ...clipPlanes, enabled: e.target.checked })
-                }
-                className="size-4 accent-teal-400"
-              />
-            </div>
-
-            {/* Plane X */}
-            <div>
-              <div className="flex justify-between text-slate-400 mb-1">
-                <span>{v.sections.axisX}</span>
-                <span className="font-mono font-bold text-teal-300">
-                  {clipPlanes.x.toFixed(1)} m
-                </span>
-              </div>
-              <input
-                type="range"
-                min="-20"
-                max="20"
-                step="0.5"
-                disabled={!clipPlanes.enabled}
-                value={clipPlanes.x}
-                onChange={(e) =>
-                  onChangeClipPlanes({ ...clipPlanes, x: parseFloat(e.target.value) })
-                }
-                className="w-full accent-teal-400"
-              />
-            </div>
-
-            {/* Plane Y (Height) */}
-            <div>
-              <div className="flex justify-between text-slate-400 mb-1">
-                <span>{v.sections.axisY}</span>
-                <span className="font-mono font-bold text-teal-300">
-                  {clipPlanes.y.toFixed(1)} m
-                </span>
-              </div>
-              <input
-                type="range"
-                min="-5"
-                max="25"
-                step="0.5"
-                disabled={!clipPlanes.enabled}
-                value={clipPlanes.y}
-                onChange={(e) =>
-                  onChangeClipPlanes({ ...clipPlanes, y: parseFloat(e.target.value) })
-                }
-                className="w-full accent-teal-400"
-              />
-            </div>
-
-            {/* Plane Z */}
-            <div>
-              <div className="flex justify-between text-slate-400 mb-1">
-                <span>{v.sections.axisZ}</span>
-                <span className="font-mono font-bold text-teal-300">
-                  {clipPlanes.z.toFixed(1)} m
-                </span>
-              </div>
-              <input
-                type="range"
-                min="-20"
-                max="20"
-                step="0.5"
-                disabled={!clipPlanes.enabled}
-                value={clipPlanes.z}
-                onChange={(e) =>
-                  onChangeClipPlanes({ ...clipPlanes, z: parseFloat(e.target.value) })
-                }
-                className="w-full accent-teal-400"
-              />
-            </div>
-
-            <button
-              type="button"
-              onClick={() =>
-                onChangeClipPlanes({ x: 20, y: 25, z: 20, enabled: true })
+      <div className="mb-3 flex items-center justify-between gap-2 border-b border-white/10 pb-2">
+        <h2 className="font-bold">{title}</h2>
+        <button
+          type="button"
+          aria-label={vi ? "Đóng công cụ" : "Close tool"}
+          onClick={p.onCloseTool}
+          className="grid size-9 shrink-0 place-items-center rounded-lg hover:bg-white/10"
+        >
+          <X className="size-4" />
+        </button>
+      </div>
+      {p.activeTool === "section" && (
+        <div className="space-y-3">
+          <label className="flex min-h-10 items-center justify-between">
+            {vi ? "Kích hoạt hộp cắt" : "Enable section box"}
+            <input
+              type="checkbox"
+              checked={p.clipPlanes.enabled}
+              onChange={(e) =>
+                p.onChangeClipPlanes({
+                  ...p.clipPlanes,
+                  enabled: e.target.checked,
+                })
               }
-              className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-lg border border-white/10 bg-white/5 py-1.5 text-xs font-semibold text-slate-300 hover:bg-white/10"
-            >
-              <RotateCcw className="size-3.5" /> {v.sections.resetClipping}
-            </button>
-          </div>
+              className="size-4 accent-teal-400"
+            />
+          </label>
+          {(["x", "y", "z"] as const).map((axis, index) => {
+            const lower = ({ x: "minX", y: "minY", z: "minZ" } as const)[axis];
+            const min = p.bounds.min[index],
+              max = p.bounds.max[index];
+            const step = Math.max(0.0001, (max - min) / 200);
+            return (
+              <fieldset
+                key={axis}
+                className="space-y-2 rounded-lg border border-white/10 p-2"
+              >
+                <legend className="px-1 font-bold">
+                  {axis.toUpperCase()} (m)
+                </legend>
+                {([lower, axis] as const).map((key, i) => (
+                  <label key={key} className="block">
+                    <span className="flex justify-between">
+                      <span>
+                        {i === 0
+                          ? vi
+                            ? "Giới hạn dưới"
+                            : "Lower bound"
+                          : vi
+                            ? "Giới hạn trên"
+                            : "Upper bound"}
+                      </span>
+                      <output>{p.clipPlanes[key].toFixed(3)}</output>
+                    </span>
+                    <input
+                      aria-label={`${axis.toUpperCase()} ${i === 0 ? (vi ? "dưới" : "lower") : vi ? "trên" : "upper"}`}
+                      type="range"
+                      min={min}
+                      max={max}
+                      step={step}
+                      disabled={!p.clipPlanes.enabled || min === max}
+                      value={p.clipPlanes[key]}
+                      onChange={(e) => {
+                        const value = Number(e.target.value);
+                        p.onChangeClipPlanes({
+                          ...p.clipPlanes,
+                          [key]:
+                            i === 0
+                              ? Math.min(value, p.clipPlanes[axis])
+                              : Math.max(value, p.clipPlanes[lower]),
+                        });
+                      }}
+                      className="min-h-8 w-full accent-teal-400"
+                    />
+                  </label>
+                ))}
+              </fieldset>
+            );
+          })}
+          <button
+            type="button"
+            className={button}
+            onClick={() =>
+              p.onChangeClipPlanes({ ...defaultClip(p.bounds), enabled: true })
+            }
+          >
+            <RotateCcw className="size-4" />
+            {v.sections.resetClipping}
+          </button>
         </div>
       )}
-
-      {/* 2. 3D Measurement Tool */}
-      {activeTool === "measure" && (
-        <div>
-          <div className="flex items-center justify-between border-b border-white/10 pb-3">
-            <div className="flex items-center gap-2">
-              <Ruler className="size-4 text-teal-400" />
-              <h4 className="text-xs font-bold uppercase tracking-wider text-slate-200">
-                {v.measure.title}
-              </h4>
-            </div>
-            <button
-              type="button"
-              onClick={onCloseTool}
-              aria-label="Close"
-              className="rounded-lg p-1 text-slate-400 hover:bg-white/10 hover:text-white"
-            >
-              <X className="size-4" />
-            </button>
-          </div>
-
-          <div className="mt-3 text-xs text-slate-300 space-y-3">
-            <p className="leading-relaxed text-slate-400">
-              {v.measure.instruction}
+      {p.activeTool === "measure" && (
+        <div className="space-y-3">
+          <p className="leading-relaxed text-slate-400">
+            {vi
+              ? "Chọn hai điểm trên bề mặt đang nhìn thấy. Phép đo theo vị trí hiển thị; khi phân rã, khoảng cách cũng thay đổi. Không có bắt điểm đỉnh tự động."
+              : "Select two points on visible surfaces. Distances use displayed positions, including exploded offsets. Automatic vertex snapping is not enabled."}
+          </p>
+          {p.measurement?.distance !== undefined ? (
+            <dl className="space-y-2 rounded-lg bg-teal-500/10 p-3">
+              {[
+                [v.measure.distance, p.measurement.distance],
+                [v.measure.deltaX, p.measurement.deltaX],
+                [v.measure.deltaY, p.measurement.deltaY],
+                [v.measure.deltaZ, p.measurement.deltaZ],
+              ].map(([label, value]) => (
+                <div key={String(label)} className="flex justify-between gap-2">
+                  <dt>{label}</dt>
+                  <dd className="font-mono text-teal-300">
+                    {Number(value).toFixed(3)} m
+                  </dd>
+                </div>
+              ))}
+            </dl>
+          ) : p.measurement?.p1 ? (
+            <p role="status" className="flex items-center gap-2">
+              <Crosshair className="size-4" />
+              {vi
+                ? "Đã chọn điểm 1. Chọn điểm 2."
+                : "Point 1 selected. Select point 2."}
             </p>
-
-            {measurement && measurement.distance !== undefined ? (
-              <div className="rounded-xl border border-teal-500/30 bg-teal-500/10 p-3 space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-slate-300 font-semibold">{v.measure.distance}:</span>
-                  <span className="font-mono text-base font-bold text-teal-300">
-                    {measurement.distance} m
-                  </span>
-                </div>
-                <div className="grid grid-cols-3 gap-1.5 border-t border-white/10 pt-2 text-[11px]">
-                  <div>
-                    <span className="text-slate-400 block">{v.measure.deltaX}</span>
-                    <span className="font-mono font-semibold text-white">{measurement.deltaX} m</span>
-                  </div>
-                  <div>
-                    <span className="text-slate-400 block">{v.measure.deltaY}</span>
-                    <span className="font-mono font-semibold text-white">{measurement.deltaY} m</span>
-                  </div>
-                  <div>
-                    <span className="text-slate-400 block">{v.measure.deltaZ}</span>
-                    <span className="font-mono font-semibold text-white">{measurement.deltaZ} m</span>
-                  </div>
-                </div>
-              </div>
-            ) : measurement?.p1 ? (
-              <div className="rounded-xl border border-white/10 bg-black/30 p-3 text-center">
-                <Crosshair className="size-5 text-teal-400 mx-auto mb-1 animate-pulse" />
-                <span className="text-slate-300 font-semibold">
-                  {locale === "vi" ? "Đã chọn điểm 1." : "Point 1 selected."}
-                </span>
-                <span className="block text-[11px] text-slate-400 mt-0.5">
-                  {locale === "vi" ? "Click chọn điểm thứ 2 để đo khoảng cách." : "Click 2nd point to measure distance."}
-                </span>
-              </div>
-            ) : null}
-
-            {measurement && (
-              <button
-                type="button"
-                onClick={onClearMeasurement}
-                className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-white/10 bg-white/5 py-1.5 text-xs font-semibold text-slate-300 hover:bg-white/10"
-              >
-                {v.measure.clear}
-              </button>
-            )}
-          </div>
+          ) : null}
+          {p.measurement && (
+            <button
+              type="button"
+              className={button}
+              onClick={p.onClearMeasurement}
+            >
+              {v.measure.clear}
+            </button>
+          )}
         </div>
       )}
-
-      {/* 3. Exploded View Tool */}
-      {activeTool === "explode" && (
-        <div>
-          <div className="flex items-center justify-between border-b border-white/10 pb-3">
-            <div className="flex items-center gap-2">
-              <Sparkles className="size-4 text-teal-400" />
-              <h4 className="text-xs font-bold uppercase tracking-wider text-slate-200">
-                {v.explode.title}
-              </h4>
-            </div>
-            <button
-              type="button"
-              onClick={onCloseTool}
-              aria-label="Close"
-              className="rounded-lg p-1 text-slate-400 hover:bg-white/10 hover:text-white"
-            >
-              <X className="size-4" />
-            </button>
-          </div>
-
-          <div className="mt-4 space-y-4 text-xs">
-            <div>
-              <div className="flex justify-between text-slate-400 mb-1">
-                <span>{v.explode.intensity}</span>
-                <span className="font-mono font-bold text-teal-300">
-                  {Math.round(explodeFactor * 100)}%
-                </span>
-              </div>
-              <input
-                type="range"
-                min="0"
-                max="2"
-                step="0.05"
-                value={explodeFactor}
-                onChange={(e) => onChangeExplodeFactor(parseFloat(e.target.value))}
-                className="w-full accent-teal-400"
-              />
-            </div>
-            <button
-              type="button"
-              onClick={() => onChangeExplodeFactor(0)}
-              className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-white/10 bg-white/5 py-1.5 text-xs font-semibold text-slate-300 hover:bg-white/10"
-            >
-              <RotateCcw className="size-3.5" /> {locale === "vi" ? "Thu gọn mô hình" : "Collapse Model"}
-            </button>
-          </div>
+      {p.activeTool === "explode" && (
+        <div className="space-y-3">
+          <label className="block">
+            <span className="flex justify-between">
+              {v.explode.intensity}
+              <output>{Math.round(p.explodeFactor * 100)}%</output>
+            </span>
+            <input
+              aria-label={v.explode.intensity}
+              type="range"
+              min="0"
+              max="2"
+              step="0.05"
+              value={p.explodeFactor}
+              onChange={(e) => p.onChangeExplodeFactor(Number(e.target.value))}
+              className="min-h-10 w-full accent-teal-400"
+            />
+          </label>
+          <button
+            type="button"
+            className={button}
+            onClick={() => p.onChangeExplodeFactor(0)}
+          >
+            {vi ? "Thu gọn mô hình" : "Collapse model"}
+          </button>
         </div>
       )}
-
-      {/* 4. Layer Visibility Tool */}
-      {activeTool === "layers" && (
-        <div>
-          <div className="flex items-center justify-between border-b border-white/10 pb-3">
-            <div className="flex items-center gap-2">
-              <Layers className="size-4 text-teal-400" />
-              <h4 className="text-xs font-bold uppercase tracking-wider text-slate-200">
-                {v.tools.layers}
-              </h4>
-            </div>
-            <button
-              type="button"
-              onClick={onCloseTool}
-              aria-label="Close"
-              className="rounded-lg p-1 text-slate-400 hover:bg-white/10 hover:text-white"
-            >
-              <X className="size-4" />
-            </button>
-          </div>
-
-          <div className="mt-3 space-y-2 text-xs">
-            {[
-              { id: "architecture" as BimDiscipline, label: v.layers.architecture, color: "#38bdf8" },
-              { id: "structure" as BimDiscipline, label: v.layers.structure, color: "#94a3b8" },
-              { id: "mep" as BimDiscipline, label: v.layers.mep, color: "#06b6d4" },
-              { id: "clash" as BimDiscipline, label: v.layers.clashMarkers, color: "#ef4444" },
-            ].map((layer) => (
+      {p.activeTool === "layers" && (
+        <div className="space-y-2">
+          {(["architecture", "structure", "mep", "clash"] as const).map(
+            (id) => (
               <label
-                key={layer.id}
-                className="flex items-center justify-between p-2 rounded-xl bg-white/[0.03] border border-white/5 hover:bg-white/5 cursor-pointer"
+                key={id}
+                className="flex min-h-11 items-center justify-between gap-2 rounded-lg border border-white/10 px-2"
               >
-                <div className="flex items-center gap-2">
-                  <span
-                    className="size-3 rounded-full"
-                    style={{ backgroundColor: layer.color }}
-                  />
-                  <span className="font-medium text-slate-200">{layer.label}</span>
-                </div>
+                {id === "clash" ? v.layers.clashMarkers : v.layers[id]}
                 <input
                   type="checkbox"
-                  checked={visibleLayers[layer.id]}
-                  onChange={() => onToggleLayer(layer.id)}
+                  checked={p.visibleLayers[id]}
+                  onChange={() => p.onToggleLayer(id)}
                   className="size-4 accent-teal-400"
                 />
               </label>
-            ))}
-          </div>
+            ),
+          )}
         </div>
       )}
-
-      {/* 5. Clash Matrix Tool */}
-      {activeTool === "clashes" && (
-        <div>
-          <div className="flex items-center justify-between border-b border-white/10 pb-3">
-            <div className="flex items-center gap-2">
-              <AlertTriangle className="size-4 text-red-400" />
-              <h4 className="text-xs font-bold uppercase tracking-wider text-slate-200">
-                {v.clashes.title}
-              </h4>
-            </div>
+      {p.activeTool === "clashes" && (
+        <div className="space-y-3">
+          <p className="leading-relaxed text-amber-200">
+            {p.isSample
+              ? vi
+                ? "Các tình huống dưới đây là dữ liệu minh họa được tạo sẵn, chưa phải kết quả kiểm tra mô hình."
+                : "These are authored sample issues, not results of a model check."
+              : vi
+                ? "Mô hình này chưa được kiểm tra xung đột. Demo chưa hỗ trợ phát hiện va chạm hoặc nhập/xuất BCF."
+                : "This model has not been checked for clashes. Clash detection and BCF import/export are not supported by this demo."}
+          </p>
+          {p.clashes.map((clash) => (
             <button
+              key={clash.id}
               type="button"
-              onClick={onCloseTool}
-              aria-label="Close"
-              className="rounded-lg p-1 text-slate-400 hover:bg-white/10 hover:text-white"
+              aria-pressed={p.activeClashId === clash.id}
+              onClick={() => p.onFocusClash(clash)}
+              className={`block w-full space-y-2 rounded-lg border p-3 text-left ${p.activeClashId === clash.id ? "border-teal-400 bg-teal-500/15" : "border-white/15 hover:bg-white/5"}`}
             >
-              <X className="size-4" />
+              <span className="block text-[10px] text-amber-200">
+                {v.clashes.severity[clash.severity]} · {clash.id}
+              </span>
+              <span className="block font-semibold">{clash.title}</span>
+              <span className="block text-slate-400">{clash.description}</span>
+              <span className="block text-teal-300">
+                {v.clashes.focusClash} →
+              </span>
             </button>
-          </div>
-
-          <div className="mt-3 space-y-3 max-h-80 overflow-y-auto pr-1">
-            <p className="text-[11px] text-slate-400">
-              {v.clashes.count(clashes.length)}
-            </p>
-
-            {clashes.length === 0 && (
-              <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4 text-center">
-                <CheckCircle2 className="size-6 text-emerald-400 mx-auto mb-2" />
-                <p className="font-semibold text-white text-xs">
-                  {locale === "vi" ? "Không có dữ liệu xung đột" : "No Clash Data"}
-                </p>
-                <p className="mt-1 text-[11px] text-slate-400 leading-relaxed">
-                  {locale === "vi"
-                    ? "Mô hình hiện tại chưa thiết lập ma trận va chạm BCF hoặc không phát hiện giao cắt không gian."
-                    : "Current model has no active BCF clash matrix configured or no intersections detected."}
-                </p>
-              </div>
-            )}
-
-            {clashes.map((clash) => {
-              const isSelected = clash.id === activeClashId;
-              return (
-                <div
-                  key={clash.id}
-                  onClick={() => onFocusClash(clash)}
-                  className={cn(
-                    "cursor-pointer rounded-xl border p-3 transition-all text-xs",
-                    isSelected
-                      ? "border-teal-400 bg-teal-500/15 shadow-lg shadow-teal-500/20"
-                      : "border-white/10 bg-white/[0.02] hover:border-white/20 hover:bg-white/5",
-                  )}
-                >
-                  <div className="flex items-center justify-between gap-2">
-                    <span
-                      className={cn(
-                        "rounded px-1.5 py-0.5 text-[10px] font-bold uppercase",
-                        clash.severity === "high"
-                          ? "bg-red-500/20 text-red-400 border border-red-500/30"
-                          : "bg-amber-500/20 text-amber-400 border border-amber-500/30",
-                      )}
-                    >
-                      {clash.severity === "high"
-                        ? v.clashes.severity.high
-                        : v.clashes.severity.medium}
-                    </span>
-                    <span className="font-mono text-[10px] text-slate-400">
-                      BCF #{clash.id}
-                    </span>
-                  </div>
-                  <h5 className="mt-2 font-bold text-white leading-snug">
-                    {clash.title}
-                  </h5>
-                  <p className="mt-1 text-[11px] text-slate-300 leading-relaxed line-clamp-2">
-                    {clash.description}
-                  </p>
-                  <div className="mt-2 flex items-center justify-between pt-2 border-t border-white/10 text-[10px] text-teal-300 font-semibold">
-                    <span>{v.clashes.focusClash}</span>
-                    <span>→</span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+          ))}
         </div>
       )}
-    </div>
+    </section>
   );
 }

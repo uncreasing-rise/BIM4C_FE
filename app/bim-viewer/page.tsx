@@ -4,11 +4,11 @@ import { BimViewerPage } from "@/components/bim-viewer/BimViewerPage";
 export const metadata: Metadata = {
   title: "OpenBIM 3D Web Viewer Demo | BIM4C",
   description:
-    "Trải nghiệm trực tiếp trình xem mô hình 3D OpenBIM trên trình duyệt: đo đạc kích thước 3D, cắt mặt phẳng Section Box, tra cứu thuộc tính IFC và kiểm soát xung đột BCF.",
+    "Xem mô hình IFC trên trình duyệt, tra cứu thuộc tính gốc, đo bề mặt và khám phá hộp cắt 3D.",
   openGraph: {
     title: "OpenBIM 3D Web Viewer Demo | BIM4C",
     description:
-      "Interactive 3D Web BIM Viewer powered by That Open Platform & Three.js with full IFC element inspection.",
+      "Browser-based IFC viewer using Three.js and Web-IFC, with source properties, surface measurements and section cuts.",
     images: ["/images/news-digital-twin.webp"],
   },
 };

@@ -1,19 +1,12 @@
+import type { SerializedBVH } from "three-mesh-bvh";
+
 export type BimDiscipline = "architecture" | "structure" | "mep" | "clash";
 
 export type BimTool =
-  | "orbit"
-  | "measure"
-  | "section"
-  | "explode"
-  | "layers"
-  | "clashes";
+  "orbit" | "measure" | "section" | "explode" | "layers" | "clashes";
 
 export type BimViewPreset =
-  | "perspective"
-  | "top"
-  | "front"
-  | "right"
-  | "isometric";
+  "perspective" | "top" | "front" | "right" | "isometric";
 
 export interface IfcPropertyItem {
   name: string;
@@ -26,7 +19,18 @@ export interface IfcPropertySet {
   properties: IfcPropertyItem[];
 }
 
+export interface BimGeometryData {
+  bvh?: SerializedBVH;
+  positions: Float32Array | number[];
+  normals?: Float32Array | number[];
+  indices: Uint32Array | Uint16Array | number[];
+  groups?: { start: number; count: number; color: string; opacity: number }[];
+}
+
 export interface BimElementData {
+  source?: "ifc" | "sample";
+  spatialPath?: { id: number; type: string; name: string }[];
+  dimensionsSource?: "bounds" | "sample";
   id: string;
   guid: string;
   name: string;
@@ -46,7 +50,10 @@ export interface BimElementData {
   position: [number, number, number];
   size: [number, number, number];
   rotation?: [number, number, number];
-  geometryType?: "box" | "cylinder" | "duct" | "pipe" | "slab" | "truss";
+  quaternion?: [number, number, number, number];
+  geometryType?:
+    "box" | "cylinder" | "duct" | "pipe" | "slab" | "truss" | "custom";
+  geometryData?: BimGeometryData;
 }
 
 export interface BimClashItem {
@@ -63,6 +70,15 @@ export interface BimClashItem {
 }
 
 export interface BimModelDefinition {
+  source?: "ifc" | "sample";
+  filename?: string;
+  schema?: string;
+  diagnostics?: {
+    missingGeometry: number;
+    failedGeometry: number;
+    failedProperties: number;
+  };
+  bounds?: BimBounds;
   id: string;
   nameKey: "tower" | "steel" | "mep" | "villa";
   description: string;
@@ -73,6 +89,21 @@ export interface BimModelDefinition {
     position: [number, number, number];
     target: [number, number, number];
   };
+}
+
+export interface BimBounds {
+  min: [number, number, number];
+  max: [number, number, number];
+}
+
+export interface BimClipPlanes {
+  x: number;
+  y: number;
+  z: number;
+  minX: number;
+  minY: number;
+  minZ: number;
+  enabled: boolean;
 }
 
 export interface MeasurementPoint {

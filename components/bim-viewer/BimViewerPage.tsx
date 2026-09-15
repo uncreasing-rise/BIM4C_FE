@@ -1,23 +1,15 @@
-"use client";
+﻿"use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 import Link from "next/link";
-import {
-  ArrowLeft,
-  Cpu,
-  ShieldCheck,
-  Upload,
-  Box,
-  Layers,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { ROUTES } from "@/constants/routes";
+import { ArrowLeft, Upload, Box, Layers } from "lucide-react";
 import { useLanguage } from "@/lib/i18n/context";
 import { SAMPLE_BIM_MODELS } from "./sample-models";
 import { BimCanvas } from "./BimCanvas";
 import { BimToolbar } from "./BimToolbar";
 import { BimPropertyInspector } from "./BimPropertyInspector";
 import { BimControlsOverlay } from "./BimControlsOverlay";
+import { defaultClip, getModelBounds } from "./viewer-geometry";
 import type {
   BimElementData,
   BimModelDefinition,
@@ -25,392 +17,439 @@ import type {
   BimViewPreset,
   BimDiscipline,
   ActiveMeasurement,
-  BimClashItem,
+  BimClipPlanes,
 } from "./types";
 import { toast } from "sonner";
 
 export function BimViewerPage() {
   const { t, locale } = useLanguage();
+  const vi = locale === "vi";
   const v = t.bimViewerPage;
-  const viewerContainerRef = useRef<HTMLDivElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  // Active Model State
-  const [selectedModelId, setSelectedModelId] = useState<string>("tower");
-  const [customModel, setCustomModel] = useState<BimModelDefinition | null>(null);
-  const activeModel = customModel || SAMPLE_BIM_MODELS[selectedModelId] || SAMPLE_BIM_MODELS.tower;
-
-  // Active Tool & Selection State
+  const containerRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const taskRef = useRef<AbortController | null>(null);
+  const dragDepth = useRef(0);
+  const [selectedModelId, setSelectedModelId] = useState("tower");
+  const [customModel, setCustomModel] = useState<BimModelDefinition | null>(
+    null,
+  );
+  const model =
+    customModel ??
+    SAMPLE_BIM_MODELS[selectedModelId] ??
+    SAMPLE_BIM_MODELS.tower;
+  const bounds = useMemo(() => getModelBounds(model), [model]);
   const [activeTool, setActiveTool] = useState<BimTool>("orbit");
-  const [selectedElement, setSelectedElement] = useState<BimElementData | null>(null);
-  const [isInspectorOpen, setIsInspectorOpen] = useState<boolean>(() => {
-    if (typeof window !== "undefined") {
-      return window.innerWidth >= 1024;
-    }
-    return false;
-  });
-
-  // Tool specific states
-  const [activeViewPreset, setActiveViewPreset] = useState<BimViewPreset | null>("perspective");
-  const [visibleLayers, setVisibleLayers] = useState<Record<BimDiscipline, boolean>>({
+  const [selectedElement, setSelectedElement] = useState<BimElementData | null>(
+    null,
+  );
+  const [inspector, setInspector] = useState(false);
+  const [preset, setPreset] = useState<BimViewPreset>("perspective");
+  const [viewRevision, setViewRevision] = useState(0);
+  const [snapshotRevision, setSnapshotRevision] = useState(0);
+  const [layers, setLayers] = useState<Record<BimDiscipline, boolean>>({
     architecture: true,
     structure: true,
     mep: true,
     clash: true,
   });
-  const [clipPlanes, setClipPlanes] = useState<{ x: number; y: number; z: number; enabled: boolean }>({
-    x: 20,
-    y: 25,
-    z: 20,
-    enabled: false,
-  });
-  const [explodeFactor, setExplodeFactor] = useState<number>(0);
-  const [activeMeasurement, setActiveMeasurement] = useState<ActiveMeasurement | null>(null);
-  const [activeClashPoint, setActiveClashPoint] = useState<[number, number, number] | null>(null);
-  const [activeClashId, setActiveClashId] = useState<string | null>(null);
-  const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
-  const [fps, setFps] = useState<number>(60);
-
-  // Model change handler
-  const handleSelectModel = (id: string) => {
-    setCustomModel(null);
-    setSelectedModelId(id);
-    setSelectedElement(null);
-    setActiveClashPoint(null);
-    setActiveClashId(null);
-    setActiveMeasurement(null);
-    setExplodeFactor(0);
-    setClipPlanes({ x: 20, y: 25, z: 20, enabled: false });
-    toast.success(
-      locale === "vi"
-        ? `Đã tải mô hình: ${v.models[id as keyof typeof v.models] || id}`
-        : `Loaded 3D model: ${v.models[id as keyof typeof v.models] || id}`,
-    );
-  };
-
-  // Toggle Layer visibility
-  const handleToggleLayer = (layer: BimDiscipline) => {
-    setVisibleLayers((prev) => ({ ...prev, [layer]: !prev[layer] }));
-  };
-
-  // Focus Clash
-  const handleFocusClash = (clash: BimClashItem) => {
-    setActiveClashId(clash.id);
-    setActiveClashPoint(clash.point);
-    toast.info(clash.title);
-  };
-
-  // Fullscreen toggle & change listener
-  React.useEffect(() => {
-    const handleFullscreenChange = () => {
-      setIsFullscreen(!!document.fullscreenElement);
-    };
-    document.addEventListener("fullscreenchange", handleFullscreenChange);
+  const [clip, setClip] = useState<BimClipPlanes>(() =>
+    defaultClip(getModelBounds(SAMPLE_BIM_MODELS.tower)),
+  );
+  const [explode, setExplode] = useState(0);
+  const [measurement, setMeasurement] = useState<ActiveMeasurement | null>(
+    null,
+  );
+  const [clashPoint, setClashPoint] = useState<[number, number, number] | null>(
+    null,
+  );
+  const [clashId, setClashId] = useState<string | null>(null);
+  const [fullscreen, setFullscreen] = useState(false);
+  const [dragging, setDragging] = useState(false);
+  const [loading, setLoading] = useState<{
+    name: string;
+    percent: number;
+  } | null>(null);
+  const [stats, setStats] = useState({ bytes: 0, triangles: 0 });
+  useEffect(() => {
+    const listener = () =>
+      setFullscreen(document.fullscreenElement === containerRef.current);
+    document.addEventListener("fullscreenchange", listener);
     return () => {
-      document.removeEventListener("fullscreenchange", handleFullscreenChange);
+      taskRef.current?.abort();
+      document.removeEventListener("fullscreenchange", listener);
     };
   }, []);
-
-  const handleToggleFullscreen = () => {
-    if (!viewerContainerRef.current) return;
-    if (!document.fullscreenElement) {
-      viewerContainerRef.current.requestFullscreen().catch(() => {});
-    } else {
-      document.exitFullscreen().catch(() => {});
-    }
+  const cancelLoad = () => {
+    taskRef.current?.abort();
+    taskRef.current = null;
+    setLoading(null);
   };
-
-  // Snapshot capture
-  const handleTakeSnapshot = () => {
-    const canvas = viewerContainerRef.current?.querySelector("canvas");
-    if (!canvas) return;
-    const dataUrl = canvas.toDataURL("image/png");
-    const link = document.createElement("a");
-    link.download = `BIM4C-3D-Snapshot-${Date.now()}.png`;
-    link.href = dataUrl;
-    link.click();
-    toast.success(
-      locale === "vi"
-        ? "Đã xuất ảnh chụp phối cảnh 3D thành công!"
-        : "3D Snapshot captured and downloaded!",
-    );
+  const chooseView = (view: BimViewPreset) => {
+    setPreset(view);
+    setViewRevision((n) => n + 1);
+    setClashPoint(null);
+    setClashId(null);
   };
-
-  const [isDragging, setIsDragging] = useState<boolean>(false);
-
-  const processUploadedFile = async (file: File) => {
-    if (!file.name.toLowerCase().endsWith(".ifc")) {
+  const resetModelState = (next: BimModelDefinition) => {
+    setSelectedElement(null);
+    setInspector(false);
+    setMeasurement(null);
+    setClashPoint(null);
+    setClashId(null);
+    setExplode(0);
+    setClip(defaultClip(getModelBounds(next)));
+    setActiveTool("orbit");
+    chooseView("perspective");
+    setStats({ bytes: 0, triangles: 0 });
+  };
+  const load = async (input: File | "demo") => {
+    if (input !== "demo" && !input.name.toLowerCase().endsWith(".ifc")) {
       toast.error(
-        locale === "vi"
-          ? "Vui lòng chọn tệp định dạng .ifc tiêu chuẩn OpenBIM."
-          : "Please select a standard .ifc OpenBIM file.",
+        vi ? "Vui lòng chọn tệp .ifc." : "Please select an .ifc file.",
       );
       return;
     }
-
-    const sizeInMB = (file.size / (1024 * 1024)).toFixed(1);
-    const toastId = toast.loading(
-      locale === "vi"
-        ? `Đang tải & khởi tạo WebAssembly (${sizeInMB} MB)...`
-        : `Loading & initializing WebAssembly (${sizeInMB} MB)...`,
-    );
-
+    cancelLoad();
+    const controller = new AbortController();
+    taskRef.current = controller;
+    setLoading({
+      name: input === "demo" ? "bim4c-commercial-tower.ifc" : input.name,
+      percent: 0,
+    });
     try {
+      let file: File;
+      if (input === "demo") {
+        const response = await fetch("/models/bim4c-commercial-tower.ifc", {
+          signal: controller.signal,
+        });
+        if (!response.ok) throw Error("IFC_FETCH");
+        file = new File([await response.blob()], "bim4c-commercial-tower.ifc");
+      } else file = input;
       const { parseIfcFileToBimModel } = await import("./ifc-loader");
-      const generatedModel = await parseIfcFileToBimModel(file, (percent) => {
-        toast.loading(
-          locale === "vi"
-            ? `Đang phân tích mô hình IFC (${sizeInMB} MB) ${percent}%...`
-            : `Parsing IFC model (${sizeInMB} MB) ${percent}%...`,
-          { id: toastId },
-        );
-      });
-
-      setCustomModel(generatedModel);
-      toast.dismiss(toastId);
-      toast.success(
-        locale === "vi"
-          ? `Đã tải lên và bóc tách thành công: ${file.name} (${generatedModel.elements.length} cấu kiện)`
-          : `Successfully loaded and extracted: ${file.name} (${generatedModel.elements.length} elements)`,
+      controller.signal.throwIfAborted();
+      const parsed = await parseIfcFileToBimModel(
+        file,
+        (percent) => {
+          if (!controller.signal.aborted)
+            setLoading({ name: file.name, percent });
+        },
+        controller.signal,
       );
-    } catch (err) {
-      toast.dismiss(toastId);
-      console.error("IFC parse error:", err);
+      if (controller.signal.aborted) return;
+      resetModelState(parsed);
+      setCustomModel(parsed);
+      setSelectedModelId("uploaded");
+      toast.success(
+        vi
+          ? `Đã tải ${parsed.elements.length} cấu kiện có hình học.`
+          : `Loaded ${parsed.elements.length} elements with geometry.`,
+      );
+    } catch (error) {
+      if (controller.signal.aborted) return;
+      const code = error instanceof Error ? error.message : "";
+      const messages: Record<string, [string, string]> = {
+        IFC_FILE_EMPTY: ["Tệp IFC rỗng.", "The IFC file is empty."],
+        IFC_NO_GEOMETRY: [
+          "Tệp không chứa hình học 3D được hỗ trợ. Không có khối thay thế nào được tạo.",
+          "This file contains no supported 3D geometry. No substitute shapes were created.",
+        ],
+        IFC_WORKER_FAILED: [
+          "Không thể khởi tạo bộ đọc IFC. Hãy tải lại trang và thử lại.",
+          "The IFC reader could not start. Reload the page and retry.",
+        ],
+      };
       toast.error(
-        locale === "vi"
-          ? `Không thể xử lý tệp IFC "${file.name}": ${err instanceof Error ? err.message : "Định dạng không được hỗ trợ hoặc tệp bị hỏng."}`
-          : `Failed to process IFC file "${file.name}": ${err instanceof Error ? err.message : "Unsupported schema or corrupted file."}`,
-        { duration: 5000 },
+        messages[code]?.[vi ? 0 : 1] ??
+          (vi
+            ? "Không đọc được IFC. Kiểm tra tệp, kết nối và thử lại."
+            : "Unable to read IFC. Check the file and connection, then retry."),
+        { duration: 7000 },
+      );
+    } finally {
+      if (taskRef.current === controller) {
+        taskRef.current = null;
+        setLoading(null);
+      }
+    }
+  };
+  const selectModel = (id: string) => {
+    if (id === "ifc-demo") {
+      void load("demo");
+      return;
+    }
+    if (id === "uploaded") return;
+    cancelLoad();
+    const next = SAMPLE_BIM_MODELS[id];
+    if (!next) return;
+    resetModelState(next);
+    setCustomModel(null);
+    setSelectedModelId(id);
+  };
+  const snapshot = (data: string | null) => {
+    if (!data) {
+      toast.error(
+        vi ? "Không thể chụp ảnh 3D." : "Unable to capture the 3D view.",
+      );
+      return;
+    }
+    const a = document.createElement("a");
+    a.href = data;
+    a.download = `BIM4C-${Date.now()}.png`;
+    a.click();
+    toast.success(vi ? "Đã xuất ảnh 3D." : "3D image exported.");
+  };
+  const toggleFullscreen = async () => {
+    try {
+      if (document.fullscreenElement) await document.exitFullscreen();
+      else if (containerRef.current?.requestFullscreen)
+        await containerRef.current.requestFullscreen();
+      else throw Error("unsupported");
+    } catch {
+      toast.info(
+        vi
+          ? "Trình duyệt chưa hỗ trợ toàn màn hình tại đây."
+          : "Fullscreen is unavailable in this browser.",
       );
     }
   };
-
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) processUploadedFile(file);
-  };
-
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(true);
-  };
-
-  const handleDragLeave = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(false);
-  };
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(false);
-    const file = e.dataTransfer.files?.[0];
-    if (file) processUploadedFile(file);
-  };
-
+  const diagnostics = model.diagnostics;
+  const hasWarnings = diagnostics && Object.values(diagnostics).some(Boolean);
+  const smallScreen = () => window.innerWidth < 1024;
   return (
     <div
-      ref={viewerContainerRef}
-      className="relative flex h-screen w-full flex-col overflow-hidden bg-[#090d16] text-white"
+      ref={containerRef}
+      className="flex h-dvh min-h-0 w-full flex-col overflow-hidden bg-[#090d16] text-white"
     >
-      {/* Top Header Bar */}
-      <header className="z-20 flex h-14 shrink-0 items-center justify-between border-b border-white/10 bg-slate-950/80 px-4 backdrop-blur-md">
-        <div className="flex items-center gap-3">
-          <Button asChild variant="ghost" size="sm" className="text-slate-300 hover:text-white">
-            <Link href={ROUTES.home} className="flex items-center gap-1.5 text-xs font-semibold">
-              <ArrowLeft className="size-4" />
-              <span>{t.common.back}</span>
-            </Link>
-          </Button>
-
-          <div className="h-4 w-px bg-white/10" />
-
-          <div className="flex items-center gap-2">
-            <div className="grid size-7 place-items-center rounded-lg bg-teal-500/20 text-teal-300 border border-teal-500/30">
-              <Box className="size-4" />
-            </div>
-            <div className="min-w-0">
-              <h1 className="text-xs sm:text-sm font-bold text-white leading-tight truncate max-w-[130px] sm:max-w-none">
-                {v.title}
-              </h1>
-              <p className="hidden md:block text-[10px] text-teal-400/80 font-mono mt-0.5">
-                {v.badge}
-              </p>
-            </div>
-          </div>
+      <header className="flex min-h-14 shrink-0 items-center justify-between gap-2 border-b border-white/10 bg-slate-950 px-2 py-2 sm:px-4">
+        <div className="flex min-w-0 flex-1 items-center gap-2">
+          <Link
+            href="/"
+            aria-label={t.common.back}
+            className="flex min-h-10 shrink-0 items-center gap-1 rounded-lg px-2 text-xs hover:bg-white/10"
+          >
+            <ArrowLeft className="size-4" />
+            <span className="hidden sm:inline">{t.common.back}</span>
+          </Link>
+          <Box className="hidden size-5 shrink-0 text-teal-300 sm:block" />
+          <h1
+            className="min-w-0 truncate text-xs font-bold sm:text-sm"
+            title={v.title}
+          >
+            {v.title}
+          </h1>
         </div>
-
-        <div className="flex items-center gap-2 sm:gap-3">
-          {/* Upload IFC Button */}
+        <div className="flex shrink-0 items-center gap-1 sm:gap-2">
           <input
+            ref={inputRef}
             type="file"
-            ref={fileInputRef}
-            onChange={handleFileUpload}
             accept=".ifc"
             className="hidden"
-          />
-          <Button
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
-            variant="outline"
-            size="sm"
-            className="rounded-xl border-teal-500/30 bg-teal-500/10 text-xs font-semibold text-teal-300 hover:bg-teal-500/20 hover:text-teal-200"
-          >
-            <Upload className="size-3.5 mr-1.5" />
-            <span className="hidden sm:inline">{v.uploadIfc}</span>
-            <span className="sm:hidden">{locale === "vi" ? "Tải lên" : "Upload"}</span>
-          </Button>
-
-          {/* Toggle Property Inspector button */}
-          <Button
-            type="button"
-            onClick={() => {
-              setIsInspectorOpen((prev) => {
-                const nextState = !prev;
-                if (nextState && typeof window !== "undefined" && window.innerWidth < 1024) {
-                  setActiveTool("orbit");
-                }
-                return nextState;
-              });
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              e.target.value = "";
+              if (file) void load(file);
             }}
-            variant="outline"
-            size="sm"
-            className="rounded-xl border-white/15 bg-white/5 text-xs font-semibold text-slate-300 hover:bg-white/10 hover:text-white"
+          />
+          <button
+            type="button"
+            onClick={() => inputRef.current?.click()}
+            aria-label={v.uploadIfc}
+            title={v.uploadIfc}
+            className="flex min-h-10 items-center gap-1 rounded-lg border border-teal-500/30 bg-teal-500/10 px-2 text-xs text-teal-300"
           >
-            <Layers className="size-3.5 mr-1.5 text-teal-400" />
-            <span className="hidden sm:inline">{v.properties.title}</span>
-            <span className="sm:hidden">{locale === "vi" ? "Thuộc tính" : "Props"}</span>
-          </Button>
+            <Upload className="size-4" />
+            <span className="hidden sm:inline">{v.uploadIfc}</span>
+          </button>
+          <button
+            type="button"
+            aria-label={v.properties.title}
+            title={v.properties.title}
+            aria-expanded={inspector}
+            onClick={() => {
+              setInspector(!inspector);
+              if (!inspector && smallScreen()) setActiveTool("orbit");
+            }}
+            className="flex min-h-10 items-center gap-1 rounded-lg border border-white/15 px-2 text-xs"
+          >
+            <Layers className="size-4 text-teal-300" />
+            <span className="hidden lg:inline">{v.properties.title}</span>
+          </button>
         </div>
       </header>
-
-      {/* Main 3D Viewport */}
+      {loading && (
+        <div
+          role="status"
+          className="flex shrink-0 items-center gap-3 bg-teal-950 px-3 py-2 text-xs"
+        >
+          <span className="min-w-0 flex-1 truncate">
+            {vi ? "Đang đọc" : "Reading"}: {loading.name} ({loading.percent}%)
+          </span>
+          <button
+            type="button"
+            onClick={cancelLoad}
+            className="shrink-0 rounded border px-3 py-1"
+          >
+            {vi ? "Hủy" : "Cancel"}
+          </button>
+        </div>
+      )}
+      {hasWarnings && (
+        <div
+          role="status"
+          className="shrink-0 bg-amber-950 px-3 py-2 text-xs text-amber-100"
+        >
+          {vi
+            ? `Không có hình học: ${diagnostics.missingGeometry}; lỗi hình học: ${diagnostics.failedGeometry}; thuộc tính đọc chưa đầy đủ: ${diagnostics.failedProperties}.`
+            : `Without geometry: ${diagnostics.missingGeometry}; geometry errors: ${diagnostics.failedGeometry}; incomplete properties: ${diagnostics.failedProperties}.`}
+        </div>
+      )}
       <main
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
-        className="relative flex-1 size-full overflow-hidden"
+        className="flex min-h-0 flex-1 flex-col"
+        onDragEnter={(e) => {
+          if (e.dataTransfer.types.includes("Files")) {
+            e.preventDefault();
+            dragDepth.current++;
+            setDragging(true);
+          }
+        }}
+        onDragOver={(e) => {
+          if (e.dataTransfer.types.includes("Files")) e.preventDefault();
+        }}
+        onDragLeave={(e) => {
+          e.preventDefault();
+          dragDepth.current = Math.max(0, dragDepth.current - 1);
+          if (!dragDepth.current) setDragging(false);
+        }}
+        onDrop={(e) => {
+          e.preventDefault();
+          dragDepth.current = 0;
+          setDragging(false);
+          const file = e.dataTransfer.files[0];
+          if (file) void load(file);
+        }}
       >
-        {/* Drag & Drop Visual Overlay */}
-        {isDragging && (
-          <div className="pointer-events-none absolute inset-4 z-50 flex flex-col items-center justify-center rounded-3xl border-2 border-dashed border-teal-400 bg-slate-950/85 text-center shadow-2xl backdrop-blur-xl animate-fade-in">
-            <div className="mb-4 grid size-16 place-items-center rounded-2xl bg-teal-500/20 text-teal-300 border border-teal-500/40 animate-bounce">
-              <Upload className="size-8" />
-            </div>
-            <h3 className="text-xl font-bold text-white">
-              {locale === "vi"
-                ? "Thả tệp mô hình .IFC vào đây"
-                : "Drop .IFC model file here"}
-            </h3>
-            <p className="mt-1 text-xs text-teal-300/80">
-              {locale === "vi"
-                ? "Trình duyệt sẽ tự động bóc tách và nạp mô hình 3D ngay lập tức"
-                : "The browser will automatically parse and load the 3D model instantly"}
-            </p>
-          </div>
-        )}
-
-        {/* Floating Top Toolbar */}
         <BimToolbar
           activeTool={activeTool}
           onSelectTool={(tool) => {
             setActiveTool(tool);
-            if (tool === "orbit") {
-              setActiveMeasurement(null);
-            }
+            if (tool !== "measure") setMeasurement(null);
+            if (tool !== "orbit" && smallScreen()) setInspector(false);
           }}
-          activeViewPreset={activeViewPreset}
-          onSelectViewPreset={setActiveViewPreset}
+          activeViewPreset={preset}
+          onSelectViewPreset={chooseView}
           selectedModelId={selectedModelId}
-          onSelectModel={handleSelectModel}
+          uploadedName={customModel?.filename}
+          onSelectModel={selectModel}
           onResetView={() => {
-            setActiveViewPreset("perspective");
+            chooseView("perspective");
             setSelectedElement(null);
-            setActiveClashPoint(null);
-            setActiveClashId(null);
-            setActiveMeasurement(null);
+            setMeasurement(null);
           }}
-          onTakeSnapshot={handleTakeSnapshot}
-          isFullscreen={isFullscreen}
-          onToggleFullscreen={handleToggleFullscreen}
-          clashesCount={activeModel.clashes.length}
+          onTakeSnapshot={() => setSnapshotRevision((n) => n + 1)}
+          isFullscreen={fullscreen}
+          onToggleFullscreen={() => void toggleFullscreen()}
+          clashesCount={model.clashes.length}
         />
-
-        {/* 3D WebGL Canvas */}
-        <BimCanvas
-          model={activeModel}
-          activeTool={activeTool}
-          selectedElementId={selectedElement?.id ?? null}
-          onSelectElement={(elem) => {
-            setSelectedElement(elem);
-            if (elem) {
-              setIsInspectorOpen(true);
-            }
-          }}
-          visibleLayers={visibleLayers}
-          clipPlanes={clipPlanes}
-          explodeFactor={explodeFactor}
-          activeClashPoint={activeClashPoint}
-          activeViewPreset={activeViewPreset}
-          onFpsUpdate={setFps}
-          activeMeasurement={activeMeasurement}
-          onMeasurementChange={setActiveMeasurement}
-        />
-
-        {/* Floating Tool Controls Overlay (Section Box, Calipers, Exploded View, Layer Toggles, Clashes) */}
-        <BimControlsOverlay
-          activeTool={activeTool}
-          onCloseTool={() => setActiveTool("orbit")}
-          clipPlanes={clipPlanes}
-          onChangeClipPlanes={setClipPlanes}
-          measurement={activeMeasurement}
-          onClearMeasurement={() => setActiveMeasurement(null)}
-          explodeFactor={explodeFactor}
-          onChangeExplodeFactor={setExplodeFactor}
-          visibleLayers={visibleLayers}
-          onToggleLayer={handleToggleLayer}
-          clashes={activeModel.clashes}
-          onFocusClash={handleFocusClash}
-          activeClashId={activeClashId}
-        />
-
-        {/* IFC Property Inspector (Right Panel) */}
-        <BimPropertyInspector
-          element={selectedElement}
-          isOpen={isInspectorOpen}
-          onClose={() => setIsInspectorOpen(false)}
-        />
+        <div className="relative flex min-h-0 flex-1">
+          <BimCanvas
+            model={model}
+            activeTool={activeTool}
+            selectedElementId={selectedElement?.id ?? null}
+            onSelectElement={(e) => {
+              setSelectedElement(e);
+              if (e) {
+                setInspector(true);
+                if (smallScreen()) setActiveTool("orbit");
+              }
+            }}
+            visibleLayers={layers}
+            clipPlanes={clip}
+            explodeFactor={explode}
+            activeClashPoint={clashPoint}
+            activeViewPreset={preset}
+            viewRevision={viewRevision}
+            snapshotRevision={snapshotRevision}
+            onSnapshot={snapshot}
+            onStats={setStats}
+            activeMeasurement={measurement}
+            onMeasurementChange={setMeasurement}
+          />
+          <BimControlsOverlay
+            activeTool={activeTool}
+            onCloseTool={() => setActiveTool("orbit")}
+            clipPlanes={clip}
+            onChangeClipPlanes={(next) => {
+              setClip(next);
+              setMeasurement(null);
+            }}
+            bounds={bounds}
+            measurement={measurement}
+            onClearMeasurement={() => setMeasurement(null)}
+            explodeFactor={explode}
+            onChangeExplodeFactor={(n) => {
+              setExplode(n);
+              setMeasurement(null);
+              setClashPoint(null);
+              setClashId(null);
+            }}
+            visibleLayers={layers}
+            onToggleLayer={(layer) => {
+              setLayers((p) => ({ ...p, [layer]: !p[layer] }));
+              setSelectedElement(null);
+              setMeasurement(null);
+            }}
+            clashes={model.clashes}
+            isSample={model.source !== "ifc"}
+            onFocusClash={(clash) => {
+              setExplode(0);
+              setClip((p) => ({ ...p, enabled: false }));
+              setLayers({
+                architecture: true,
+                structure: true,
+                mep: true,
+                clash: true,
+              });
+              setClashId(clash.id);
+              setClashPoint([...clash.point]);
+            }}
+            activeClashId={clashId}
+          />
+          <BimPropertyInspector
+            key={selectedElement?.id ?? "empty"}
+            element={selectedElement}
+            isOpen={inspector}
+            onClose={() => setInspector(false)}
+          />
+          {dragging && (
+            <div className="pointer-events-none absolute inset-2 z-50 grid place-items-center rounded-xl border-2 border-dashed border-teal-400 bg-slate-950/90 p-4 text-center">
+              {vi
+                ? "Thả tệp IFC để xem mô hình"
+                : "Drop an IFC file to view the model"}
+            </div>
+          )}
+        </div>
       </main>
-
-      {/* Bottom Performance & Status Bar */}
-      <footer className="z-20 flex h-9 shrink-0 items-center justify-between border-t border-white/10 bg-slate-950/90 px-4 text-[11px] text-slate-400">
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-1.5">
-            <span className="size-2 rounded-full bg-emerald-400 animate-pulse" />
-            <span className="font-mono font-semibold text-slate-300">
-              {fps} {v.performance.fps}
-            </span>
-          </div>
-          <div className="hidden sm:flex items-center gap-1">
-            <Box className="size-3 text-teal-400" />
-            <span>
-              {activeModel.elements.length} {v.performance.elements}
-            </span>
-          </div>
-          <div className="hidden md:flex items-center gap-1 font-mono text-slate-400">
-            <Cpu className="size-3 text-teal-400" />
-            <span>{((activeModel?.elements?.length || 0) * 0.08 + 18.5).toFixed(1)} MB {v.performance.memory}</span>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2 text-slate-400 text-[10px]">
-          <ShieldCheck className="size-3.5 text-teal-400" />
-          <span className="hidden sm:inline font-mono text-teal-300">
-            {v.performance.openBimStandard}
+      <footer className="flex shrink-0 flex-wrap items-center justify-between gap-x-3 gap-y-1 border-t border-white/10 px-3 py-2 text-[10px] text-slate-400">
+        <span>
+          {model.elements.length} {v.performance.elements}
+          <span className="hidden sm:inline">
+            {" "}
+            · {stats.triangles.toLocaleString(locale)}{" "}
+            {vi ? "tam giác" : "triangles"} ·{" "}
+            {(stats.bytes / 1048576).toFixed(1)} MB{" "}
+            {vi ? "bộ đệm hình học" : "geometry buffers"}
           </span>
-        </div>
+        </span>
+        <span
+          className="max-w-full truncate text-teal-300"
+          title={model.filename}
+        >
+          {model.source === "ifc"
+            ? `${model.schema} · ${model.filename}`
+            : vi
+              ? "Mô hình minh họa · dữ liệu mẫu"
+              : "Illustrative model · sample data"}
+        </span>
       </footer>
     </div>
   );

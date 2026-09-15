@@ -1,5 +1,4 @@
-"use client";
-
+﻿"use client";
 import React from "react";
 import {
   MousePointer,
@@ -11,167 +10,127 @@ import {
   Maximize2,
   Minimize2,
   Camera,
-  FolderOpen,
   AlertTriangle,
-  Compass,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/lib/i18n/context";
-import { cn } from "@/lib/utils";
 import type { BimTool, BimViewPreset } from "./types";
-
-interface BimToolbarProps {
+interface Props {
   activeTool: BimTool;
   onSelectTool: (tool: BimTool) => void;
-  activeViewPreset: BimViewPreset | null;
-  onSelectViewPreset: (preset: BimViewPreset) => void;
+  activeViewPreset: BimViewPreset;
+  onSelectViewPreset: (view: BimViewPreset) => void;
   selectedModelId: string;
-  onSelectModel: (modelId: string) => void;
+  uploadedName?: string;
+  onSelectModel: (id: string) => void;
   onResetView: () => void;
   onTakeSnapshot: () => void;
   isFullscreen: boolean;
   onToggleFullscreen: () => void;
   clashesCount: number;
 }
-
-export function BimToolbar({
-  activeTool,
-  onSelectTool,
-  activeViewPreset,
-  onSelectViewPreset,
-  selectedModelId,
-  onSelectModel,
-  onResetView,
-  onTakeSnapshot,
-  isFullscreen,
-  onToggleFullscreen,
-  clashesCount,
-}: BimToolbarProps) {
-  const { t } = useLanguage();
+export function BimToolbar(p: Props) {
+  const { t, locale } = useLanguage();
   const v = t.bimViewerPage;
-
-  const tools: { id: BimTool; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
-    { id: "orbit", label: v.tools.orbit, icon: MousePointer },
-    { id: "measure", label: v.tools.measure, icon: Ruler },
-    { id: "section", label: v.tools.section, icon: Scissors },
-    { id: "explode", label: v.tools.explode, icon: Sparkles },
-    { id: "layers", label: v.tools.layers, icon: Layers },
-    { id: "clashes", label: v.tools.clashes, icon: AlertTriangle },
-  ];
-
-  const viewPresets: { id: BimViewPreset; label: string }[] = [
-    { id: "perspective", label: v.views.perspective },
-    { id: "top", label: v.views.top },
-    { id: "front", label: v.views.front },
-    { id: "right", label: v.views.right },
-    { id: "isometric", label: v.views.isometric },
-  ];
-
+  const tools = [
+    { id: "orbit", icon: MousePointer },
+    { id: "measure", icon: Ruler },
+    { id: "section", icon: Scissors },
+    { id: "explode", icon: Sparkles },
+    { id: "layers", icon: Layers },
+    { id: "clashes", icon: AlertTriangle },
+  ] as const;
+  const views = ["perspective", "top", "front", "right", "isometric"] as const;
   return (
-    <div className="pointer-events-none absolute inset-x-0 top-3 sm:top-4 z-20 flex flex-col items-center gap-3 px-2 sm:px-6">
-      {/* Top Main Toolbar */}
-      <div className="pointer-events-auto flex max-w-full items-center justify-start sm:justify-between gap-2 sm:gap-3 overflow-x-auto rounded-2xl border border-white/15 bg-slate-950/90 px-2.5 sm:px-3 py-2 text-white shadow-2xl backdrop-blur-xl [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-        {/* Model Selector */}
-        <div className="flex items-center gap-2 border-r border-white/10 pr-2 sm:pr-3 shrink-0">
-          <FolderOpen className="size-4 text-teal-400" />
-          <select
-            value={selectedModelId}
-            onChange={(e) => onSelectModel(e.target.value)}
-            className="rounded-lg border border-white/10 bg-slate-900/90 px-2 py-1 sm:px-2.5 sm:py-1.5 text-xs font-semibold text-white focus:outline-none focus:ring-1 focus:ring-teal-400"
-            aria-label={v.selectModel}
-          >
-            <option value="tower">{v.models.tower}</option>
-            <option value="steel">{v.models.steel}</option>
-            <option value="mep">{v.models.mep}</option>
-          </select>
+    <div
+      className="z-20 flex shrink-0 flex-col gap-2 border-b border-white/10 bg-slate-950/95 p-2 lg:flex-row lg:items-center lg:justify-between"
+      aria-label={locale === "vi" ? "Công cụ mô hình" : "Model controls"}
+    >
+      <div className="flex min-w-0 flex-wrap items-center gap-2">
+        <select
+          aria-label={v.selectModel}
+          value={p.selectedModelId}
+          onChange={(e) => p.onSelectModel(e.target.value)}
+          className="min-h-10 min-w-0 flex-1 rounded-lg border border-white/15 bg-slate-900 px-2 text-xs lg:max-w-64"
+        >
+          {p.uploadedName && <option value="uploaded">{p.uploadedName}</option>}
+          <option value="ifc-demo">
+            {locale === "vi"
+              ? "Tải IFC mẫu có hình học"
+              : "Load sample IFC file"}
+          </option>
+          {(["tower", "steel", "mep"] as const).map((id) => (
+            <option key={id} value={id}>
+              {v.models[id]} ({locale === "vi" ? "minh họa" : "sample"})
+            </option>
+          ))}
+        </select>
+        <select
+          aria-label={locale === "vi" ? "Góc nhìn" : "View preset"}
+          value={p.activeViewPreset}
+          onChange={(e) =>
+            p.onSelectViewPreset(e.target.value as BimViewPreset)
+          }
+          className="min-h-10 min-w-0 max-w-[45%] rounded-lg border border-white/15 bg-slate-900 px-2 text-xs"
+        >
+          {views.map((view) => (
+            <option key={view} value={view}>
+              {v.views[view]}
+            </option>
+          ))}
+        </select>
+      </div>
+      <div className="flex flex-wrap items-center justify-between gap-1 sm:justify-start">
+        <div className="flex flex-wrap items-center gap-1">
+          {tools.map(({ id, icon: Icon }) => (
+            <button
+              key={id}
+              type="button"
+              data-tool={id}
+              onClick={() => p.onSelectTool(id)}
+              title={v.tools[id]}
+              aria-label={v.tools[id]}
+              aria-pressed={p.activeTool === id}
+              className={`relative flex min-h-10 min-w-10 items-center justify-center gap-1 rounded-lg px-2 text-xs ${p.activeTool === id ? "bg-teal-400 text-slate-950" : "text-slate-300 hover:bg-white/10"}`}
+            >
+              <Icon className="size-4" />
+              <span className="hidden xl:inline">{v.tools[id]}</span>
+              {id === "clashes" && p.clashesCount > 0 && (
+                <span className="absolute right-0 top-0 rounded bg-red-600 px-1 text-[9px] text-white">
+                  {p.clashesCount}
+                </span>
+              )}
+            </button>
+          ))}
         </div>
-
-        {/* Action Tools */}
-        <div className="flex items-center gap-1 shrink-0">
-          {tools.map((item) => {
-            const Icon = item.icon;
-            const isActive = activeTool === item.id;
-            return (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => onSelectTool(item.id)}
-                title={item.label}
-                aria-label={item.label}
-                className={cn(
-                  "relative flex items-center gap-1.5 rounded-xl px-2 sm:px-2.5 py-1.5 text-xs font-semibold transition-all duration-200 shrink-0",
-                  isActive
-                    ? "bg-teal-500 text-slate-950 shadow-md shadow-teal-500/30"
-                    : "text-slate-300 hover:bg-white/10 hover:text-white",
-                )}
-              >
-                <Icon className="size-4" />
-                <span className="hidden md:inline">{item.label}</span>
-                {item.id === "clashes" && clashesCount > 0 && (
-                  <span
-                    className={cn(
-                      "flex size-4 items-center justify-center rounded-full text-[10px] font-bold",
-                      isActive
-                        ? "bg-slate-950 text-teal-300"
-                        : "bg-red-500 text-white animate-pulse",
-                    )}
-                  >
-                    {clashesCount}
-                  </span>
-                )}
-              </button>
-            );
-          })}
-        </div>
-
-        {/* View Presets & Utility Controls */}
-        <div className="flex items-center gap-1 sm:gap-1.5 border-l border-white/10 pl-2 sm:pl-3 shrink-0">
-          <div className="hidden lg:flex items-center gap-1 bg-white/5 p-0.5 rounded-xl">
-            {viewPresets.map((preset) => (
-              <button
-                key={preset.id}
-                type="button"
-                onClick={() => onSelectViewPreset(preset.id)}
-                className={cn(
-                  "rounded-lg px-2 py-1 text-[11px] font-medium transition-colors",
-                  activeViewPreset === preset.id
-                    ? "bg-white/20 text-teal-300"
-                    : "text-slate-400 hover:text-white",
-                )}
-              >
-                {preset.label}
-              </button>
-            ))}
-          </div>
-
+        <div className="flex items-center gap-1 border-l border-white/15 pl-1">
           <button
             type="button"
-            onClick={onResetView}
-            title={v.tools.reset}
+            data-action="fit"
+            onClick={p.onResetView}
             aria-label={v.tools.reset}
-            className="rounded-xl p-2 text-slate-300 transition-colors hover:bg-white/10 hover:text-white"
+            title={v.tools.reset}
+            className="grid min-h-10 min-w-10 place-items-center rounded-lg hover:bg-white/10"
           >
             <RotateCcw className="size-4" />
           </button>
-
           <button
             type="button"
-            onClick={onTakeSnapshot}
-            title={v.tools.snapshot}
+            data-action="snapshot"
+            onClick={p.onTakeSnapshot}
             aria-label={v.tools.snapshot}
-            className="rounded-xl p-2 text-slate-300 transition-colors hover:bg-white/10 hover:text-white"
+            title={v.tools.snapshot}
+            className="grid min-h-10 min-w-10 place-items-center rounded-lg hover:bg-white/10"
           >
             <Camera className="size-4" />
           </button>
-
           <button
             type="button"
-            onClick={onToggleFullscreen}
-            title={v.tools.fullscreen}
+            onClick={p.onToggleFullscreen}
             aria-label={v.tools.fullscreen}
-            className="rounded-xl p-2 text-slate-300 transition-colors hover:bg-white/10 hover:text-white"
+            title={v.tools.fullscreen}
+            className="grid min-h-10 min-w-10 place-items-center rounded-lg hover:bg-white/10"
           >
-            {isFullscreen ? (
+            {p.isFullscreen ? (
               <Minimize2 className="size-4" />
             ) : (
               <Maximize2 className="size-4" />
