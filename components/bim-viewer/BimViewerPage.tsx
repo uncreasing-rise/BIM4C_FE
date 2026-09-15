@@ -148,20 +148,30 @@ export function BimViewerPage() {
       return;
     }
 
+    const sizeInMB = (file.size / (1024 * 1024)).toFixed(1);
     const toastId = toast.loading(
-      locale === "vi" ? "Đang xử lý WebAssembly & phân tích cấu trúc IFC..." : "Processing WebAssembly & parsing IFC file...",
+      locale === "vi"
+        ? `Đang tải & khởi tạo WebAssembly (${sizeInMB} MB)...`
+        : `Loading & initializing WebAssembly (${sizeInMB} MB)...`,
     );
 
     try {
       const { parseIfcFileToBimModel } = await import("./ifc-loader");
-      const generatedModel = await parseIfcFileToBimModel(file);
+      const generatedModel = await parseIfcFileToBimModel(file, (percent) => {
+        toast.loading(
+          locale === "vi"
+            ? `Đang phân tích mô hình IFC (${sizeInMB} MB) ${percent}%...`
+            : `Parsing IFC model (${sizeInMB} MB) ${percent}%...`,
+          { id: toastId },
+        );
+      });
 
       setCustomModel(generatedModel);
       toast.dismiss(toastId);
       toast.success(
         locale === "vi"
-          ? `Đã tải lên và bóc tách thành công: ${file.name}`
-          : `Successfully loaded and extracted: ${file.name}`,
+          ? `Đã tải lên và bóc tách thành công: ${file.name} (${generatedModel.elements.length} cấu kiện)`
+          : `Successfully loaded and extracted: ${file.name} (${generatedModel.elements.length} elements)`,
       );
     } catch (err) {
       toast.dismiss(toastId);
@@ -391,7 +401,7 @@ export function BimViewerPage() {
           </div>
           <div className="hidden md:flex items-center gap-1 font-mono text-slate-400">
             <Cpu className="size-3 text-teal-400" />
-            <span>24.8 MB {v.performance.memory}</span>
+            <span>{((activeModel?.elements?.length || 0) * 0.08 + 18.5).toFixed(1)} MB {v.performance.memory}</span>
           </div>
         </div>
 
