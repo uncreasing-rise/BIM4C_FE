@@ -3,34 +3,17 @@
 import { useLanguage } from "@/lib/i18n/context";
 
 export function ExpertiseStrip() {
-  const { locale } = useLanguage();
-  const isVi = locale === "vi";
-
-  const stats = [
-    {
-      num: "150+",
-      label: isVi ? "Dự án BIM đã bàn giao" : "BIM Projects Delivered",
-      sub: isVi ? "Cao tầng & Hạ tầng kỹ thuật" : "High-rise & Infrastructure",
-    },
-    {
-      num: "99.8%",
-      label: isVi ? "Tỷ lệ xử lý xung đột mô hình" : "Clash Resolution Rate",
-      sub: isVi ? "Xử lý va chạm trước thi công" : "Pre-construction coordination",
-    },
-    {
-      num: "5,000+",
-      label: isVi ? "Lượt kỹ sư & học viên đào tạo" : "Engineers & Trainees Trained",
-      sub: isVi ? "Chương trình thực tế BIM4C" : "Hands-on BIM Curriculum",
-    },
-    {
-      num: "100%",
-      label: isVi ? "Quy trình chuẩn ISO 19650" : "ISO 19650 Standard Workflow",
-      sub: isVi ? "OpenBIM & CDE phối hợp" : "OpenBIM & CDE Coordination",
-    },
-  ];
-
+  const { t } = useLanguage();
+  const stats = t.aboutPage.trackRecord.metrics.map((metric) => ({
+    num: metric.value,
+    label: metric.label,
+    sub: metric.subtext,
+  }));
   return (
-    <section className="border-y border-border/70 bg-card/75 backdrop-blur-md relative overflow-hidden" aria-label="Key Performance Indicators">
+    <section
+      className="border-y border-border/70 bg-card/75 backdrop-blur-md relative overflow-hidden"
+      aria-label={t.aboutPage.trackRecord.title}
+    >
       <div className="site-container py-7">
         <div className="grid grid-cols-2 gap-6 md:grid-cols-4 md:divide-x md:divide-border/60">
           {stats.map((stat, idx) => (

@@ -1,6 +1,7 @@
-export const CONTACT_EMAIL = "info@bim4c.vn";
+export const CONTACT_EMAIL = "Bim4c.lab@gmail.com";
 
 export const ROUTES = {
+  profile: "/documents/hsnl-bim4c-2026.pdf",
   home: "/",
   about: "/gioi-thieu",
   services: "/dich-vu",

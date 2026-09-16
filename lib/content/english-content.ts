@@ -2,34 +2,6 @@ import translations from "./english-translations.json";
 import { toEnglishLabel } from "../utils/public-labels";
 
 const dictionary: Record<string, string> = translations;
-const serviceSummaries: Record<string, string> = {
-  "tu-van-bim":
-    "Set your BIM direction with clear information requirements, delivery standards and a practical implementation plan.",
-  "dao-tao":
-    "Equip your team to apply BIM at work through role-based learning, project exercises and practical assessment.",
-  "thiet-ke":
-    "Coordinate architecture, structures and MEP to improve buildability and keep project documentation consistent.",
-  "tu-van-giam-sat":
-    "Keep site quality, safety and progress visible through structured inspections and clear reporting.",
-  "bim-coordination":
-    "Connect discipline models, prioritize clashes and track issues from review to verified resolution.",
-  "digital-twin-va-du-lieu-tai-san":
-    "Prepare connected asset information for digital handover, maintenance and operational decision-making.",
-};
-const courseSummaries: Record<string, string> = {
-  "bim-foundation":
-    "Understand BIM fundamentals, model information and the coordination workflows used by construction teams.",
-  "bim-coordination":
-    "Develop the skills to federate models, manage clashes and lead multidisciplinary coordination reviews.",
-  "bim-management":
-    "Turn business objectives into BIM requirements, delivery plans and measurable implementation goals.",
-  "revit-structure-professional":
-    "Build coordinated structural models and manage model quality and construction documentation in Revit.",
-  "navisworks-clash-detection":
-    "Set up federated models, configure clash checks and turn review findings into actionable project issues.",
-  "cde-iso-19650":
-    "Design information requirements, naming conventions and approval workflows for a common data environment.",
-};
 const technicalFields = new Set([
   "id",
   "slug",
@@ -82,22 +54,5 @@ export function englishContent<T extends { title: string }>(entry: T): T {
     return value;
   };
   const result = translate(entry) as T;
-  // Replace only the generic legacy summaries; preserve subsequent editorial changes.
-  const content = result as T & { slug?: string; description?: string };
-  const source = entry as T & { description?: string };
-  if (
-    content.slug &&
-    source.description?.startsWith("Giải pháp ") &&
-    source.description.endsWith("của từng tổ chức hoặc dự án.")
-  ) {
-    content.description = serviceSummaries[content.slug] ?? content.description;
-  }
-  if (
-    content.slug &&
-    source.description?.startsWith("Chương trình ") &&
-    source.description.endsWith("cho đội ngũ ngành xây dựng.")
-  ) {
-    content.description = courseSummaries[content.slug] ?? content.description;
-  }
   return result;
 }

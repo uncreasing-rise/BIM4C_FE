@@ -12,7 +12,6 @@ const viToEnLabels: Record<string, string> = {
   "Dịch vụ BIM4C": "BIM4C Solutions",
 
   // Articles & News
-  "The Matrix One - Giai đoạn 2": "The Matrix One - Phase 2",
   "Phối hợp BIM tại dự án cao tầng: Từ mô hình đến quyết định hiện trường":
     "High-rise BIM coordination: from models to site decisions",
   "Digital Twin mở ra cách tiếp cận mới trong quản lý vòng đời công trình":
@@ -217,4 +216,3 @@ export function toLocalizedLabel(value: string, locale: Locale = "vi"): string {
   }
   return toVietnameseLabel(value);
 }
-

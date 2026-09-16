@@ -24,7 +24,6 @@ interface Props {
   visibleLayers: Record<BimDiscipline, boolean>;
   onToggleLayer: (layer: BimDiscipline) => void;
   clashes: BimClashItem[];
-  isSample: boolean;
   onFocusClash: (clash: BimClashItem) => void;
   activeClashId: string | null;
 }
@@ -232,13 +231,9 @@ export function BimControlsOverlay(p: Props) {
       {p.activeTool === "clashes" && (
         <div className="space-y-3">
           <p className="leading-relaxed text-amber-200">
-            {p.isSample
-              ? vi
-                ? "Các tình huống dưới đây là dữ liệu minh họa được tạo sẵn, chưa phải kết quả kiểm tra mô hình."
-                : "These are authored sample issues, not results of a model check."
-              : vi
-                ? "Mô hình này chưa được kiểm tra xung đột. Demo chưa hỗ trợ phát hiện va chạm hoặc nhập/xuất BCF."
-                : "This model has not been checked for clashes. Clash detection and BCF import/export are not supported by this demo."}
+            {vi
+              ? "Mô hình chưa có dữ liệu kiểm tra xung đột. Hãy tải IFC đã được kiểm tra để xem các issue."
+              : "No clash results are available for this model. Load an IFC with coordination issues to review them."}
           </p>
           {p.clashes.map((clash) => (
             <button

@@ -2,33 +2,33 @@
 
 import { usePublicMotion } from "@/components/motion/hooks/use-public-motion";
 
-import Image from "next/image";
-import Link from "next/link";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { ContentBlockRenderer } from "@/components/shared/ContentBlockRenderer";
+import { PageHero } from "@/components/shared/PageHero";
+import { TableOfContents } from "@/components/shared/TableOfContents";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ROUTES } from "@/constants/routes";
+import { CourseRegistrationForm } from "@/features/contact/components/CourseRegistrationForm";
+import { useLanguage } from "@/lib/i18n/context";
+import { localizeContent, localizeContentList } from "@/lib/i18n/localize";
+import { breadcrumbSchema, contentSchema } from "@/lib/seo/structured-data";
+import { legacyBlocks } from "@/lib/utils/legacy-blocks";
+import { toLocalizedLabel } from "@/lib/utils/public-labels";
+import type { ContentEntry } from "@/types/content";
 import {
   ArrowLeft,
   ArrowRight,
   ArrowUpRight,
+  Award,
   CheckCircle2,
   Cpu,
   GraduationCap,
-  Users,
-  Award,
   HelpCircle,
+  Users,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CourseRegistrationForm } from "@/features/contact/components/CourseRegistrationForm";
-import type { ContentEntry } from "@/types/content";
-import { ContentBlockRenderer } from "@/components/shared/ContentBlockRenderer";
-import { TableOfContents } from "@/components/shared/TableOfContents";
-import { PageHero } from "@/components/shared/PageHero";
-import { JsonLd } from "@/components/seo/JsonLd";
-import { breadcrumbSchema, contentSchema } from "@/lib/seo/structured-data";
-import { toLocalizedLabel } from "@/lib/utils/public-labels";
-import { useLanguage } from "@/lib/i18n/context";
-import { localizeContent, localizeContentList } from "@/lib/i18n/localize";
-import { legacyBlocks } from "@/lib/utils/legacy-blocks";
-import { ROUTES } from "@/constants/routes";
+import Image from "next/image";
+import Link from "next/link";
 
 interface CourseCurriculumItem {
   id?: string;
@@ -69,17 +69,41 @@ export function CourseDetailView({
     { name: entry.title, path: detailPath },
   ];
 
-  const durationVal = entry.duration || entry.eyebrow.split("·")[1]?.trim() || (isVi ? "8 tuần" : "8 weeks");
-  const levelVal = entry.level || entry.eyebrow.split("·")[0]?.trim() || (isVi ? "Chuyên sâu" : "Advanced");
-  const priceVal = entry.price || (isVi ? "Liên hệ ưu đãi khóa học" : "Contact for corporate/cohort pricing");
-  const instructorVal = entry.instructor || (isVi ? "BIM Manager & Giảng viên BIM4C" : "BIM Manager & Senior Specialist");
+  const durationVal =
+    entry.duration ||
+    entry.eyebrow.split("·")[1]?.trim() ||
+    (isVi ? "8 tuần" : "8 weeks");
+  const levelVal =
+    entry.level ||
+    entry.eyebrow.split("·")[0]?.trim() ||
+    (isVi ? "Chuyên sâu" : "Advanced");
+  const priceVal =
+    entry.price ||
+    (isVi ? "Liên hệ ưu đãi khóa học" : "Contact for corporate/cohort pricing");
+  const instructorVal =
+    entry.instructor ||
+    (isVi
+      ? "BIM Manager & Giảng viên BIM4C"
+      : "BIM Manager & Senior Specialist");
 
   const courseFacts = [
-    { label: t.detailPage.fields.duration, value: toLocalizedLabel(durationVal, locale) },
-    { label: t.detailPage.fields.level, value: toLocalizedLabel(levelVal, locale) },
+    {
+      label: t.detailPage.fields.duration,
+      value: toLocalizedLabel(durationVal, locale),
+    },
+    {
+      label: t.detailPage.fields.level,
+      value: toLocalizedLabel(levelVal, locale),
+    },
     { label: t.detailPage.fields.price, value: priceVal },
-    { label: isVi ? "Hình thức học" : "Format", value: isVi ? "Online tương tác / Lab" : "Live Interactive / Lab" },
-    { label: isVi ? "Lịch khai giảng" : "Schedule", value: isVi ? "Định kỳ hàng tháng" : "Monthly Intakes" },
+    {
+      label: isVi ? "Hình thức học" : "Format",
+      value: isVi ? "Online tương tác / Lab" : "Live Interactive / Lab",
+    },
+    {
+      label: isVi ? "Lịch khai giảng" : "Schedule",
+      value: isVi ? "Định kỳ hàng tháng" : "Monthly Intakes",
+    },
     { label: t.detailPage.fields.instructor, value: instructorVal },
   ];
 
@@ -107,7 +131,10 @@ export function CourseDetailView({
           href: index < breadcrumbItems.length - 1 ? item.path : undefined,
         }))}
       />
-      <article className="bg-background py-8 lg:py-12 pb-24 lg:pb-16" data-motion="detail">
+      <article
+        className="bg-background py-8 lg:py-12 pb-24 lg:pb-16"
+        data-motion="detail"
+      >
         <div className="site-container">
           {/* Top Back Navigation */}
           <div
@@ -155,7 +182,6 @@ export function CourseDetailView({
             }}
           />
 
-
           {/* Main 2-Column: Course Content + Registration Form */}
           <div className="grid items-start gap-12 lg:grid-cols-[minmax(0,1fr)_22rem] lg:gap-16">
             <div className="min-w-0" data-motion="reveal">
@@ -166,11 +192,16 @@ export function CourseDetailView({
                 <div className="mt-10 rounded-2xl border bg-card p-6 shadow-2xs">
                   <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
                     <GraduationCap className="size-5 text-primary" />
-                    <span>{isVi ? "Chuẩn đầu ra khóa học" : "Key Learning Outcomes"}</span>
+                    <span>
+                      {isVi ? "Chuẩn đầu ra khóa học" : "Key Learning Outcomes"}
+                    </span>
                   </h3>
                   <ul className="mt-5 grid gap-3 sm:grid-cols-2">
                     {entry.learningOutcomes.map((item, i) => (
-                      <li className="flex items-start gap-2.5 text-sm text-muted-foreground" key={`${entry.id}-outcomes-${i}`}>
+                      <li
+                        className="flex items-start gap-2.5 text-sm text-muted-foreground"
+                        key={`${entry.id}-outcomes-${i}`}
+                      >
                         <CheckCircle2 className="size-4 shrink-0 text-teal-600 dark:text-teal-400 mt-0.5" />
                         <span>{item}</span>
                       </li>
@@ -196,7 +227,9 @@ export function CourseDetailView({
                           {String(index + 1).padStart(2, "0")}
                         </span>
                         <div>
-                          <h3 className="text-lg font-bold text-foreground">{module.title}</h3>
+                          <h3 className="text-lg font-bold text-foreground">
+                            {module.title}
+                          </h3>
                           {module.description && (
                             <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
                               {module.description}
@@ -248,9 +281,14 @@ export function CourseDetailView({
                       {t.detailPage.b2bTrainingDesc}
                     </p>
                   </div>
-                  <Button asChild size="lg" className="shrink-0 bg-teal-500 hover:bg-teal-400 text-brand-ink font-bold">
+                  <Button
+                    asChild
+                    size="lg"
+                    className="shrink-0 bg-teal-500 hover:bg-teal-400 text-brand-ink font-bold"
+                  >
                     <a href="#course-registration">
-                      {t.detailPage.b2bTrainingAction} <ArrowUpRight className="size-4 ml-1" />
+                      {t.detailPage.b2bTrainingAction}{" "}
+                      <ArrowUpRight className="size-4 ml-1" />
                     </a>
                   </Button>
                 </div>
@@ -267,9 +305,6 @@ export function CourseDetailView({
                 <div className="flex items-center justify-between gap-2">
                   <span className="rounded bg-teal-500/20 px-2.5 py-1 text-xs font-bold text-teal-300 border border-teal-500/30">
                     {t.detailPage.courseProfile}
-                  </span>
-                  <span className="font-mono text-[11px] text-teal-300 bg-black/40 px-2 py-0.5 rounded border border-teal-500/30">
-                    ISO 19650 SYLLABUS
                   </span>
                 </div>
                 <CardTitle className="text-xl text-white mt-2">
@@ -288,7 +323,7 @@ export function CourseDetailView({
                     <GraduationCap className="size-4 text-teal-400 shrink-0 mt-0.5" />
                     <div>
                       <span className="font-semibold text-white/95">
-                        {isVi ? "Giáo trình chuẩn ISO 19650:" : "ISO 19650 Syllabus:"}{" "}
+                        {isVi ? "Nội dung đào tạo:" : "Training content:"}{" "}
                       </span>
                       <span>
                         {isVi
@@ -301,7 +336,9 @@ export function CourseDetailView({
                     <Users className="size-4 text-teal-400 shrink-0 mt-0.5" />
                     <div>
                       <span className="font-semibold text-white/95">
-                        {isVi ? "Chuyên gia trực tiếp giảng dạy:" : "Instructor Mentorship:"}{" "}
+                        {isVi
+                          ? "Chuyên gia trực tiếp giảng dạy:"
+                          : "Instructor Mentorship:"}{" "}
                       </span>
                       <span>
                         {isVi
@@ -314,7 +351,9 @@ export function CourseDetailView({
                     <Award className="size-4 text-teal-400 shrink-0 mt-0.5" />
                     <div>
                       <span className="font-semibold text-white/95">
-                        {isVi ? "Chứng chỉ hoàn thành BIM4C:" : "BIM4C Certificate:"}{" "}
+                        {isVi
+                          ? "Chứng chỉ hoàn thành BIM4C:"
+                          : "BIM4C Certificate:"}{" "}
                       </span>
                       <span>
                         {isVi
@@ -327,7 +366,9 @@ export function CourseDetailView({
                     <HelpCircle className="size-4 text-teal-400 shrink-0 mt-0.5" />
                     <div>
                       <span className="font-semibold text-white/95">
-                        {isVi ? "Hỗ trợ sau khóa học:" : "Post-course Support:"}{" "}
+                        {isVi
+                          ? "Hỗ trợ sau khóa học:"
+                          : "Post-course Support:"}{" "}
                       </span>
                       <span>
                         {isVi
@@ -344,7 +385,10 @@ export function CourseDetailView({
 
         {/* Related Courses Section */}
         {related.length > 0 && (
-          <section className="site-container mt-16 border-t pt-12" aria-label="Related courses">
+          <section
+            className="site-container mt-16 border-t pt-12"
+            aria-label="Related courses"
+          >
             <div>
               <header className="mb-8 flex items-center justify-between">
                 <div>
@@ -355,13 +399,18 @@ export function CourseDetailView({
                 </div>
                 <Button asChild variant="outline">
                   <Link href={backHref}>
-                    {t.detailPage.viewAll} <ArrowRight className="size-4 ml-1" />
+                    {t.detailPage.viewAll}{" "}
+                    <ArrowRight className="size-4 ml-1" />
                   </Link>
                 </Button>
               </header>
               <div className="grid gap-6 md:grid-cols-3">
                 {related.slice(0, 3).map((item) => (
-                  <article className="group relative" key={item.slug} data-motion="tile">
+                  <article
+                    className="group relative"
+                    key={item.slug}
+                    data-motion="tile"
+                  >
                     <div className="relative aspect-[16/10] overflow-hidden rounded-2xl">
                       <Image
                         src={item.image}

@@ -1,14 +1,21 @@
 "use client";
 
-import Image from "next/image";
-import Link from "next/link";
-import { ArrowUpRight, Building2, MapPin, CheckCircle2, UserCheck, Calendar } from "lucide-react";
-import type { Project } from "@/features/projects/types/project";
 import { ROUTES } from "@/constants/routes";
-import { toLocalizedLabel } from "@/lib/utils/public-labels";
-import { cn } from "@/lib/utils";
+import type { Project } from "@/features/projects/types/project";
 import { useLanguage } from "@/lib/i18n/context";
 import { localizeContent } from "@/lib/i18n/localize";
+import { cn } from "@/lib/utils";
+import { toLocalizedLabel } from "@/lib/utils/public-labels";
+import {
+  ArrowUpRight,
+  Building2,
+  Calendar,
+  CheckCircle2,
+  MapPin,
+  UserCheck,
+} from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
 
 export function ProjectRow({
   project: rawProject,
@@ -219,7 +226,7 @@ export function ProjectRow({
                 dark ? "text-teal-300" : "text-primary",
               )}
             >
-              ISO 19650 · LOD 400
+              BIM
             </p>
           </div>
         </div>

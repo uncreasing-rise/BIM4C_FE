@@ -1,25 +1,22 @@
-import { apiClient } from "@/lib/api/client";
-import { API_ENDPOINTS } from "@/lib/api/endpoints";
-import { isNotFoundError } from "@/lib/api/errors";
-import { withQueryParams } from "@/lib/api/query-params";
-import type { ApiResponse } from "@/lib/api/types";
-import { env } from "@/lib/config/env";
 import { mapContentDto } from "@/features/shared/mappers/content.mapper";
 import {
   unwrapData,
   unwrapPage,
 } from "@/features/shared/mappers/response.mapper";
-import type { PageResult } from "@/features/shared/types/pagination";
 import type { ContentEntryDto } from "@/features/shared/types/content-dto";
+import type { PageResult } from "@/features/shared/types/pagination";
 import type { ContentQueryParams } from "@/features/shared/types/query";
-import { blogEntries } from "@/mocks/content";
-import type { ContentEntry } from "@/types/content";
+import { apiClient } from "@/lib/api/client";
+import { API_ENDPOINTS } from "@/lib/api/endpoints";
+import { isNotFoundError } from "@/lib/api/errors";
+import { withQueryParams } from "@/lib/api/query-params";
+import type { ApiResponse } from "@/lib/api/types";
 import { canDeferBuildData } from "@/lib/config/build";
+import type { ContentEntry } from "@/types/content";
 
 export async function getPosts(
   params: ContentQueryParams & { strict?: boolean } = {},
 ): Promise<ContentEntry[]> {
-  if (env.useMockApi) return blogEntries;
   const endpoint = withQueryParams(API_ENDPOINTS.posts.list, {
     page: params.page,
     limit: params.limit,
@@ -33,7 +30,7 @@ export async function getPosts(
       ApiResponse<ContentEntryDto[]> | ContentEntryDto[]
     >(endpoint, {
       signal: params.signal,
-      next: { revalidate: 300, tags: ["posts"] },
+      cache: "no-store",
     });
     return unwrapPage<ContentEntryDto>(
       response,
@@ -41,10 +38,7 @@ export async function getPosts(
       params.limit,
     ).items.map(mapContentDto);
   } catch (error) {
-    if (!params.strict && (canDeferBuildData(error) || process.env.NODE_ENV !== "production")) {
-      console.warn("Backend /posts error, falling back to blogEntries:", error);
-      return blogEntries;
-    }
+    if (!params.strict && canDeferBuildData(error)) return [];
     throw error;
   }
 }
@@ -52,51 +46,17 @@ export async function getPosts(
 export async function getPostBySlug(
   slug: string,
 ): Promise<ContentEntry | null> {
-  if (env.useMockApi)
-    return blogEntries.find((post) => post.slug === slug) ?? null;
   try {
     const response = await apiClient.get<
       ApiResponse<ContentEntryDto> | ContentEntryDto
     >(API_ENDPOINTS.posts.detail(slug), {
-      next: { revalidate: 300, tags: ["posts", `post:${slug}`] },
+      cache: "no-store",
     });
     return mapContentDto(unwrapData(response));
   } catch (error) {
     if (isNotFoundError(error)) return null;
-    if (canDeferBuildData(error) || process.env.NODE_ENV !== "production") {
-      console.warn(`Backend /posts/${slug} error, falling back to mock post:`, error);
-      return blogEntries.find((post) => post.slug === slug) ?? null;
-    }
     throw error;
   }
-}
-
-import { toEnglishLabel, toVietnameseLabel } from "@/lib/utils/public-labels";
-
-function matchBlogCategory(item: ContentEntry, targetCategory?: string): boolean {
-  if (!targetCategory || targetCategory === "All" || targetCategory === "Tất cả") return true;
-  const targetLower = targetCategory.toLowerCase().trim();
-  const rawCat = (item.category || item.eyebrow).trim();
-  const enCat = toEnglishLabel(rawCat).toLowerCase();
-  const viCat = toVietnameseLabel(rawCat).toLowerCase();
-  const rawCatLower = rawCat.toLowerCase();
-  const targetEn = toEnglishLabel(targetCategory).toLowerCase();
-  const targetVi = toVietnameseLabel(targetCategory).toLowerCase();
-
-  return (
-    rawCatLower === targetLower ||
-    rawCatLower === targetEn ||
-    rawCatLower === targetVi ||
-    enCat === targetLower ||
-    enCat === targetEn ||
-    enCat === targetVi ||
-    viCat === targetLower ||
-    viCat === targetEn ||
-    viCat === targetVi ||
-    item.eyebrow.toLowerCase().includes(targetLower) ||
-    item.eyebrow.toLowerCase().includes(targetEn) ||
-    item.eyebrow.toLowerCase().includes(targetVi)
-  );
 }
 
 export async function getPostsPage(
@@ -104,22 +64,6 @@ export async function getPostsPage(
 ): Promise<PageResult<ContentEntry>> {
   const page = params.page ?? 1;
   const limit = params.limit ?? 5;
-  if (env.useMockApi) {
-    const filtered = blogEntries.filter(
-      (post) =>
-        (!params.search ||
-          `${post.title} ${post.description}`
-            .toLowerCase()
-            .includes(params.search.toLowerCase())) &&
-        matchBlogCategory(post, params.category),
-    );
-    const totalPages = Math.max(1, Math.ceil(filtered.length / limit));
-    const safePage = Math.min(page, totalPages);
-    return {
-      items: filtered.slice((safePage - 1) * limit, safePage * limit),
-      meta: { page: safePage, limit, total: filtered.length, totalPages },
-    };
-  }
   const endpoint = withQueryParams(API_ENDPOINTS.posts.list, {
     page,
     limit,
@@ -133,28 +77,13 @@ export async function getPostsPage(
       ApiResponse<ContentEntryDto[]> | ContentEntryDto[]
     >(endpoint, {
       signal: params.signal,
-      next: { revalidate: 300, tags: ["posts"] },
+      cache: "no-store",
     });
     const result = unwrapPage<ContentEntryDto>(response, page, limit);
     return { ...result, items: result.items.map(mapContentDto) };
   } catch (error) {
-    if (!params.strict && (canDeferBuildData(error) || process.env.NODE_ENV !== "production")) {
-      console.warn("Backend /posts list error, falling back to blogEntries:", error);
-      const filtered = blogEntries.filter(
-        (post) =>
-          (!params.search ||
-            `${post.title} ${post.description}`
-              .toLowerCase()
-              .includes(params.search.toLowerCase())) &&
-          matchBlogCategory(post, params.category),
-      );
-      const totalPages = Math.max(1, Math.ceil(filtered.length / limit));
-      const safePage = Math.min(page, totalPages);
-      return {
-        items: filtered.slice((safePage - 1) * limit, safePage * limit),
-        meta: { page: safePage, limit, total: filtered.length, totalPages },
-      };
-    }
+    if (!params.strict && canDeferBuildData(error))
+      return { items: [], meta: { page, limit, total: 0, totalPages: 1 } };
     throw error;
   }
 }

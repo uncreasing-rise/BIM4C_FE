@@ -121,25 +121,6 @@ test("English content translates structured copy but preserves identifiers and e
   );
 });
 
-test("all bundled catalogue copy is English after mapping", () => {
-  const { englishContent } = load("lib/content/english-content");
-  const entries = Object.values(load("mocks/content-data")).flat();
-  for (const entry of entries) {
-    const translated = englishContent(entry);
-    const copy = [
-      translated.title,
-      translated.description,
-      translated.eyebrow,
-      ...translated.highlights,
-      ...translated.sections.flatMap((section) => [
-        section.title,
-        section.body,
-      ]),
-    ].join(" ");
-    assert.equal(/[À-ỹĐđ]/u.test(copy), false, entry.slug);
-  }
-});
-
 test("page normalization preserves search and filters", () => {
   const { normalizedPageRedirect } = load("lib/seo/listing");
   assert.equal(

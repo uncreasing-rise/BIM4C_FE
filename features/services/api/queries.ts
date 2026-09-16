@@ -1,65 +1,33 @@
-import { apiClient } from "@/lib/api/client";
-import { API_ENDPOINTS } from "@/lib/api/endpoints";
-import { withQueryParams } from "@/lib/api/query-params";
-import { isNotFoundError } from "@/lib/api/errors";
-import type { ApiResponse } from "@/lib/api/types";
-import { env } from "@/lib/config/env";
 import { mapContentDto } from "@/features/shared/mappers/content.mapper";
-import { unwrapData } from "@/features/shared/mappers/response.mapper";
+import {
+  unwrapData,
+  unwrapPage,
+} from "@/features/shared/mappers/response.mapper";
 import type { ContentEntryDto } from "@/features/shared/types/content-dto";
-import { serviceEntries } from "@/mocks/content";
-import type { ContentEntry } from "@/types/content";
-import { canDeferBuildData } from "@/lib/config/build";
-import { unwrapPage } from "@/features/shared/mappers/response.mapper";
 import type { PageResult } from "@/features/shared/types/pagination";
 import type { ContentQueryParams } from "@/features/shared/types/query";
-import { toEnglishLabel, toVietnameseLabel } from "@/lib/utils/public-labels";
+import { apiClient } from "@/lib/api/client";
+import { API_ENDPOINTS } from "@/lib/api/endpoints";
+import { isNotFoundError } from "@/lib/api/errors";
+import { withQueryParams } from "@/lib/api/query-params";
+import type { ApiResponse } from "@/lib/api/types";
+import { canDeferBuildData } from "@/lib/config/build";
+import type { ContentEntry } from "@/types/content";
 
 export async function getServices(
   options: { strict?: boolean; limit?: number } = {},
 ): Promise<ContentEntry[]> {
-  if (env.useMockApi) return serviceEntries;
   try {
     const response = await apiClient.get<
       ApiResponse<ContentEntryDto[]> | ContentEntryDto[]
     >(withQueryParams(API_ENDPOINTS.services.list, { limit: options.limit }), {
-      next: { revalidate: 600, tags: ["services"] },
+      cache: "no-store",
     });
     return unwrapPage<ContentEntryDto>(response).items.map(mapContentDto);
   } catch (error) {
-    if (!options.strict && (canDeferBuildData(error) || process.env.NODE_ENV !== "production")) {
-      console.warn("Backend /services error, falling back to serviceEntries:", error);
-      return serviceEntries;
-    }
+    if (!options.strict && canDeferBuildData(error)) return [];
     throw error;
   }
-}
-
-function matchServiceCategory(item: ContentEntry, targetCategory?: string): boolean {
-  if (!targetCategory || targetCategory === "All" || targetCategory === "Tất cả") return true;
-  const targetLower = targetCategory.toLowerCase().trim();
-  const rawCat = (item.category || item.title || item.eyebrow).trim();
-  const enCat = toEnglishLabel(rawCat).toLowerCase();
-  const viCat = toVietnameseLabel(rawCat).toLowerCase();
-  const rawCatLower = rawCat.toLowerCase();
-  const targetEn = toEnglishLabel(targetCategory).toLowerCase();
-  const targetVi = toVietnameseLabel(targetCategory).toLowerCase();
-
-  return (
-    rawCatLower === targetLower ||
-    rawCatLower === targetEn ||
-    rawCatLower === targetVi ||
-    enCat === targetLower ||
-    enCat === targetEn ||
-    enCat === targetVi ||
-    viCat === targetLower ||
-    viCat === targetEn ||
-    viCat === targetVi ||
-    item.title.toLowerCase().includes(targetLower) ||
-    item.title.toLowerCase().includes(targetEn) ||
-    item.title.toLowerCase().includes(targetVi) ||
-    item.slug.toLowerCase().includes(targetLower.replace(/\s+/g, "-"))
-  );
 }
 
 export async function getServicesPage(
@@ -67,22 +35,6 @@ export async function getServicesPage(
 ): Promise<PageResult<ContentEntry>> {
   const page = params.page ?? 1;
   const limit = params.limit ?? 6;
-  if (env.useMockApi) {
-    const filtered = serviceEntries.filter(
-      (item) =>
-        (!params.search ||
-          `${item.title} ${item.description}`
-            .toLowerCase()
-            .includes(params.search.toLowerCase())) &&
-        matchServiceCategory(item, params.category),
-    );
-    const totalPages = Math.max(1, Math.ceil(filtered.length / limit));
-    const safePage = Math.min(page, totalPages);
-    return {
-      items: filtered.slice((safePage - 1) * limit, safePage * limit),
-      meta: { page: safePage, limit, total: filtered.length, totalPages },
-    };
-  }
   const endpoint = withQueryParams(API_ENDPOINTS.services.list, {
     page,
     limit,
@@ -95,29 +47,14 @@ export async function getServicesPage(
     const response = await apiClient.get<
       ApiResponse<ContentEntryDto[]> | ContentEntryDto[]
     >(endpoint, {
-      next: { revalidate: 600, tags: ["services"] },
+      cache: "no-store",
       signal: params.signal,
     });
     const result = unwrapPage<ContentEntryDto>(response, page, limit);
     return { ...result, items: result.items.map(mapContentDto) };
   } catch (error) {
-    if (canDeferBuildData(error) || process.env.NODE_ENV !== "production") {
-      console.warn("Backend /services list error, falling back to serviceEntries:", error);
-      const filtered = serviceEntries.filter(
-        (item) =>
-          (!params.search ||
-            `${item.title} ${item.description}`
-              .toLowerCase()
-              .includes(params.search.toLowerCase())) &&
-          matchServiceCategory(item, params.category),
-      );
-      const totalPages = Math.max(1, Math.ceil(filtered.length / limit));
-      const safePage = Math.min(page, totalPages);
-      return {
-        items: filtered.slice((safePage - 1) * limit, safePage * limit),
-        meta: { page: safePage, limit, total: filtered.length, totalPages },
-      };
-    }
+    if (canDeferBuildData(error))
+      return { items: [], meta: { page, limit, total: 0, totalPages: 1 } };
     throw error;
   }
 }
@@ -125,22 +62,15 @@ export async function getServicesPage(
 export async function getServiceBySlug(
   slug: string,
 ): Promise<ContentEntry | null> {
-  if (env.useMockApi)
-    return serviceEntries.find((service) => service.slug === slug) ?? null;
   try {
     const response = await apiClient.get<
       ApiResponse<ContentEntryDto> | ContentEntryDto
     >(API_ENDPOINTS.services.detail(slug), {
-      next: { revalidate: 600, tags: ["services", `service:${slug}`] },
+      cache: "no-store",
     });
     return mapContentDto(unwrapData(response));
   } catch (error) {
     if (isNotFoundError(error)) return null;
-    if (canDeferBuildData(error) || process.env.NODE_ENV !== "production") {
-      console.warn(`Backend /services/${slug} error, falling back to mock service:`, error);
-      return serviceEntries.find((service) => service.slug === slug) ?? null;
-    }
     throw error;
   }
 }
-

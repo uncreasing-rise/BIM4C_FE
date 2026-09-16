@@ -1,18 +1,17 @@
 ﻿"use client";
-import React from "react";
+import { useLanguage } from "@/lib/i18n/context";
 import {
-  MousePointer,
-  Ruler,
-  Scissors,
+  AlertTriangle,
+  Camera,
   Layers,
-  Sparkles,
-  RotateCcw,
   Maximize2,
   Minimize2,
-  Camera,
-  AlertTriangle,
+  MousePointer,
+  RotateCcw,
+  Ruler,
+  Scissors,
+  Sparkles,
 } from "lucide-react";
-import { useLanguage } from "@/lib/i18n/context";
 import type { BimTool, BimViewPreset } from "./types";
 interface Props {
   activeTool: BimTool;
@@ -21,7 +20,6 @@ interface Props {
   onSelectViewPreset: (view: BimViewPreset) => void;
   selectedModelId: string;
   uploadedName?: string;
-  onSelectModel: (id: string) => void;
   onResetView: () => void;
   onTakeSnapshot: () => void;
   isFullscreen: boolean;
@@ -49,20 +47,15 @@ export function BimToolbar(p: Props) {
         <select
           aria-label={v.selectModel}
           value={p.selectedModelId}
-          onChange={(e) => p.onSelectModel(e.target.value)}
+          disabled
           className="min-h-10 min-w-0 flex-1 rounded-lg border border-white/15 bg-slate-900 px-2 text-xs lg:max-w-64"
         >
           {p.uploadedName && <option value="uploaded">{p.uploadedName}</option>}
-          <option value="ifc-demo">
-            {locale === "vi"
-              ? "Tải IFC mẫu có hình học"
-              : "Load sample IFC file"}
-          </option>
-          {(["tower", "steel", "mep"] as const).map((id) => (
-            <option key={id} value={id}>
-              {v.models[id]} ({locale === "vi" ? "minh họa" : "sample"})
+          {!p.uploadedName && (
+            <option value="empty">
+              {locale === "vi" ? "Ch?a t?i IFC" : "No IFC loaded"}
             </option>
-          ))}
+          )}
         </select>
         <select
           aria-label={locale === "vi" ? "Góc nhìn" : "View preset"}

@@ -1,30 +1,24 @@
 "use client";
-import Image from "next/image";
-import Link from "next/link";
-import { useEffect, useState } from "react";
-import {
-  FileText,
-  CheckCircle2,
-  Edit3,
-  Users,
-  ArrowUpRight,
-  TrendingUp,
-  Database,
-  Layers,
-  GraduationCap,
-  Sparkles,
-  Plus,
-  Activity,
-  Cloud,
-  Cpu,
-  Bell,
-  FolderPlus,
-} from "lucide-react";
 import {
   getDashboard,
   type DashboardStats,
   type RecentContent,
 } from "@/features/admin/api/dashboard";
+import {
+  ArrowUpRight,
+  CheckCircle2,
+  Database,
+  Edit3,
+  FileText,
+  FolderPlus,
+  GraduationCap,
+  Layers,
+  Plus,
+  Users,
+} from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+import { useEffect, useState } from "react";
 
 const href: Record<string, string> = {
   project: "/admin/du-an",
@@ -119,7 +113,8 @@ export function Dashboard() {
       sub: `${total ? Math.round((published / total) * 100) : 0}% tổng dữ liệu`,
       icon: CheckCircle2,
       badge: "Đã đăng",
-      color: "from-emerald-500/20 to-emerald-500/5 text-emerald-500 border-emerald-500/20",
+      color:
+        "from-emerald-500/20 to-emerald-500/5 text-emerald-500 border-emerald-500/20",
     },
     {
       title: "Bản nháp",
@@ -127,7 +122,8 @@ export function Dashboard() {
       sub: "Đang biên tập",
       icon: Edit3,
       badge: "Cần duyệt",
-      color: "from-amber-500/20 to-amber-500/5 text-amber-500 border-amber-500/20",
+      color:
+        "from-amber-500/20 to-amber-500/5 text-amber-500 border-amber-500/20",
     },
     {
       title: "Liên hệ & Học viên",
@@ -164,7 +160,9 @@ export function Dashboard() {
                   {card.value}
                 </div>
                 <div className="mt-2 flex items-center justify-between text-xs">
-                  <span className="text-muted-foreground font-mono">{card.sub}</span>
+                  <span className="text-muted-foreground font-mono">
+                    {card.sub}
+                  </span>
                   <span className="rounded-full bg-muted px-2 py-0.5 font-mono text-[10px] font-semibold text-foreground">
                     {card.badge}
                   </span>
@@ -178,86 +176,59 @@ export function Dashboard() {
       {/* Analytics & Performance Charts */}
       <div className="mb-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Trend Growth Chart */}
-        <div className="lg:col-span-2 rounded-2xl border border-border/80 bg-card p-6 shadow-xs flex flex-col justify-between">
-          <div className="flex items-center justify-between border-b border-border/70 pb-4 mb-4">
-            <div>
-              <h3 className="text-base font-bold text-foreground flex items-center gap-2">
-                <TrendingUp className="size-4 text-primary" /> Xu hướng Tiếp nhận Khách hàng & Học viên
-              </h3>
-              <p className="text-xs text-muted-foreground mt-0.5">Số lượng yêu cầu tư vấn và đăng ký khóa học 6 tháng gần nhất</p>
-            </div>
-            <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-primary/10 text-primary border border-primary/20">
-              +32.8% YoY
-            </span>
-          </div>
-
-          {/* SVG Bar / Trend Chart */}
-          <div className="space-y-3 pt-2">
-            <div className="grid grid-cols-6 gap-3 sm:gap-6 items-end h-44 pb-2 border-b border-border/50">
-              {[
-                { month: "T4", leads: 18, students: 24, height: 45 },
-                { month: "T5", leads: 25, students: 30, height: 60 },
-                { month: "T6", leads: 32, students: 42, height: 75 },
-                { month: "T7", leads: 28, students: 38, height: 68 },
-                { month: "T8", leads: 40, students: 52, height: 90 },
-                { month: "T9", leads: 48, students: 64, height: 100 },
-              ].map((bar) => (
-                <div key={bar.month} className="flex flex-col items-center gap-2 h-full justify-end group">
-                  <div className="text-[10px] font-mono text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity">
-                    {bar.leads + bar.students}
-                  </div>
-                  <div className="w-full max-w-[36px] flex gap-1 items-end justify-center">
-                    <div
-                      style={{ height: `${bar.height * 0.65}%` }}
-                      className="w-1/2 rounded-t-md bg-teal-500/70 group-hover:bg-teal-500 transition-all shadow-xs"
-                      title={`Tư vấn: ${bar.leads}`}
-                    />
-                    <div
-                      style={{ height: `${bar.height}%` }}
-                      className="w-1/2 rounded-t-md bg-primary group-hover:bg-primary/90 transition-all shadow-xs"
-                      title={`Học viên: ${bar.students}`}
-                    />
-                  </div>
-                  <span className="text-xs font-semibold text-muted-foreground">{bar.month}</span>
-                </div>
-              ))}
-            </div>
-            <div className="flex items-center justify-center gap-6 text-xs text-muted-foreground pt-1">
-              <div className="flex items-center gap-2">
-                <span className="size-2.5 rounded-full bg-teal-500/70" />
-                <span>Yêu cầu tư vấn BIM</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="size-2.5 rounded-full bg-primary" />
-                <span>Học viên Academy</span>
-              </div>
-            </div>
-          </div>
+        <div className="rounded-2xl border bg-card p-6 text-sm text-muted-foreground">
+          Chưa có dữ liệu báo cáo từ hệ thống.
         </div>
 
         {/* Content Distribution Breakdown */}
         <div className="rounded-2xl border border-border/80 bg-card p-6 shadow-xs flex flex-col justify-between">
           <div className="border-b border-border/70 pb-4 mb-4">
             <h3 className="text-base font-bold text-foreground flex items-center gap-2">
-              <Layers className="size-4 text-primary" /> Cơ cấu Danh mục Nội dung
+              <Layers className="size-4 text-primary" /> Cơ cấu Danh mục Nội
+              dung
             </h3>
-            <p className="text-xs text-muted-foreground mt-0.5">Phân bổ tỷ trọng các chuyên mục trong hệ thống</p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Phân bổ tỷ trọng các chuyên mục trong hệ thống
+            </p>
           </div>
 
           <div className="space-y-4">
             {[
-              { name: "Khóa học Đào tạo (Academy)", count: stats.courses?.total ?? 6, percent: 35, color: "bg-teal-500" },
-              { name: "Dự án BIM Tiêu biểu", count: stats.projects?.total ?? 8, percent: 40, color: "bg-primary" },
-              { name: "Tin tức & Chuyên san", count: stats.posts?.total ?? 6, percent: 15, color: "bg-emerald-500" },
-              { name: "Giải pháp Dịch vụ BIM4C", count: stats.services?.total ?? 6, percent: 10, color: "bg-amber-500" },
+              {
+                name: "Khóa học Đào tạo (Academy)",
+                count: stats.courses?.total ?? 0,
+                color: "bg-teal-500",
+              },
+              {
+                name: "Dự án BIM Tiêu biểu",
+                count: stats.projects?.total ?? 0,
+                color: "bg-primary",
+              },
+              {
+                name: "Tin tức & Chuyên san",
+                count: stats.posts?.total ?? 0,
+                color: "bg-emerald-500",
+              },
+              {
+                name: "Giải pháp Dịch vụ BIM4C",
+                count: stats.services?.total ?? 0,
+                color: "bg-amber-500",
+              },
             ].map((cat) => (
               <div key={cat.name} className="space-y-1.5">
                 <div className="flex justify-between text-xs font-medium">
                   <span className="text-foreground">{cat.name}</span>
-                  <span className="font-mono text-muted-foreground">{cat.count} mục</span>
+                  <span className="font-mono text-muted-foreground">
+                    {cat.count} mục
+                  </span>
                 </div>
                 <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
-                  <div style={{ width: `${cat.percent}%` }} className={`h-full ${cat.color} rounded-full transition-all duration-500`} />
+                  <div
+                    style={{
+                      width: `${total ? (cat.count / total) * 100 : 0}%`,
+                    }}
+                    className={`h-full ${cat.color} rounded-full transition-all duration-500`}
+                  />
                 </div>
               </div>
             ))}
@@ -265,7 +236,7 @@ export function Dashboard() {
 
           <div className="mt-4 pt-4 border-t border-border/70 flex items-center justify-between text-xs text-muted-foreground">
             <span>Độ phủ hệ sinh thái</span>
-            <span className="font-bold text-primary">100% Hoạt động</span>
+            <span className="font-bold text-primary">{total} mục nội dung</span>
           </div>
         </div>
       </div>
@@ -276,10 +247,12 @@ export function Dashboard() {
         <div className="lg:col-span-2 rounded-2xl border border-border/80 bg-card p-6 shadow-sm flex flex-col justify-between">
           <div>
             <h3 className="text-base font-bold text-foreground flex items-center gap-2 mb-1">
-              <Plus className="size-4 text-primary" /> Phím tắt tác vụ nhanh (Quick Actions)
+              <Plus className="size-4 text-primary" /> Phím tắt tác vụ nhanh
+              (Quick Actions)
             </h3>
             <p className="text-xs text-muted-foreground mb-4">
-              Khởi tạo nội dung mới và truy cập nhanh các nghiệp vụ quản trị trọng tâm
+              Khởi tạo nội dung mới và truy cập nhanh các nghiệp vụ quản trị
+              trọng tâm
             </p>
           </div>
 
@@ -291,8 +264,12 @@ export function Dashboard() {
               <div className="size-9 rounded-lg bg-teal-500/10 text-primary flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
                 <Layers className="size-4" />
               </div>
-              <span className="text-xs font-semibold text-foreground group-hover:text-primary">Thêm Dự Án</span>
-              <span className="text-[10px] text-muted-foreground">Portfolio BIM</span>
+              <span className="text-xs font-semibold text-foreground group-hover:text-primary">
+                Thêm Dự Án
+              </span>
+              <span className="text-[10px] text-muted-foreground">
+                Portfolio BIM
+              </span>
             </Link>
 
             <Link
@@ -302,8 +279,12 @@ export function Dashboard() {
               <div className="size-9 rounded-lg bg-emerald-500/10 text-emerald-500 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
                 <FileText className="size-4" />
               </div>
-              <span className="text-xs font-semibold text-foreground group-hover:text-primary">Viết Bài Mới</span>
-              <span className="text-[10px] text-muted-foreground">Tin tức & Blog</span>
+              <span className="text-xs font-semibold text-foreground group-hover:text-primary">
+                Viết Bài Mới
+              </span>
+              <span className="text-[10px] text-muted-foreground">
+                Tin tức & Blog
+              </span>
             </Link>
 
             <Link
@@ -313,7 +294,9 @@ export function Dashboard() {
               <div className="size-9 rounded-lg bg-sky-500/10 text-sky-500 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
                 <GraduationCap className="size-4" />
               </div>
-              <span className="text-xs font-semibold text-foreground group-hover:text-primary">Tạo Khóa Học</span>
+              <span className="text-xs font-semibold text-foreground group-hover:text-primary">
+                Tạo Khóa Học
+              </span>
               <span className="text-[10px] text-muted-foreground">Academy</span>
             </Link>
 
@@ -324,48 +307,19 @@ export function Dashboard() {
               <div className="size-9 rounded-lg bg-purple-500/10 text-purple-500 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
                 <FolderPlus className="size-4" />
               </div>
-              <span className="text-xs font-semibold text-foreground group-hover:text-primary">Tải Media</span>
-              <span className="text-[10px] text-muted-foreground">Supabase Storage</span>
+              <span className="text-xs font-semibold text-foreground group-hover:text-primary">
+                Tải Media
+              </span>
+              <span className="text-[10px] text-muted-foreground">
+                Supabase Storage
+              </span>
             </Link>
           </div>
         </div>
 
         {/* System & Services Health */}
-        <div className="rounded-2xl border border-border/80 bg-card p-6 shadow-sm flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between mb-1">
-              <h3 className="text-base font-bold text-foreground flex items-center gap-2">
-                <Activity className="size-4 text-emerald-500" /> Trạng thái Hạ tầng
-              </h3>
-              <span className="size-2 rounded-full bg-emerald-500 animate-ping" />
-            </div>
-            <p className="text-xs text-muted-foreground mb-3">
-              Tình trạng các dịch vụ kết nối đám mây
-            </p>
-          </div>
-
-          <div className="space-y-2 text-xs">
-            <div className="flex items-center justify-between p-2 rounded-lg bg-muted/40 border border-border/60">
-              <span className="flex items-center gap-1.5 text-muted-foreground">
-                <Cloud className="size-3.5 text-teal-500" /> Web Server / Next.js
-              </span>
-              <span className="font-semibold text-emerald-500 font-mono text-[11px]">🟢 Online (100%)</span>
-            </div>
-
-            <div className="flex items-center justify-between p-2 rounded-lg bg-muted/40 border border-border/60">
-              <span className="flex items-center gap-1.5 text-muted-foreground">
-                <Cpu className="size-3.5 text-indigo-500" /> Gemini 2.0 AI Copilot
-              </span>
-              <span className="font-semibold text-emerald-500 font-mono text-[11px]">🟢 Sẵn sàng</span>
-            </div>
-
-            <div className="flex items-center justify-between p-2 rounded-lg bg-muted/40 border border-border/60">
-              <span className="flex items-center gap-1.5 text-muted-foreground">
-                <Bell className="size-3.5 text-amber-500" /> Zalo & Telegram Webhook
-              </span>
-              <span className="font-semibold text-emerald-500 font-mono text-[11px]">🟢 Đang kết nối</span>
-            </div>
-          </div>
+        <div className="rounded-2xl border bg-card p-6 text-sm text-muted-foreground">
+          Chưa có dữ liệu báo cáo từ hệ thống.
         </div>
       </div>
 
@@ -388,11 +342,15 @@ export function Dashboard() {
           <table className="w-full border-collapse text-left text-sm">
             <thead>
               <tr className="border-b border-border/60 bg-muted/40 font-mono text-[11px] uppercase tracking-wider text-muted-foreground">
-                <th className="py-3.5 pl-6 pr-4 font-semibold">TIÊU ĐỀ & ĐƯỜNG DẪN</th>
+                <th className="py-3.5 pl-6 pr-4 font-semibold">
+                  TIÊU ĐỀ & ĐƯỜNG DẪN
+                </th>
                 <th className="px-4 py-3.5 font-semibold">PHÂN LOẠI</th>
                 <th className="px-4 py-3.5 font-semibold">TRẠNG THÁI</th>
                 <th className="px-4 py-3.5 font-semibold">CẬP NHẬT</th>
-                <th className="py-3.5 pl-4 pr-6 text-right font-semibold">THAO TÁC</th>
+                <th className="py-3.5 pl-4 pr-6 text-right font-semibold">
+                  THAO TÁC
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border/60">

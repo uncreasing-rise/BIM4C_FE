@@ -2,9 +2,9 @@
 
 ## Frontend expects
 
-The frontend currently uses mock adapters. Backend integration can be enabled through environment configuration without changing UI components.
+The frontend uses the Backend API exclusively. Mock adapters and runtime mock fallbacks have been removed.
 
-The newsletter form currently calls the Backend directly from a Client Component, so `NEXT_PUBLIC_API_URL` and `NEXT_PUBLIC_USE_MOCK_API` are intentionally public runtime/build configuration. The API URL must contain no secret, and Backend must allow the deployed frontend origin through CORS. If mutations later move behind Next.js server actions or route handlers, these two variables can be replaced by server-only configuration.
+The newsletter form currently calls the Backend directly from a Client Component, so `NEXT_PUBLIC_API_URL` are intentionally public runtime/build configuration. The API URL must contain no secret, and Backend must allow the deployed frontend origin through CORS. If mutations later move behind Next.js server actions or route handlers, this variable can be replaced by server-only configuration.
 
 Required groups: services, projects, courses, posts, contact, course registration and newsletter. See `frontend-api-contract.md` for fields and examples.
 

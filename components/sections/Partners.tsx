@@ -1,19 +1,7 @@
 "use client";
 
-import Image from "next/image";
 import { useLanguage } from "@/lib/i18n/context";
-
-const defaultPartners = [
-  {
-    name: "Masterise Homes",
-    src: "/images/partners/transparent/masterise.png",
-  },
-  { name: "Gamuda Land", src: "/images/partners/transparent/gamuda.png" },
-  { name: "Ecopark", src: "/images/partners/transparent/ecopark.png" },
-  { name: "Nam Long", src: "/images/partners/transparent/namlong.png" },
-  { name: "MIK Group", src: "/images/partners/transparent/mik.png" },
-  { name: "Bitexco Group", src: "/images/partners/transparent/bitexco.png" },
-];
+import Image from "next/image";
 
 interface PartnersProps {
   compact?: boolean;
@@ -25,27 +13,16 @@ interface PartnersProps {
   }>;
 }
 
-function resolvePartnerLogo(srcOrLogo?: string): string {
-  if (!srcOrLogo) return "/images/partners/transparent/masterise.png";
-  // Normalize non-transparent paths to transparent versions if available
-  if (srcOrLogo.startsWith("/images/partners/") && !srcOrLogo.includes("/transparent/")) {
-    const filename = srcOrLogo.replace("/images/partners/", "");
-    return `/images/partners/transparent/${filename}`;
-  }
-  return srcOrLogo;
-}
-
 export function Partners({ compact = false, customPartners }: PartnersProps) {
   const { t } = useLanguage();
-  const partners = customPartners?.length
-    ? customPartners.map((p) => ({
-        name: p.name,
-        src: resolvePartnerLogo(p.src || p.logo),
-      }))
-    : defaultPartners;
+  const partners = (customPartners ?? [])
+    .map((p) => ({ name: p.name, src: p.src || p.logo }))
+    .filter((p): p is { name: string; src: string } => Boolean(p.src));
+  if (!partners.length) return null;
 
   return (
     <section
+      id="partners"
       data-home-section="partners"
       className={`partners-section border-y border-border bg-card/60 backdrop-blur-xs ${compact ? "py-12 lg:py-16" : "py-16 lg:py-24"}`}
       aria-label={t.partners.title}
@@ -85,4 +62,3 @@ export function Partners({ compact = false, customPartners }: PartnersProps) {
     </section>
   );
 }
-

@@ -419,7 +419,6 @@ export function parseIfcData(
       filename,
       schema,
       diagnostics,
-      nameKey: "tower",
       description: filename,
       elementsCount: elements.length,
       elements,

@@ -1,6 +1,6 @@
 # BIM4C Corporate Website
 
-Frontend corporate BIM4C dùng Next.js App Router, React và TypeScript strict. Public content đi qua data-access layer để có thể chuyển từ mock sang Backend API mà không đổi component UI.
+Frontend corporate BIM4C dùng Next.js App Router, React và TypeScript strict. Public content đi qua data-access layer và chỉ lấy nội dung danh mục từ Backend API.
 
 ## Requirements
 
@@ -26,12 +26,11 @@ npm start
 
 ## Environment variables
 
-| Variable                   | Mô tả                                              |
-| -------------------------- | -------------------------------------------------- |
-| `NEXT_PUBLIC_API_URL`      | Base URL Backend API, không có dấu `/` cuối        |
-| `NEXT_PUBLIC_APP_URL`      | Canonical URL frontend                             |
-| `NEXT_PUBLIC_CDN_URL`      | Base URL media/CDN; để trống khi dùng asset nội bộ |
-| `NEXT_PUBLIC_USE_MOCK_API` | `true`: mock adapter, `false`: HTTP API            |
+| Variable              | Mô tả                                              |
+| --------------------- | -------------------------------------------------- |
+| `NEXT_PUBLIC_API_URL` | Base URL Backend API, không có dấu `/` cuối        |
+| `NEXT_PUBLIC_APP_URL` | Canonical URL frontend                             |
+| `NEXT_PUBLIC_CDN_URL` | Base URL media/CDN; để trống khi dùng asset nội bộ |
 
 Không đặt secret, DB credential hoặc private token trong biến `NEXT_PUBLIC_*` vì các giá trị này có thể xuất hiện trong client bundle.
 
@@ -45,10 +44,8 @@ features/               Domain API, model, mapper, selector, schema and form
 lib/api/                HTTP client, endpoints, errors and API types
 lib/config/             Centralized environment access
 lib/utils/              Media, date, slug and storage utilities
-mocks/                  Mock adapters/fixtures before backend delivery
 types/                  Shared domain-neutral frontend types
 docs/                   API contract and backend handoff
-data/                   Legacy fixture source, reachable through mocks only
 public/                  Static assets
 ```
 
@@ -58,14 +55,13 @@ Public pages are Server Components and call named queries such as `getProjects()
 
 To connect Backend:
 
-1. Implement the endpoints in `docs/frontend-api-contract.md`.
-2. Set `NEXT_PUBLIC_API_URL` and `NEXT_PUBLIC_USE_MOCK_API=false`.
-3. Adapt feature DTO/mappers if Backend field names differ.
-4. Keep pages and presentational components unchanged.
+1. Configure `NEXT_PUBLIC_API_URL` and implement the endpoints in `docs/frontend-api-contract.md`.
+2. Adapt feature DTO/mappers if Backend field names differ.
+3. Keep pages and presentational components unchanged.
 
-## Mock data
+## Content source
 
-Mock mode is enabled by default. Only feature query/mutation adapters may access mocks. When API integration is complete, legacy fixtures can be deleted after mock mode is retired.
+Mock mode has been removed. Set `NEXT_PUBLIC_API_URL` for development and production. Runtime errors are surfaced without substitute content. Profile audit: `docs/hsnl-content-audit-2026-09-16.md`.
 
 ## Cache strategy
 

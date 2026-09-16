@@ -7,7 +7,7 @@ import test, { before, after } from "node:test";
 import ts from "typescript";
 import * as THREE from "three";
 import * as BVH from "three-mesh-bvh";
-import { generateDemoIfc } from "../scripts/generate-ifc-demo.mjs";
+import { generateDemoIfc } from "./fixtures/ifc/generate-ifc.mjs";
 const require = createRequire(import.meta.url);
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const cache = new Map();

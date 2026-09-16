@@ -4,7 +4,7 @@ export const SITE_NAME = "BIM4C";
 export const DEFAULT_TITLE =
   "BIM4C — Enterprise BIM Consulting, Digital Twin & Construction Technology";
 export const DEFAULT_DESCRIPTION =
-  "BIM4C delivers ISO 19650 compliant BIM consulting, LOD 300-500 coordination, Scan-to-BIM, 4D/5D simulation, and enterprise Academy training for mega infrastructure and construction projects.";
+  "BIM4C provides BIM 3D–7D, laser scanning, design consulting and training for construction and asset management.";
 export const DEFAULT_SOCIAL_IMAGE = "/images/news-project-coordination.webp";
 export const canonicalOrigin = env.appUrl;
 

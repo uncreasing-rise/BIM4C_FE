@@ -1,30 +1,32 @@
 "use client";
 
 import { usePublicMotion } from "@/components/motion/hooks/use-public-motion";
-import Image from "next/image";
-import Link from "next/link";
+import { DeliveryProcess } from "@/components/sections/DeliveryProcess";
+import { Partners } from "@/components/sections/Partners";
+import { PageHero } from "@/components/shared/PageHero";
+import { Button } from "@/components/ui/button";
+import { ROUTES } from "@/constants/routes";
+import { useLanguage } from "@/lib/i18n/context";
 import {
   ArrowUpRight,
   Check,
   Compass,
+  Cpu,
+  Handshake,
   Layers3,
-  Users,
-  Leaf,
-  Briefcase,
-  BadgeCheck,
+  Lightbulb,
+  MessageCircle,
+  RefreshCw,
   ShieldCheck,
-  Award,
-  BarChart3,
-  Building2,
+  Sparkles,
+  Target,
+  Users,
+  Workflow,
 } from "lucide-react";
-import { PageHero } from "@/components/shared/PageHero";
-import { Button } from "@/components/ui/button";
-import { ROUTES } from "@/constants/routes";
-import { Partners } from "@/components/sections/Partners";
-import { DeliveryProcess } from "@/components/sections/DeliveryProcess";
-import { useLanguage } from "@/lib/i18n/context";
+import Image from "next/image";
+import Link from "next/link";
 
-export function AboutView() {
+export function AboutView({ partners = [] }: { partners?: Array<{ name: string; logo: string; website?: string | null; sortOrder: number; isActive: boolean }> }) {
   usePublicMotion();
   const { t, locale } = useLanguage();
 
@@ -50,14 +52,9 @@ export function AboutView() {
       color: "text-indigo-500",
       bg: "bg-indigo-500/10",
     },
-    {
-      icon: Leaf,
-      title: t.aboutPage.values.sustainability.title,
-      text: t.aboutPage.values.sustainability.desc,
-      color: "text-emerald-500",
-      bg: "bg-emerald-500/10",
-    },
   ];
+  const workIcons = [Target, MessageCircle, RefreshCw, Sparkles];
+  const whyChooseItems = t.aboutPage.whyChoose.items;
 
   return (
     <>
@@ -70,46 +67,40 @@ export function AboutView() {
         variant="about"
       />
 
-      {/* Track Record Metrics Bento */}
-      {t.aboutPage.trackRecord && (
-        <section className="py-12 border-b bg-card/40">
-          <div className="site-container">
-            <div className="mb-8 text-center max-w-2xl mx-auto">
-              <p className="eyebrow justify-center">{t.aboutPage.trackRecord.eyebrow}</p>
-              <h2 className="section-title text-2xl md:text-3xl mt-1">
-                {t.aboutPage.trackRecord.title}
-              </h2>
-            </div>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {t.aboutPage.trackRecord.metrics.map((metric, idx) => (
-                <div
-                  key={idx}
-                  className="group relative rounded-2xl border bg-card p-6 shadow-xs transition-all duration-300 hover:border-primary/40 hover:shadow-md"
-                  data-motion="tile"
-                >
-                  <div className="text-3xl md:text-4xl font-black tracking-tight text-primary">
-                    {metric.value}
-                  </div>
-                  <h3 className="mt-2 text-base font-bold text-foreground">
-                    {metric.label}
-                  </h3>
-                  <p className="mt-1 text-sm text-muted-foreground leading-relaxed">
-                    {metric.subtext}
-                  </p>
-                </div>
-              ))}
-            </div>
+      <section className="border-b bg-card/40 py-16 lg:py-24">
+        <div className="site-container grid gap-10 lg:grid-cols-[0.7fr_1.3fr]">
+          <div>
+            <p className="eyebrow">{t.aboutPage.letter.title}</p>
+            <h2 className="section-title mt-1">{t.aboutPage.whoWeAreTitle}</h2>
           </div>
-        </section>
-      )}
+          <div className="space-y-5 text-base leading-8 text-muted-foreground">
+            {t.aboutPage.letter.paragraphs.map((paragraph) => (
+              <p key={paragraph}>{paragraph}</p>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="py-16 lg:py-24">
+        <div className="site-container grid gap-6 lg:grid-cols-2">
+          {[t.aboutPage.visionMission.vision, t.aboutPage.visionMission.mission].map((item) => (
+            <article key={item.title} className="rounded-2xl border bg-card p-7 shadow-xs">
+              <p className="eyebrow">{item.title}</p>
+              <p className="mt-2 text-base leading-8 text-muted-foreground">{item.text}</p>
+            </article>
+          ))}
+        </div>
+      </section>
 
       {/* Who We Are Story */}
-      <section className="py-16 lg:py-24">
+      <section id="about-us" className="py-16 lg:py-24">
         <div className="site-container grid gap-12 lg:grid-cols-12 lg:items-center">
           <div className="lg:col-span-6 space-y-6">
             <div>
               <p className="eyebrow">{t.aboutPage.whoWeAreEyebrow}</p>
-              <h2 className="section-title mt-2">{t.aboutPage.whoWeAreTitle}</h2>
+              <h2 className="section-title mt-2">
+                {locale === "vi" ? "V\u1ec1 ch\u00fang t\u00f4i" : t.aboutPage.whoWeAreTitle}
+              </h2>
             </div>
             <p className="text-base md:text-lg leading-relaxed text-muted-foreground">
               {t.aboutPage.whoWeAreP1}
@@ -129,7 +120,7 @@ export function AboutView() {
                       {item}
                     </span>
                   </li>
-                )
+                ),
               )}
             </ul>
           </div>
@@ -139,7 +130,11 @@ export function AboutView() {
               <div className="relative aspect-[4/3] w-full">
                 <Image
                   src="/images/news-digital-twin.webp"
-                  alt="BIM4C Engineering Team"
+                  alt={
+                    locale === "vi"
+                      ? "Minh họa công nghệ BIM"
+                      : "BIM technology illustration"
+                  }
                   fill
                   sizes="(max-width: 1024px) 100vw, 50vw"
                   className="object-cover transition-transform duration-700 group-hover:scale-105"
@@ -147,7 +142,7 @@ export function AboutView() {
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                 <div className="absolute bottom-6 left-6 right-6 text-white">
                   <div className="inline-flex items-center gap-2 rounded-md bg-white/20 backdrop-blur-md px-3 py-1 text-xs font-bold uppercase tracking-wider text-white border border-white/20 mb-2">
-                    <ShieldCheck className="size-4" /> ISO 19650 Standardized
+                    <ShieldCheck className="size-4" /> BIM 3D–7D
                   </div>
                   <p className="text-base font-bold text-white/95">
                     {locale === "vi"
@@ -162,39 +157,105 @@ export function AboutView() {
       </section>
 
       {/* Core Values */}
-      <section className="py-16 bg-muted/40 border-y">
+      <section className="border-y bg-slate-950 py-16 text-white lg:py-24">
         <div className="site-container">
           <div className="max-w-2xl mb-12">
-            <p className="eyebrow">{t.aboutPage.guidesEyebrow}</p>
+            <p className="eyebrow text-primary-foreground/60">{t.aboutPage.guidesEyebrow}</p>
             <h2 className="section-title mt-1">{t.aboutPage.guidesTitle}</h2>
-            <p className="mt-3 text-base text-muted-foreground leading-relaxed">
+            <p className="mt-3 text-base leading-relaxed text-slate-300">
               {t.aboutPage.guidesDesc}
             </p>
           </div>
 
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-6">
             {values.map((v, i) => {
               const Icon = v.icon;
               return (
                 <div
                   key={i}
-                  className="rounded-2xl border bg-card p-6 shadow-xs transition-all duration-300 hover:shadow-md hover:border-primary/40 flex flex-col justify-between"
+                  className={`${i === 0 ? "lg:col-span-2 lg:row-span-2" : "lg:col-span-2"} rounded-2xl border border-white/10 bg-white/[0.06] p-7 shadow-xs transition-all duration-300 hover:-translate-y-1 hover:bg-white/[0.1] flex flex-col justify-between`}
                   data-motion="tile"
                 >
                   <div>
-                    <span className={`grid size-12 place-items-center rounded-xl ${v.bg} ${v.color} mb-4`}>
+                    <span
+                      className={`grid size-12 place-items-center rounded-xl ${v.bg} ${v.color} mb-4`}
+                    >
                       <Icon className="size-6" />
                     </span>
-                    <h3 className="text-lg font-bold text-foreground">
+                    <h3 className="text-lg font-bold text-white">
                       {v.title}
                     </h3>
-                    <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                    <p className="mt-2 text-sm leading-relaxed text-slate-300">
                       {v.text}
                     </p>
                   </div>
                 </div>
               );
             })}
+          </div>
+        </div>
+      </section>
+
+      <section className="border-b py-16 lg:py-24">
+        <div className="site-container">
+          <header className="mb-10 max-w-2xl">
+            <p className="eyebrow">{t.aboutPage.workMethod.eyebrow}</p>
+            <h2 className="section-title mt-1">{t.aboutPage.workMethod.title}</h2>
+            <p className="mt-3 text-base leading-8 text-muted-foreground">{t.aboutPage.workMethod.intro}</p>
+          </header>
+          <div className="relative grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="pointer-events-none absolute left-[12.5%] right-[12.5%] top-11 hidden h-px bg-border lg:block" />
+            {t.aboutPage.workMethod.items.map((item, index) => {
+              const Icon = workIcons[index];
+              return <article key={item.title} className="group relative rounded-2xl border bg-card p-7 shadow-xs transition-all hover:-translate-y-1 hover:border-primary/40 hover:shadow-md">
+                <span className="relative z-10 mb-5 grid size-11 place-items-center rounded-xl bg-primary text-primary-foreground ring-8 ring-background"><Icon className="size-5" /></span>
+                <span className="absolute right-5 top-5 font-mono text-xs text-muted-foreground">0{index + 1}</span>
+                <h3 className="text-lg font-bold">{item.title}</h3>
+                <p className="mt-2 text-sm leading-7 text-muted-foreground">{item.text}</p>
+              </article>;
+            })}
+          </div>
+        </div>
+      </section>
+
+      <section className="py-16 lg:py-24">
+        <div className="site-container">
+          <header className="mb-10 max-w-2xl">
+            <p className="eyebrow">{t.aboutPage.operation.eyebrow}</p>
+            <h2 className="section-title mt-1">{t.aboutPage.operation.title}</h2>
+          </header>
+          <div className="grid gap-x-12 gap-y-8 sm:grid-cols-2">
+            {t.aboutPage.operation.items.map((item, index) => (
+              <article key={item.title} className="relative flex gap-5 border-l-2 border-primary/20 pl-6">
+                <span className="absolute -left-[18px] top-0 grid size-8 place-items-center rounded-full bg-primary font-mono text-xs font-bold text-primary-foreground ring-8 ring-background">0{index + 1}</span>
+                <div><span className="mb-4 grid size-10 place-items-center rounded-xl bg-slate-900 text-white"><Workflow className="size-5" /></span>
+                <h3 className="text-lg font-bold">{item.title}</h3>
+                <p className="mt-2 text-sm leading-7 text-muted-foreground">{item.text}</p>
+                </div>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section id="why-bim4c" className="border-y bg-muted/30 py-16 lg:py-24">
+        <div className="site-container">
+          <div className="grid gap-10 lg:grid-cols-[0.85fr_1.5fr] lg:items-start">
+            <header className="rounded-3xl bg-slate-950 p-8 text-white lg:sticky lg:top-24 lg:p-10">
+              <p className="eyebrow text-slate-400">{t.aboutPage.whyChoose.eyebrow}</p>
+              <h2 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">{t.aboutPage.whyChoose.title}</h2>
+              <div className="mt-10 h-px bg-white/15" />
+              <p className="mt-6 text-sm leading-7 text-slate-300">{t.aboutPage.whyChoose.intro}</p>
+            </header>
+            <div className="divide-y rounded-3xl border bg-card px-6 shadow-sm sm:px-10">
+            {whyChooseItems.map((item, index) => {
+              const Icon = [Cpu, Lightbulb, Handshake][index] ?? ShieldCheck;
+              return <article key={item.title} className="group grid gap-5 py-8 sm:grid-cols-[64px_1fr] sm:gap-7">
+                <div className="flex items-start justify-between sm:block"><span className="grid size-12 place-items-center rounded-2xl bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground"><Icon className="size-6" /></span><span className="font-mono text-sm text-muted-foreground sm:mt-5 sm:block">0{index + 1}</span></div>
+                <div><h3 className="text-xl font-bold tracking-tight">{item.title}</h3><p className="mt-3 max-w-2xl text-sm leading-7 text-muted-foreground">{item.text}</p></div>
+              </article>;
+            })}
+            </div>
           </div>
         </div>
       </section>
@@ -210,48 +271,54 @@ export function AboutView() {
             </p>
           </div>
 
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
             {t.aboutPage.teamMembers.map((member) => (
               <article
                 key={member.name}
-                className="group relative aspect-[3/4] w-full overflow-hidden rounded-2xl border border-border/80 bg-slate-950 shadow-md transition-all duration-500 hover:shadow-2xl hover:border-primary/60"
+                className="group relative overflow-hidden rounded-2xl bg-slate-900 shadow-xl aspect-[3/4] cursor-pointer ring-1 ring-white/10 transition-shadow duration-300 hover:ring-primary/40 hover:shadow-2xl"
                 data-motion="tile"
               >
-                {/* Full-Card Portrait Image */}
-                <Image
-                  src={member.image || "/images/team/ceo-hieu.jpg"}
-                  alt={member.name}
-                  fill
-                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                  className="object-cover object-top transition-transform duration-700 ease-out group-hover:scale-105"
-                />
+                {/* Full-card background image */}
+                {member.image ? (
+                  <Image
+                    src={member.image}
+                    alt={member.name}
+                    fill
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                    className="object-cover object-top transition-transform duration-700 ease-out group-hover:scale-105"
+                  />
+                ) : (
+                  <div className="absolute inset-0 bg-gradient-to-br from-slate-700 via-slate-800 to-slate-900 flex items-center justify-center">
+                    <span className="text-7xl font-black text-white/[0.07] select-none tracking-tighter">
+                      {member.name.split(" ").pop()?.charAt(0)}
+                    </span>
+                  </div>
+                )}
 
-                {/* Ambient Gradient Scrim */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-transparent transition-all duration-500 group-hover:from-black/95 group-hover:via-black/60 pointer-events-none" />
+                {/* Gradient overlay — deepens slightly on hover */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/25 to-transparent transition-all duration-500 group-hover:from-black/95 group-hover:via-black/45" />
 
-                {/* Bottom Content: Name + Role, Expanding Specs on Hover */}
-                <div className="absolute inset-x-0 bottom-0 p-5 sm:p-6 flex flex-col justify-end text-white z-10 pointer-events-none">
-                  <h3 className="text-lg sm:text-xl font-bold tracking-tight text-white">
-                    {member.name}
-                  </h3>
+                {/* Subtle teal accent glow on hover */}
+                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none bg-[radial-gradient(ellipse_at_bottom_left,_var(--tw-gradient-stops))] from-primary/15 via-transparent to-transparent" />
 
-                  <p className="mt-1 text-xs sm:text-sm font-medium text-teal-300 tracking-wide">
-                    {member.role}
-                  </p>
+                {/* Info panel */}
+                <div className="absolute inset-x-0 bottom-0">
+                  {/* Always visible: role pill + name */}
+                  <div className="px-5 pb-5 pt-3">
+                    <span className="inline-block mb-2 rounded-full bg-primary/15 border border-primary/30 backdrop-blur-md px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-widest text-primary">
+                      {member.role}
+                    </span>
+                    <h3 className="text-[1.05rem] font-bold text-white leading-snug">
+                      {member.name}
+                    </h3>
+                  </div>
 
-                  {/* Smooth Expandable Drawer on Hover */}
-                  <div className="grid grid-rows-[0fr] opacity-0 transition-all duration-500 ease-out group-hover:grid-rows-[1fr] group-hover:opacity-100 group-hover:mt-3">
-                    <div className="overflow-hidden space-y-2 border-t border-white/20 pt-3">
-                      {member.cert && (
-                        <p className="text-xs font-semibold text-white/90 leading-tight">
-                          {member.cert}
-                        </p>
-                      )}
-                      {member.spec && (
-                        <p className="text-xs leading-relaxed text-slate-300">
-                          {member.spec}
-                        </p>
-                      )}
+                  {/* Hover-revealed spec info — slides in via max-height */}
+                  <div className="max-h-0 overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] group-hover:max-h-32">
+                    <div className="px-5 pb-5 border-t border-white/15 pt-3">
+                      <p className="text-[0.8rem] leading-relaxed text-white/70">
+                        {member.spec}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -262,18 +329,34 @@ export function AboutView() {
       </section>
 
       <DeliveryProcess />
-      <Partners compact />
+      <Partners customPartners={partners} />
+      <div className="site-container pb-12">
+        <a
+          href={ROUTES.profile}
+          download
+          className="font-semibold text-primary underline"
+        >
+          {t.common.downloadProfile}
+        </a>
+      </div>
 
       {/* Bottom CTA */}
       <section className="py-16 border-t bg-card/60">
         <div className="site-container flex flex-col items-start justify-between gap-6 rounded-2xl border bg-card p-8 md:p-12 md:flex-row md:items-center shadow-lg">
           <div className="max-w-xl">
             <p className="eyebrow">{t.aboutPage.ctaEyebrow}</p>
-            <h2 className="section-title text-2xl md:text-3xl mt-1">{t.aboutPage.ctaTitle}</h2>
+            <h2 className="section-title text-2xl md:text-3xl mt-1">
+              {t.aboutPage.ctaTitle}
+            </h2>
           </div>
-          <Button asChild size="lg" className="rounded-xl font-semibold shadow-md shrink-0">
+          <Button
+            asChild
+            size="lg"
+            className="rounded-xl font-semibold shadow-md shrink-0"
+          >
             <Link href={ROUTES.contact}>
-              {t.common.discussProject} <ArrowUpRight className="ml-1.5 size-4" />
+              {t.common.discussProject}{" "}
+              <ArrowUpRight className="ml-1.5 size-4" />
             </Link>
           </Button>
         </div>

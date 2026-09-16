@@ -44,26 +44,8 @@ test("BIM Viewer route is properly configured in ROUTES", () => {
   assert.equal(ROUTES.bimViewer, "/bim-viewer");
 });
 
-test("SAMPLE_BIM_MODELS generates valid IFC entities and Psets", () => {
-  const { SAMPLE_BIM_MODELS } = load("components/bim-viewer/sample-models");
-  assert.ok(SAMPLE_BIM_MODELS.tower);
-  assert.ok(SAMPLE_BIM_MODELS.steel);
-  assert.ok(SAMPLE_BIM_MODELS.mep);
-
-  // Tower verification
-  const tower = SAMPLE_BIM_MODELS.tower;
-  assert.ok(tower.elements.length > 0);
-  assert.ok(tower.clashes.length > 0);
-  assert.equal(typeof tower.defaultCamera.position[0], "number");
-
-  for (const elem of tower.elements) {
-    assert.ok(elem.id);
-    assert.ok(elem.guid);
-    assert.ok(elem.ifcType.startsWith("Ifc"));
-    assert.ok(["architecture", "structure", "mep", "clash"].includes(elem.discipline));
-    assert.ok(Array.isArray(elem.position));
-    assert.equal(elem.position.length, 3);
-    assert.ok(Array.isArray(elem.size));
-    assert.equal(elem.size.length, 3);
-  }
+test("viewer starts with no fabricated building or clash results", () => {
+  const { EMPTY_BIM_MODEL } = load("components/bim-viewer/empty-model");
+  assert.deepEqual(EMPTY_BIM_MODEL.elements, []);
+  assert.deepEqual(EMPTY_BIM_MODEL.clashes, []);
 });

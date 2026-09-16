@@ -1,11 +1,10 @@
 "use client";
 
-import Link from "next/link";
-import { ArrowUpRight, Mail, MapPin, Phone } from "lucide-react";
 import { CONTACT_EMAIL, ROUTES } from "@/constants/routes";
 import { NewsletterForm } from "@/features/contact/components/NewsletterForm";
 import { useLanguage } from "@/lib/i18n/context";
-import { SocialLinks } from "@/components/shared/SocialLinks";
+import { ArrowUpRight, Mail, MapPin, Phone } from "lucide-react";
+import Link from "next/link";
 
 export function Footer() {
   const { t, locale } = useLanguage();
@@ -47,20 +46,12 @@ export function Footer() {
               {CONTACT_EMAIL}
             </a>
             <a
-              href="tel:+842873004068"
+              href="tel:+84932468099"
               className="flex min-h-8 items-center gap-3 hover:text-white"
             >
               <Phone className="size-4 text-teal-300" />
-              +84 28 7300 4068
+              +84 93 2468 099
             </a>
-          </div>
-
-          {/* Social Links Icons */}
-          <div className="mt-6 pt-4 border-t border-white/10">
-            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">
-              {locale === "vi" ? "Mạng xã hội" : "Connect with us"}
-            </p>
-            <SocialLinks variant="icons" />
           </div>
         </div>
         <div>
@@ -106,10 +97,7 @@ export function Footer() {
       </div>
       <div className="border-t border-white/10">
         <div className="site-container flex flex-col justify-between gap-4 py-6 text-xs leading-6 text-slate-400 lg:flex-row">
-          <span>
-            {t.footer.copyright}
-            <span className="ml-3">MST: 0402225839</span>
-          </span>
+          <span>{t.footer.copyright}</span>
           <div className="flex flex-wrap gap-x-6 gap-y-2">
             <Link
               href={ROUTES.legalDetail("dieu-khoan-su-dung")}

@@ -1,25 +1,25 @@
 ﻿"use client";
 
-import React, { useState, useRef, useEffect, useMemo } from "react";
-import Link from "next/link";
-import { ArrowLeft, Upload, Box, Layers } from "lucide-react";
 import { useLanguage } from "@/lib/i18n/context";
-import { SAMPLE_BIM_MODELS } from "./sample-models";
+import { ArrowLeft, Box, Layers, Upload } from "lucide-react";
+import Link from "next/link";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { toast } from "sonner";
 import { BimCanvas } from "./BimCanvas";
-import { BimToolbar } from "./BimToolbar";
-import { BimPropertyInspector } from "./BimPropertyInspector";
 import { BimControlsOverlay } from "./BimControlsOverlay";
-import { defaultClip, getModelBounds } from "./viewer-geometry";
+import { BimPropertyInspector } from "./BimPropertyInspector";
+import { BimToolbar } from "./BimToolbar";
+import { EMPTY_BIM_MODEL } from "./empty-model";
 import type {
+  ActiveMeasurement,
+  BimClipPlanes,
+  BimDiscipline,
   BimElementData,
   BimModelDefinition,
   BimTool,
   BimViewPreset,
-  BimDiscipline,
-  ActiveMeasurement,
-  BimClipPlanes,
 } from "./types";
-import { toast } from "sonner";
+import { defaultClip, getModelBounds } from "./viewer-geometry";
 
 export function BimViewerPage() {
   const { t, locale } = useLanguage();
@@ -29,14 +29,11 @@ export function BimViewerPage() {
   const inputRef = useRef<HTMLInputElement>(null);
   const taskRef = useRef<AbortController | null>(null);
   const dragDepth = useRef(0);
-  const [selectedModelId, setSelectedModelId] = useState("tower");
+  const [selectedModelId, setSelectedModelId] = useState("empty");
   const [customModel, setCustomModel] = useState<BimModelDefinition | null>(
     null,
   );
-  const model =
-    customModel ??
-    SAMPLE_BIM_MODELS[selectedModelId] ??
-    SAMPLE_BIM_MODELS.tower;
+  const model = customModel ?? EMPTY_BIM_MODEL;
   const bounds = useMemo(() => getModelBounds(model), [model]);
   const [activeTool, setActiveTool] = useState<BimTool>("orbit");
   const [selectedElement, setSelectedElement] = useState<BimElementData | null>(
@@ -53,7 +50,7 @@ export function BimViewerPage() {
     clash: true,
   });
   const [clip, setClip] = useState<BimClipPlanes>(() =>
-    defaultClip(getModelBounds(SAMPLE_BIM_MODELS.tower)),
+    defaultClip(getModelBounds(EMPTY_BIM_MODEL)),
   );
   const [explode, setExplode] = useState(0);
   const [measurement, setMeasurement] = useState<ActiveMeasurement | null>(
@@ -102,8 +99,8 @@ export function BimViewerPage() {
     chooseView("perspective");
     setStats({ bytes: 0, triangles: 0 });
   };
-  const load = async (input: File | "demo") => {
-    if (input !== "demo" && !input.name.toLowerCase().endsWith(".ifc")) {
+  const load = async (input: File) => {
+    if (!input.name.toLowerCase().endsWith(".ifc")) {
       toast.error(
         vi ? "Vui lòng chọn tệp .ifc." : "Please select an .ifc file.",
       );
@@ -113,18 +110,11 @@ export function BimViewerPage() {
     const controller = new AbortController();
     taskRef.current = controller;
     setLoading({
-      name: input === "demo" ? "bim4c-commercial-tower.ifc" : input.name,
+      name: input.name,
       percent: 0,
     });
     try {
-      let file: File;
-      if (input === "demo") {
-        const response = await fetch("/models/bim4c-commercial-tower.ifc", {
-          signal: controller.signal,
-        });
-        if (!response.ok) throw Error("IFC_FETCH");
-        file = new File([await response.blob()], "bim4c-commercial-tower.ifc");
-      } else file = input;
+      const file = input;
       const { parseIfcFileToBimModel } = await import("./ifc-loader");
       controller.signal.throwIfAborted();
       const parsed = await parseIfcFileToBimModel(
@@ -172,19 +162,7 @@ export function BimViewerPage() {
       }
     }
   };
-  const selectModel = (id: string) => {
-    if (id === "ifc-demo") {
-      void load("demo");
-      return;
-    }
-    if (id === "uploaded") return;
-    cancelLoad();
-    const next = SAMPLE_BIM_MODELS[id];
-    if (!next) return;
-    resetModelState(next);
-    setCustomModel(null);
-    setSelectedModelId(id);
-  };
+
   const snapshot = (data: string | null) => {
     if (!data) {
       toast.error(
@@ -339,7 +317,6 @@ export function BimViewerPage() {
           onSelectViewPreset={chooseView}
           selectedModelId={selectedModelId}
           uploadedName={customModel?.filename}
-          onSelectModel={selectModel}
           onResetView={() => {
             chooseView("perspective");
             setSelectedElement(null);
@@ -351,6 +328,19 @@ export function BimViewerPage() {
           clashesCount={model.clashes.length}
         />
         <div className="relative flex min-h-0 flex-1">
+          {!customModel && (
+            <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none">
+              <button
+                type="button"
+                className="pointer-events-auto rounded-xl bg-teal-400 px-6 py-4 font-semibold text-slate-950"
+                onClick={() => inputRef.current?.click()}
+              >
+                {vi
+                  ? "Chọn tệp IFC để xem mô hình"
+                  : "Choose an IFC file to view"}
+              </button>
+            </div>
+          )}
           <BimCanvas
             model={model}
             activeTool={activeTool}
@@ -399,7 +389,6 @@ export function BimViewerPage() {
               setMeasurement(null);
             }}
             clashes={model.clashes}
-            isSample={model.source !== "ifc"}
             onFocusClash={(clash) => {
               setExplode(0);
               setClip((p) => ({ ...p, enabled: false }));
@@ -447,8 +436,8 @@ export function BimViewerPage() {
           {model.source === "ifc"
             ? `${model.schema} · ${model.filename}`
             : vi
-              ? "Mô hình minh họa · dữ liệu mẫu"
-              : "Illustrative model · sample data"}
+              ? "Chưa tải mô hình IFC"
+              : "No IFC model loaded"}
         </span>
       </footer>
     </div>

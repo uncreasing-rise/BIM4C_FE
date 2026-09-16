@@ -64,7 +64,10 @@ export function HomeView({
         <div className="site-container relative">
           <div className="grid items-center gap-12 lg:grid-cols-[1.05fr_1.15fr] lg:gap-14">
             {/* Left Hero Content */}
-            <div className="home-hero-copy flex flex-col justify-center" data-motion="hero">
+            <div
+              className="home-hero-copy flex flex-col justify-center"
+              data-motion="hero"
+            >
               {/* Tech Kicker Pill */}
               <div className="inline-flex items-center gap-2 rounded-full border border-teal-500/30 bg-teal-500/10 px-3.5 py-1.5 text-xs font-semibold text-teal-300 backdrop-blur-md w-fit mb-6">
                 <span className="relative flex size-2">
@@ -73,8 +76,8 @@ export function HomeView({
                 </span>
                 <span>
                   {isVi
-                    ? "Công nghệ số hóa công trình chuẩn ISO 19650"
-                    : "ISO 19650 Construction Technology"}
+                    ? "Công nghệ số hóa công trình BIM"
+                    : "BIM Construction Technology"}
                 </span>
               </div>
 
@@ -119,50 +122,46 @@ export function HomeView({
               </div>
 
               {/* Metrics Strip */}
-              <div className="mt-10 grid grid-cols-3 gap-4 border-t border-white/10 pt-6">
-                <div>
-                  <strong className="block text-2xl font-black text-white sm:text-3xl font-mono">
-                    100+
-                  </strong>
-                  <span className="mt-0.5 block text-xs text-slate-400">
-                    {isVi ? "Dự án bàn giao" : "Delivered Projects"}
-                  </span>
-                </div>
-                <div>
-                  <strong className="block text-2xl font-black text-teal-300 sm:text-3xl font-mono">
-                    0 Clash
-                  </strong>
-                  <span className="mt-0.5 block text-xs text-slate-400">
-                    {isVi ? "Xung đột thi công" : "Clash Free Delivery"}
-                  </span>
-                </div>
-                <div>
-                  <strong className="block text-2xl font-black text-emerald-400 sm:text-3xl font-mono">
-                    LOD 400
-                  </strong>
-                  <span className="mt-0.5 block text-xs text-slate-400">
-                    {isVi ? "Độ chính xác chế tạo" : "Fabrication Precision"}
-                  </span>
-                </div>
+              <div className="mt-8 grid grid-cols-2 gap-4 border-t border-white/15 pt-6">
+                {t.aboutPage.trackRecord.metrics.map((metric) => (
+                  <div key={metric.value}>
+                    <strong className="text-xl text-teal-300">
+                      {metric.value}
+                    </strong>
+                    <p className="text-xs text-slate-300">{metric.label}</p>
+                  </div>
+                ))}
               </div>
             </div>
 
             {/* Right Hero Interactive 3D BIM Stage */}
             <div className="min-w-0" data-motion="slide-in">
-              <BimInteractiveHeroVisual featuredProject={projects[0]} />
+              <BimInteractiveHeroVisual />
             </div>
           </div>
         </div>
       </section>
-
 
       <section
         id="services"
         data-home-section="services"
         className="services-section py-16 lg:py-20"
       >
+        {!services.length && (
+          <p className="site-container py-4 text-sm text-muted-foreground">
+            {isVi
+              ? "Nội dung đang được cập nhật. Vui lòng xem hồ sơ năng lực hoặc liên hệ BIM4C."
+              : "Content is being updated. Please view our company profile or contact BIM4C."}{" "}
+            <a href={ROUTES.profile} className="underline">
+              {t.common.downloadProfile}
+            </a>
+          </p>
+        )}
         <div className="site-container">
-          <header className="mb-8 flex flex-col justify-between gap-5 md:flex-row md:items-end" data-motion="reveal">
+          <header
+            className="mb-8 flex flex-col justify-between gap-5 md:flex-row md:items-end"
+            data-motion="reveal"
+          >
             <div>
               <p className="eyebrow">
                 {isVi ? "Năng lực chuyên môn" : "Our expertise"}
@@ -252,7 +251,10 @@ export function HomeView({
             })}
           </div>
           {services.length > 3 && (
-            <div className="mt-6 grid divide-y rounded-2xl border border-border/80 bg-muted/40 md:grid-cols-3 md:divide-x md:divide-y-0 shadow-xs" data-motion="reveal">
+            <div
+              className="mt-6 grid divide-y rounded-2xl border border-border/80 bg-muted/40 md:grid-cols-3 md:divide-x md:divide-y-0 shadow-xs"
+              data-motion="reveal"
+            >
               {orderedServices.slice(3, 6).map((service) => (
                 <Link
                   href={ROUTES.serviceDetail(service.slug)}
@@ -273,8 +275,21 @@ export function HomeView({
         data-home-section="projects"
         className="bg-brand-ink py-16 text-white lg:py-20 relative overflow-hidden"
       >
+        {!projects.length && (
+          <p className="site-container py-4 text-sm text-muted-foreground">
+            {isVi
+              ? "Nội dung đang được cập nhật. Vui lòng xem hồ sơ năng lực hoặc liên hệ BIM4C."
+              : "Content is being updated. Please view our company profile or contact BIM4C."}{" "}
+            <a href={ROUTES.profile} className="underline">
+              {t.common.downloadProfile}
+            </a>
+          </p>
+        )}
         <div className="site-container relative">
-          <header className="mb-10 flex flex-col justify-between gap-4 sm:flex-row sm:items-end" data-motion="reveal">
+          <header
+            className="mb-10 flex flex-col justify-between gap-4 sm:flex-row sm:items-end"
+            data-motion="reveal"
+          >
             <div>
               <p className="eyebrow text-teal-300">
                 {isVi ? "Kinh nghiệm thực chiến" : "Selected experience"}
@@ -302,8 +317,21 @@ export function HomeView({
       <DeliveryProcess />
 
       <section data-home-section="academy" className="py-16 lg:py-20">
+        {!courses.length && (
+          <p className="site-container py-4 text-sm text-muted-foreground">
+            {isVi
+              ? "Nội dung đang được cập nhật. Vui lòng xem hồ sơ năng lực hoặc liên hệ BIM4C."
+              : "Content is being updated. Please view our company profile or contact BIM4C."}{" "}
+            <a href={ROUTES.profile} className="underline">
+              {t.common.downloadProfile}
+            </a>
+          </p>
+        )}
         <div className="site-container">
-          <div className="academy-panel grid overflow-hidden rounded-3xl border border-border/80 bg-card lg:grid-cols-[.9fr_1.1fr] shadow-lg" data-motion="reveal">
+          <div
+            className="academy-panel grid overflow-hidden rounded-3xl border border-border/80 bg-card lg:grid-cols-[.9fr_1.1fr] shadow-lg"
+            data-motion="reveal"
+          >
             <div className="relative min-h-72 lg:min-h-full">
               <Image
                 src="/images/news-bim-training.webp"
@@ -316,8 +344,8 @@ export function HomeView({
 
               <p className="absolute bottom-6 left-6 right-6 text-sm font-medium text-white/90">
                 {isVi
-                  ? "Học trên dữ liệu dự án thực tế. Cấp chứng chỉ định danh chuẩn hóa quốc tế."
-                  : "Learn with live project datasets. Receive verifiable industry certificates."}
+                  ? "Đào tạo và chuyển giao công nghệ BIM cho doanh nghiệp và sinh viên."
+                  : "BIM training and technology transfer for businesses and students."}
               </p>
             </div>
             <div className="p-6 sm:p-10 flex flex-col justify-between">
@@ -373,11 +401,26 @@ export function HomeView({
       <Partners compact customPartners={rawPartners} />
 
       <section data-home-section="news" className="py-16 lg:py-24">
+        {!posts.length && (
+          <p className="site-container py-4 text-sm text-muted-foreground">
+            {isVi
+              ? "Nội dung đang được cập nhật. Vui lòng xem hồ sơ năng lực hoặc liên hệ BIM4C."
+              : "Content is being updated. Please view our company profile or contact BIM4C."}{" "}
+            <a href={ROUTES.profile} className="underline">
+              {t.common.downloadProfile}
+            </a>
+          </p>
+        )}
         <div className="site-container">
-          <header className="mb-10 flex flex-col justify-between gap-4 sm:flex-row sm:items-end" data-motion="reveal">
+          <header
+            className="mb-10 flex flex-col justify-between gap-4 sm:flex-row sm:items-end"
+            data-motion="reveal"
+          >
             <div>
               <p className="eyebrow">
-                {isVi ? "Góc nhìn & Bài viết chuyên môn" : "Engineering Insights"}
+                {isVi
+                  ? "Góc nhìn & Bài viết chuyên môn"
+                  : "Engineering Insights"}
               </p>
               <h2 className="section-title">
                 {isVi
@@ -424,8 +467,6 @@ export function HomeView({
                   </div>
                   <div className="mt-4 flex items-center gap-2 text-xs font-semibold text-muted-foreground">
                     <time>{post.meta}</time>
-                    <span>·</span>
-                    <span className="text-primary">{isVi ? "5 phút đọc" : "5 min read"}</span>
                   </div>
                   <h3 className="mt-2.5 text-xl font-bold leading-snug tracking-tight text-foreground group-hover:text-primary transition-colors line-clamp-2">
                     {post.title}
@@ -444,7 +485,10 @@ export function HomeView({
         </div>
       </section>
 
-      <section data-home-section="cta" className="py-16 lg:py-24 relative overflow-hidden">
+      <section
+        data-home-section="cta"
+        className="py-16 lg:py-24 relative overflow-hidden"
+      >
         <div className="site-container">
           <div
             className="relative overflow-hidden rounded-3xl border border-teal-500/30 bg-gradient-to-br from-slate-950 via-[#082631] to-slate-950 p-8 sm:p-12 lg:p-16 text-white shadow-2xl grid gap-8 lg:grid-cols-[1.3fr_0.7fr] lg:items-center"
@@ -458,7 +502,9 @@ export function HomeView({
             <div className="relative z-10">
               <div className="inline-flex items-center gap-2 rounded-full bg-teal-500/15 border border-teal-500/30 px-3.5 py-1 text-xs font-bold uppercase tracking-wider text-teal-300 mb-4">
                 <span className="size-2 rounded-full bg-teal-400 animate-pulse" />
-                {isVi ? "Bắt đầu từ câu hỏi đúng" : "Start with the right question"}
+                {isVi
+                  ? "Bắt đầu từ câu hỏi đúng"
+                  : "Start with the right question"}
               </div>
               <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold leading-[1.15] tracking-tight text-white max-w-2xl">
                 {isVi
@@ -481,7 +527,7 @@ export function HomeView({
                 <span>{t.common.discussProject}</span>
                 <ArrowUpRight className="size-5 transition-transform duration-300 group-hover:translate-x-1 group-hover:-translate-y-1" />
               </Link>
-              
+
               <a
                 href={ROUTES.contactEmail}
                 className="inline-flex items-center gap-2 text-sm font-semibold text-slate-300 hover:text-teal-300 transition-colors"
@@ -491,7 +537,7 @@ export function HomeView({
               </a>
 
               <p className="text-xs text-slate-400">
-                {isVi ? "✓ Phản hồi trong vòng 24 giờ làm việc" : "✓ Response within 24 business hours"}
+                {isVi ? "Liên hệ đội ngũ BIM4C" : "Contact the BIM4C team"}
               </p>
             </div>
           </div>

@@ -2,33 +2,24 @@
 
 import { usePublicMotion } from "@/components/motion/hooks/use-public-motion";
 
-import Image from "next/image";
-import Link from "next/link";
-import {
-  ArrowLeft,
-  ArrowRight,
-  ArrowUpRight,
-  ShieldCheck,
-  Clock,
-  Award,
-  Building2,
-  FileCheck2,
-} from "lucide-react";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { ContentBlockRenderer } from "@/components/shared/ContentBlockRenderer";
+import { PageHero } from "@/components/shared/PageHero";
+import { TableOfContents } from "@/components/shared/TableOfContents";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ROUTES } from "@/constants/routes";
 import { ConsultationForm } from "@/features/contact/components/ConsultationForm";
 import type { Project } from "@/features/projects/types/project";
-import type { ContentEntry } from "@/types/content";
-import { ContentBlockRenderer } from "@/components/shared/ContentBlockRenderer";
-import { TableOfContents } from "@/components/shared/TableOfContents";
-import { PageHero } from "@/components/shared/PageHero";
-import { JsonLd } from "@/components/seo/JsonLd";
-import { breadcrumbSchema, contentSchema } from "@/lib/seo/structured-data";
-import { toLocalizedLabel } from "@/lib/utils/public-labels";
 import { useLanguage } from "@/lib/i18n/context";
 import { localizeContent, localizeContentList } from "@/lib/i18n/localize";
+import { breadcrumbSchema, contentSchema } from "@/lib/seo/structured-data";
 import { legacyBlocks } from "@/lib/utils/legacy-blocks";
-import { ROUTES } from "@/constants/routes";
+import { toLocalizedLabel } from "@/lib/utils/public-labels";
+import type { ContentEntry } from "@/types/content";
+import { ArrowLeft, ArrowRight, Award, Clock, ShieldCheck } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
 
 interface ProjectDetailViewProps {
   entry: Project;
@@ -55,7 +46,10 @@ export function ProjectDetailView({
 
   const projectProfile = [
     [t.detailPage.fields.client, entry.investor],
-    [t.detailPage.fields.location, toLocalizedLabel(entry.location ?? "", locale)],
+    [
+      t.detailPage.fields.location,
+      toLocalizedLabel(entry.location ?? "", locale),
+    ],
     [t.detailPage.fields.scale, entry.scale],
     [t.detailPage.fields.contractPackage, entry.contractPackage],
     [
@@ -91,7 +85,10 @@ export function ProjectDetailView({
           href: index < breadcrumbItems.length - 1 ? item.path : undefined,
         }))}
       />
-      <article className="bg-background py-8 lg:py-12 pb-24 lg:pb-16" data-motion="detail">
+      <article
+        className="bg-background py-8 lg:py-12 pb-24 lg:pb-16"
+        data-motion="detail"
+      >
         <div className="site-container">
           {/* Top Bar Navigation */}
           <div
@@ -126,7 +123,6 @@ export function ProjectDetailView({
               ))}
             </dl>
           )}
-
 
           {/* Table of Contents & Quick Action */}
           <TableOfContents
@@ -180,22 +176,34 @@ export function ProjectDetailView({
                     <div className="flex items-start gap-2.5 text-xs text-slate-200">
                       <ShieldCheck className="size-4 text-teal-400 shrink-0 mt-0.5" />
                       <div>
-                        <strong className="font-bold text-teal-300">{t.detailPage.trustSignals.ndaTitle}: </strong>
-                        <span className="text-slate-200">{t.detailPage.trustSignals.ndaDesc}</span>
+                        <strong className="font-bold text-teal-300">
+                          {t.detailPage.trustSignals.ndaTitle}:{" "}
+                        </strong>
+                        <span className="text-slate-200">
+                          {t.detailPage.trustSignals.ndaDesc}
+                        </span>
                       </div>
                     </div>
                     <div className="flex items-start gap-2.5 text-xs text-slate-200">
                       <Clock className="size-4 text-teal-400 shrink-0 mt-0.5" />
                       <div>
-                        <strong className="font-bold text-teal-300">{t.detailPage.trustSignals.slaTitle}: </strong>
-                        <span className="text-slate-200">{t.detailPage.trustSignals.slaDesc}</span>
+                        <strong className="font-bold text-teal-300">
+                          {t.detailPage.trustSignals.slaTitle}:{" "}
+                        </strong>
+                        <span className="text-slate-200">
+                          {t.detailPage.trustSignals.slaDesc}
+                        </span>
                       </div>
                     </div>
                     <div className="flex items-start gap-2.5 text-xs text-slate-200">
                       <Award className="size-4 text-teal-400 shrink-0 mt-0.5" />
                       <div>
-                        <strong className="font-bold text-teal-300">{t.detailPage.trustSignals.expertTitle}: </strong>
-                        <span className="text-slate-200">{t.detailPage.trustSignals.expertDesc}</span>
+                        <strong className="font-bold text-teal-300">
+                          {t.detailPage.trustSignals.expertTitle}:{" "}
+                        </strong>
+                        <span className="text-slate-200">
+                          {t.detailPage.trustSignals.expertDesc}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -207,9 +215,14 @@ export function ProjectDetailView({
 
         {/* Project Gallery */}
         {entry.gallery && entry.gallery.length > 0 && (
-          <section className="site-container mt-16" aria-label="Project gallery">
+          <section
+            className="site-container mt-16"
+            aria-label="Project gallery"
+          >
             <h2 className="text-xl font-bold mb-6 text-foreground">
-              {locale === "vi" ? "Hình ảnh & Mô hình dự án" : "Project Gallery & 3D Deliverables"}
+              {locale === "vi"
+                ? "Hình ảnh & Mô hình dự án"
+                : "Project Gallery & 3D Deliverables"}
             </h2>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {entry.gallery.map((image, index) => (
@@ -240,73 +253,36 @@ export function ProjectDetailView({
           </section>
         )}
 
-        {/* Technical BIM Deliverables Strip */}
-        <section className="site-container mt-14">
-          <div className="grid gap-6 md:grid-cols-2">
-            <div className="rounded-2xl border bg-card p-6 shadow-2xs">
-              <div className="flex items-center gap-2 text-primary font-bold text-sm uppercase tracking-wider">
-                <Building2 className="size-5" />
-                <span>{t.detailPage.standardsCompliance}</span>
-              </div>
-              <ul className="mt-4 space-y-3 text-sm text-muted-foreground">
-                <li className="flex items-center gap-2">
-                  <span className="size-1.5 rounded-full bg-teal-500" />
-                  <span>ISO 19650 CDE Information Governance</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="size-1.5 rounded-full bg-teal-500" />
-                  <span>AIA BIM Protocol & Model Specifications (LOD 300 - 400)</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="size-1.5 rounded-full bg-teal-500" />
-                  <span>OpenBIM IFC & BCF Multidiscipline Coordination</span>
-                </li>
-              </ul>
-            </div>
-
-            <div className="rounded-2xl border bg-card p-6 shadow-2xs">
-              <div className="flex items-center gap-2 text-primary font-bold text-sm uppercase tracking-wider">
-                <FileCheck2 className="size-5" />
-                <span>{t.detailPage.deliverablesChecklist}</span>
-              </div>
-              <ul className="mt-4 space-y-3 text-sm text-muted-foreground">
-                <li className="flex items-center gap-2">
-                  <span className="size-1.5 rounded-full bg-teal-500" />
-                  <span>Federated BIM Model (Architectural, Structural, MEP)</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="size-1.5 rounded-full bg-teal-500" />
-                  <span>Clash Detection & Resolution Audit Matrix</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="size-1.5 rounded-full bg-teal-500" />
-                  <span>Shop Drawings & As-Built Digital Handover</span>
-                </li>
-              </ul>
-            </div>
-          </div>
-        </section>
-
         {/* Related Projects Section */}
         {related.length > 0 && (
-          <section className="site-container mt-16 border-t pt-12" aria-label="Related projects">
+          <section
+            className="site-container mt-16 border-t pt-12"
+            aria-label="Related projects"
+          >
             <div>
               <header className="mb-8 flex items-center justify-between">
                 <div>
                   <p className="eyebrow">{t.detailPage.keepExploring}</p>
                   <h2 className="text-2xl font-bold tracking-tight sm:text-3xl text-foreground">
-                    {locale === "vi" ? "Dự án tiêu biểu khác" : "Related projects"}
+                    {locale === "vi"
+                      ? "Dự án tiêu biểu khác"
+                      : "Related projects"}
                   </h2>
                 </div>
                 <Button asChild variant="outline">
                   <Link href={backHref}>
-                    {t.detailPage.viewAll} <ArrowRight className="size-4 ml-1" />
+                    {t.detailPage.viewAll}{" "}
+                    <ArrowRight className="size-4 ml-1" />
                   </Link>
                 </Button>
               </header>
               <div className="grid gap-6 md:grid-cols-3">
                 {related.slice(0, 3).map((item) => (
-                  <article className="group relative" key={item.slug} data-motion="tile">
+                  <article
+                    className="group relative"
+                    key={item.slug}
+                    data-motion="tile"
+                  >
                     <div className="relative aspect-[16/10] overflow-hidden rounded-2xl">
                       <Image
                         src={item.image}

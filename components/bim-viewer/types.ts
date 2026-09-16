@@ -28,9 +28,9 @@ export interface BimGeometryData {
 }
 
 export interface BimElementData {
-  source?: "ifc" | "sample";
+  source?: "ifc";
   spatialPath?: { id: number; type: string; name: string }[];
-  dimensionsSource?: "bounds" | "sample";
+  dimensionsSource?: "bounds";
   id: string;
   guid: string;
   name: string;
@@ -70,7 +70,7 @@ export interface BimClashItem {
 }
 
 export interface BimModelDefinition {
-  source?: "ifc" | "sample";
+  source?: "ifc";
   filename?: string;
   schema?: string;
   diagnostics?: {
@@ -80,7 +80,6 @@ export interface BimModelDefinition {
   };
   bounds?: BimBounds;
   id: string;
-  nameKey: "tower" | "steel" | "mep" | "villa";
   description: string;
   elementsCount: number;
   elements: BimElementData[];

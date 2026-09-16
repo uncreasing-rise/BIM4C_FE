@@ -1,0 +1,109 @@
+const apiUrl = process.env.BIM4C_API_URL ?? "http://127.0.0.1:8080";
+const email = process.env.BIM4C_ADMIN_EMAIL;
+const password = process.env.BIM4C_ADMIN_PASSWORD;
+if (!email || !password) throw new Error("BIM4C_ADMIN_EMAIL and BIM4C_ADMIN_PASSWORD are required");
+
+const content = {
+  "laser-scan": {
+    description: "Quét hiện trạng công trình bằng công nghệ LiDAR và máy quét laser mặt đất, tạo dữ liệu chính xác cho cải tạo, nâng cấp và lập hồ sơ hoàn công.",
+    sections: [
+      ["Tổng quan dịch vụ", "Chúng tôi cung cấp dịch vụ quét laser 3D độ chính xác cao, ghi nhận hiện trạng không gian vật lý nhanh chóng, an toàn và không xâm lấn. Dữ liệu point cloud là cơ sở đáng tin cậy cho thiết kế, cải tạo và kiểm tra chất lượng."],
+      ["Ứng dụng công nghệ quét laser", "Thu thập dữ liệu hoàn công (As-Built); tích hợp Scan-to-BIM; so sánh dữ liệu quét với mô hình thiết kế để giám sát thi công và phân tích biến dạng; xây dựng dữ liệu Digital Twin phục vụ quản lý vận hành và tài sản."],
+      ["Lợi ích nổi bật", "Hàng triệu điểm dữ liệu được thu thập trong thời gian ngắn với độ chính xác cao; thực hiện từ xa, hạn chế ảnh hưởng đến hoạt động hiện hữu; giảm sai sót thiết kế, làm lại và chi phí dự án."]
+    ],
+    highlights: ["Quét hiện trạng công trình để cải tạo", "Khảo sát địa hình bằng drone", "Mô hình hoàn công (As-built model)"]
+  },
+  "lidar": {
+    description: "Khảo sát địa hình và công trình bằng công nghệ LiDAR, tạo dữ liệu không gian phục vụ thiết kế, quy hoạch và quản lý hiện trạng.",
+    sections: [["Phạm vi dịch vụ", "Thu thập dữ liệu LiDAR từ thiết bị quét laser mặt đất hoặc drone theo điều kiện hiện trường; xử lý point cloud, kiểm tra dữ liệu và chuẩn bị sản phẩm khảo sát phù hợp với mục tiêu dự án."], ["Sản phẩm đầu ra", "Dữ liệu point cloud, hồ sơ hiện trạng và thông tin không gian có thể kết nối với quy trình BIM, thiết kế, kiểm tra biến dạng hoặc lập kế hoạch cải tạo."]],
+    highlights: ["Khảo sát địa hình bằng drone", "Thu thập dữ liệu LiDAR", "Dữ liệu hiện trạng phục vụ BIM"]
+  },
+  "scan-to-bim": {
+    description: "Chuyển đổi dữ liệu point cloud từ khảo sát hiện trạng thành mô hình BIM chính xác, hỗ trợ cải tạo, phối hợp thiết kế và quản lý tài sản.",
+    sections: [["Phạm vi dịch vụ", "Làm sạch và xử lý point cloud; xác định phạm vi mô hình hóa; dựng mô hình kiến trúc, kết cấu và MEP hiện trạng theo yêu cầu LOD; kiểm tra sai lệch giữa mô hình và dữ liệu quét."], ["Ứng dụng", "Mô hình hiện trạng phục vụ thiết kế cải tạo, phát hiện xung đột, lập hồ sơ hoàn công, kiểm tra chất lượng và xây dựng nền tảng dữ liệu Digital Twin."]],
+    highlights: ["Xử lý đám mây điểm", "Mô hình BIM hiện trạng", "Kiểm tra mô hình với dữ liệu quét"]
+  },
+  "bim-3d": {
+    description: "Mô hình hóa thông tin công trình 3D cho kiến trúc, kết cấu, cơ điện (MEP) và hạ tầng, chuyển đổi bản vẽ 2D hoặc dữ liệu khảo sát thành mô hình giàu thông tin.",
+    sections: [["Dịch vụ BIM 3D bao gồm", "Mô hình 3D các bộ môn theo cấp độ LOD; xử lý point cloud; phối hợp liên bộ môn và phát hiện xung đột; trích xuất shop drawing, bản vẽ IFC và hồ sơ thi công; chuẩn hóa mô hình cho đấu thầu, thi công và vận hành."], ["Lợi ích chính", "Nâng cao độ chính xác và tính nhất quán; tăng hiệu quả phối hợp giữa các bên; giảm lỗi thi công và xung đột tại công trường; tạo nền tảng số cho các giai đoạn tiếp theo."]],
+    highlights: ["Xử lý đám mây điểm (point cloud)", "Mô hình hóa 3D theo LOD", "Phát hiện xung đột và phối hợp đa bộ môn", "Triển khai shop drawing và xuất bản tài liệu"]
+  },
+  "bim-4d": {
+    description: "Tích hợp mô hình 3D với dữ liệu tiến độ để mô phỏng toàn bộ chuỗi thời gian, tối ưu trình tự thi công và quản lý thời gian, nguồn lực hiệu quả.",
+    sections: [["Dịch vụ BIM 4D bao gồm", "Liên kết mô hình 3D với tiến độ Primavera hoặc MS Project; mô phỏng trình tự thi công qua hoạt hình; phân tích kịch bản; xác định rủi ro và điểm nghẽn; tích hợp Lean Construction và phương pháp đường găng (CPM)."], ["Lợi ích nổi bật", "Hình dung rõ tiến độ theo thời gian; tăng phối hợp giữa nhà lập kế hoạch, nhà thầu và chủ đầu tư; phát hiện sớm chậm trễ liên quan đến tiến độ; nâng cao kiểm soát và năng suất tại công trường."]],
+    highlights: ["Mô phỏng biện pháp thi công", "Lập tiến độ dựa trên dữ liệu mô hình", "Phân tích kịch bản và điểm nghẽn"]
+  },
+  "bim-5d": {
+    description: "Tích hợp dữ liệu chi phí trực tiếp vào mô hình 3D để lập dự toán, theo dõi biến động và kiểm soát ngân sách từ thiết kế đến thi công.",
+    sections: [["Dịch vụ BIM 5D bao gồm", "Tích hợp khối lượng, đơn giá và ngân sách; lập và cập nhật dự toán, tổng mức đầu tư; theo dõi chi phí so với ngân sách kế hoạch; phân tích tác động tài chính khi thay đổi thiết kế; hỗ trợ quyết định và quản lý ngân sách."], ["Lợi ích nổi bật", "Hạn chế vượt ngân sách; tăng minh bạch tài chính; cập nhật và kiểm tra chi phí nhanh chóng; cải thiện phối hợp giữa nhóm thiết kế, dự toán và thi công."]],
+    highlights: ["Bóc tách khối lượng", "Dự toán chi phí từ mô hình BIM", "Kiểm soát ngân sách và thay đổi thiết kế"]
+  },
+  "bim-6d": {
+    description: "Tích hợp các nguyên tắc phát triển bền vững vào thiết kế, thi công và vận hành nhằm tối ưu năng lượng, tài nguyên và tác động môi trường.",
+    sections: [["Dịch vụ BIM 6D bao gồm", "Phân tích hiệu suất năng lượng; lựa chọn vật liệu thân thiện môi trường; đánh giá tác động và phát thải carbon; hỗ trợ mục tiêu chứng chỉ công trình xanh như LEED và LOTUS; theo dõi, báo cáo chỉ số bền vững trong vòng đời dự án."], ["Công nghệ hỗ trợ", "Cảm biến IoT giám sát môi trường và tiêu thụ năng lượng; AI phân tích dữ liệu bền vững; Digital Twin mô phỏng và đánh giá phương án thiết kế trước khi triển khai."], ["Lợi ích nổi bật", "Giảm dấu chân carbon; sử dụng tài nguyên hiệu quả; hỗ trợ tuân thủ tiêu chuẩn xây dựng xanh; gia tăng giá trị và uy tín cho dự án."]],
+    highlights: ["Phân tích hiệu suất năng lượng", "Tối ưu tiêu thụ năng lượng công trình", "Theo dõi chỉ số bền vững và phát thải carbon"]
+  },
+  "bim-7d": {
+    description: "Tích hợp dữ liệu tài sản, vận hành và bảo trì vào mô hình BIM để hỗ trợ quản lý cơ sở vật chất trong toàn bộ vòng đời công trình.",
+    sections: [["Dịch vụ BIM 7D bao gồm", "Tích hợp dữ liệu tài sản và lịch bảo trì; quản lý sửa chữa, vận hành thiết bị; giám sát hiệu suất và chi phí hoạt động; quản lý tài liệu kỹ thuật, bảo hành và tuân thủ; tối ưu quy trình quản lý cơ sở vật chất."], ["Công nghệ hỗ trợ", "IoT giám sát HVAC, chiếu sáng và an ninh; AI và Machine Learning phục vụ bảo trì dự đoán, phát hiện bất thường; Digital Twin mô phỏng vận hành và lập kế hoạch bảo trì chủ động."], ["Lợi ích nổi bật", "Giảm thời gian ngừng hoạt động; kéo dài tuổi thọ công trình và thiết bị; giảm chi phí vận hành, bảo trì; nâng cao chất lượng dịch vụ công trình."]],
+    highlights: ["Quản lý vận hành và tài sản", "Tích hợp lịch bảo trì và hồ sơ kỹ thuật", "Digital Twin cho vận hành công trình"]
+  },
+  "kien-truc": { description: "Tư vấn thiết kế kiến trúc cho công trình dân dụng, nhà ở, công trình công cộng, thương mại và công nghiệp.", sections: [["Phạm vi dịch vụ", "Phát triển ý tưởng, phương án không gian, hồ sơ thiết kế và bản vẽ phối hợp theo yêu cầu dự án; kết nối thông tin kiến trúc với các bộ môn kỹ thuật để hỗ trợ tính khả thi thi công."]], highlights: ["Công trình dân dụng và nhà ở", "Công trình công cộng và thương mại", "Công trình công nghiệp"] },
+  "noi-that": { description: "Tư vấn thiết kế nội thất cho công trình dân dụng, nhà ở, công cộng, thương mại và công nghiệp.", sections: [["Phạm vi dịch vụ", "Tổ chức không gian, vật liệu, hoàn thiện và hồ sơ nội thất; phối hợp với kiến trúc, kết cấu, MEP và yêu cầu vận hành của dự án."]], highlights: ["Tổ chức không gian nội thất", "Thông tin vật liệu và hoàn thiện", "Hồ sơ thiết kế phối hợp"] },
+  "canh-quan": { description: "Thiết kế cảnh quan và phối hợp không gian ngoài nhà cho các dự án xây dựng, khu đô thị và khu nghỉ dưỡng.", sections: [["Phạm vi dịch vụ", "Lập phương án cảnh quan, tổ chức không gian, cây xanh và các thành phần ngoài nhà; chuẩn bị thông tin phối hợp với quy hoạch, kiến trúc và hạ tầng kỹ thuật."]], highlights: ["Quy hoạch không gian cảnh quan", "Thông tin cây xanh và ngoài nhà", "Phối hợp cảnh quan với hạ tầng"] },
+  "ha-tang": { description: "Tư vấn thiết kế hạ tầng cho giao thông, thoát nước và các hệ thống kỹ thuật khu đất.", sections: [["Phạm vi dịch vụ", "Phối hợp thông tin thiết kế đường, nền, thoát nước và hạ tầng kỹ thuật; hỗ trợ kiểm tra giao cắt, tính khả thi và hồ sơ triển khai theo giai đoạn dự án."]], highlights: ["Giao thông và nền đường", "Thoát nước và hạ tầng kỹ thuật", "Phối hợp hồ sơ đa bộ môn"] },
+  "quy-hoach-1-500": { description: "Quy hoạch và thiết kế đô thị tỷ lệ 1/500 cho khu đô thị, nhà ở thấp tầng, nhà ở cao tầng, khu nghỉ dưỡng và khu công nghiệp.", sections: [["Phạm vi dịch vụ", "Chuẩn bị thông tin quy hoạch không gian, chỉ tiêu sử dụng đất, tổ chức giao thông, cảnh quan và hạ tầng kỹ thuật theo yêu cầu của dự án và hồ sơ được phê duyệt."]], highlights: ["Quy hoạch khu đô thị", "Khu ở và khu nghỉ dưỡng", "Khu công nghiệp và hạ tầng"] },
+  "quan-ly-du-an": { description: "Tư vấn quản lý dự án đầu tư và xây dựng công trình dân dụng, công nghiệp và hạ tầng.", sections: [["Phạm vi dịch vụ", "Hỗ trợ lập kế hoạch, quản lý phạm vi, tiến độ, chi phí, chất lượng, rủi ro, phối hợp các bên và báo cáo dựa trên thông tin dự án."]], highlights: ["Lập kế hoạch và quản lý phạm vi", "Theo dõi tiến độ và chi phí", "Phối hợp và báo cáo dự án"] },
+  "giam-sat-thi-cong": { description: "Tư vấn giám sát thi công công trình dân dụng, công nghiệp và hạ tầng kỹ thuật, bao gồm dự án thủy lợi và phát triển nông thôn.", sections: [["Phạm vi dịch vụ", "Theo dõi chất lượng, tiến độ, hồ sơ và sự phù hợp với thiết kế, biện pháp thi công và yêu cầu được phê duyệt; ghi nhận vấn đề hiện trường để phối hợp xử lý."]], highlights: ["Công trình dân dụng và công nghiệp", "Hạ tầng kỹ thuật, thủy lợi", "Theo dõi chất lượng và tiến độ"] },
+  "giam-sat-lap-dat-thiet-bi": { description: "Tư vấn giám sát lắp đặt thiết bị trong các công trình xây dựng dân dụng.", sections: [["Phạm vi dịch vụ", "Theo dõi công tác lắp đặt, phối hợp hồ sơ kỹ thuật, ghi nhận sai lệch và hỗ trợ kiểm tra, nghiệm thu thiết bị theo phạm vi được phê duyệt."]], highlights: ["Theo dõi lắp đặt thiết bị", "Phối hợp hồ sơ kỹ thuật", "Hỗ trợ kiểm tra và nghiệm thu"] },
+  "tham-tra-tham-dinh-thiet-ke": { description: "Thẩm tra và thẩm định thiết kế các công trình xây dựng dân dụng và công nghiệp.", sections: [["Phạm vi dịch vụ", "Rà soát hồ sơ thiết kế về tính đầy đủ, phối hợp đa bộ môn, khả năng triển khai và sự phù hợp với yêu cầu, tiêu chuẩn và phạm vi được phê duyệt; lập danh mục nhận xét để theo dõi xử lý."]], highlights: ["Rà soát hồ sơ thiết kế", "Kiểm tra tính đầy đủ và phối hợp", "Danh mục nhận xét và theo dõi xử lý"] },
+  "dao-tao-chuyen-giao-cong-nghe": { description: "Đào tạo và chuyển giao công nghệ BIM cho chuyên gia, tổ chức, ban quản lý dự án, chủ đầu tư và sinh viên trong lĩnh vực xây dựng, hạ tầng.", sections: [["Đối tượng đào tạo", "Doanh nghiệp cần nâng cao kỹ năng quy trình BIM và công cụ số; ban quản lý dự án và chủ đầu tư cần hiểu quy hoạch số, rủi ro và quyết định dựa trên dữ liệu; sinh viên kiến trúc, xây dựng và hạ tầng cần kiến thức nền tảng và thực hành BIM."], ["Phạm vi chương trình", "Từ kiến thức nền tảng đến ứng dụng nâng cao, xây dựng theo vai trò và quy trình thực tế của tổ chức; kết hợp hướng dẫn, bài tập và chuyển giao quy trình có thể sử dụng, duy trì."]], sections_en: [["Training overview", "BIM4C provides tailored training and technology transfer for construction professionals, organizations, project management units, owners and students working in construction and infrastructure."], ["Who the programme is for", "Companies building capability in BIM workflows and digital tools; project management teams and owners making data-informed decisions; and architecture, construction and infrastructure students preparing for digital construction practice."], ["Programme scope and outcomes", "Training ranges from foundational knowledge to advanced application. Content is structured around real roles and workflows, combining guided learning, practical exercises and transfer of processes that teams can use and maintain."]], highlights: ["Đào tạo theo vai trò và nhu cầu tổ chức", "Quy trình BIM và công cụ số", "Thực hành và chuyển giao công nghệ"] }
+};
+
+const englishSections = {
+  "laser-scan": [["Service overview", "High-accuracy 3D laser scanning using LiDAR and terrestrial scanners to capture existing conditions for renovation, upgrade and as-built documentation."], ["Applications", "Existing-condition capture, Scan-to-BIM integration, construction monitoring, deformation analysis and digital-twin preparation for operations and asset management."], ["Key benefits", "Fast, accurate and non-invasive data capture that reduces design uncertainty, rework and project risk."]],
+  "lidar": [["Service scope", "LiDAR surveys capture terrain and building conditions from terrestrial or drone-based equipment, subject to site conditions and the approved survey brief."], ["Deliverables", "Processed point-cloud data, existing-condition information and digital survey outputs prepared for planning, design, BIM coordination or condition review."]],
+  "scan-to-bim": [["Service scope", "We clean and process point clouds, define the modelling scope, develop existing-condition BIM models and validate the model against survey data."], ["Applications", "Scan-to-BIM supports renovation design, clash review, as-built documentation, quality checking and the development of a digital-twin information base."]],
+  "bim-3d": [["What we deliver", "Architecture, structure and MEP models developed from 2D drawings, design information or survey data, with modelling scope and LOD agreed for the project."], ["Coordination and outputs", "Point-cloud processing, multidisciplinary coordination, clash detection, shop drawings, IFC and construction documentation, plus model standards for procurement, construction and operations."], ["Project value", "More consistent design information, clearer coordination and a reliable digital foundation for later project stages."]],
+  "bim-4d": [["What we deliver", "Link the 3D model with Primavera or MS Project schedules, simulate construction sequences, compare scenarios and identify schedule risks and bottlenecks."], ["Methodology", "4D reviews can support Lean Construction and Critical Path Method planning, helping planners, contractors and owners communicate the intended sequence."], ["Project value", "Clearer time-based communication, earlier visibility of delays and stronger control of site productivity and resources."]],
+  "bim-5d": [["What we deliver", "Connect model elements with quantities, rates and budget information to prepare and update estimates, track planned versus current cost and assess design-change impact."], ["Project value", "A transparent cost-information workflow improves coordination between design, estimating and construction teams and supports timely budget decisions."], ["Important scope note", "Cost outputs depend on the quality, classification and completeness of the source model, quantity rules and approved rates."]],
+  "bim-6d": [["What we deliver", "Energy and sustainability analysis, material considerations, environmental-impact and carbon review, green-building support and lifecycle sustainability reporting."], ["Supporting technology", "IoT data can support environmental monitoring; AI can assist data analysis; digital twins can compare sustainable design and operational scenarios when suitable data is available."], ["Project value", "Better-informed decisions around energy, resources and environmental performance across design, construction and operations."]],
+  "bim-7d": [["What we deliver", "Integrate asset data, maintenance schedules, equipment information, technical documents, warranty records and operational requirements into a structured BIM information base."], ["Supporting technology", "IoT, AI, machine learning and digital-twin workflows may support monitoring, anomaly detection, predictive maintenance and operational planning when connected data is available."], ["Project value", "Faster access to asset information, better maintenance planning and a clearer basis for facility-management decisions."]],
+  "kien-truc": [["Service scope", "Architectural consultancy for residential, public, commercial and industrial buildings, from concept development through coordinated design information."], ["Coordination", "Architectural information is coordinated with structure, MEP, infrastructure and project requirements to support buildability and clear documentation."]],
+  "noi-that": [["Service scope", "Interior-design consultancy covering space planning, materials, finishes and documentation for residential, public, commercial and industrial projects."], ["Coordination", "Interior information is coordinated with architecture, structure, MEP and operational requirements before documentation is issued."]],
+  "canh-quan": [["Service scope", "Landscape design for urban, residential, resort and other development projects, including outdoor-space planning, planting information and site coordination."], ["Coordination", "Landscape information is coordinated with planning, architecture and infrastructure to support an integrated site solution."]],
+  "ha-tang": [["Service scope", "Infrastructure design consultancy for roads, earthworks, drainage and site-utility systems."], ["Coordination", "We coordinate technical information, review interfaces and support phased documentation for the approved project scope."]],
+  "quy-hoach-1-500": [["Service scope", "1/500 planning and urban-design information for urban areas, low-rise and high-rise housing, resorts and industrial developments."], ["Coordination", "Planning information can cover land use, spatial organization, movement, landscape and technical infrastructure in line with the approved project requirements."]],
+  "quan-ly-du-an": [["Service scope", "Project-management consultancy for civil, industrial and infrastructure investment and construction projects."], ["Management support", "Planning, scope, schedule, cost, quality, risk, stakeholder coordination and reporting are organized around reliable project information and agreed responsibilities."]],
+  "giam-sat-thi-cong": [["Service scope", "Construction supervision consultancy for civil, industrial and technical-infrastructure works, including irrigation and rural-development projects."], ["Site information", "The service supports quality, progress, document and design-compliance monitoring, with site observations recorded for coordinated resolution within the approved scope."]],
+  "giam-sat-lap-dat-thiet-bi": [["Service scope", "Supervision of equipment installation for civil-building projects, including technical coordination and installation records."], ["Acceptance support", "Record observations, coordinate technical documents and support inspection and acceptance activities within the approved brief."]],
+  "tham-tra-tham-dinh-thiet-ke": [["Service scope", "Design review and appraisal for civil and industrial construction works."], ["Review approach", "Check completeness, multidisciplinary coordination, constructability and alignment with approved requirements and applicable standards; issue comments for tracking and resolution."]],
+  "dao-tao-chuyen-giao-cong-nghe": [["Training overview", "BIM4C provides tailored training and technology transfer for construction professionals, organizations, project-management teams, owners and students working in construction and infrastructure."], ["Who the programme is for", "Companies building capability in BIM workflows and digital tools; project teams and owners making data-informed decisions; and architecture, construction and infrastructure students preparing for digital-construction practice."], ["Programme scope and outcomes", "Training ranges from foundational knowledge to advanced application. Content is structured around real roles and workflows, combining guided learning, practical exercises and transfer of processes that teams can use and maintain."]]
+};
+
+const login = await fetch(`${apiUrl}/auth/login`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ email, password }) });
+if (!login.ok) throw new Error(`Login failed: ${await login.text()}`);
+const cookie = login.headers.getSetCookie()[0]?.split(";", 1)[0];
+const listResponse = await fetch(`${apiUrl}/admin/services?limit=100`, { headers: { cookie } });
+if (!listResponse.ok) throw new Error(`List failed: ${await listResponse.text()}`);
+const list = await listResponse.json();
+
+for (const [slug, value] of Object.entries(content)) {
+  const current = list.data.find((item) => item.slug === slug);
+  if (!current) throw new Error(`Missing service record: ${slug}`);
+  const sections = value.sections.map(([title, body]) => ({ title, body }));
+  const payload = {
+    description_vi: value.description,
+    highlights_vi: value.highlights,
+    sections: (englishSections[slug] ?? [["Scope", value.description]]).map(([title, body]) => ({ title, body })),
+    sections_vi: sections,
+    seoDescription_vi: value.description,
+  };
+  const response = await fetch(`${apiUrl}/admin/services/${current.id}`, {
+    method: "PATCH",
+    headers: { cookie, origin: process.env.BIM4C_FRONTEND_ORIGIN ?? "http://localhost:3000", "content-type": "application/json; charset=utf-8" },
+    body: JSON.stringify(payload),
+  });
+  if (!response.ok) throw new Error(`Update failed for ${slug}: ${await response.text()}`);
+}
+console.log(`Enriched ${Object.keys(content).length} service records through the admin CRUD API.`);

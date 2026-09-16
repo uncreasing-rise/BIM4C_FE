@@ -24,7 +24,7 @@ Any non-2xx response must stop the frontend deployment. Retry briefly for rollou
 
 Backend required: `NODE_ENV=production`, `DATABASE_URL`, `FRONTEND_URL`, `REVALIDATION_URL`, `REVALIDATION_SECRET`, `MEDIA_STORAGE_DRIVER=supabase`, `PUBLIC_API_URL`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, and `SUPABASE_MEDIA_BUCKET`. Supply `ADMIN_BOOTSTRAP_EMAIL` and `ADMIN_BOOTSTRAP_PASSWORD` through the server secret manager only when bootstrapping or intentionally rotating the bootstrap account. `CORS_ORIGINS` is only needed for multiple allowed origins; otherwise it inherits `FRONTEND_URL`.
 
-Frontend required: `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_APP_URL`, `NEXT_PUBLIC_USE_MOCK_API=false`, `BACKEND_URL`, and server-only `REVALIDATION_SECRET`. Set `NEXT_PUBLIC_CDN_URL` when media uses a remote host. `AUTH_COOKIE_NAME` is optional and must match the backend only when overriding its default. Only public origins/CDN/API addresses and the mock-mode flag may use `NEXT_PUBLIC_*`.
+Frontend required: `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_APP_URL`, `BACKEND_URL`, and server-only `REVALIDATION_SECRET`. Set `NEXT_PUBLIC_CDN_URL` when media uses a remote host. `AUTH_COOKIE_NAME` is optional and must match the backend only when overriding its default. Only public origins/CDN/API addresses may use `NEXT_PUBLIC_*`.
 
 ## Rendering classification
 

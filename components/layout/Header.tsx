@@ -1,307 +1,102 @@
 "use client";
+
 import Link from "next/link";
-import { ArrowUpRight, Menu, Search } from "lucide-react";
+import { Box, ChevronDown, Menu, X } from "lucide-react";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ROUTES } from "@/constants/routes";
+import { ABOUT_MENU_ITEMS as aboutItems, SERVICE_MENU_GROUPS as serviceGroups } from "@/constants/navigation";
 import { Button } from "@/components/ui/button";
-import {
-  Sheet,
-  SheetClose,
-  SheetContent,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/lib/i18n/context";
 import { LanguageSwitcher } from "@/components/shared/LanguageSwitcher";
-import { CommandMenu } from "@/components/shared/CommandMenu";
+
+const text = (item: { vi: string; en: string }, locale: string) => locale === "vi" ? item.vi : item.en;
 
 export function Header() {
   const pathname = usePathname();
-  const [overHero, setOverHero] = useState(true);
-  const [commandOpen, setCommandOpen] = useState(false);
   const { t, locale } = useLanguage();
-
-  const navigation = [
-    { label: t.navigation.about, href: ROUTES.about },
-    { label: t.navigation.services, href: ROUTES.services },
-    { label: t.navigation.projects, href: ROUTES.projects },
-    { label: t.navigation.courses, href: ROUTES.courses },
-    { label: t.navigation.blog, href: ROUTES.blog },
-    { label: t.navigation.bimViewer, href: ROUTES.bimViewer, is3D: true },
-  ];
+  const rootRef = useRef<HTMLElement>(null);
+  const [overHero, setOverHero] = useState(true);
+  const [openMenu, setOpenMenu] = useState<"about" | "services" | null>(null);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [mobileAboutOpen, setMobileAboutOpen] = useState(false);
+  const [mobileServicesOpen, setMobileServicesOpen] = useState(false);
+  const isVi = locale === "vi";
+  const active = (href: string) => pathname === href || (href !== ROUTES.home && pathname.startsWith(`${href}/`));
 
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.key === "k" || e.key === "K") && (e.metaKey || e.ctrlKey)) {
-        e.preventDefault();
-        setCommandOpen((open) => !open);
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+    const update = () => setOverHero(window.scrollY < 40 && Boolean(document.querySelector(".page-hero, .home-hero, main > section:first-child.bg-brand-ink")));
+    update();
+    window.addEventListener("scroll", update, { passive: true });
+    return () => window.removeEventListener("scroll", update);
+  }, [pathname]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setOpenMenu(null);
+      setMobileOpen(false);
+      setMobileAboutOpen(false);
+      setMobileServicesOpen(false);
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, [pathname]);
+
+  useEffect(() => {
+    const key = (event: KeyboardEvent) => { if (event.key === "Escape") { setOpenMenu(null); setMobileOpen(false); } };
+    const outside = (event: PointerEvent) => { if (!rootRef.current?.contains(event.target as Node)) setOpenMenu(null); };
+    window.addEventListener("keydown", key); document.addEventListener("pointerdown", outside);
+    return () => { window.removeEventListener("keydown", key); document.removeEventListener("pointerdown", outside); };
   }, []);
 
   useEffect(() => {
-    const updateHeader = () =>
-      setOverHero(
-        window.scrollY < 40 &&
-          Boolean(
-            document.querySelector(".page-hero") ||
-              document.querySelector(".home-hero") ||
-              document.querySelector("main > section:first-child.bg-brand-ink") ||
-              document.querySelector("#main-content section:first-child.bg-brand-ink"),
-          ),
-      );
-    updateHeader();
-    window.addEventListener("scroll", updateHeader, { passive: true });
-    const observer = new MutationObserver(updateHeader);
-    const main = document.getElementById("main-content");
-    if (main) observer.observe(main, { childList: true, subtree: true });
-    return () => {
-      window.removeEventListener("scroll", updateHeader);
-      observer.disconnect();
-    };
-  }, [pathname]);
+    if (!mobileOpen) return;
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = previous; };
+  }, [mobileOpen]);
+
+  const navClass = (href: string) => cn("inline-flex min-h-11 items-center gap-1 rounded-lg px-3 text-[13px] font-semibold transition-colors", overHero ? (active(href) ? "text-teal-200" : "text-white/85 hover:bg-white/10 hover:text-white") : (active(href) ? "bg-primary/10 text-primary" : "text-slate-700 hover:bg-muted hover:text-slate-950"));
+  const closeMobile = () => setMobileOpen(false);
 
   return (
-    <header
-      className={cn(
-        "site-header fixed inset-x-0 top-0 z-50 transition-all duration-300",
-        overHero
-          ? "border-b border-transparent bg-transparent text-white"
-          : "border-b border-border bg-white/95 text-foreground backdrop-blur-xl shadow-xs",
-      )}
-    >
-      <div className="site-container flex h-20 items-center justify-between gap-4">
-        <Link
-          href={ROUTES.home}
-          className="flex items-center gap-3 shrink-0 group"
-          aria-label="BIM4C — Enterprise Construction Technology"
-        >
-          {/* Architectural 3D BIM Cube Brand Icon */}
-          <div className="relative flex size-10 items-center justify-center rounded-xl bg-gradient-to-br from-teal-500 to-teal-800 p-0.5 shadow-md shadow-teal-900/20 transition-transform group-hover:scale-105">
-            <svg
-              viewBox="0 0 32 32"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-              className="size-6 text-white"
-              aria-hidden="true"
-            >
-              {/* Isometric 3D BIM Node Structure */}
-              <path
-                d="M16 3L28 10V22L16 29L4 22V10L16 3Z"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="opacity-90"
-              />
-              <path
-                d="M16 3V16M28 10L16 16M4 10L16 16"
-                stroke="currentColor"
-                strokeWidth="1.75"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-              <path
-                d="M16 16V29"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-              />
-              <circle cx="16" cy="16" r="2.5" fill="#5eead4" />
-              <circle cx="28" cy="10" r="1.5" fill="currentColor" />
-              <circle cx="4" cy="10" r="1.5" fill="currentColor" />
-              <circle cx="16" cy="29" r="1.5" fill="currentColor" />
-            </svg>
-          </div>
-          <span className="leading-none">
-            <strong
-              className={cn(
-                "block text-[17px] font-black tracking-[.14em]",
-                overHero ? "text-white" : "text-slate-950",
-              )}
-            >
-              BIM
-              <span className={overHero ? "text-teal-400" : "text-teal-600"}>
-                4C
-              </span>
-            </strong>
-            <small
-              className={cn(
-                "mt-0.5 hidden text-[10px] font-medium tracking-[.12em] sm:block",
-                overHero ? "text-white/65" : "text-slate-500",
-              )}
-            >
-              {t.navigation.tagline}
-            </small>
-          </span>
-        </Link>
-        <nav
-          className={cn(
-            "desktop-navigation hidden items-center gap-1 xl:flex",
-            overHero ? "text-white" : "text-foreground",
-          )}
-          aria-label="Main navigation"
-        >
-          {navigation.map((item) => {
-            const isCurrentPage =
-              pathname === item.href || pathname.startsWith(`${item.href}/`);
-            return (
-              <Link
-                href={item.href}
-                key={item.href}
-                aria-current={isCurrentPage ? "page" : undefined}
-                className={cn(
-                  "nav-link px-3 py-3 text-[13px] font-medium transition-colors duration-200",
-                  overHero
-                    ? isCurrentPage
-                      ? "text-teal-200"
-                      : "text-white/85 hover:bg-white/10 hover:text-white"
-                    : isCurrentPage
-                      ? "text-primary"
-                      : "text-slate-700 hover:bg-white hover:text-slate-950 font-medium",
-                )}
-              >
-                {item.label}
-              </Link>
-            );
-          })}
-        </nav>
-        <div className="hidden items-center gap-3 xl:flex">
-          <button
-            type="button"
-            onClick={() => setCommandOpen(true)}
-            className="grid size-11 place-items-center rounded-lg hover:bg-primary/10"
-            aria-label={locale === "vi" ? "Tìm kiếm" : "Search"}
-          >
-            <Search className="size-4" />
-          </button>
-          <LanguageSwitcher isOverHero={overHero} />
-          <Button
-            asChild
-            className={cn(
-              "rounded-lg px-5 font-semibold transition-colors duration-200 shadow-none",
-              overHero
-                ? "bg-white text-brand-ink hover:bg-teal-50 hover:text-brand-ink shadow-teal-900/30"
-                : "bg-primary text-white hover:bg-primary-hover shadow-primary/30",
-            )}
-          >
-            <Link href={ROUTES.contact}>
-              {t.navigation.requestConsultation}{" "}
-              <ArrowUpRight className="size-4 ml-1" />
-            </Link>
-          </Button>
-        </div>
-        <div className="flex items-center gap-1.5 sm:gap-2 xl:hidden">
-          <button
-            type="button"
-            onClick={() => setCommandOpen(true)}
-            className={cn(
-              "inline-flex size-11 items-center justify-center rounded-lg border transition-colors",
-              overHero
-                ? "border-white/20 bg-black/30 text-white hover:bg-white/15"
-                : "border-slate-200 bg-slate-100 text-slate-800 hover:bg-slate-200",
-            )}
-            aria-label={locale === "vi" ? "Tìm kiếm" : "Search"}
-          >
-            <Search className="size-4 text-teal-400" />
-          </button>
-          <LanguageSwitcher
-            variant="compact"
-            isOverHero={overHero}
-            className="hidden sm:inline-flex"
-          />
-          <Link
-            href={ROUTES.contact}
-            className={cn(
-              "inline-flex min-h-11 items-center rounded-lg px-2.5 text-xs font-semibold",
-              overHero
-                ? "bg-white/10 text-white hover:bg-white/20"
-                : "bg-primary text-white hover:bg-primary-hover shadow-xs",
-            )}
-          >
-            {t.common.contact}
-          </Link>
-          <Sheet key={pathname}>
-            <SheetTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className={cn(
-                  "size-11 xl:hidden",
-                  overHero
-                    ? "text-white hover:bg-white/10 hover:text-white"
-                    : "text-slate-900 hover:bg-slate-100 hover:text-slate-950",
-                )}
-                aria-label={
-                  locale === "vi"
-                    ? "Mở menu điều hướng"
-                    : "Open navigation menu"
-                }
-                aria-haspopup="dialog"
-              >
-                <Menu className="size-5" />
-              </Button>
-            </SheetTrigger>
-            <SheetContent className="overflow-y-auto p-6">
-              <SheetTitle className="mb-2 text-left">
-                {t.navigation.exploreBim4c}
-              </SheetTitle>
-              <p className="mb-5 text-sm leading-6 text-muted-foreground">
-                {t.hero.badge}
-              </p>
-              <div className="mb-4 flex items-center justify-between border-b pb-4">
-                <span className="text-xs font-medium text-muted-foreground">
-                  {locale === "vi" ? "Ngôn ngữ hiển thị:" : "Language:"}
-                </span>
-                <LanguageSwitcher />
+    <header ref={rootRef} className={cn("site-header fixed inset-x-0 top-0 z-50 border-b transition-colors duration-200", overHero ? "border-transparent bg-transparent text-white" : "border-border bg-white/95 text-foreground shadow-xs backdrop-blur-xl")}>
+      <div className="site-container flex h-16 items-center gap-3 sm:h-20">
+        <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+          <SheetTrigger asChild><Button variant="ghost" size="icon" className={cn("order-first size-10 shrink-0 lg:hidden", overHero ? "text-white hover:bg-white/10" : "text-slate-900 hover:bg-muted")} aria-label={isVi ? "Mở menu điều hướng" : "Open navigation menu"}><Menu className="size-5" /></Button></SheetTrigger>
+          <SheetContent side="left" showCloseButton={false} className="flex w-[min(90vw,24rem)] flex-col overflow-hidden p-0">
+            <div className="flex items-center justify-between border-b px-5 py-4"><SheetTitle>{isVi ? "Điều hướng BIM4C" : "BIM4C navigation"}</SheetTitle><button type="button" onClick={closeMobile} className="grid size-10 place-items-center rounded-lg hover:bg-muted" aria-label={isVi ? "Đóng menu" : "Close menu"}><X className="size-5" /></button></div>
+            <nav className="min-h-0 flex-1 overflow-y-auto px-4 py-5" aria-label={isVi ? "Điều hướng chính" : "Main navigation"}>
+              <div className="grid gap-1">
+                <button type="button" onClick={() => setMobileAboutOpen((v) => !v)} className="flex min-h-12 items-center justify-between rounded-lg px-3 text-left text-base font-semibold hover:bg-muted" aria-expanded={mobileAboutOpen}>{isVi ? "Giới thiệu" : "About"}<ChevronDown className={cn("size-4 transition-transform", mobileAboutOpen && "rotate-180")} /></button>
+                {mobileAboutOpen && <div className="ml-3 grid border-l pl-3">{aboutItems.map((item) => <Link key={item.vi} href={item.href} onClick={closeMobile} className="flex min-h-11 items-center rounded-lg px-3 text-sm hover:bg-muted">{text(item, locale)}</Link>)}</div>}
+                <button type="button" onClick={() => setMobileServicesOpen((v) => !v)} className="flex min-h-12 items-center justify-between rounded-lg px-3 text-left text-base font-semibold hover:bg-muted" aria-expanded={mobileServicesOpen}>{isVi ? "Dịch vụ" : "Services"}<ChevronDown className={cn("size-4 transition-transform", mobileServicesOpen && "rotate-180")} /></button>
+                {mobileServicesOpen && <div className="ml-3 grid gap-3 border-l py-2 pl-3">{serviceGroups.map((group) => <div key={group.vi}><p className="px-3 py-1 text-xs font-bold uppercase tracking-wider text-primary">{text(group, locale)}</p>{group.items.map((item) => <Link key={item.vi} href={item.href} onClick={closeMobile} className="flex min-h-10 items-center rounded-lg px-3 text-sm hover:bg-muted">{text(item, locale)}</Link>)}</div>)}</div>}
+                <Link href={ROUTES.projects} onClick={closeMobile} className={cn("flex min-h-12 items-center rounded-lg px-3 text-base font-semibold hover:bg-muted", active(ROUTES.projects) && "text-primary")}>{isVi ? "Dự án" : "Projects"}</Link>
+                <Link href={ROUTES.courses} onClick={closeMobile} className={cn("flex min-h-12 items-center rounded-lg px-3 text-base font-semibold hover:bg-muted", active(ROUTES.courses) && "text-primary")}>{isVi ? "Đào tạo" : "Training"}</Link>
+                <Link href={ROUTES.blog} onClick={closeMobile} className={cn("flex min-h-12 items-center rounded-lg px-3 text-base font-semibold hover:bg-muted", active(ROUTES.blog) && "text-primary")}>{isVi ? "Tin tức" : "Insights"}</Link>
+                <Link href={ROUTES.contact} onClick={closeMobile} className="mt-3 flex min-h-12 items-center justify-center rounded-lg bg-primary px-4 text-base font-bold text-white hover:bg-primary-hover">{isVi ? "Liên hệ tư vấn" : "Contact us"} →</Link>
               </div>
-              <nav className="grid gap-2">
-                <SheetClose asChild>
-                  <Link
-                    href={ROUTES.home}
-                    className="flex min-h-11 items-center rounded-lg px-4 text-base font-medium hover:bg-muted"
-                    aria-current={pathname === ROUTES.home ? "page" : undefined}
-                  >
-                    {t.navigation.home}
-                  </Link>
-                </SheetClose>
-                {navigation.map((item) => (
-                  <SheetClose asChild key={item.href}>
-                    <Button
-                      asChild
-                      variant="ghost"
-                      className="min-h-11 justify-start text-base"
-                    >
-                      <Link
-                        href={item.href}
-                        aria-current={
-                          pathname === item.href ||
-                          pathname.startsWith(`${item.href}/`)
-                            ? "page"
-                            : undefined
-                        }
-                        className="aria-[current=page]:bg-muted aria-[current=page]:text-primary"
-                      >
-                        {item.label}
-                      </Link>
-                    </Button>
-                  </SheetClose>
-                ))}
-                <SheetClose asChild>
-                  <Button asChild className="mt-4 min-h-11 font-bold">
-                    <Link href={ROUTES.contact}>{t.common.talkToExpert}</Link>
-                  </Button>
-                </SheetClose>
-              </nav>
-            </SheetContent>
-          </Sheet>
-        </div>
+              <Link href={ROUTES.bimViewer} onClick={closeMobile} className="mt-3 flex min-h-12 items-center justify-center gap-2 rounded-lg border border-primary/30 px-4 text-base font-bold text-primary hover:bg-primary/10"><Box className="size-4" />{t.navigation.bimViewer}</Link>
+            </nav>
+            <div className="border-t px-5 py-4"><LanguageSwitcher /></div>
+          </SheetContent>
+        </Sheet>
+
+        <Link href={ROUTES.home} className="group flex shrink-0 items-center gap-2" aria-label="BIM4C">
+          <div className="grid size-9 place-items-center rounded-lg bg-gradient-to-br from-teal-500 to-teal-800 p-1 shadow-md transition-transform group-hover:scale-105 sm:size-10"><svg viewBox="0 0 32 32" fill="none" className="size-6 text-white" aria-hidden="true"><path d="M16 3 28 10v12l-12 7L4 22V10L16 3Z M16 3v13m12-6L16 16 4 10m12 6v13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /><circle cx="16" cy="16" r="2.5" fill="#5eead4" /></svg></div>
+          <span className="leading-none"><strong className={cn("block text-[17px] font-black tracking-[.14em]", overHero ? "text-white" : "text-slate-950")}>BIM<span className={overHero ? "text-teal-400" : "text-teal-600"}>4C</span></strong><small className={cn("mt-0.5 hidden text-[10px] font-medium tracking-[.12em] sm:block", overHero ? "text-white/65" : "text-slate-500")}>{t.navigation.tagline}</small></span>
+        </Link>
+
+        <nav className="desktop-navigation ml-auto hidden items-center gap-1 lg:flex" aria-label={isVi ? "Điều hướng chính" : "Main navigation"}>
+          <div className="relative" onMouseEnter={() => setOpenMenu("about")} onMouseLeave={() => setOpenMenu(null)}><button type="button" className={navClass(ROUTES.about)} onClick={() => setOpenMenu((v) => v === "about" ? null : "about")} aria-expanded={openMenu === "about"} aria-haspopup="true">{isVi ? "Giới thiệu" : "About"}<ChevronDown className="size-3.5" /></button>{openMenu === "about" && <div className="absolute left-0 top-full w-64 pt-2"><div className="rounded-xl border border-border bg-white p-2 text-slate-800 shadow-xl">{aboutItems.map((item) => <Link key={item.vi} href={item.href} onClick={() => setOpenMenu(null)} className="flex min-h-10 items-center rounded-lg px-3 text-sm font-medium hover:bg-muted hover:text-primary">{text(item, locale)}</Link>)}</div></div>}</div>
+          <div className="relative" onMouseEnter={() => setOpenMenu("services")}><button type="button" className={navClass(ROUTES.services)} onClick={() => setOpenMenu((v) => v === "services" ? null : "services")} aria-expanded={openMenu === "services"} aria-haspopup="true">{isVi ? "Dịch vụ" : "Services"}<ChevronDown className="size-3.5" /></button>{openMenu === "services" && <div className="fixed right-4 top-20 z-50 w-[min(62rem,calc(100vw-2rem))] max-h-[calc(100vh-6rem)] overflow-y-auto pt-2"><div className="grid grid-cols-2 gap-4 rounded-xl border border-border bg-white p-4 text-slate-800 shadow-xl md:grid-cols-3 lg:grid-cols-5 lg:gap-5 lg:p-5">{serviceGroups.map((group) => <div key={group.vi}><h3 className="border-b border-border pb-2 text-xs font-bold uppercase tracking-wider text-primary">{text(group, locale)}</h3><div className="mt-2 grid gap-1">{group.items.map((item) => <Link key={item.vi} href={item.href} onClick={() => setOpenMenu(null)} className="rounded-lg px-2 py-2 text-sm font-medium hover:bg-muted hover:text-primary">{text(item, locale)}</Link>)}</div></div>)}</div></div>}</div>
+          <Link href={ROUTES.projects} className={navClass(ROUTES.projects)}>{isVi ? "Dự án" : "Projects"}</Link><Link href={ROUTES.courses} className={navClass(ROUTES.courses)}>{isVi ? "Đào tạo" : "Training"}</Link><Link href={ROUTES.blog} className={navClass(ROUTES.blog)}>{isVi ? "Tin tức" : "Insights"}</Link>
+          <Link href={ROUTES.bimViewer} className={cn(navClass(ROUTES.bimViewer), "border border-current/20") }><Box className="size-4" />{t.navigation.bimViewer}</Link>
+        </nav>
+        <div className="ml-auto flex items-center gap-2 lg:ml-3"><LanguageSwitcher variant="compact" isOverHero={overHero} className="hidden sm:inline-flex" /><Button asChild className={cn("hidden min-h-10 rounded-lg px-3 text-xs font-bold shadow-none sm:inline-flex sm:px-5 sm:text-sm", overHero ? "bg-white text-brand-ink hover:bg-teal-50" : "bg-primary text-white hover:bg-primary-hover")}><Link href={ROUTES.contact}>{isVi ? "Liên hệ tư vấn" : "Contact us"}<span aria-hidden="true" className="ml-1">→</span></Link></Button></div>
       </div>
-      <CommandMenu isOpen={commandOpen} onClose={() => setCommandOpen(false)} />
     </header>
   );
 }

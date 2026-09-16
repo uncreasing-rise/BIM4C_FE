@@ -1,25 +1,25 @@
 "use client";
 
-import { FormEvent, useState, Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import Link from "next/link";
 import {
-  ShieldCheck,
-  Mail,
-  Lock,
+  ArrowLeft,
+  ArrowRight,
+  CheckCircle2,
   Eye,
   EyeOff,
-  ArrowRight,
-  ArrowLeft,
-  Loader2,
-  ShieldAlert,
-  Layers,
   GraduationCap,
-  Sparkles,
-  Server,
+  Layers,
+  Loader2,
+  Lock,
   LockKeyhole,
-  CheckCircle2,
+  Mail,
+  Server,
+  ShieldAlert,
+  ShieldCheck,
+  Sparkles,
 } from "lucide-react";
+import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
+import { FormEvent, Suspense, useState } from "react";
 
 function LoginForm() {
   const router = useRouter();
@@ -48,14 +48,21 @@ function LoginForm() {
         const body = (await response.json().catch(() => null)) as {
           message?: string;
         } | null;
-        throw new Error(body?.message ?? "Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.");
+        throw new Error(
+          body?.message ??
+            "Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.",
+        );
       }
 
       const next = params.get("next");
       router.replace(next?.startsWith("/admin") ? next : "/admin");
       router.refresh();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.");
+      setError(
+        e instanceof Error
+          ? e.message
+          : "Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.",
+      );
     } finally {
       setBusy(false);
     }
@@ -162,7 +169,9 @@ function LoginForm() {
                 onChange={(e) => setRememberMe(e.target.checked)}
                 className="size-4 rounded border-slate-700 bg-slate-900 text-teal-500 focus:ring-teal-400/20 focus:ring-offset-0 accent-teal-500 cursor-pointer"
               />
-              <span className="hover:text-slate-300 transition-colors">Ghi nhớ thiết bị này</span>
+              <span className="hover:text-slate-300 transition-colors">
+                Ghi nhớ thiết bị này
+              </span>
             </label>
             <span
               title="Vui lòng liên hệ Super Administrator nếu bạn quên mật khẩu hoặc bị khóa tài khoản"
@@ -254,7 +263,9 @@ export default function AdminLogin() {
             </div>
             <div className="flex flex-col">
               <div className="flex items-center gap-1.5 font-bold tracking-tight text-white">
-                <span className="text-xl">BIM<span className="text-teal-400">4C</span></span>
+                <span className="text-xl">
+                  BIM<span className="text-teal-400">4C</span>
+                </span>
                 <span className="rounded bg-teal-500/15 px-1.5 py-0.5 text-[10px] font-semibold text-teal-300 border border-teal-500/20">
                   ENTERPRISE
                 </span>
@@ -271,7 +282,9 @@ export default function AdminLogin() {
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
                 <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
               </span>
-              <span className="text-emerald-400 font-medium">Hệ thống đang hoạt động</span>
+              <span className="text-emerald-400 font-medium">
+                Hệ thống đang hoạt động
+              </span>
             </div>
             <span className="text-slate-700">•</span>
             <span className="font-mono text-slate-500">v2.4.0</span>
@@ -287,7 +300,9 @@ export default function AdminLogin() {
             {/* Tagline Badge */}
             <div className="inline-flex items-center gap-2 self-start rounded-full border border-teal-500/20 bg-teal-500/5 px-4 py-1.5 text-xs font-medium text-teal-300">
               <Sparkles className="size-3.5 text-teal-400" />
-              <span>Nền Tảng Quản Lý Nội Dung Chuyên Nghiệp Cho Ngành Xây Dựng</span>
+              <span>
+                Nền Tảng Quản Lý Nội Dung Chuyên Nghiệp Cho Ngành Xây Dựng
+              </span>
             </div>
 
             {/* Main Headline */}
@@ -299,7 +314,9 @@ export default function AdminLogin() {
                 </span>
               </h2>
               <p className="text-base text-slate-300/90 leading-relaxed max-w-2xl font-light">
-                Trung tâm điều phối tập trung cho việc xuất bản dữ liệu dự án, số hóa mô hình 3D OpenBIM, quản trị học viện đào tạo và thiết lập các giải pháp công nghệ kỹ thuật số.
+                Trung tâm điều phối tập trung cho việc xuất bản dữ liệu dự án,
+                số hóa mô hình 3D OpenBIM, quản trị học viện đào tạo và thiết
+                lập các giải pháp công nghệ kỹ thuật số.
               </p>
             </div>
 
@@ -310,9 +327,12 @@ export default function AdminLogin() {
                   <Layers className="size-5" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-semibold text-white">Mô hình OpenBIM & Dữ liệu Dự án</h3>
+                  <h3 className="text-sm font-semibold text-white">
+                    Mô hình OpenBIM & Dữ liệu Dự án
+                  </h3>
                   <p className="mt-1 text-xs text-slate-400 leading-relaxed">
-                    Kiểm soát dự án, cập nhật thông tin phối cảnh 3D và hồ sơ kỹ thuật chuyên sâu theo chuẩn IFC.
+                    Kiểm soát dự án, cập nhật thông tin phối cảnh 3D và hồ sơ kỹ
+                    thuật chuyên sâu theo chuẩn IFC.
                   </p>
                 </div>
               </div>
@@ -322,9 +342,12 @@ export default function AdminLogin() {
                   <GraduationCap className="size-5" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-semibold text-white">Hệ thống Đào tạo & Học viên</h3>
+                  <h3 className="text-sm font-semibold text-white">
+                    Hệ thống Đào tạo & Học viên
+                  </h3>
                   <p className="mt-1 text-xs text-slate-400 leading-relaxed">
-                    Điều phối các khóa học BIM/Revit/Dynamo, theo dõi danh sách đăng ký và quản lý tài liệu chuyên ngành.
+                    Điều phối các khóa học BIM/Revit/Dynamo, theo dõi danh sách
+                    đăng ký và quản lý tài liệu chuyên ngành.
                   </p>
                 </div>
               </div>
@@ -334,9 +357,12 @@ export default function AdminLogin() {
                   <Server className="size-5" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-semibold text-white">Kiểm soát Phân quyền & Nhật ký Kiểm toán</h3>
+                  <h3 className="text-sm font-semibold text-white">
+                    Kiểm soát Phân quyền & Nhật ký Kiểm toán
+                  </h3>
                   <p className="mt-1 text-xs text-slate-400 leading-relaxed">
-                    Phân quyền vai trò RBAC chặt chẽ, tự động lưu vết mọi thao tác quản trị nhằm bảo đảm toàn vẹn dữ liệu.
+                    Phân quyền vai trò RBAC chặt chẽ, tự động lưu vết mọi thao
+                    tác quản trị nhằm bảo đảm toàn vẹn dữ liệu.
                   </p>
                 </div>
               </div>
@@ -344,10 +370,6 @@ export default function AdminLogin() {
 
             {/* Bottom Quick Stats */}
             <div className="flex items-center gap-6 pt-4 border-t border-slate-800/80 text-xs text-slate-400">
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="size-4 text-emerald-400" />
-                <span>Uptime 99.98%</span>
-              </div>
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="size-4 text-emerald-400" />
                 <span>Zero Trust Security</span>
@@ -361,11 +383,13 @@ export default function AdminLogin() {
 
           {/* Right Column: Sleek Auth Form */}
           <div className="lg:col-span-5 flex justify-center">
-            <Suspense fallback={
-              <div className="flex h-96 w-full items-center justify-center rounded-3xl border border-teal-500/20 bg-slate-950/70">
-                <Loader2 className="size-8 animate-spin text-teal-400" />
-              </div>
-            }>
+            <Suspense
+              fallback={
+                <div className="flex h-96 w-full items-center justify-center rounded-3xl border border-teal-500/20 bg-slate-950/70">
+                  <Loader2 className="size-8 animate-spin text-teal-400" />
+                </div>
+              }
+            >
               <LoginForm />
             </Suspense>
           </div>
@@ -375,11 +399,14 @@ export default function AdminLogin() {
       {/* Footer */}
       <footer className="relative z-20 w-full border-t border-white/5 bg-slate-950/50 py-4 text-center text-xs text-slate-500">
         <div className="mx-auto max-w-7xl px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
-          <span>&copy; {new Date().getFullYear()} BIM4C Innovation. Tất cả các quyền được bảo lưu.</span>
+          <span>
+            &copy; {new Date().getFullYear()} BIM4C Innovation. Tất cả các quyền
+            được bảo lưu.
+          </span>
           <div className="flex items-center gap-4 text-slate-500">
             <span>Bảo mật & Điều khoản</span>
             <span>•</span>
-            <span>Hỗ trợ kỹ thuật: support@bim4c.com</span>
+            <span>Hỗ trợ kỹ thuật: Bim4c.lab@gmail.com</span>
           </div>
         </div>
       </footer>

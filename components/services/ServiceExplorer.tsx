@@ -18,6 +18,15 @@ import type { PageMeta } from "@/features/shared/types/pagination";
 import { useLanguage } from "@/lib/i18n/context";
 import { localizeContentList } from "@/lib/i18n/localize";
 
+const LEGACY_SERVICE_BASE_CATEGORIES = [
+  "Tư vấn BIM",
+  "Đào tạo",
+  "Thiết kế",
+  "Tư vấn giám sát",
+  "BIM Coordination",
+  "Digital Twin & Dữ liệu tài sản",
+];
+
 const SERVICE_BASE_CATEGORIES = [
   "Tư vấn BIM",
   "Đào tạo",

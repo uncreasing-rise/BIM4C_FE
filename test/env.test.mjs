@@ -1,13 +1,24 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-
-import { isMockApiEnabled } from "../lib/config/env.ts";
-
-test("mock API is enabled only by the exact explicit value true", () => {
-  assert.equal(isMockApiEnabled("true"), true);
-  assert.equal(isMockApiEnabled(undefined), false);
-  assert.equal(isMockApiEnabled("false"), false);
-  assert.equal(isMockApiEnabled("TRUE"), false);
-  assert.equal(isMockApiEnabled("1"), false);
-  assert.equal(isMockApiEnabled("yes"), false);
+import { spawnSync } from "node:child_process";
+test("a legacy mock flag cannot bypass the required backend URL", () => {
+  const result = spawnSync(
+    process.execPath,
+    [
+      "--input-type=module",
+      "-e",
+      "import { assertApiEnvironment } from './lib/config/env.ts'; assertApiEnvironment();",
+    ],
+    {
+      env: {
+        ...process.env,
+        NODE_ENV: "development",
+        NEXT_PUBLIC_API_URL: "",
+        NEXT_PUBLIC_USE_MOCK_API: "true",
+      },
+      encoding: "utf8",
+    },
+  );
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /NEXT_PUBLIC_API_URL is required/);
 });

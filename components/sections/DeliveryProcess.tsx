@@ -1,13 +1,13 @@
 "use client";
 
+import { useLanguage } from "@/lib/i18n/context";
 import {
   ClipboardList,
+  FolderCheck,
   Network,
   ScanLine,
-  FolderCheck,
   ShieldCheck,
 } from "lucide-react";
-import { useLanguage } from "@/lib/i18n/context";
 
 export function DeliveryProcess() {
   const { t, locale } = useLanguage();
@@ -39,9 +39,9 @@ export function DeliveryProcess() {
       phase: "03",
       title: isVi ? "Xử lý xung đột (Clash)" : "Clash Resolution",
       text: isVi
-        ? "Kiểm soát chất lượng tự động, phát hiện và điều phối giải quyết triệt để 100% xung đột."
+        ? "Kiểm soát chất lượng tự động, phát hiện và điều phối xử lý xung đột."
         : "Automated clash detection, issue matrix tracking and multi-discipline coordination sign-off.",
-      output: isVi ? "Báo cáo BCF & Không xung đột" : "Zero Clash BCF Report",
+      output: isVi ? "Báo cáo phối hợp mô hình" : "Model coordination report",
       tag: "BCF / Navisworks",
     },
     {

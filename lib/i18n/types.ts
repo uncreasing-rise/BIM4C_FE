@@ -156,6 +156,16 @@ export interface Dictionary {
     eyebrow: string;
     heroTitle: string;
     heroDesc: string;
+    letter: { title: string; paragraphs: string[] };
+    visionMission: { vision: { title: string; text: string }; mission: { title: string; text: string } };
+    workMethod: { eyebrow: string; title: string; intro: string; items: { title: string; text: string }[] };
+    operation: { eyebrow: string; title: string; items: { title: string; text: string }[] };
+    whyChoose: {
+      eyebrow: string;
+      title: string;
+      intro: string;
+      items: { title: string; text: string }[];
+    };
     trackRecord: {
       eyebrow: string;
       title: string;
@@ -175,12 +185,17 @@ export interface Dictionary {
       integrity: { title: string; desc: string };
       innovation: { title: string; desc: string };
       collaboration: { title: string; desc: string };
-      sustainability: { title: string; desc: string };
     };
     teamEyebrow: string;
     teamTitle: string;
     teamDesc: string;
-    teamMembers: { name: string; role: string; cert: string; spec: string; image?: string }[];
+    teamMembers: {
+      name: string;
+      role: string;
+      cert: string;
+      spec: string;
+      image?: string;
+    }[];
     ctaEyebrow: string;
     ctaTitle: string;
   };
@@ -473,12 +488,6 @@ export interface Dictionary {
         low: string;
       };
       focusClash: string;
-    };
-    models: {
-      tower: string;
-      steel: string;
-      mep: string;
-      villa: string;
     };
     performance: {
       fps: string;
