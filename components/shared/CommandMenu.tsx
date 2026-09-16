@@ -215,7 +215,7 @@ export function CommandMenu({ isOpen, onClose }: CommandMenuProps) {
       {
         id: "crs-foundation",
         category: "course",
-        title: isVi ? "Khóa học BIM Foundation (Nhập môn Thực chiến)" : "BIM Foundation (Hands-on Fundamentals)",
+        title: isVi ? "Khóa học BIM Foundation (Nền tảng Quản trị & Mô hình hóa)" : "BIM Foundation (Management & Modeling)",
         subtitle: isVi ? "Làm quen tư duy ISO 19650, OpenBIM và đọc hiểu mô hình 3D" : "Master ISO 19650 mindset, OpenBIM and 3D model navigation",
         icon: GraduationCap,
         keywords: ["foundation", "nhap mon", "co ban", "can ban", "khoa hoc"],
@@ -227,24 +227,60 @@ export function CommandMenu({ isOpen, onClose }: CommandMenuProps) {
       {
         id: "crs-coordinator",
         category: "course",
-        title: isVi ? "Khóa học BIM Coordinator (Điều phối viên Chuyên nghiệp)" : "BIM Coordinator Professional Course",
+        title: isVi ? "Khóa học BIM Coordination (Điều phối viên Chuyên nghiệp)" : "BIM Coordination Professional Course",
         subtitle: isVi ? "Quản lý va chạm Navisworks, ma trận BCF và vận hành CDE dự án" : "Master Navisworks clash matrices, BCF tracking & CDE workflows",
         icon: GraduationCap,
-        keywords: ["coordinator", "dieu phoi", "navisworks", "bcf", "nang cao"],
+        keywords: ["coordinator", "dieu phoi", "navisworks", "bcf", "nang cao", "coordination"],
         action: () => {
-          router.push(ROUTES.courseDetail("bim-coordinator"));
+          router.push(ROUTES.courseDetail("bim-coordination"));
           onClose();
         },
       },
       {
-        id: "crs-revit-arch",
+        id: "crs-management",
         category: "course",
-        title: isVi ? "Khóa học Revit Architecture & Structure" : "Revit Architecture & Structure Course",
-        subtitle: isVi ? "Triển khai mô hình chuẩn LOD 300 - 400 và xuất hồ sơ bản vẽ kỹ thuật" : "Production-grade modeling LOD 300 - 400 & documentation",
+        title: isVi ? "Khóa học BIM Management (Quản trị & Chiến lược)" : "BIM Management (Strategy & Execution)",
+        subtitle: isVi ? "Xây dựng BEP, EIR, định giá đầu tư và quản trị chuyển đổi số" : "Draft BEP, EIR, ROI metrics and organizational digital transformation",
         icon: GraduationCap,
-        keywords: ["revit", "kien truc", "ket cau", "architecture", "structure"],
+        keywords: ["management", "quan ly", "bep", "eir", "giam doc bim"],
         action: () => {
-          router.push(ROUTES.courseDetail("revit-kien-truc-ket-cau"));
+          router.push(ROUTES.courseDetail("bim-management"));
+          onClose();
+        },
+      },
+      {
+        id: "crs-revit-structure",
+        category: "course",
+        title: isVi ? "Khóa học Revit Structure Professional" : "Revit Structure Professional Course",
+        subtitle: isVi ? "Triển khai mô hình kết cấu thép & bê tông cốt thép chuẩn LOD 350-400" : "Production-grade structural modeling LOD 350-400 & rebar",
+        icon: GraduationCap,
+        keywords: ["revit", "ket cau", "structure", "rebar", "thep"],
+        action: () => {
+          router.push(ROUTES.courseDetail("revit-structure-professional"));
+          onClose();
+        },
+      },
+      {
+        id: "crs-navisworks",
+        category: "course",
+        title: isVi ? "Khóa học Navisworks & Clash Detection" : "Navisworks & Clash Detection Course",
+        subtitle: isVi ? "Thực chiến kiểm soát xung đột và mô phỏng 4D TimeLiner" : "Clash Detective mastery and 4D TimeLiner schedule simulation",
+        icon: GraduationCap,
+        keywords: ["navisworks", "clash", "xung dot", "4d", "timeliner"],
+        action: () => {
+          router.push(ROUTES.courseDetail("navisworks-clash-detection"));
+          onClose();
+        },
+      },
+      {
+        id: "crs-cde",
+        category: "course",
+        title: isVi ? "Khóa học CDE & ISO 19650 (Quản trị Môi trường Chung)" : "CDE & ISO 19650 (Common Data Environment)",
+        subtitle: isVi ? "Thiết kế CDE, quy tắc đặt tên file và luồng xét duyệt thông tin số" : "CDE architecture, naming conventions and multi-tier approval workflows",
+        icon: GraduationCap,
+        keywords: ["cde", "iso 19650", "quan tri thong tin", "du lieu chung"],
+        action: () => {
+          router.push(ROUTES.courseDetail("cde-iso-19650"));
           onClose();
         },
       },

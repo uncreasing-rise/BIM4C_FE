@@ -244,173 +244,311 @@ export const projectEntries: ContentEntry[] = [
       },
     ],
   },
-  {
-    slug: "northgate-logistics-hub",
-    title: "Northgate Logistics Hub",
-    eyebrow: "DỰ ÁN CÔNG NGHIỆP",
-    image: "/images/news-site-safety.webp",
-    description:
-      "Trung tâm logistics đa chức năng được phối hợp BIM nhằm tối ưu luồng vận hành, kết cấu nhịp lớn và hệ thống kỹ thuật.",
-    meta: "BẮC NINH · 2026",
-    highlights: ["Công nghiệp", "4D Planning", "MEP Coordination"],
-    sections: [
-      {
-        title: "Bài toán dự án",
-        body: "Tiến độ nhanh và mật độ hệ thống kỹ thuật cao đòi hỏi các gói thiết kế, kết cấu và MEP phải được phối hợp theo chu kỳ ngắn.",
-      },
-      {
-        title: "Phạm vi BIM4C",
-        body: "Đội ngũ thiết lập mô hình liên kết, kiểm tra không gian bảo trì, quản lý xung đột và hỗ trợ lập kế hoạch thi công 4D.",
-      },
-      {
-        title: "Kết quả triển khai",
-        body: "Các vấn đề ảnh hưởng đến lắp đặt được xử lý trước khi phát hành bản vẽ thi công, giảm thay đổi tại hiện trường.",
-      },
-    ],
-  },
-  {
-    slug: "greenfield-smart-factory",
-    title: "Greenfield Smart Factory",
-    eyebrow: "DỰ ÁN CÔNG NGHIỆP",
-    image: "/images/service-design.jpg",
-    description:
-      "Nhà máy thông minh được phát triển trên nền tảng dữ liệu thống nhất từ thiết kế đến bàn giao vận hành.",
-    meta: "HẢI PHÒNG · 2025",
-    highlights: ["Nhà máy", "Digital Handover", "Asset Data"],
-    sections: [
-      {
-        title: "Mục tiêu thông tin",
-        body: "Yêu cầu dữ liệu được xác định sớm để mô hình không chỉ phục vụ thi công mà còn sẵn sàng cho quản lý tài sản.",
-      },
-      {
-        title: "Tích hợp đa bộ môn",
-        body: "Kiến trúc, kết cấu, MEP và dây chuyền công nghệ được phối hợp trong một mô hình tổng thể có kiểm soát phiên bản.",
-      },
-      {
-        title: "Bàn giao số",
-        body: "Danh mục thiết bị, tài liệu kỹ thuật và dữ liệu bảo trì được liên kết phục vụ đội ngũ vận hành sau nghiệm thu.",
-      },
-    ],
-  },
-  {
-    slug: "metro-depot-digital-coordination",
-    title: "Metro Depot Digital Coordination",
-    eyebrow: "DỰ ÁN HẠ TẦNG",
-    image: "/images/news-digital-twin.webp",
-    description:
-      "Phối hợp số cho tổ hợp depot với nhiều hệ thống hạ tầng, kiến trúc và thiết bị chuyên ngành giao cắt phức tạp.",
-    meta: "TP. HỒ CHÍ MINH · 2026",
-    highlights: ["Hạ tầng", "CDE", "Interface Management"],
-    sections: [
-      {
-        title: "Quản lý giao diện",
-        body: "Ranh giới giữa các gói thầu được mô hình hóa và quản lý bằng danh mục giao diện có người chịu trách nhiệm rõ ràng.",
-      },
-      {
-        title: "Môi trường dữ liệu chung",
-        body: "Quy trình CDE kiểm soát trạng thái tài liệu, phiên bản và luồng phê duyệt cho các bên tham gia.",
-      },
-      {
-        title: "Hỗ trợ điều hành",
-        body: "Báo cáo trực quan giúp ban dự án theo dõi các vấn đề liên ngành và ưu tiên xử lý theo ảnh hưởng tiến độ.",
-      },
-    ],
-  },
 ];
 
-export const courseEntries: ContentEntry[] = [
+export const courseEntries: (ContentEntry & {
+  id: string;
+  duration: string;
+  level: string;
+  price: string;
+  instructor: string;
+  learningOutcomes: string[];
+  curriculum: { id: string; title: string; description: string }[];
+})[] = [
   {
+    id: "course-1",
     slug: "bim-foundation",
-    title: "BIM Foundation",
+    title: "BIM Foundation (Nền tảng Quản trị & Mô hình hóa BIM)",
     eyebrow: "NỀN TẢNG · 8 TUẦN",
+    category: "Nền tảng",
     image: "/images/service-training.jpg",
     description:
-      "Kiến thức BIM nền tảng và quy trình phối hợp dành cho kỹ sư xây dựng.",
-    highlights: ["24 buổi học", "Bài tập thực hành", "Chứng nhận BIM4C"],
+      "Trang bị nền tảng tư duy BIM chuẩn ISO 19650, cấu trúc dữ liệu mô hình và phương pháp phối hợp liên bộ môn dành cho kỹ sư xây dựng.",
+    duration: "8 tuần (24 buổi)",
+    level: "Nền tảng",
+    price: "4.800.000 VNĐ",
+    instructor: "ThS. KTS Trần Minh Tuấn (BIM Specialist)",
+    highlights: [
+      "24 buổi học tương tác & lab",
+      "Thực hành trên dữ liệu dự án thực",
+      "Chứng chỉ chuẩn hóa BIM4C",
+    ],
+    learningOutcomes: [
+      "Nắm vững thuật ngữ chuẩn ISO 19650, BEP, EIR, LOD 100-500",
+      "Sử dụng thành thạo Revit tạo lập mô hình kiến trúc & kết cấu cơ bản",
+      "Thiết lập và quản lý môi trường dữ liệu chung (CDE)",
+      "Đọc hiểu ma trận kiểm soát xung đột và quy trình xuất hồ sơ 2D từ BIM",
+    ],
+    curriculum: [
+      {
+        id: "mod-1",
+        title: "Mô-đun 01: Tổng quan BIM & Chuẩn mực ISO 19650",
+        description:
+          "Giới thiệu các nguyên lý BIM, định dạng IFC, phân loại LOD/LOIN và cấu trúc kế hoạch thực thi BIM (BEP).",
+      },
+      {
+        id: "mod-2",
+        title: "Mô-đun 02: Dựng hình kết cấu & kiến trúc trên Autodesk Revit",
+        description:
+          "Thao tác dựng hình dầm, cột, sàn, tường, family cơ bản và quản lý hệ thống view/sheet chuẩn thi công.",
+      },
+      {
+        id: "mod-3",
+        title: "Mô-đun 03: Thiết lập CDE & Quản trị dữ liệu chia sẻ",
+        description:
+          "Thực hành quy trình trạng thái WIP, Shared, Published và quản lý version kiểm soát thay đổi.",
+      },
+      {
+        id: "mod-4",
+        title: "Mô-đun 04: Đồ án tốt nghiệp & Trình bày kết quả",
+        description:
+          "Hoàn thiện gói mô hình và báo cáo kỹ thuật từ một đề bài công trình thực tế có phản biện trực tiếp.",
+      },
+    ],
     sections: [
       {
         title: "Bạn sẽ học được gì?",
-        body: "Học viên hiểu nguyên lý BIM, cấu trúc dữ liệu mô hình và quy trình phối hợp cơ bản trong dự án.",
+        body: "Học viên hiểu nguyên lý BIM, cấu trúc dữ liệu mô hình và quy trình phối hợp cơ bản trong dự án xây dựng hiện đại.",
       },
       {
         title: "Đối tượng phù hợp",
-        body: "Kỹ sư, kiến trúc sư, sinh viên năm cuối và nhân sự muốn bắt đầu lộ trình nghề nghiệp BIM.",
+        body: "Kỹ sư, kiến trúc sư, sinh viên năm cuối và nhân sự kỹ thuật muốn bắt đầu lộ trình nghề nghiệp BIM bài bản.",
       },
     ],
   },
   {
+    id: "course-2",
     slug: "bim-coordination",
-    title: "BIM Coordination",
+    title: "BIM Coordination (Điều phối viên BIM Chuyên nghiệp)",
     eyebrow: "CHUYÊN SÂU · 10 TUẦN",
+    category: "Chuyên sâu",
     image: "/images/service-bim.jpg",
     description:
-      "Phối hợp đa bộ môn, kiểm soát xung đột và quản lý thông tin trong CDE.",
-    highlights: ["Clash Detection", "CDE Workflow", "Dự án cuối khóa"],
+      "Kỹ năng phối hợp đa bộ môn, quản trị xung đột không gian MEP/Kết cấu/Kiến trúc và điều hành phiên họp phối hợp trên CDE.",
+    duration: "10 tuần (30 buổi)",
+    level: "Chuyên sâu",
+    price: "7.200.000 VNĐ",
+    instructor: "Kỹ sư Lê Quốc Khánh (Senior BIM Coordinator)",
+    highlights: [
+      "Clash Detective & BCF workflow",
+      "Điều phối ACC & Navisworks",
+      "Case study dự án cao tầng",
+    ],
+    learningOutcomes: [
+      "Thiết lập bộ quy tắc kiểm tra xung đột phân tầng theo độ ưu tiên",
+      "Sử dụng chuẩn BCF (BIM Collaboration Format) để đóng mở issue minh bạch",
+      "Chủ trì các buổi họp phối hợp kỹ thuật (BIM Coordination Meeting)",
+      "Tối ưu không gian lắp đặt và bảo trì hệ thống cơ điện (MEP Clearance)",
+    ],
+    curriculum: [
+      {
+        id: "mod-1",
+        title: "Mô-đun 01: Thiết lập mô hình liên kết (Federated Model)",
+        description:
+          "Tổ chức hệ tọa độ Shared Coordinates, kiểm soát nguồn gốc file và phân quyền mô hình đa bộ môn.",
+      },
+      {
+        id: "mod-2",
+        title: "Mô-đun 02: Quản trị xung đột chuyên sâu với Navisworks",
+        description:
+          "Xây dựng Search Sets tự động, thiết lập ma trận Clash Matrix và lọc bỏ xung đột giả (Soft Clash).",
+      },
+      {
+        id: "mod-3",
+        title: "Mô-đun 03: Điều hành luồng giải quyết vấn đề qua BCF & Cloud",
+        description:
+          "Tích hợp Revit - Navisworks - BIM Track/ACC để theo dõi vòng đời sự cố và phân công trách nhiệm.",
+      },
+      {
+        id: "mod-4",
+        title: "Mô-đun 04: Quản lý cuộc họp phối hợp & Báo cáo tiến độ",
+        description:
+          "Mô phỏng phiên họp thực chiến, ra biên bản phối hợp và cập nhật dashboard trạng thái mô hình.",
+      },
+    ],
     sections: [
       {
         title: "Năng lực đầu ra",
-        body: "Học viên có thể tổ chức phiên phối hợp, phân loại xung đột và quản lý quá trình đóng vấn đề.",
+        body: "Học viên có thể độc lập tổ chức phiên phối hợp, phân loại xung đột và quản lý quá trình đóng vấn đề kỹ thuật.",
       },
       {
         title: "Phương pháp học",
-        body: "Mỗi chủ đề được thực hành trên mô hình dự án, kèm phản hồi trực tiếp từ giảng viên.",
+        body: "Mỗi chủ đề được thực hành trên mô hình dự án cao tầng và khu phức hợp thực tế, kèm phản hồi trực tiếp từ chuyên gia.",
       },
     ],
   },
   {
+    id: "course-3",
     slug: "bim-management",
-    title: "BIM Management",
+    title: "BIM Management (Quản trị & Hoạch định Chiến lược BIM)",
     eyebrow: "QUẢN LÝ · 6 TUẦN",
+    category: "Quản lý",
     image: "/images/news-site-safety.webp",
     description:
-      "Thiết lập chiến lược BIM và đo lường hiệu quả triển khai cho doanh nghiệp.",
-    highlights: ["BEP & EIR", "Quản trị thay đổi", "Đo lường hiệu quả"],
+      "Thiết lập chiến lược chuyển đổi số, xây dựng kế hoạch thực thi BEP/EIR, dự toán chi phí và đo lường ROI triển khai BIM cho doanh nghiệp.",
+    duration: "6 tuần (18 buổi)",
+    level: "Quản lý",
+    price: "8.500.000 VNĐ",
+    instructor: "ThS. Phạm Hoàng Long (BIM Director)",
+    highlights: [
+      "Soạn thảo BEP, EIR, AIR chuẩn quốc tế",
+      "Định giá & KPI chuyển đổi số",
+      "Cố vấn chiến lược 1:1",
+    ],
+    learningOutcomes: [
+      "Soạn thảo hồ sơ mời thầu EIR và kế hoạch thực thi BEP sát thực tế",
+      "Đánh giá năng lực nhà thầu và thẩm định chất lượng mô hình bàn giao",
+      "Tính toán chi phí đầu tư công nghệ và tối ưu hóa nguồn lực nhân sự",
+      "Xây dựng quy chế quản trị thông tin và lộ trình số hóa cấp doanh nghiệp",
+    ],
+    curriculum: [
+      {
+        id: "mod-1",
+        title: "Mô-đun 01: Chiến lược & Khung thể chế BIM",
+        description:
+          "Phân tích tiêu chuẩn ISO 19650-1/2, các văn bản pháp lý Việt Nam và xác định mục tiêu áp dụng BIM.",
+      },
+      {
+        id: "mod-2",
+        title: "Mô-đun 02: Xây dựng EIR, BEP và Ma trận phân công trách nhiệm",
+        description:
+          "Hướng dẫn soạn thảo bộ tài liệu BEP hoàn chỉnh, phân bổ RACI matrix và tiêu chí nghiệm thu LOD.",
+      },
+      {
+        id: "mod-3",
+        title: "Mô-đun 03: Quản trị hợp đồng & Thẩm định mô hình bàn giao",
+        description:
+          "Quy trình kiểm tra QA/QC mô hình, audit dữ liệu thuộc tính và điều khoản pháp lý liên quan đến bản quyền số.",
+      },
+      {
+        id: "mod-4",
+        title: "Mô-đun 04: Chuyển đổi số & Đo lường hiệu quả đầu tư (ROI)",
+        description:
+          "Cách thức chuyển giao công nghệ, quản trị thay đổi nhân sự và xây dựng KPI đo lường giá trị thực tế.",
+      },
+    ],
     sections: [
       {
         title: "Tư duy quản lý",
-        body: "Chương trình tập trung vào cách chuyển mục tiêu kinh doanh thành yêu cầu thông tin và kế hoạch thực thi.",
+        body: "Chương trình tập trung vào cách chuyển mục tiêu kinh doanh thành yêu cầu thông tin và kế hoạch thực thi có thể kiểm chứng.",
       },
       {
         title: "Dành cho người lãnh đạo",
-        body: "Phù hợp với BIM Manager, quản lý dự án và lãnh đạo doanh nghiệp đang triển khai chuyển đổi số.",
+        body: "Phù hợp với BIM Manager, Giám đốc dự án, Trưởng ban quản lý và lãnh đạo doanh nghiệp đang triển khai chuyển đổi số.",
       },
     ],
   },
   {
+    id: "course-4",
     slug: "revit-structure-professional",
-    title: "Revit Structure Professional",
+    title: "Revit Structure Professional (Mô hình hóa Kết cấu Chuyên sâu)",
     eyebrow: "CHUYÊN NGÀNH · 8 TUẦN",
+    category: "Chuyên ngành",
     image: "/images/service-design.jpg",
     description:
-      "Phát triển mô hình kết cấu có tính thi công, kiểm soát hồ sơ và phối hợp hiệu quả với các bộ môn liên quan.",
+      "Phát triển mô hình kết cấu bê tông, cốt thép và kết cấu thép đạt LOD 350-400, kiểm soát hồ sơ bản vẽ thi công và tham số khối lượng.",
+    duration: "8 tuần (24 buổi)",
+    level: "Chuyên sâu",
+    price: "5.500.000 VNĐ",
+    instructor: "KS. Vũ Đình Hải (Lead Structural Modeler)",
     highlights: [
-      "Concrete & Steel",
-      "Model QA/QC",
-      "Construction Documentation",
+      "Revit Rebar & Steel Connection",
+      "Trích xuất khối lượng tự động",
+      "Hồ sơ Shopdrawing chuẩn xác",
+    ],
+    learningOutcomes: [
+      "Mô hình hóa cốt thép 3D chi tiết cho móng, cột, dầm, sàn phức tạp",
+      "Thiết lập liên kết kết cấu thép tiền chế và chi tiết bản mã",
+      "Tự động hóa thống kê khối lượng cốt thép và bảng uốn thép",
+      "Xuất bản vẽ thi công kết cấu đồng bộ, hạn chế 100% sai lệch bản vẽ - mô hình",
+    ],
+    curriculum: [
+      {
+        id: "mod-1",
+        title: "Mô-đun 01: Thiết lập mô hình kết cấu tiêu chuẩn",
+        description:
+          "Cấu hình dự án, liên kết mô hình kiến trúc, thiết lập lưới trục, cao trình và family kết cấu chuẩn.",
+      },
+      {
+        id: "mod-2",
+        title: "Mô-đun 02: Mô hình hóa cốt thép 3D (Revit Rebar Modeling)",
+        description:
+          "Triển khai thép móng, dầm, cột, vách, sàn chuyển và xử lý xung đột cốt thép mật độ cao.",
+      },
+      {
+        id: "mod-3",
+        title: "Mô-đun 03: Kết cấu thép & Chi tiết liên kết (Steel Connections)",
+        description:
+          "Mô hình kết cấu giàn thép, khung thép nhà xưởng, bu-lông, mối hàn và bản mã liên kết.",
+      },
+      {
+        id: "mod-4",
+        title: "Mô-đun 04: Quản lý khối lượng & Trích xuất hồ sơ bản vẽ",
+        description:
+          "Tạo lập Schedule khối lượng vật liệu, bóc tách bê tông/thép và bố trí dàn trang hồ sơ kỹ thuật thi công.",
+      },
     ],
     sections: [
       {
         title: "Nội dung trọng tâm",
-        body: "Học viên xây dựng mô hình bê tông, thép, cấu kiện đặc thù và tổ chức bộ hồ sơ theo tiêu chuẩn dự án.",
+        body: "Học viên xây dựng mô hình bê tông, thép, cấu kiện đặc thù và tổ chức bộ hồ sơ bản vẽ theo tiêu chuẩn dự án thực tế.",
       },
       {
         title: "Quản lý chất lượng",
         body: "Chương trình hướng dẫn kiểm tra mô hình, quản lý cảnh báo, tham số và tính nhất quán giữa mô hình với bản vẽ.",
       },
-      {
-        title: "Sản phẩm cuối khóa",
-        body: "Hoàn thiện một gói mô hình và hồ sơ kết cấu có thể sử dụng làm portfolio chuyên môn.",
-      },
     ],
   },
   {
+    id: "course-5",
     slug: "navisworks-clash-detection",
-    title: "Navisworks & Clash Detection",
+    title: "Navisworks & Clash Detection (Thực chiến Kiểm soát Xung đột)",
     eyebrow: "THỰC CHIẾN · 5 TUẦN",
+    category: "Thực chiến",
     image: "/images/news-project-coordination.webp",
     description:
-      "Tổ chức mô hình liên kết, thiết lập quy tắc clash và điều hành phiên phối hợp đa bộ môn trên dữ liệu dự án.",
-    highlights: ["Search Sets", "Clash Rules", "Coordination Meeting"],
+      "Tổ chức mô hình liên kết tổng thể, làm chủ bộ công cụ Clash Detective, kiểm soát TimeLiner 4D và mô phỏng biện pháp thi công.",
+    duration: "5 tuần (15 buổi)",
+    level: "Thực chiến",
+    price: "4.500.000 VNĐ",
+    instructor: "KS. Đỗ Minh Quân (BIM Coordinator)",
+    highlights: [
+      "Quy tắc Clash Detective nâng cao",
+      "Mô phỏng 4D TimeLiner",
+      "Xuất báo cáo xung đột HTML/BCF",
+    ],
+    learningOutcomes: [
+      "Cấu hình Search Sets theo hệ thống mã phân cấp (Uniclass/OmniClass)",
+      "Lập ma trận kiểm tra xung đột chuyên sâu giữa Kết cấu - Kiến trúc - MEP",
+      "Kết hợp tiến độ thi công vào mô hình để tạo hoạt cảnh mô phỏng 4D",
+      "Xuất báo cáo chuyên nghiệp phục vụ giao ban hiện trường",
+    ],
+    curriculum: [
+      {
+        id: "mod-1",
+        title: "Mô-đun 01: Tổng hợp mô hình & Quản trị tập hợp dữ liệu",
+        description:
+          "Nhập xuất các định dạng NWD, NWC, IFC, DWG và tối ưu hiệu năng hiển thị cho mô hình dung lượng lớn.",
+      },
+      {
+        id: "mod-2",
+        title: "Mô-đun 02: Làm chủ Clash Detective & Xử lý xung đột",
+        description:
+          "Thiết lập dung sai, quy tắc bỏ qua xung đột (Rules) và phân nhóm theo vị trí/tầng.",
+      },
+      {
+        id: "mod-3",
+        title: "Mô-đun 03: Mô phỏng thi công 4D với TimeLiner",
+        description:
+          "Liên kết dữ liệu tiến độ MS Project/Primavera P6 với các đối tượng mô hình để mô phỏng giai đoạn thi công.",
+      },
+      {
+        id: "mod-4",
+        title: "Mô-đun 04: Báo cáo phối hợp & Thực hành dự án",
+        description:
+          "Tạo báo cáo chi tiết, điều hành phiên họp phối hợp và nghiệm thu mô hình không xung đột nghiêm trọng.",
+      },
+    ],
     sections: [
       {
         title: "Thiết lập kiểm tra",
@@ -420,23 +558,57 @@ export const courseEntries: ContentEntry[] = [
         title: "Điều hành vấn đề",
         body: "Kết quả clash được phân loại, nhóm theo nguyên nhân và chuyển thành issue có trách nhiệm cùng thời hạn xử lý.",
       },
-      {
-        title: "Báo cáo phối hợp",
-        body: "Cuối khóa, học viên tổ chức một phiên coordination và trình bày dashboard trạng thái cho ban dự án.",
-      },
     ],
   },
   {
+    id: "course-6",
     slug: "cde-iso-19650",
-    title: "CDE & ISO 19650",
+    title: "CDE & ISO 19650 (Quản trị Dữ liệu Môi trường Chung)",
     eyebrow: "QUẢN TRỊ THÔNG TIN · 6 TUẦN",
+    category: "Quản trị thông tin",
     image: "/images/news-digital-twin.webp",
     description:
-      "Thiết kế quy trình môi trường dữ liệu chung và quản trị thông tin dự án theo nguyên tắc ISO 19650.",
+      "Thiết kế kiến trúc môi trường dữ liệu chung CDE, chuẩn hóa quy tắc đặt tên, revision và luồng xét duyệt thông tin số cho toàn dự án.",
+    duration: "6 tuần (18 buổi)",
+    level: "Quản trị thông tin",
+    price: "5.800.000 VNĐ",
+    instructor: "Chuyên gia ISO 19650 Nguyễn Văn Hải",
     highlights: [
-      "Information Requirements",
-      "CDE Workflow",
-      "Naming & Approval",
+      "Xây dựng CDE trên ACC / SharePoint / Nextcloud",
+      "Quy tắc đặt tên file ISO 19650",
+      "Luồng xét duyệt phân cấp",
+    ],
+    learningOutcomes: [
+      "Thiết kế cấu trúc thư mục 4 trạng thái: WIP -> Shared -> Published -> Archived",
+      "Áp dụng chuẩn đặt tên file ISO 19650 National Annex",
+      "Xây dựng quy trình phê duyệt tài liệu và ký số điện tử",
+      "Quản lý phân quyền bảo mật dữ liệu cho Chủ đầu tư, Tư vấn và Nhà thầu",
+    ],
+    curriculum: [
+      {
+        id: "mod-1",
+        title: "Mô-đun 01: Nguyên lý Môi trường dữ liệu chung CDE",
+        description:
+          "Hiểu rõ khái niệm Single Source of Truth và các yêu cầu kỹ thuật đối với nền tảng CDE.",
+      },
+      {
+        id: "mod-2",
+        title: "Mô-đun 02: Chuẩn hóa quy tắc đặt tên và trường thuộc tính",
+        description:
+          "Thực hành áp dụng cấu trúc mã dự án, bộ môn, vị trí, loại tài liệu và trạng thái phù hợp ISO 19650.",
+      },
+      {
+        id: "mod-3",
+        title: "Mô-đun 03: Thiết lập luồng kiểm duyệt (Review Workflow)",
+        description:
+          "Cấu hình bước kiểm tra nội bộ, phát hành chia sẻ và phê duyệt chính thức trên nền tảng đám mây.",
+      },
+      {
+        id: "mod-4",
+        title: "Mô-đun 04: Bảo mật, lưu trữ và bàn giao dữ liệu số",
+        description:
+          "Quy trình đóng gói Asset Information Model (AIM) phục vụ vận hành và lưu trữ dự án dài hạn.",
+      },
     ],
     sections: [
       {
@@ -447,10 +619,6 @@ export const courseEntries: ContentEntry[] = [
         title: "Thiết kế CDE",
         body: "Xây dựng trạng thái WIP, Shared, Published, Archived cùng quy tắc đặt tên, revision và luồng phê duyệt.",
       },
-      {
-        title: "Áp dụng vào tổ chức",
-        body: "Học viên hoàn thiện bộ quy trình mẫu và kế hoạch triển khai phù hợp với quy mô doanh nghiệp hoặc dự án.",
-      },
     ],
   },
 ];
@@ -459,24 +627,24 @@ export const blogEntries: ContentEntry[] = [
   {
     slug: "phoi-hop-bim-du-an-cao-tang",
     title:
-      "Phối hợp BIM tại dự án cao tầng: Từ mô hình đến quyết định hiện trường",
+      "Phối hợp BIM tại dự án cao tầng: Từ mô hình 3D đến quyết định hiện trường",
     eyebrow: "DỰ ÁN",
     meta: "15.08.2026",
     image: "/images/news-project-coordination.webp",
     description:
-      "Đội ngũ BIM4C kết nối mô hình, bản vẽ và dữ liệu hiện trường để phát hiện sớm xung đột và hỗ trợ quyết định thi công chính xác.",
+      "Đội ngũ BIM4C kết nối mô hình, bản vẽ và dữ liệu hiện trường để phát hiện sớm hơn 1.200 xung đột và hỗ trợ quyết định thi công chính xác.",
     highlights: [
-      "Phối hợp đa bộ môn",
-      "Kiểm soát xung đột",
-      "Dữ liệu hiện trường",
+      "Phối hợp đa bộ môn MEP - Kết cấu",
+      "Kiểm soát xung đột không gian hẹp",
+      "Giảm 35% chi phí phát sinh",
     ],
     sections: [
       {
-        title: "Một nguồn thông tin thống nhất",
+        title: "Một nguồn thông tin thống nhất (Single Source of Truth)",
         body: "Mô hình phối hợp giúp các bên cùng làm việc trên nguồn dữ liệu được kiểm soát, giảm độ trễ khi trao đổi và hạn chế sai lệch giữa thiết kế với hiện trường.",
       },
       {
-        title: "Quyết định dựa trên dữ liệu",
+        title: "Quyết định dựa trên dữ liệu thời gian thực",
         body: "Các vấn đề được phân loại, giao trách nhiệm và theo dõi đến khi đóng, giúp đội ngũ dự án xử lý chủ động trước khi ảnh hưởng đến tiến độ.",
       },
     ],
@@ -489,29 +657,37 @@ export const blogEntries: ContentEntry[] = [
     meta: "14.08.2026",
     image: "/images/news-digital-twin.webp",
     description:
-      "Mô hình số đồng bộ dữ liệu thiết kế, thi công và vận hành, tạo nền tảng trực quan cho quản trị tài sản và dự báo rủi ro.",
-    highlights: ["Digital Twin", "Dữ liệu thời gian thực", "Quản trị vòng đời"],
+      "Mô hình số đồng bộ dữ liệu thiết kế, thi công và cảm biến IoT vận hành, tạo nền tảng trực quan cho quản trị tài sản và dự báo rủi ro.",
+    highlights: [
+      "Digital Twin thời gian thực",
+      "Tích hợp cảm biến IoT",
+      "Tối ưu chi phí bảo trì vòng đời",
+    ],
     sections: [
       {
-        title: "Từ mô hình tĩnh đến hệ thống sống",
-        body: "Digital Twin liên kết mô hình với dữ liệu vận hành để phản ánh trạng thái công trình, hỗ trợ theo dõi hiệu suất và nhận diện bất thường.",
+        title: "Từ mô hình tĩnh đến hệ sinh thái sống",
+        body: "Digital Twin liên kết mô hình với dữ liệu vận hành để phản ánh trạng thái công trình, hỗ trợ theo dõi hiệu suất và nhận diện bất thường ngay tức thì.",
       },
       {
         title: "Nền tảng cho vận hành thông minh",
-        body: "Dữ liệu có cấu trúc giúp chủ đầu tư đánh giá phương án bảo trì, tối ưu tài sản và ra quyết định trên cơ sở minh bạch.",
+        body: "Dữ liệu có cấu trúc giúp chủ đầu tư đánh giá phương án bảo trì, tối ưu tài sản và ra quyết định trên cơ sở dữ liệu minh bạch.",
       },
     ],
   },
   {
     slug: "dao-tao-bim-thuc-chien-cho-ky-su",
     title:
-      "Đào tạo BIM thực chiến: Nâng cao năng lực phối hợp cho đội ngũ kỹ sư",
+      "Đào tạo BIM thực chiến: Nâng cao năng lực phối hợp số cho kỹ sư thế hệ mới",
     eyebrow: "ĐÀO TẠO",
     meta: "13.08.2026",
     image: "/images/news-bim-training.webp",
     description:
-      "Chương trình học dựa trên tình huống dự án giúp kỹ sư hình thành tư duy phối hợp, kiểm soát thông tin và xử lý vấn đề có hệ thống.",
-    highlights: ["Học từ dự án", "Thực hành mô hình", "Phát triển năng lực"],
+      "Chương trình học dựa trên tình huống dự án thật giúp kỹ sư hình thành tư duy phối hợp, làm chủ công cụ và xử lý xung đột có hệ thống.",
+    highlights: [
+      "Học từ dự án thực tế",
+      "Thực hành tương tác trực tiếp",
+      "Cấp chứng chỉ xác thực QR",
+    ],
     sections: [
       {
         title: "Học thông qua tình huống thực tế",
@@ -519,28 +695,33 @@ export const blogEntries: ContentEntry[] = [
       },
       {
         title: "Đo lường năng lực đầu ra",
-        body: "Kết quả được đánh giá bằng sản phẩm thực hành và khả năng tổ chức quy trình, thay vì chỉ dựa trên kiến thức lý thuyết.",
+        body: "Kết quả được đánh giá bằng sản phẩm thực hành và khả năng tổ chức quy trình, thay vì chỉ dừng lại ở kiến thức lý thuyết.",
       },
     ],
   },
   {
     slug: "du-lieu-so-nang-cao-an-toan-cong-truong",
-    title: "Ứng dụng dữ liệu số để chủ động kiểm soát an toàn công trường",
+    title: "Ứng dụng dữ liệu số & 4D Simulation để chủ động kiểm soát an toàn",
     eyebrow: "AN TOÀN",
     meta: "12.08.2026",
     image: "/images/news-site-safety.webp",
     description:
-      "Quy trình kiểm tra số hóa giúp đội ngũ nhận diện rủi ro, theo dõi hành động khắc phục và duy trì tiêu chuẩn an toàn nhất quán.",
-    highlights: ["Nhận diện rủi ro", "Kiểm tra số hóa", "An toàn chủ động"],
+      "Quy trình kiểm tra số hóa và mô phỏng 4D giúp đội ngũ nhận diện vùng nguy hiểm, theo dõi hành động khắc phục và duy trì an toàn tuyệt đối.",
+    highlights: [
+      "Nhận diện rủi ro trước thi công",
+      "Mô phỏng 4D không gian hẹp",
+      "An toàn chủ động không tai nạn",
+    ],
     sections: [
       {
         title: "Thông tin được ghi nhận tại nguồn",
-        body: "Các phát hiện tại hiện trường được gắn với vị trí, hình ảnh và người phụ trách, giúp hành động khắc phục rõ ràng và có thể truy vết.",
+        body: "Các phát hiện tại hiện trường được gắn với vị trí không gian mô hình, hình ảnh và người phụ trách, giúp hành động khắc phục rõ ràng và có thể truy vết.",
       },
       {
-        title: "Chuyển từ phản ứng sang phòng ngừa",
+        title: "Chuyển từ phản ứng sang phòng ngừa rủi ro",
         body: "Dữ liệu lịch sử giúp đội ngũ nhận diện xu hướng rủi ro và ưu tiên biện pháp kiểm soát trước khi sự cố xảy ra.",
       },
     ],
   },
 ];
+

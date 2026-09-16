@@ -98,86 +98,119 @@ export function BlogExplorer({
           {t.blogPage.matchingCount(meta.total)}
         </p>
         {visible.length ? (
-          <div className="grid grid-cols-1 gap-x-10 border-t pt-8 lg:grid-cols-[1.1fr_.9fr]">
-            {visible.map((item, index) => (
+          <div className="grid grid-cols-1 gap-8 border-t pt-8 lg:grid-cols-12">
+            {/* Featured Hero Story (Spans 7 cols on desktop) */}
+            {visible[0] && (
               <article
-                className={
-                  index === 0
-                    ? "group relative flex min-w-0 flex-col border-b pb-8 lg:row-span-4"
-                    : "group relative grid min-w-0 grid-cols-[5rem_minmax(0,1fr)] gap-4 border-b py-6 sm:grid-cols-[8rem_minmax(0,1fr)] lg:col-start-2"
-                }
+                className="group relative flex flex-col overflow-hidden rounded-3xl border border-border/80 bg-card shadow-lg transition-all duration-500 hover:shadow-2xl hover:border-primary/50 lg:col-span-7 cursor-pointer"
                 data-motion="tile"
-                key={item.slug}
+                key={visible[0].slug}
               >
                 <Link
-                  className="absolute inset-0 z-10 rounded-[14px] focus-visible:outline-2 focus-visible:outline-offset-[-3px] focus-visible:outline-primary"
-                  href={ROUTES.blogDetail(item.slug)}
+                  className="absolute inset-0 z-20 rounded-3xl focus:outline-none"
+                  href={ROUTES.blogDetail(visible[0].slug)}
                   aria-label={
                     (locale === "vi" ? "Xem bài viết: " : "View article: ") +
-                    item.title
+                    visible[0].title
                   }
                 />
-                <div
-                  className={
-                    index === 0
-                      ? "relative aspect-[4/3] overflow-hidden rounded-2xl bg-muted"
-                      : "relative aspect-square overflow-hidden rounded-xl bg-muted"
-                  }
-                >
+                <div className="relative aspect-[16/10] w-full overflow-hidden bg-muted">
                   <Image
-                    className="object-cover transition-transform duration-700 group-hover:scale-[1.04]"
-                    src={item.image}
-                    alt={item.title}
+                    className="object-cover transition-transform duration-700 ease-out group-hover:scale-110"
+                    src={visible[0].image}
+                    alt={visible[0].title}
                     fill
-                    sizes={
-                      index === 0 ? "(max-width:1023px) 100vw, 55vw" : "128px"
-                    }
+                    sizes="(max-width:1023px) 100vw, 60vw"
+                    priority
                   />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                  <div className="absolute top-4 left-4 z-10 flex items-center gap-2">
+                    <span className="rounded-full bg-teal-500/90 backdrop-blur-md px-3 py-1 text-xs font-bold text-black uppercase tracking-wider shadow-sm">
+                      {toLocalizedLabel(visible[0].eyebrow, locale)}
+                    </span>
+                    <span className="rounded-full bg-black/60 backdrop-blur-md px-2.5 py-1 text-[11px] font-medium text-white border border-white/10">
+                      {locale === "vi" ? "5 phút đọc" : "5 min read"}
+                    </span>
+                  </div>
                 </div>
-                <div
-                  className={
-                    index === 0
-                      ? "flex flex-1 flex-col pt-6"
-                      : "flex min-w-0 flex-1 flex-col"
-                  }
-                >
-                  <p className="mb-2.5 text-[10px] font-semibold uppercase tracking-[.1em] text-primary">
-                    {toLocalizedLabel(item.eyebrow, locale)}
-                  </p>
-                  <h3
-                    className={cn(
-                      "font-semibold leading-[1.3] tracking-[-.015em] text-foreground group-hover:text-primary transition-colors",
-                      index === 0
-                        ? "text-2xl sm:text-3xl line-clamp-3"
-                        : "text-sm sm:text-base lg:text-lg line-clamp-2",
-                    )}
-                  >
-                    {item.title}
+                <div className="flex flex-1 flex-col p-6 sm:p-8">
+                  <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground">
+                    <time>{visible[0].meta}</time>
+                    <span>·</span>
+                    <span className="text-primary font-bold">{toLocalizedLabel(visible[0].eyebrow, locale)}</span>
+                  </div>
+                  <h3 className="mt-3 text-2xl sm:text-3xl font-extrabold leading-tight tracking-tight text-foreground group-hover:text-primary transition-colors">
+                    {visible[0].title}
                   </h3>
-                  <p
-                    className={
-                      index === 0
-                        ? "mt-3 line-clamp-3 text-[14px] leading-[1.65] text-muted-foreground"
-                        : "mt-2 line-clamp-2 text-xs leading-5 text-muted-foreground"
-                    }
-                  >
-                    {item.description}
+                  <p className="mt-3 line-clamp-3 text-sm sm:text-base leading-relaxed text-muted-foreground">
+                    {visible[0].description}
                   </p>
-                  <div
-                    className={
-                      index === 0
-                        ? "mt-5 flex items-center justify-between border-t pt-4 text-[12px] text-muted-foreground"
-                        : "mt-auto flex items-center justify-between pt-3 text-[11px] text-muted-foreground"
-                    }
-                  >
-                    <time>{item.meta}</time>
-                    <span className="font-semibold text-primary">
-                      {t.blogPage.readMore}
+                  <div className="mt-6 flex items-center justify-between border-t pt-4">
+                    <span className="inline-flex items-center gap-2 text-sm font-bold text-primary group-hover:translate-x-1 transition-transform">
+                      {t.blogPage.readMore} →
+                    </span>
+                    <span className="text-xs text-muted-foreground font-medium">
+                      BIM4C Engineering Insights
                     </span>
                   </div>
                 </div>
               </article>
-            ))}
+            )}
+
+            {/* Sub-articles column (Spans 5 cols on desktop) */}
+            <div className="flex flex-col gap-6 lg:col-span-5">
+              {visible.slice(1).map((item) => (
+                <article
+                  className="group relative flex flex-col sm:flex-row gap-4 overflow-hidden rounded-2xl border border-border/70 bg-card p-4 shadow-sm transition-all duration-300 hover:shadow-xl hover:border-primary/40 hover:-translate-y-1 cursor-pointer"
+                  data-motion="tile"
+                  key={item.slug}
+                >
+                  <Link
+                    className="absolute inset-0 z-20 rounded-2xl focus:outline-none"
+                    href={ROUTES.blogDetail(item.slug)}
+                    aria-label={
+                      (locale === "vi" ? "Xem bài viết: " : "View article: ") +
+                      item.title
+                    }
+                  />
+                  <div className="relative aspect-[16/10] sm:aspect-square w-full sm:w-36 shrink-0 overflow-hidden rounded-xl bg-muted">
+                    <Image
+                      className="object-cover transition-transform duration-500 ease-out group-hover:scale-110"
+                      src={item.image}
+                      alt={item.title}
+                      fill
+                      sizes="(max-width:639px) 100vw, 150px"
+                    />
+                    <div className="absolute top-2 left-2 z-10 sm:hidden">
+                      <span className="rounded-full bg-black/60 backdrop-blur-md px-2 py-0.5 text-[10px] font-bold text-white">
+                        {toLocalizedLabel(item.eyebrow, locale)}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex min-w-0 flex-1 flex-col justify-between">
+                    <div>
+                      <div className="hidden sm:flex items-center gap-2 text-[11px] font-semibold text-primary">
+                        <span>{toLocalizedLabel(item.eyebrow, locale)}</span>
+                        <span className="text-muted-foreground font-normal">·</span>
+                        <time className="text-muted-foreground font-normal">{item.meta}</time>
+                      </div>
+                      <h3 className="mt-1 text-base sm:text-lg font-bold leading-snug tracking-tight text-foreground group-hover:text-primary transition-colors line-clamp-2">
+                        {item.title}
+                      </h3>
+                      <p className="mt-1.5 line-clamp-2 text-xs leading-relaxed text-muted-foreground">
+                        {item.description}
+                      </p>
+                    </div>
+                    <div className="mt-3 flex items-center justify-between text-xs font-semibold text-primary">
+                      <span>{t.blogPage.readMore}</span>
+                      <span className="text-[11px] text-muted-foreground font-normal">
+                        {locale === "vi" ? "4 phút đọc" : "4 min read"}
+                      </span>
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
           </div>
         ) : (
           <EmptyState

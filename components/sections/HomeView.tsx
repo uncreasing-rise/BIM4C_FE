@@ -372,64 +372,72 @@ export function HomeView({
 
       <Partners compact customPartners={rawPartners} />
 
-      <section data-home-section="news" className="py-16 lg:py-20">
+      <section data-home-section="news" className="py-16 lg:py-24">
         <div className="site-container">
-          <header className="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-end" data-motion="reveal">
+          <header className="mb-10 flex flex-col justify-between gap-4 sm:flex-row sm:items-end" data-motion="reveal">
             <div>
               <p className="eyebrow">
-                {isVi ? "Góc nhìn & Bài viết" : "From our journal"}
+                {isVi ? "Góc nhìn & Bài viết chuyên môn" : "Engineering Insights"}
               </p>
               <h2 className="section-title">
                 {isVi
-                  ? "Giải pháp chuyển đổi số hiệu quả."
-                  : "Ideas for better project delivery."}
+                  ? "Xu hướng công nghệ & Giải pháp thực chiến."
+                  : "Latest ideas for digital project delivery."}
               </h2>
             </div>
             <Link
               href={ROUTES.blog}
-              className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-primary hover:underline underline-offset-4"
+              className="inline-flex min-h-11 items-center gap-2 text-sm font-bold text-primary hover:underline underline-offset-4"
             >
-              {isVi ? "Tất cả bài viết" : "All insights"}{" "}
+              {isVi ? "Xem tất cả bài viết" : "Browse all insights"}{" "}
               <ArrowUpRight className="size-4" />
             </Link>
           </header>
-          <div className="grid gap-6 md:grid-cols-3">
+          <div className="grid gap-8 md:grid-cols-3">
             {posts.slice(0, 3).map((post) => (
               <article
-                className="group relative min-w-0 flex flex-col justify-between rounded-2xl border bg-card p-4 shadow-xs transition-all duration-300 hover:shadow-xl hover:border-primary/50 hover:-translate-y-1.5"
+                className="group relative flex flex-col justify-between overflow-hidden rounded-3xl border border-border/80 bg-card p-5 shadow-sm transition-all duration-500 hover:shadow-2xl hover:border-primary/50 hover:-translate-y-2 cursor-pointer"
                 key={post.slug}
                 data-motion="tile"
               >
+                {/* Full-card link for reliable click */}
+                <Link
+                  className="absolute inset-0 z-20 rounded-3xl focus:outline-none"
+                  href={ROUTES.blogDetail(post.slug)}
+                  aria-label={post.title}
+                />
+
                 <div>
-                  <div className="relative aspect-[16/9] overflow-hidden rounded-xl bg-muted">
+                  <div className="relative aspect-[16/10] overflow-hidden rounded-2xl bg-muted">
                     <Image
                       src={post.image}
-                      alt=""
+                      alt={post.title}
                       fill
                       sizes="(max-width:767px) 100vw, 33vw"
-                      className="object-cover transition-transform duration-500 group-hover:scale-105"
+                      className="object-cover transition-transform duration-700 ease-out group-hover:scale-110"
                     />
+                    <div className="absolute top-3 left-3 z-10 flex items-center gap-2">
+                      <span className="rounded-full bg-black/70 backdrop-blur-md px-3 py-0.5 text-[11px] font-bold text-white border border-white/10 uppercase tracking-wider">
+                        {toLocalizedLabel(post.eyebrow, locale)}
+                      </span>
+                    </div>
                   </div>
-                  <p className="mt-4 text-xs font-semibold text-primary">
-                    {toLocalizedLabel(post.eyebrow, locale)}
-                    <span className="text-muted-foreground font-normal"> · {post.meta}</span>
-                  </p>
-                  <h3 className="mt-2 text-xl font-bold leading-snug tracking-tight text-foreground group-hover:text-primary transition-colors">
-                    <Link
-                      className="after:absolute after:inset-0"
-                      href={ROUTES.blogDetail(post.slug)}
-                    >
-                      {post.title}
-                    </Link>
+                  <div className="mt-4 flex items-center gap-2 text-xs font-semibold text-muted-foreground">
+                    <time>{post.meta}</time>
+                    <span>·</span>
+                    <span className="text-primary">{isVi ? "5 phút đọc" : "5 min read"}</span>
+                  </div>
+                  <h3 className="mt-2.5 text-xl font-bold leading-snug tracking-tight text-foreground group-hover:text-primary transition-colors line-clamp-2">
+                    {post.title}
                   </h3>
-                  <p className="mt-2 line-clamp-2 text-sm leading-6 text-muted-foreground">
+                  <p className="mt-2.5 line-clamp-2 text-sm leading-relaxed text-muted-foreground">
                     {post.description}
                   </p>
                 </div>
-                <span className="mt-4 inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-primary pt-3 border-t">
+                <div className="mt-5 flex items-center justify-between border-t pt-4 text-xs font-bold uppercase tracking-wider text-primary">
                   <span>{t.common.readMore}</span>
-                  <ArrowUpRight className="size-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-                </span>
+                  <ArrowUpRight className="size-4 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" />
+                </div>
               </article>
             ))}
           </div>

@@ -67,10 +67,7 @@ export async function getProjectsPage(
       "the-matrix-one-giai-doan-2": "high-rise",
       elysian: "high-rise",
       "tt-avio": "low-rise",
-      "greenfield-smart-factory": "industrial",
-      "northgate-logistics-hub": "industrial",
       "central-park-residences": "infrastructure",
-      "metro-depot-digital-coordination": "infrastructure",
     };
     const filtered = mockProjects.filter(
       (project) =>
@@ -124,10 +121,7 @@ export async function getProjectsPage(
         "the-matrix-one-giai-doan-2": "high-rise",
         elysian: "high-rise",
         "tt-avio": "low-rise",
-        "greenfield-smart-factory": "industrial",
-        "northgate-logistics-hub": "industrial",
         "central-park-residences": "infrastructure",
-        "metro-depot-digital-coordination": "infrastructure",
       };
       const filtered = mockProjects.filter(
         (project) =>

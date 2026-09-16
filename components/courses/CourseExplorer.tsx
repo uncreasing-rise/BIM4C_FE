@@ -109,12 +109,20 @@ export function CourseExplorer({
           {visible.map((course) => {
             const duration =
               course.duration || course.eyebrow.split("·")[1]?.trim();
+            const detailUrl = ROUTES.courseDetail(course.slug);
             return (
               <article
                 key={course.slug}
-                className="group relative flex flex-col overflow-hidden rounded-2xl border bg-card transition-all duration-300 hover:-translate-y-1 hover:border-primary/40 hover:shadow-xl focus-within:ring-2 focus-within:ring-primary"
+                className="group relative flex flex-col overflow-hidden rounded-2xl border bg-card transition-all duration-300 hover:-translate-y-1.5 hover:border-primary/50 hover:shadow-xl focus-within:ring-2 focus-within:ring-primary cursor-pointer"
                 data-motion="tile"
               >
+                {/* Full-card overlay link for 100% reliable clickability */}
+                <Link
+                  href={detailUrl}
+                  className="absolute inset-0 z-20 rounded-2xl focus:outline-none"
+                  aria-label={`${course.title} - ${t.coursesPage.exploreProgramme}`}
+                />
+
                 <div className="relative aspect-[16/9] w-full overflow-hidden bg-muted">
                   <Image
                     src={course.image}
@@ -123,18 +131,26 @@ export function CourseExplorer({
                     sizes="(max-width:767px) 100vw, (max-width:1023px) 50vw, 33vw"
                     className="object-cover transition-transform duration-500 group-hover:scale-105"
                   />
+                  <div className="absolute top-3 left-3 z-10">
+                    <span className="rounded-md bg-black/60 backdrop-blur-md px-2.5 py-1 text-xs font-bold text-white border border-white/10 uppercase tracking-wider">
+                      {courseCategory(course)}
+                    </span>
+                  </div>
                 </div>
+
                 <div className="flex min-w-0 flex-1 flex-col p-5 md:p-6">
-                  <p className="text-xs font-semibold uppercase tracking-wider text-primary">
-                    {courseCategory(course)}
-                  </p>
-                  <h3 className="mt-2 text-xl font-semibold leading-tight tracking-tight md:mt-3 md:text-2xl">
-                    <Link
-                      className="after:absolute after:inset-0 after:content-['']"
-                      href={ROUTES.courseDetail(course.slug)}
-                    >
-                      {course.title}
-                    </Link>
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-xs font-semibold uppercase tracking-wider text-primary">
+                      {courseCategory(course)}
+                    </p>
+                    {course.level && (
+                      <span className="text-[11px] font-medium px-2 py-0.5 rounded bg-teal-500/10 text-teal-700 dark:text-teal-300 border border-teal-500/20">
+                        {toLocalizedLabel(course.level, locale)}
+                      </span>
+                    )}
+                  </div>
+                  <h3 className="mt-2 text-xl font-bold leading-tight tracking-tight text-foreground group-hover:text-primary transition-colors md:mt-3 md:text-2xl">
+                    {course.title}
                   </h3>
                   <p className="mt-3 line-clamp-2 flex-1 text-sm leading-6 text-muted-foreground md:line-clamp-none md:leading-7">
                     {course.description}
@@ -143,35 +159,27 @@ export function CourseExplorer({
                     {duration && (
                       <div className="flex items-center gap-2">
                         <dt className="flex items-center gap-2 text-muted-foreground">
-                          <Clock3 className="size-4" />
+                          <Clock3 className="size-4 text-primary" />
                           {t.coursesPage.durationLabel}
                         </dt>
-                        <dd className="ml-auto font-medium">
+                        <dd className="ml-auto font-medium text-foreground">
                           {toLocalizedLabel(duration, locale)}
                         </dd>
                       </div>
                     )}
-                    {course.level && (
-                      <div className="flex justify-between gap-3">
-                        <dt className="text-muted-foreground">
-                          {t.coursesPage.levelLabel}
-                        </dt>
-                        <dd>{toLocalizedLabel(course.level, locale)}</dd>
-                      </div>
-                    )}
                     {course.price && (
-                      <div className="flex justify-between gap-3">
+                      <div className="flex justify-between gap-3 font-semibold">
                         <dt className="text-muted-foreground">
                           {t.coursesPage.tuitionLabel}
                         </dt>
-                        <dd>{course.price}</dd>
+                        <dd className="text-primary">{course.price}</dd>
                       </div>
                     )}
                   </dl>
-                  <span className="mt-5 flex min-h-11 items-center justify-between text-sm font-semibold text-primary">
-                    {t.coursesPage.exploreProgramme}{" "}
-                    <ArrowUpRight className="size-5" />
-                  </span>
+                  <div className="mt-5 flex min-h-11 items-center justify-between text-sm font-bold text-primary border-t pt-3">
+                    <span>{t.coursesPage.exploreProgramme}</span>
+                    <ArrowUpRight className="size-5 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" />
+                  </div>
                 </div>
               </article>
             );
