@@ -20,9 +20,11 @@ export default function PublicLayout({
       <a
         href="#main-content"
         className="fixed left-4 top-4 z-[100] -translate-y-24 rounded-xl bg-white px-5 py-3 font-semibold text-foreground shadow-lg focus:translate-y-0"
+        aria-label="Chuyển đến nội dung chính / Skip to main content"
       >
-        Skip to content
+        Chuyển đến nội dung chính
       </a>
+
       <JsonLd data={[organizationSchema(), websiteSchema()]} />
       <MotionSystem />
       <SmoothScroll />

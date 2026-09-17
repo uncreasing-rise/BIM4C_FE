@@ -363,47 +363,67 @@ export function SettingsManager() {
               className="bg-white dark:bg-background border-slate-200 dark:border-border"
             />
           </div>
-          <div>
-            <label className="block text-xs font-semibold text-muted-foreground mb-1.5 flex items-center gap-1.5">
-              <Share2 className="size-3 text-primary" /> Mạng xã hội (JSON
-              Object)
+          <div className="space-y-3">
+            <label className="block text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
+              <Share2 className="size-3.5 text-primary" /> Liên kết Mạng xã hội
             </label>
-            <Textarea
-              rows={3}
-              value={socialLinksJson}
-              aria-invalid={Boolean(socialLinksError)}
-              aria-describedby={
-                socialLinksError ? "social-links-error" : undefined
-              }
-              onChange={(e) => {
-                setSocialLinksJson(e.target.value);
-                try {
-                  const parsed: unknown = JSON.parse(e.target.value);
-                  if (
-                    !parsed ||
-                    typeof parsed !== "object" ||
-                    Array.isArray(parsed)
-                  ) {
-                    throw new Error("invalid shape");
-                  }
-                  setSocialLinksError("");
-                } catch {
-                  setSocialLinksError("JSON chưa hợp lệ.");
-                }
-              }}
-              className="font-mono text-xs bg-white dark:bg-background border-slate-200 dark:border-border"
-            />
-            {socialLinksError && (
-              <span
-                id="social-links-error"
-                className="text-xs text-destructive mt-1 block"
-                role="alert"
-              >
-                {socialLinksError}
-              </span>
-            )}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              <div>
+                <span className="text-[11px] font-medium text-muted-foreground block mb-1">Facebook Fanpage:</span>
+                <Input
+                  value={data.socialLinks?.facebook ?? ""}
+                  placeholder="https://facebook.com/..."
+                  onChange={(e) => {
+                    const next = { ...(data.socialLinks || {}), facebook: e.target.value };
+                    setData({ ...data, socialLinks: next });
+                    setSocialLinksJson(JSON.stringify(next, null, 2));
+                  }}
+                  className="bg-white dark:bg-background border-slate-200 dark:border-border text-xs"
+                />
+              </div>
+              <div>
+                <span className="text-[11px] font-medium text-muted-foreground block mb-1">LinkedIn Company:</span>
+                <Input
+                  value={data.socialLinks?.linkedin ?? ""}
+                  placeholder="https://linkedin.com/company/..."
+                  onChange={(e) => {
+                    const next = { ...(data.socialLinks || {}), linkedin: e.target.value };
+                    setData({ ...data, socialLinks: next });
+                    setSocialLinksJson(JSON.stringify(next, null, 2));
+                  }}
+                  className="bg-white dark:bg-background border-slate-200 dark:border-border text-xs"
+                />
+              </div>
+              <div>
+                <span className="text-[11px] font-medium text-muted-foreground block mb-1">Zalo Official / SĐT:</span>
+                <Input
+                  value={data.socialLinks?.zalo ?? ""}
+                  placeholder="https://zalo.me/..."
+                  onChange={(e) => {
+                    const next = { ...(data.socialLinks || {}), zalo: e.target.value };
+                    setData({ ...data, socialLinks: next });
+                    setSocialLinksJson(JSON.stringify(next, null, 2));
+                  }}
+                  className="bg-white dark:bg-background border-slate-200 dark:border-border text-xs"
+                />
+              </div>
+              <div>
+                <span className="text-[11px] font-medium text-muted-foreground block mb-1">YouTube Channel:</span>
+                <Input
+                  value={data.socialLinks?.youtube ?? ""}
+                  placeholder="https://youtube.com/@..."
+                  onChange={(e) => {
+                    const next = { ...(data.socialLinks || {}), youtube: e.target.value };
+                    setData({ ...data, socialLinks: next });
+                    setSocialLinksJson(JSON.stringify(next, null, 2));
+                  }}
+                  className="bg-white dark:bg-background border-slate-200 dark:border-border text-xs"
+                />
+              </div>
+            </div>
           </div>
         </div>
+
 
         {/* Card 3: Tự động hóa Thông báo Lead (Zalo, Telegram & Email cho Quản trị viên) */}
         <div className="rounded-2xl border border-slate-200/80 dark:border-border bg-white dark:bg-card p-6 shadow-xs flex flex-col gap-4">

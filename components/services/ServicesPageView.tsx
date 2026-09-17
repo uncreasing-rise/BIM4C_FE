@@ -14,6 +14,9 @@ import type { ContentEntry } from "@/types/content";
 import type { PageMeta } from "@/features/shared/types/pagination";
 import { useLanguage } from "@/lib/i18n/context";
 
+import { JsonLd } from "@/components/seo/JsonLd";
+import { breadcrumbSchema, faqPageSchema } from "@/lib/seo/structured-data";
+
 export function ServicesPageView({
   services,
   meta,
@@ -24,8 +27,19 @@ export function ServicesPageView({
   usePublicMotion();
   const { t } = useLanguage();
 
+  const breadcrumbs = [
+    { name: t.navigation.home, path: "/" },
+    { name: t.navigation.services, path: ROUTES.services },
+  ];
+
   return (
     <main>
+      <JsonLd
+        data={[
+          breadcrumbSchema(breadcrumbs),
+          faqPageSchema(t.servicesPage.faqs),
+        ]}
+      />
       <PageHero
         breadcrumbs={[{ label: t.navigation.services }]}
         eyebrow={t.servicesPage.eyebrow}
@@ -33,6 +47,7 @@ export function ServicesPageView({
         description={t.servicesPage.description}
         image="/images/news-digital-twin.webp"
       />
+
       <ServiceGuide
         services={services.map(({ slug, title }) => ({
           slug,

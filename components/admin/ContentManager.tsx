@@ -102,8 +102,9 @@ export function ContentManager({
 }) {
   const params = useSearchParams();
   const router = useRouter();
-  const [adminLangTab, setAdminLangTab] = useState<"en" | "vi">("en");
+  const [adminLangTab, setAdminLangTab] = useState<"vi" | "en">("vi");
   const [items, setItems] = useState<AdminContent[]>([]);
+
   const [categories, setCategories] = useState<AdminCategory[]>([]);
   const [query, setQuery] = useState(params.get("search") ?? "");
   const [status, setStatus] = useState(params.get("status") ?? "");
@@ -225,35 +226,42 @@ export function ContentManager({
 
   async function save() {
     if (!editor) return;
-    if (!editor.title.trim()) {
-      toast.error("Vui lòng nhập tiêu đề tiếng Anh (Title).");
+    const title = editor.title?.trim() || editor.title_vi?.trim();
+    if (!title) {
+      toast.error("Vui lòng nhập tiêu đề (Tiếng Việt hoặc Tiếng Anh).");
       return;
     }
-    if (!editor.description.trim()) {
-      toast.error("Vui lòng nhập mô tả tiếng Anh (Description).");
-      return;
-    }
+
+    const description =
+      editor.description?.trim() || editor.description_vi?.trim() || title;
+
     setSaving(true);
     const toastId = toast.loading("Đang lưu nội dung...");
     try {
       if (editor.contentBlocks) {
         contentBlocksSchema.parse(editor.contentBlocks);
       }
+      const slug = editor.slug?.trim() || slugify(title);
       const payload: AdminContent = {
         ...editor,
+        title: editor.title?.trim() || title,
+        title_vi: editor.title_vi?.trim() || editor.title?.trim() || title,
+        slug,
+        description,
+        description_vi: editor.description_vi?.trim() || description,
         image: editor.image || "/images/hero-1.webp",
-        eyebrow: editor.eyebrow || "BIM4C Enterprise",
-        description: editor.description || editor.title,
+        eyebrow: editor.eyebrow || editor.eyebrow_vi || "BIM4C Enterprise",
         highlights: Array.isArray(editor.highlights) ? editor.highlights : [],
         sections: Array.isArray(editor.sections) ? editor.sections : [],
         ...(contentType === "Dự án"
           ? {
-              location: editor.location || "Hà Nội, Việt Nam",
+              location: editor.location || "Đà Nẵng, Việt Nam",
               year: Number(editor.year) || new Date().getFullYear(),
               categoryId: editor.categoryId || (categories[0]?.id ?? undefined),
             }
           : {}),
       };
+
       if (editor.id) {
         await adminContentApi.update(contentType, editor.id, payload);
         toast.success("Cập nhật nội dung thành công!", { id: toastId });
@@ -577,7 +585,11 @@ export function ContentManager({
                   hasViTranslation={Boolean(
                     editor.title_vi || editor.description_vi,
                   )}
+                  hasEnTranslation={Boolean(
+                    editor.title || editor.description,
+                  )}
                 />
+
               </div>
 
               {/* Core Content Details Card */}
@@ -670,17 +682,55 @@ export function ContentManager({
                 ) : (
                   <>
                     <div className="space-y-1.5">
-                      <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                        Tiêu đề Tiếng Việt
-                      </label>
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                          Tiêu đề Tiếng Việt
+                        </label>
+                        {editor.title_vi && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              update({ slug: slugify(editor.title_vi!) });
+                              toast.success("Đã tạo đường dẫn (Slug) từ tiêu đề tiếng Việt!");
+                            }}
+                            className="text-primary text-[11px] font-bold hover:underline"
+                          >
+                            Tạo Slug từ tiêu đề
+                          </button>
+                        )}
+                      </div>
                       <input
                         autoFocus
                         placeholder="Ví dụ: Tư vấn Điều phối & Quản lý BIM Chuyên sâu"
                         value={editor.title_vi ?? ""}
-                        onChange={(e) => update({ title_vi: e.target.value })}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          update({
+                            title_vi: val,
+                            ...(!editor.id && !editor.slug ? { slug: slugify(val) } : {}),
+                          });
+                        }}
                         className="w-full rounded-xl border border-border bg-background px-4 py-3 text-base font-bold text-foreground placeholder:text-muted-foreground/60 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
                       />
                     </div>
+
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1">
+                        <span>Đường dẫn (Slug URL)</span>
+                      </label>
+                      <div className="flex items-center rounded-xl border border-border bg-background px-3 py-2 text-sm">
+                        <span className="text-xs text-muted-foreground select-none font-mono">
+                          {publicBase}/
+                        </span>
+                        <input
+                          value={editor.slug}
+                          onChange={(e) => update({ slug: slugify(e.target.value) })}
+                          className="flex-1 bg-transparent px-1 font-mono text-sm text-foreground outline-none"
+                          placeholder="duong-dan-bai-viet"
+                        />
+                      </div>
+                    </div>
+
 
                     <div className="space-y-1.5">
                       <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">

@@ -1,45 +1,88 @@
 import type { Metadata } from "next";
-import { canonicalPath } from "./site";
+import { canonicalPath, DEFAULT_KEYWORDS, DEFAULT_SOCIAL_IMAGE, getAlternateLanguages, SITE_NAME } from "./site";
 
 export type ListingSearchParams = Record<string, string | string[] | undefined>;
+
 export function pageMetadata(
   title: string,
   description: string,
   pathname: string,
+  image = DEFAULT_SOCIAL_IMAGE,
+  keywords = DEFAULT_KEYWORDS,
 ): Metadata {
   return {
     title,
     description,
-    alternates: { canonical: pathname },
-    openGraph: { title, description, url: pathname },
-    twitter: { title, description },
+    keywords,
+    alternates: {
+      canonical: pathname,
+      languages: getAlternateLanguages(pathname),
+    },
+    openGraph: {
+      title,
+      description,
+      url: pathname,
+      siteName: SITE_NAME,
+      locale: "vi_VN",
+      alternateLocale: ["en_US"],
+      images: [{ url: image, alt: title }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [image],
+    },
   };
 }
+
 export function parsePage(value: string | string[] | null | undefined): number {
   const raw = Array.isArray(value) ? value[0] : value;
   if (!raw || !/^\d+$/.test(raw)) return 1;
   return Math.max(1, Number(raw));
 }
+
 export function listingMetadata(
   title: string,
   description: string,
   pathname: string,
   params: ListingSearchParams,
+  image = DEFAULT_SOCIAL_IMAGE,
 ): Metadata {
   const page = parsePage(params.page);
   const utilityParams = Object.keys(params).some((key) => key !== "page");
   const canonical = canonicalPath(pathname, page);
+  const fullTitle = page > 1 ? `${title} – Trang ${page}` : title;
+
   return {
-    title: page > 1 ? `${title} – Page ${page}` : title,
+    title: fullTitle,
     description,
-    alternates: { canonical },
+    keywords: DEFAULT_KEYWORDS,
+    alternates: {
+      canonical,
+      languages: getAlternateLanguages(canonical),
+    },
     robots: utilityParams
       ? { index: false, follow: true }
       : { index: true, follow: true },
-    openGraph: { title, description, url: canonical },
-    twitter: { title, description },
+    openGraph: {
+      title: fullTitle,
+      description,
+      url: canonical,
+      siteName: SITE_NAME,
+      locale: "vi_VN",
+      alternateLocale: ["en_US"],
+      images: [{ url: image, alt: fullTitle }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: fullTitle,
+      description,
+      images: [image],
+    },
   };
 }
+
 export function normalizedPageRedirect(
   pathname: string,
   params: ListingSearchParams,

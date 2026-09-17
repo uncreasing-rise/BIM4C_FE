@@ -99,8 +99,9 @@ export function AboutView({ partners = [] }: { partners?: Array<{ name: string; 
             <div>
               <p className="eyebrow">{t.aboutPage.whoWeAreEyebrow}</p>
               <h2 className="section-title mt-2">
-                {locale === "vi" ? "V\u1ec1 ch\u00fang t\u00f4i" : t.aboutPage.whoWeAreTitle}
+                {t.aboutPage.whoWeAreTitle}
               </h2>
+
             </div>
             <p className="text-base md:text-lg leading-relaxed text-muted-foreground">
               {t.aboutPage.whoWeAreP1}

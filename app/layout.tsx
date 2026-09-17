@@ -3,8 +3,10 @@ import { cookies } from "next/headers";
 import { env } from "@/lib/config/env";
 import {
   DEFAULT_DESCRIPTION,
+  DEFAULT_KEYWORDS,
   DEFAULT_SOCIAL_IMAGE,
   DEFAULT_TITLE,
+  getAlternateLanguages,
   SITE_NAME,
 } from "@/lib/seo/site";
 import "./globals.css";
@@ -33,20 +35,35 @@ export const metadata: Metadata = {
   metadataBase: new URL(env.appUrl),
   title: { default: DEFAULT_TITLE, template: `%s | ${SITE_NAME}` },
   description: DEFAULT_DESCRIPTION,
+  keywords: DEFAULT_KEYWORDS,
   applicationName: SITE_NAME,
   authors: [{ name: SITE_NAME }],
   creator: SITE_NAME,
   publisher: SITE_NAME,
-  alternates: { canonical: "/" },
-  robots: { index: true, follow: true },
+  alternates: {
+    canonical: "/",
+    languages: getAlternateLanguages("/"),
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
   openGraph: {
     title: DEFAULT_TITLE,
     description: DEFAULT_DESCRIPTION,
     siteName: SITE_NAME,
     type: "website",
-    locale: "en_US",
+    locale: "vi_VN",
+    alternateLocale: ["en_US"],
     url: "/",
-    images: [{ url: DEFAULT_SOCIAL_IMAGE, alt: "BIM4C Construction" }],
+    images: [{ url: DEFAULT_SOCIAL_IMAGE, alt: "BIM4C Digital Construction" }],
   },
   twitter: {
     card: "summary_large_image",
@@ -61,6 +78,7 @@ export const metadata: Metadata = {
       : undefined,
   },
 };
+
 
 export default async function RootLayout({
   children,

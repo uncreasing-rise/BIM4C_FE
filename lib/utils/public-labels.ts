@@ -10,6 +10,24 @@ const viToEnLabels: Record<string, string> = {
   "Digital Twin & Dữ liệu tài sản": "Digital Twin & Asset Information",
   "DỊCH VỤ BIM4C": "BIM4C Solutions",
   "Dịch vụ BIM4C": "BIM4C Solutions",
+  "BIM 3D": "BIM 3D",
+  "BIM 4D": "BIM 4D",
+  "BIM 5D": "BIM 5D",
+  "BIM 6D": "BIM 6D",
+  "BIM 7D": "BIM 7D",
+  "Laser Scan": "Laser Scan",
+  "LiDAR": "LiDAR",
+  "Scan-to-BIM": "Scan-to-BIM",
+  "Kiến trúc": "Architecture",
+  "Nội thất": "Interior Design",
+  "Cảnh quan": "Landscape Design",
+  "Hạ tầng": "Infrastructure Design",
+  "Quy hoạch 1/500": "1/500 Master Planning",
+  "Quản lý dự án": "Project Management",
+  "Giám sát thi công": "Construction Supervision",
+  "Giám sát lắp đặt thiết bị": "Equipment Installation Supervision",
+  "Thẩm tra & thẩm định thiết kế": "Design Review & Appraisal",
+  "Đào tạo & chuyển giao công nghệ": "Training & Technology Transfer",
 
   // Articles & News
   "Phối hợp BIM tại dự án cao tầng: Từ mô hình đến quyết định hiện trường":
@@ -103,8 +121,8 @@ const viToEnLabels: Record<string, string> = {
   "Nhà cao tầng": "High-rise",
   "Nhà thấp tầng": "Low-rise",
   "Công nghiệp": "Industrial",
-  "Hạ tầng": "Infrastructure",
   "Cơ điện": "MEP",
+
 
   // Statuses
   "Bản nháp": "Draft",
@@ -113,11 +131,13 @@ const viToEnLabels: Record<string, string> = {
   "Hoàn thành": "Completed",
   "Đã lưu trữ": "Archived",
   "Đã xuất bản": "Published",
+  "Đã lên kế hoạch": "Planned",
   draft: "Draft",
   planned: "Planned",
   in_progress: "In delivery",
   completed: "Completed",
   archived: "Archived",
+
 };
 
 const enToViLabels: Record<string, string> = {};
