@@ -16,16 +16,21 @@ import { PRIVACY_POLICY_VERSION } from "@/constants/legal-content";
 
 function parseMutationResult(
   response: unknown,
-  message: string,
+  fallbackMessage: string,
 ): MutationResult {
-  if (
-    typeof response === "object" &&
-    response !== null &&
-    "success" in response &&
-    response.success === true &&
-    "message" in response &&
-    typeof response.message === "string"
-  ) {
+  if (typeof response === "object" && response !== null) {
+    const res = response as Record<string, unknown>;
+    if (res.success === false) {
+      throw new ApiError(
+        400,
+        typeof res.message === "string" ? res.message : "Request was not successful",
+        "MUTATION_FAILED",
+      );
+    }
+    const message =
+      typeof res.message === "string" && res.message.trim()
+        ? res.message
+        : fallbackMessage;
     return { success: true, message };
   }
 

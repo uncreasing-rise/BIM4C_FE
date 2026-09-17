@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { AdminShell } from "./AdminShell";
 import { Button } from "@/components/ui/button";
-import { Sparkles, ArrowLeft, Clock, ShieldAlert } from "lucide-react";
+import { Sparkles, ArrowLeft, Clock } from "lucide-react";
 
 export function ComingSoon({
   title,

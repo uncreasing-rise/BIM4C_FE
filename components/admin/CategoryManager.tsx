@@ -5,7 +5,7 @@ import { adminContentApi } from "@/features/admin/api/client";
 import { revalidateCmsCache } from "@/features/admin/api/revalidate";
 import type { AdminCategory, AdminContentType } from "@/features/admin/types";
 import { slugify } from "@/lib/utils/slug";
-import { Folder, FolderPlus, Edit2, Trash2, X, Plus, Check } from "lucide-react";
+import { Folder, FolderPlus, Edit2, Trash2, Plus, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
@@ -18,16 +18,20 @@ export function CategoryManager({
   onChange: () => void;
 }) {
   const [items, setItems] = useState<AdminCategory[]>([]);
+  const [loading, setLoading] = useState(true);
   const [name, setName] = useState("");
   const [editing, setEditing] = useState<AdminCategory | null>(null);
   const [busy, setBusy] = useState(false);
 
   const load = useCallback(async () => {
+    setLoading(true);
     try {
       const res = await adminContentApi.categories(type);
       setItems(res.data);
     } catch {
       setItems([]);
+    } finally {
+      setLoading(false);
     }
   }, [type]);
 
@@ -147,7 +151,23 @@ export function CategoryManager({
 
       {/* Category List Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 pt-1">
-        {items.map((item) => (
+        {loading ? (
+          Array.from({ length: 3 }).map((_, i) => (
+            <div
+              key={i}
+              className="flex items-center justify-between gap-3 rounded-xl border border-slate-200/80 dark:border-border p-3.5 bg-slate-50/70 dark:bg-muted/30 animate-pulse"
+            >
+              <div className="space-y-1.5 flex-1">
+                <div className="h-4 w-28 bg-muted rounded" />
+                <div className="h-3 w-20 bg-muted/60 rounded" />
+              </div>
+              <div className="flex gap-1">
+                <div className="size-7 bg-muted rounded" />
+                <div className="size-7 bg-muted rounded" />
+              </div>
+            </div>
+          ))
+        ) : items.map((item) => (
           <div
             key={item.id}
             className={`group flex items-center justify-between gap-3 rounded-xl border p-3.5 transition-all ${
@@ -186,7 +206,7 @@ export function CategoryManager({
             </div>
           </div>
         ))}
-        {items.length === 0 && (
+        {!loading && items.length === 0 && (
           <div className="col-span-full py-8 text-center text-xs text-muted-foreground border border-dashed rounded-xl">
             Chưa có danh mục nào cho {type}. Hãy tạo danh mục đầu tiên ở trên.
           </div>

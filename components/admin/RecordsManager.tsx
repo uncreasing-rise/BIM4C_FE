@@ -17,6 +17,7 @@ import { toast } from "sonner";
 export function RecordsManager({ kind }: { kind: RecordKind }) {
   const newsletter = kind === "newsletter/subscriptions";
   const [items, setItems] = useState<AdminRecord[]>([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("");
   const [page, setPage] = useState(1);
@@ -25,6 +26,7 @@ export function RecordsManager({ kind }: { kind: RecordKind }) {
   const [error, setError] = useState("");
 
   const load = useCallback(async (signal?: AbortSignal) => {
+    setLoading(true);
     try {
       const result = await adminRecordsApi.list(kind, search, status, page, signal);
       if (signal?.aborted) return;
@@ -40,6 +42,8 @@ export function RecordsManager({ kind }: { kind: RecordKind }) {
     } catch (e) {
       if (signal?.aborted) return;
       setError(e instanceof Error ? e.message : "Không thể tải dữ liệu");
+    } finally {
+      if (!signal?.aborted) setLoading(false);
     }
   }, [kind, page, search, status]);
 
@@ -182,7 +186,35 @@ export function RecordsManager({ kind }: { kind: RecordKind }) {
             </tr>
           </thead>
           <tbody className="divide-y divide-border/60">
-            {items.length === 0 ? (
+            {loading ? (
+              Array.from({ length: 4 }).map((_, i) => (
+                <tr key={i} className="animate-pulse">
+                  <td className="px-5 py-4">
+                    <div className="h-4 w-32 bg-muted rounded mb-1.5" />
+                    <div className="h-3 w-20 bg-muted/60 rounded" />
+                  </td>
+                  <td className="px-5 py-4">
+                    <div className="h-3.5 w-40 bg-muted rounded mb-1" />
+                    <div className="h-3 w-24 bg-muted/60 rounded" />
+                  </td>
+                  <td className="px-5 py-4">
+                    <div className="h-3.5 w-48 bg-muted rounded" />
+                  </td>
+                  <td className="px-5 py-4">
+                    <div className="h-7 w-28 bg-muted rounded" />
+                  </td>
+                  <td className="px-5 py-4">
+                    <div className="h-3.5 w-24 bg-muted rounded" />
+                  </td>
+                  <td className="px-5 py-4">
+                    <div className="h-5 w-16 bg-muted rounded-full" />
+                  </td>
+                  <td className="px-5 py-4 text-right">
+                    <div className="h-8 w-8 bg-muted rounded ml-auto" />
+                  </td>
+                </tr>
+              ))
+            ) : items.length === 0 ? (
               <tr>
                 <td colSpan={7} className="py-12 text-center text-muted-foreground">
                   Không tìm thấy bản ghi nào.

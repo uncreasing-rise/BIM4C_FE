@@ -11,6 +11,7 @@ const domain: Record<AdminContentType, string> = {
   "Khóa học": "courses",
   "Dịch vụ": "services",
 };
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`/api/admin/${path}`, {
     ...init,
@@ -30,6 +31,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     ? (undefined as T)
     : ((await response.json()) as T);
 }
+
 const queryString = (input: Record<string, string | number | undefined>) => {
   const q = new URLSearchParams();
   Object.entries(input).forEach(([k, v]) => {
@@ -37,6 +39,37 @@ const queryString = (input: Record<string, string | number | undefined>) => {
   });
   return q.toString();
 };
+
+function normalizeStatus(val: unknown): string | undefined {
+  if (typeof val !== "string") return undefined;
+  const upper = val.trim().toUpperCase();
+  if (["PUBLISHED", "ACTIVE"].includes(upper)) return "PUBLISHED";
+  if (["ARCHIVED", "INACTIVE"].includes(upper)) return "ARCHIVED";
+  if (["DRAFT", "PLANNED"].includes(upper)) return "DRAFT";
+  return upper;
+}
+
+function sanitizeAdminPayload(body: unknown): unknown {
+  if (typeof body !== "object" || body === null) return body;
+  if (Array.isArray(body)) return body.map(sanitizeAdminPayload);
+  const copy = { ...(body as Record<string, unknown>) };
+  delete copy.id;
+  delete copy.createdAt;
+  delete copy.updatedAt;
+  delete copy.deletedAt;
+  if (copy.status) {
+    const norm = normalizeStatus(copy.status);
+    if (norm) copy.status = norm;
+  }
+  if (copy.category && typeof copy.category === "object") {
+    if (!copy.categoryId && (copy.category as { id?: string }).id) {
+      copy.categoryId = (copy.category as { id: string }).id;
+    }
+    delete copy.category;
+  }
+  return copy;
+}
+
 export const adminContentApi = {
   list: (
     type: AdminContentType,
@@ -49,12 +82,12 @@ export const adminContentApi = {
   create: (type: AdminContentType, body: unknown) =>
     request<{ data: AdminContent }>(domain[type], {
       method: "POST",
-      body: JSON.stringify(body),
+      body: JSON.stringify(sanitizeAdminPayload(body)),
     }),
   update: (type: AdminContentType, id: string, body: unknown) =>
     request<{ data: AdminContent }>(`${domain[type]}/${id}`, {
       method: "PATCH",
-      body: JSON.stringify(body),
+      body: JSON.stringify(sanitizeAdminPayload(body)),
     }),
   remove: (type: AdminContentType, id: string) =>
     request<void>(`${domain[type]}/${id}`, { method: "DELETE" }),
@@ -106,8 +139,15 @@ export const adminContentApi = {
     }),
   deleteProjectImage: (projectId: string, id: string) =>
     request<void>(`projects/${projectId}/images/${id}`, { method: "DELETE" }),
-  updateProjectImage: (projectId: string, id: string, body: { alt?: string; caption?: string | null; sortOrder?: number }) =>
-    request<{ data: { id: string } }>(`projects/${projectId}/images/${id}`, { method: "PATCH", body: JSON.stringify(body) }),
+  updateProjectImage: (
+    projectId: string,
+    id: string,
+    body: { alt?: string; caption?: string | null; sortOrder?: number },
+  ) =>
+    request<{ data: { id: string } }>(`projects/${projectId}/images/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(body),
+    }),
   addCourseSection: (
     courseId: string,
     body: { title: string; description: string; sortOrder: number },
@@ -118,6 +158,13 @@ export const adminContentApi = {
     }),
   deleteCourseSection: (courseId: string, id: string) =>
     request<void>(`courses/${courseId}/sections/${id}`, { method: "DELETE" }),
-  updateCourseSection: (courseId: string, id: string, body: { title?: string; description?: string; sortOrder?: number }) =>
-    request<{ data: { id: string } }>(`courses/${courseId}/sections/${id}`, { method: "PATCH", body: JSON.stringify(body) }),
+  updateCourseSection: (
+    courseId: string,
+    id: string,
+    body: { title?: string; description?: string; sortOrder?: number },
+  ) =>
+    request<{ data: { id: string } }>(`courses/${courseId}/sections/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(body),
+    }),
 };

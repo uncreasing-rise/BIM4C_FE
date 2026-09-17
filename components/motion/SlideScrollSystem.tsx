@@ -30,10 +30,7 @@ export function SlideScrollSystem() {
   const [inView, setInView] = useState(false);
 
   useEffect(() => {
-    if (!presentationRoutes.has(pathname)) {
-      setChapters([]);
-      return;
-    }
+    if (!presentationRoutes.has(pathname)) return;
 
     const main = document.querySelector<HTMLElement>("#main-content main");
     if (!main) return;
@@ -52,7 +49,10 @@ export function SlideScrollSystem() {
       return { id: scene.id, label };
     });
 
-    setChapters(items);
+    let rafId: number | null = null;
+    rafId = requestAnimationFrame(() => {
+      setChapters(items);
+    });
 
     const triggers: ScrollTrigger[] = [];
 
@@ -79,6 +79,7 @@ export function SlideScrollSystem() {
     triggers.push(visibilityTrigger);
 
     return () => {
+      if (rafId !== null) cancelAnimationFrame(rafId);
       triggers.forEach((t) => t.kill());
     };
   }, [pathname, locale]);

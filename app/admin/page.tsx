@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { Dashboard } from "@/components/admin/Dashboard";
-import { Plus, Sparkles, ExternalLink } from "lucide-react";
+import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export const metadata = { title: "Tổng quan | BIM4C Admin" };

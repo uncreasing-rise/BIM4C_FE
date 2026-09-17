@@ -1,7 +1,11 @@
 import { viDictionary } from "../lib/i18n/dictionaries/vi";
 import { enDictionary } from "../lib/i18n/dictionaries/en";
 
-function compareObjects(obj1: any, obj2: any, path = "") {
+function compareObjects(
+  obj1: Record<string, unknown>,
+  obj2: Record<string, unknown>,
+  path = "",
+) {
   const keys1 = Object.keys(obj1);
   const keys2 = Object.keys(obj2);
 
@@ -9,8 +13,19 @@ function compareObjects(obj1: any, obj2: any, path = "") {
     const currentPath = path ? `${path}.${k}` : k;
     if (!(k in obj2)) {
       console.log("Missing in EN:", currentPath);
-    } else if (typeof obj1[k] === "object" && obj1[k] !== null && !Array.isArray(obj1[k])) {
-      compareObjects(obj1[k], obj2[k], currentPath);
+    } else if (
+      typeof obj1[k] === "object" &&
+      obj1[k] !== null &&
+      !Array.isArray(obj1[k]) &&
+      typeof obj2[k] === "object" &&
+      obj2[k] !== null &&
+      !Array.isArray(obj2[k])
+    ) {
+      compareObjects(
+        obj1[k] as Record<string, unknown>,
+        obj2[k] as Record<string, unknown>,
+        currentPath,
+      );
     }
   }
 
@@ -23,7 +38,10 @@ function compareObjects(obj1: any, obj2: any, path = "") {
 }
 
 console.log("Comparing VI (source) with EN:");
-compareObjects(viDictionary, enDictionary);
+compareObjects(
+  viDictionary as unknown as Record<string, unknown>,
+  enDictionary as unknown as Record<string, unknown>,
+);
 
 console.log("\nChecking array lengths & types:");
 if (viDictionary.aboutPage.letter.paragraphs.length !== enDictionary.aboutPage.letter.paragraphs.length) {

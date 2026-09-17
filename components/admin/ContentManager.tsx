@@ -307,7 +307,10 @@ export function ContentManager({
     const toastId = toast.loading("Đang thực hiện thao tác hàng loạt...");
     try {
       if (action === "delete") {
-        if (!window.confirm(`Xóa ${selected.length} nội dung đã chọn?`)) return;
+        if (!window.confirm(`Xóa ${selected.length} nội dung đã chọn?`)) {
+          toast.dismiss(toastId);
+          return;
+        }
         await Promise.all(selected.map((id) => adminContentApi.remove(contentType, id)));
         toast.success(`Đã xóa ${selected.length} nội dung.`, { id: toastId });
       } else {

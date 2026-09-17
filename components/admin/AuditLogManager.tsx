@@ -21,7 +21,6 @@ export function AuditLogManager() {
 
   useEffect(() => {
     let active = true;
-    setLoading(true);
     fetch("/api/admin/audit-logs?limit=50", { cache: "no-store" })
       .then(async (r) => {
         if (!r.ok) {

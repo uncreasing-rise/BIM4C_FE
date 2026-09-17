@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useCallback, useEffect, useState } from "react";
-import { UserPlus, Search, ShieldCheck, UserCheck, AlertCircle, Lock, Mail, User, X } from "lucide-react";
+import { UserPlus, Search, AlertCircle, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -27,12 +27,14 @@ async function api(path: string, init?: RequestInit) {
 
 export function UsersManager() {
   const [items, setItems] = useState<UserItem[]>([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [show, setShow] = useState(false);
 
   const load = useCallback(async (signal?: AbortSignal) => {
+    setLoading(true);
     try {
       const qs = search.trim() ? `?search=${encodeURIComponent(search.trim())}` : "";
       const result = await api(qs, { signal });
@@ -47,6 +49,8 @@ export function UsersManager() {
     } catch (e) {
       if (signal?.aborted) return;
       setError(e instanceof Error ? e.message : "Không thể tải danh sách người dùng");
+    } finally {
+      if (!signal?.aborted) setLoading(false);
     }
   }, [search]);
 
@@ -196,7 +200,30 @@ export function UsersManager() {
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-200/60 dark:divide-border/60">
-            {items.length === 0 ? (
+            {loading ? (
+              Array.from({ length: 3 }).map((_, i) => (
+                <tr key={i} className="animate-pulse">
+                  <td className="px-5 py-4">
+                    <div className="flex items-center gap-2.5">
+                      <div className="size-8 rounded-full bg-muted" />
+                      <div className="space-y-1">
+                        <div className="h-4 w-28 bg-muted rounded" />
+                        <div className="h-3 w-36 bg-muted/60 rounded" />
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-5 py-4">
+                    <div className="h-5 w-20 bg-muted rounded" />
+                  </td>
+                  <td className="px-5 py-4">
+                    <div className="h-5 w-24 bg-muted rounded-full" />
+                  </td>
+                  <td className="px-5 py-4 text-right">
+                    <div className="h-8 w-20 bg-muted rounded ml-auto" />
+                  </td>
+                </tr>
+              ))
+            ) : items.length === 0 ? (
               <tr>
                 <td colSpan={4} className="py-12 text-center text-muted-foreground">
                   Chưa tìm thấy người dùng nào.

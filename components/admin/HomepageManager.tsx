@@ -2,7 +2,6 @@
 
 import Image from "next/image";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { adminMediaApi } from "@/features/admin/api/media";
 import { revalidateCmsCache } from "@/features/admin/api/revalidate";
 import type { HeroSlide, StrategicPartner } from "@/features/homepage/types";
 import { MediaPicker } from "./MediaPicker";
@@ -16,10 +15,8 @@ import {
   MoveDown,
   Eye,
   EyeOff,
-  Check,
   X,
   ExternalLink,
-  Layers,
   Save,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -94,16 +91,29 @@ export function HomepageManager() {
           isActive: true,
         };
 
-  const mutate = async (url: string, init: RequestInit, message: string) => {
+  const mutate = async (
+    url: string,
+    init: RequestInit,
+    message: string,
+    toastId?: string | number,
+  ) => {
     try {
       const response = await fetch(url, init);
       if (response.ok) return true;
       const body = (await response.json().catch(() => null)) as {
         message?: string;
       } | null;
-      toast.error(body?.message ?? message);
+      if (toastId) {
+        toast.error(body?.message ?? message, { id: toastId });
+      } else {
+        toast.error(body?.message ?? message);
+      }
     } catch {
-      toast.error("Không thể kết nối đến máy chủ.");
+      if (toastId) {
+        toast.error("Không thể kết nối đến máy chủ.", { id: toastId });
+      } else {
+        toast.error("Không thể kết nối đến máy chủ.");
+      }
     }
     return false;
   };
@@ -129,6 +139,7 @@ export function HomepageManager() {
           body: JSON.stringify(editing),
         },
         "Không thể lưu dữ liệu.",
+        toastId,
       );
       if (!ok) return;
       setEditing(null);
@@ -152,6 +163,7 @@ export function HomepageManager() {
         endpoint(item),
         { method: "DELETE" },
         "Không thể xóa nội dung.",
+        toastId,
       )
     ) {
       toast.success("Đã xóa nội dung!", { id: toastId });
@@ -172,6 +184,7 @@ export function HomepageManager() {
           body: JSON.stringify({ isActive: !item.isActive }),
         },
         "Không thể cập nhật trạng thái.",
+        toastId,
       )
     ) {
       toast.success("Đã đổi trạng thái hiển thị!", { id: toastId });

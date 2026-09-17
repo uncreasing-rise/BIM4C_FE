@@ -21,9 +21,7 @@ export function MotionSystem() {
     const root = document.getElementById("main-content") ?? document.body;
     if (!root) return;
 
-    let ctx: gsap.Context;
-
-    ctx = gsap.context(() => {
+    const ctx = gsap.context(() => {
       // 1. HERO ENTRANCE (Runs on page mount with high-end spring stagger)
       const hero = root.querySelector<HTMLElement>("[data-motion='hero'], .page-hero");
       if (hero) {

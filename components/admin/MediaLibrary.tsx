@@ -197,7 +197,7 @@ export function MediaLibrary() {
           {!items.length && (
             <div className="col-span-full py-16 text-center text-sm text-muted-foreground">
               <ImageIcon className="mx-auto size-8 text-muted-foreground/50 mb-2" />
-              Chưa có tệp nào trong thư viện media. Hãy nhấn "Tải ảnh mới" để đưa ảnh lên Supabase.
+              Chưa có tệp nào trong thư viện media. Hãy nhấn &quot;Tải ảnh mới&quot; để đưa ảnh lên Supabase.
             </div>
           )}
         </div>
