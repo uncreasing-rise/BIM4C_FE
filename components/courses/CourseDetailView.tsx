@@ -148,10 +148,10 @@ export function CourseDetailView({
             </Button>
             <div className="flex items-center gap-2">
               <span className="rounded-md bg-teal-500/10 px-2.5 py-1 text-xs font-semibold text-teal-700 dark:text-teal-300 border border-teal-500/20">
-                {levelVal}
+                {toLocalizedLabel(levelVal, locale)}
               </span>
               <span className="rounded-md bg-muted px-2.5 py-1 text-xs font-semibold text-muted-foreground">
-                {durationVal}
+                {toLocalizedLabel(durationVal, locale)}
               </span>
             </div>
           </div>

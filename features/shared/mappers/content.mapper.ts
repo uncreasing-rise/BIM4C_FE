@@ -178,13 +178,22 @@ export function mapContentDto(dto: ContentEntryDto): ContentEntry {
   return {
     ...rawContent,
     title_vi: dto.title_vi ?? dto.title,
+    title_en: dto.title_en ?? undefined,
     description_vi: dto.description_vi ?? dto.description,
+    description_en: dto.description_en ?? undefined,
     eyebrow_vi: dto.eyebrow_vi ?? dto.eyebrow,
+    eyebrow_en: dto.eyebrow_en ?? undefined,
     meta_vi: dto.meta_vi ?? dto.meta ?? undefined,
+    meta_en: dto.meta_en ?? undefined,
     highlights_vi: dto.highlights_vi ?? dto.highlights,
+    highlights_en: dto.highlights_en ?? undefined,
     sections_vi: (dto.sections_vi as ContentEntry["sections_vi"]) ?? undefined,
+    sections_en: (dto.sections_en as ContentEntry["sections_en"]) ?? undefined,
     contentBlocks_vi: Array.isArray(dto.contentBlocks_vi)
       ? parseContentBlocks(dto.contentBlocks_vi)
+      : undefined,
+    contentBlocks_en: Array.isArray(dto.contentBlocks_en)
+      ? parseContentBlocks(dto.contentBlocks_en)
       : undefined,
     seoTitle_vi: dto.seoTitle_vi ?? dto.seoTitle ?? undefined,
     seoDescription_vi: dto.seoDescription_vi ?? dto.seoDescription ?? undefined,
@@ -194,20 +203,35 @@ export function mapContentDto(dto: ContentEntryDto): ContentEntry {
         : dto.duration
           ? String(dto.duration)
           : undefined,
+    duration_en:
+      dto.duration_en != null
+        ? String(dto.duration_en)
+        : undefined,
     level_vi:
       dto.level_vi != null
         ? String(dto.level_vi)
         : dto.level
           ? String(dto.level)
           : undefined,
+    level_en:
+      dto.level_en != null
+        ? String(dto.level_en)
+        : undefined,
     price_vi:
       dto.price_vi != null
         ? String(dto.price_vi)
         : dto.price != null
           ? String(dto.price)
           : undefined,
+    price_en:
+      dto.price_en != null
+        ? String(dto.price_en)
+        : undefined,
     instructor_vi: dto.instructor_vi ?? dto.instructor ?? undefined,
+    instructor_en: dto.instructor_en ?? undefined,
     learningOutcomes_vi:
       dto.learningOutcomes_vi ?? dto.learningOutcomes ?? undefined,
+    learningOutcomes_en:
+      dto.learningOutcomes_en ?? undefined,
   };
 }

@@ -59,13 +59,13 @@ export function ProjectCard({
             {project.scale && (
               <div className="flex items-center gap-1.5 font-medium">
                 <Building2 className="size-3.5 shrink-0 text-teal-400" />
-                <span className="truncate">{project.scale}</span>
+                <span className="truncate">{toLocalizedLabel(project.scale, locale)}</span>
               </div>
             )}
             {project.contractPackage && (
               <div className="flex items-center gap-1.5 font-medium">
                 <ShieldCheck className="size-3.5 shrink-0 text-teal-400" />
-                <span className="truncate">{project.contractPackage}</span>
+                <span className="truncate">{toLocalizedLabel(project.contractPackage, locale)}</span>
               </div>
             )}
           </div>
@@ -80,7 +80,7 @@ export function ProjectCard({
             {project.location && (
               <span className="inline-flex items-center gap-1 truncate max-w-[170px]">
                 <MapPin className="size-3.5 text-primary shrink-0" />
-                <span>{project.location}</span>
+                <span>{toLocalizedLabel(project.location, locale)}</span>
               </span>
             )}
             {project.year && (

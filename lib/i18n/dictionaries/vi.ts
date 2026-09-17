@@ -1,4 +1,4 @@
-﻿import type { Dictionary } from "../types";
+import type { Dictionary } from "../types";
 
 /** Repairs Vietnamese strings that were accidentally decoded as ANSI. */
 function repairMojibake(value: unknown): unknown {
@@ -316,49 +316,49 @@ const viDictionaryRaw: Dictionary = {
                 name: "Trần Ngọc Hiếu",
                 role: "Nhà sáng lập / CEO",
                 cert: "",
-                image: "/images/team/ceo-hieu.jpg",
+                image: "/images/team/avatar-default.jpg",
                 spec: "Tư vấn, triển khai và đào tạo BIM.",
             },
             {
                 name: "Nguyễn Vũ Long",
                 role: "BIM Manager / Đồng sáng lập",
                 cert: "",
-                image: "/images/team/member-long.jpg",
+                image: "/images/team/avatar-default.jpg",
                 spec: "Hơn 8 năm kinh nghiệm trong ngành xây dựng.",
             },
             {
                 name: "Nguyễn Tiến Cường",
                 role: "BIM Coordinator / Đồng sáng lập",
                 cert: "",
-                image: "/images/team/member-cuong.jpg",
+                image: "/images/team/avatar-default.jpg",
                 spec: "Hơn 9 năm kinh nghiệm trong ngành xây dựng.",
             },
             {
                 name: "Nguyễn Văn Chiêu",
                 role: "BIM Developer / IT Manager",
                 cert: "",
-                image: "/images/team/member-chieu.jpg",
+                image: "/images/team/avatar-default.jpg",
                 spec: "Hơn 6 năm kinh nghiệm trong ngành xây dựng; đã phát triển hơn 100 add-in BIM.",
             },
             {
                 name: "Nguyễn Hồng Chinh",
                 role: "Trưởng nhóm Thiết kế Kết cấu",
                 cert: "",
-                image: "/images/team/lead-nam.jpg",
+                image: "/images/team/avatar-default.jpg",
                 spec: "Hơn 14 năm kinh nghiệm trong ngành xây dựng.",
             },
             {
                 name: "Nguyễn Ngọc Phước",
                 role: "Trưởng nhóm Thiết kế MEP & PCCC",
                 cert: "",
-                image: "/images/team/pm-bao.jpg",
+                image: "/images/team/avatar-default.jpg",
                 spec: "Hơn 13 năm kinh nghiệm thiết kế hệ thống công trình.",
             },
             {
                 name: "Phan Thị Kiều Diệu",
                 role: "Trưởng nhóm Dự toán & Quản lý Chi phí",
                 cert: "",
-                image: "/images/team/member-dieu.jpg",
+                image: "/images/team/avatar-female.jpg",
                 spec: "Hơn 14 năm kinh nghiệm quản lý chi phí xây dựng.",
             },
         ],

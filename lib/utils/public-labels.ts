@@ -1,15 +1,25 @@
 import type { Locale } from "../i18n/config";
 
 const viToEnLabels: Record<string, string> = {
-  // Services
+  // Service Categories & Names
   "Tư vấn BIM": "BIM Consulting",
   "Đào tạo": "Training",
+  "ĐÀO TẠO": "Training",
   "Thiết kế": "Design",
+  "THIẾT KẾ": "Design",
   "Tư vấn giám sát": "Construction Supervision",
   "BIM Coordination": "BIM Coordination",
   "Digital Twin & Dữ liệu tài sản": "Digital Twin & Asset Information",
   "DỊCH VỤ BIM4C": "BIM4C Solutions",
   "Dịch vụ BIM4C": "BIM4C Solutions",
+  "Dịch vụ BIM": "BIM Services",
+  "DỊCH VỤ BIM": "BIM Services",
+  "Khảo sát & Số hóa": "Survey & Digitization",
+  "Khảo sát & số hóa": "Survey & Digitization",
+  "KHẢO SÁT & SỐ HÓA": "Survey & Digitization",
+  "Tư vấn & Quản lý": "Consulting & Management",
+  "Tư vấn & quản lý": "Consulting & Management",
+  "TƯ VẤN & QUẢN LÝ": "Consulting & Management",
   "BIM 3D": "BIM 3D",
   "BIM 4D": "BIM 4D",
   "BIM 5D": "BIM 5D",
@@ -28,6 +38,8 @@ const viToEnLabels: Record<string, string> = {
   "Giám sát lắp đặt thiết bị": "Equipment Installation Supervision",
   "Thẩm tra & thẩm định thiết kế": "Design Review & Appraisal",
   "Đào tạo & chuyển giao công nghệ": "Training & Technology Transfer",
+  "Đào tạo & Chuyển giao công nghệ": "Training & Technology Transfer",
+  "ĐÀO TẠO & CHUYỂN GIAO CÔNG NGHỆ": "Training & Technology Transfer",
 
   // Articles & News
   "Phối hợp BIM tại dự án cao tầng: Từ mô hình đến quyết định hiện trường":
@@ -58,8 +70,20 @@ const viToEnLabels: Record<string, string> = {
   "Chuyên ngành": "Specialist",
   "THỰC CHIẾN": "Applied",
   "Thực chiến": "Applied",
+  "ỨNG DỤNG": "Applied",
+  "Ứng dụng": "Applied",
+  "CƠ BẢN": "Beginner",
+  "Cơ bản": "Beginner",
+  "TRUNG CẤP": "Intermediate",
+  "Trung cấp": "Intermediate",
+  "NÂNG CAO": "Advanced",
+  "Nâng cao": "Advanced",
+  "CHUYÊN GIA": "Expert",
+  "Chuyên gia": "Expert",
   "QUẢN TRỊ THÔNG TIN": "Information Management",
   "Quản trị thông tin": "Information Management",
+  "3 TUẦN": "3 Weeks",
+  "3 tuần": "3 weeks",
 
   // Durations
   "4 TUẦN": "4 Weeks",
@@ -82,7 +106,6 @@ const viToEnLabels: Record<string, string> = {
   "Dự án BIM4C": "BIM4C Project",
   "CÔNG NGHỆ": "Technology",
   "Công nghệ": "Technology",
-  "ĐÀO TẠO": "Training",
   "AN TOÀN": "Safety",
   "An toàn": "Safety",
   "CHUYÊN MÔN": "Expertise",
