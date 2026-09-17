@@ -20,6 +20,33 @@ export const DEFAULT_PARTNERS = [
   { name: "ZFenix", src: "/images/partners/logo-zfenix.png" },
 ];
 
+const LOGO_MAP: Record<string, string> = {
+  "atool": "/images/partners/logo-atool.png",
+  "a-tool": "/images/partners/logo-atool.png",
+  "bsi": "/images/partners/logo-bsi.jpg",
+  "btf": "/images/partners/logo-btf.png",
+  "by royal charter": "/images/partners/logo-royal-charter.jpg",
+  "royal charter": "/images/partners/logo-royal-charter.jpg",
+  "công ty kiến trúc ava": "/images/partners/logo-ava.png",
+  "công ty ava": "/images/partners/logo-ava.png",
+  "ava": "/images/partners/logo-ava.png",
+  "dacinco": "/images/partners/logo-dacinco.png",
+  "viện quy hoạch đô thị": "/images/partners/logo-dothi.png",
+  "dothi": "/images/partners/logo-dothi.png",
+  "dothico": "/images/partners/logo-dothi.png",
+  "office of cities & architecture": "/images/partners/logo-office-of-cities.png",
+  "office of cities_architecture": "/images/partners/logo-office-of-cities.png",
+  "onebim": "/images/partners/logo-onebim.png",
+  "strader": "/images/partners/logo-strader.png",
+  "strader consult": "/images/partners/logo-strader.png",
+  "tcm": "/images/partners/logo-tcm.png",
+  "tcm construction": "/images/partners/logo-tcm.png",
+  "tdic": "/images/partners/logo-tdic.png",
+  "tecco 5": "/images/partners/logo-tecco5.png",
+  "tecco5": "/images/partners/logo-tecco5.png",
+  "zfenix": "/images/partners/logo-zfenix.png",
+};
+
 interface PartnersProps {
   compact?: boolean;
   customPartners?: Array<{
@@ -36,7 +63,11 @@ export function Partners({ compact = false, customPartners }: PartnersProps) {
   const partners = rawList
     .map((p) => {
       const item = p as { name: string; src?: string; logo?: string };
-      return { name: item.name, src: item.src || item.logo || "" };
+      const normalizedName = item.name.toLowerCase().trim();
+      const mappedLogo = LOGO_MAP[normalizedName];
+      const directSrc = item.src || item.logo || "";
+      const finalSrc = directSrc.startsWith("/images/partners/") ? directSrc : (mappedLogo || directSrc || DEFAULT_PARTNERS[0].src);
+      return { name: item.name, src: finalSrc };
     })
     .filter((p): p is { name: string; src: string } => Boolean(p.src));
   if (!partners.length) return null;

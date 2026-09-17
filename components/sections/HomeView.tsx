@@ -7,7 +7,7 @@ import Link from "next/link";
 import { ArrowRight, ArrowUpRight, Check, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ROUTES, CONTACT_EMAIL } from "@/constants/routes";
-import { Partners } from "@/components/sections/Partners";
+import { Partners, DEFAULT_PARTNERS } from "@/components/sections/Partners";
 import { ProjectCarousel } from "@/components/projects/ProjectCarousel";
 import { DeliveryProcess } from "@/components/sections/DeliveryProcess";
 import { BimInteractiveHeroVisual } from "@/components/sections/BimInteractiveHeroVisual";
@@ -138,6 +138,22 @@ export function HomeView({
             <div className="min-w-0" data-motion="slide-in">
               <BimInteractiveHeroVisual />
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Sub-hero Partner Trust Strip */}
+      <section className="border-b border-white/10 bg-[#061e27] py-6 text-slate-300">
+        <div className="site-container flex flex-col md:flex-row items-center justify-between gap-4">
+          <p className="text-xs font-bold uppercase tracking-wider text-teal-400 shrink-0">
+            {isVi ? "Đối tác chiến lược" : "Strategic Partners"}
+          </p>
+          <div className="flex flex-wrap items-center justify-center gap-6 sm:gap-8">
+            {DEFAULT_PARTNERS.slice(0, 7).map((p) => (
+              <div key={p.name} className="relative h-8 w-20 sm:w-24 opacity-75 grayscale transition-all duration-300 hover:grayscale-0 hover:opacity-100 hover:scale-105" title={p.name}>
+                <Image src={p.src} alt={p.name} fill className="object-contain brightness-110" />
+              </div>
+            ))}
           </div>
         </div>
       </section>
