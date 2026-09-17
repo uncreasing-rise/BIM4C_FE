@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -191,8 +192,13 @@ export function AdminShell({
         {/* Logo Brand Header */}
         <div className="flex h-[76px] items-center justify-between border-b border-white/10 px-2">
           <Link className="flex items-center gap-2.5 font-black tracking-tight" href="/admin">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-teal-400 to-teal-600 font-black text-slate-950 shadow-md shadow-teal-500/20">
-              4C
+            <div className="relative flex h-9 w-9 items-center justify-center overflow-hidden rounded-full border border-teal-500/30 bg-white/95 p-0.5 shadow-md shadow-teal-500/20">
+              <Image
+                src="/images/bim4c-logo.png"
+                alt="BIM4C Logo"
+                fill
+                className="object-contain"
+              />
             </div>
             <div className="flex flex-col">
               <div className="flex items-center gap-1.5 leading-none">

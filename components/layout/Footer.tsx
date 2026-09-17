@@ -4,6 +4,7 @@ import { CONTACT_EMAIL, ROUTES } from "@/constants/routes";
 import { NewsletterForm } from "@/features/contact/components/NewsletterForm";
 import { useLanguage } from "@/lib/i18n/context";
 import { ArrowUpRight, Mail, MapPin, Phone } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 
 export function Footer() {
@@ -23,12 +24,24 @@ export function Footer() {
         <div>
           <Link
             href={ROUTES.home}
-            className="text-3xl font-semibold tracking-tight text-white"
+            className="group flex items-center gap-3 text-2xl sm:text-3xl font-bold tracking-tight text-white"
           >
-            BIM<span className="text-teal-300">4C</span>
-            <span className="ml-3 text-xs font-normal tracking-wide text-slate-400">
-              Digital Construction
-            </span>
+            <div className="relative size-10 sm:size-12 overflow-hidden rounded-full border border-teal-500/30 bg-white/95 p-0.5 shadow-md transition-transform group-hover:scale-105">
+              <Image
+                src="/images/bim4c-logo.png"
+                alt="BIM4C Logo"
+                fill
+                className="object-contain"
+              />
+            </div>
+            <div>
+              <div className="leading-none">
+                BIM<span className="text-teal-300">4C</span>
+              </div>
+              <span className="mt-1 block text-xs font-medium tracking-wider text-slate-400">
+                Digital Construction
+              </span>
+            </div>
           </Link>
           <p className="mt-5 max-w-sm text-sm leading-7">
             {t.footer.enterpriseInfo.companyName}

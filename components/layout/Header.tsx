@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { Box, ChevronDown, Menu, X } from "lucide-react";
 import { usePathname } from "next/navigation";
@@ -84,8 +85,16 @@ export function Header() {
           </SheetContent>
         </Sheet>
 
-        <Link href={ROUTES.home} className="group flex shrink-0 items-center gap-2" aria-label="BIM4C">
-          <div className="grid size-9 place-items-center rounded-lg bg-gradient-to-br from-teal-500 to-teal-800 p-1 shadow-md transition-transform group-hover:scale-105 sm:size-10"><svg viewBox="0 0 32 32" fill="none" className="size-6 text-white" aria-hidden="true"><path d="M16 3 28 10v12l-12 7L4 22V10L16 3Z M16 3v13m12-6L16 16 4 10m12 6v13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /><circle cx="16" cy="16" r="2.5" fill="#5eead4" /></svg></div>
+        <Link href={ROUTES.home} className="group flex shrink-0 items-center gap-2.5" aria-label="BIM4C">
+          <div className="relative size-9 sm:size-10 overflow-hidden rounded-full border border-teal-500/30 bg-white/95 p-0.5 shadow-sm transition-transform group-hover:scale-105">
+            <Image
+              src="/images/bim4c-logo.png"
+              alt="BIM4C Logo"
+              fill
+              className="object-contain"
+              priority
+            />
+          </div>
           <span className="leading-none"><strong className={cn("block text-[17px] font-black tracking-[.14em]", overHero ? "text-white" : "text-slate-950")}>BIM<span className={overHero ? "text-teal-400" : "text-teal-600"}>4C</span></strong><small className={cn("mt-0.5 hidden text-[10px] font-medium tracking-[.12em] sm:block", overHero ? "text-white/65" : "text-slate-500")}>{t.navigation.tagline}</small></span>
         </Link>
 
