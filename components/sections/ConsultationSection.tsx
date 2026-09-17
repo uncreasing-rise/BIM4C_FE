@@ -15,13 +15,6 @@ function OfficesAndVatCards({ t }: { t: Dictionary; locale: string }) {
       <a className="block text-teal-300" href="tel:+84796879899">
         {t.contactPage.danangHq.note}
       </a>
-      <a
-        className="block text-teal-300 underline"
-        href={ROUTES.profile}
-        download
-      >
-        {t.common.downloadProfile}
-      </a>
     </div>
   );
 }

@@ -94,7 +94,7 @@ export function Partners({ compact = false, customPartners }: PartnersProps) {
           {partners.map((partner) => (
             <div
               key={partner.name}
-              className="partner-cell group relative flex flex-col items-center justify-center min-h-[96px] sm:min-h-[110px] rounded-2xl border border-border/80 bg-white dark:bg-card p-4 shadow-xs transition-all duration-300 hover:border-primary/50 hover:shadow-md hover:-translate-y-0.5"
+              className="partner-cell group relative flex flex-col items-center justify-center min-h-[96px] sm:min-h-[110px] rounded-2xl border border-border/80 bg-white dark:bg-card p-4 shadow-xs transition-all duration-300 hover:border-primary/50 hover:shadow-md hover:shadow-primary/5 hover:-translate-y-1"
               data-motion="tile"
               title={partner.name}
             >
@@ -104,7 +104,7 @@ export function Partners({ compact = false, customPartners }: PartnersProps) {
                   alt={partner.name}
                   fill
                   sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 14vw"
-                  className="object-contain filter grayscale opacity-75 transition-all duration-300 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-105 dark:brightness-125 dark:opacity-85 dark:group-hover:opacity-100"
+                  className="object-contain brightness-100 opacity-100 transition-all duration-300 group-hover:scale-110 dark:brightness-110"
                 />
               </div>
               <span className="sr-only">{partner.name}</span>

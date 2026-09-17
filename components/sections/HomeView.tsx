@@ -150,8 +150,8 @@ export function HomeView({
           </p>
           <div className="flex flex-wrap items-center justify-center gap-6 sm:gap-8">
             {DEFAULT_PARTNERS.slice(0, 7).map((p) => (
-              <div key={p.name} className="relative h-8 w-20 sm:w-24 opacity-75 grayscale transition-all duration-300 hover:grayscale-0 hover:opacity-100 hover:scale-105" title={p.name}>
-                <Image src={p.src} alt={p.name} fill className="object-contain brightness-110" />
+              <div key={p.name} className="relative h-8 w-20 sm:w-24 opacity-95 transition-all duration-300 hover:opacity-100 hover:scale-110" title={p.name}>
+                <Image src={p.src} alt={p.name} fill className="object-contain brightness-110 hover:brightness-125 transition-all duration-300" />
               </div>
             ))}
           </div>
@@ -166,11 +166,8 @@ export function HomeView({
         {!services.length && (
           <p className="site-container py-4 text-sm text-muted-foreground">
             {isVi
-              ? "Nội dung đang được cập nhật. Vui lòng xem hồ sơ năng lực hoặc liên hệ BIM4C."
-              : "Content is being updated. Please view our company profile or contact BIM4C."}{" "}
-            <a href={ROUTES.profile} className="underline">
-              {t.common.downloadProfile}
-            </a>
+              ? "Nội dung đang được cập nhật. Vui lòng liên hệ BIM4C."
+              : "Content is being updated. Please contact BIM4C."}
           </p>
         )}
         <div className="site-container">
@@ -294,11 +291,8 @@ export function HomeView({
         {!projects.length && (
           <p className="site-container py-4 text-sm text-muted-foreground">
             {isVi
-              ? "Nội dung đang được cập nhật. Vui lòng xem hồ sơ năng lực hoặc liên hệ BIM4C."
-              : "Content is being updated. Please view our company profile or contact BIM4C."}{" "}
-            <a href={ROUTES.profile} className="underline">
-              {t.common.downloadProfile}
-            </a>
+              ? "Nội dung đang được cập nhật. Vui lòng liên hệ BIM4C."
+              : "Content is being updated. Please contact BIM4C."}
           </p>
         )}
         <div className="site-container relative">
@@ -336,11 +330,8 @@ export function HomeView({
         {!courses.length && (
           <p className="site-container py-4 text-sm text-muted-foreground">
             {isVi
-              ? "Nội dung đang được cập nhật. Vui lòng xem hồ sơ năng lực hoặc liên hệ BIM4C."
-              : "Content is being updated. Please view our company profile or contact BIM4C."}{" "}
-            <a href={ROUTES.profile} className="underline">
-              {t.common.downloadProfile}
-            </a>
+              ? "Nội dung đang được cập nhật. Vui lòng liên hệ BIM4C."
+              : "Content is being updated. Please contact BIM4C."}
           </p>
         )}
         <div className="site-container">
@@ -420,11 +411,8 @@ export function HomeView({
         {!posts.length && (
           <p className="site-container py-4 text-sm text-muted-foreground">
             {isVi
-              ? "Nội dung đang được cập nhật. Vui lòng xem hồ sơ năng lực hoặc liên hệ BIM4C."
-              : "Content is being updated. Please view our company profile or contact BIM4C."}{" "}
-            <a href={ROUTES.profile} className="underline">
-              {t.common.downloadProfile}
-            </a>
+              ? "Nội dung đang được cập nhật. Vui lòng liên hệ BIM4C."
+              : "Content is being updated. Please contact BIM4C."}
           </p>
         )}
         <div className="site-container">

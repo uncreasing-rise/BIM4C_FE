@@ -331,15 +331,6 @@ export function AboutView({ partners = [] }: { partners?: Array<{ name: string; 
 
       <DeliveryProcess />
       <Partners customPartners={partners} />
-      <div className="site-container pb-12">
-        <a
-          href={ROUTES.profile}
-          download
-          className="font-semibold text-primary underline"
-        >
-          {t.common.downloadProfile}
-        </a>
-      </div>
 
       {/* Bottom CTA */}
       <section className="py-16 border-t bg-card/60">
