@@ -7,11 +7,11 @@ import { HomeView } from "@/components/sections/HomeView";
 
 export default async function Home() {
   const [projects, services, posts, courses, homepageData] = await Promise.all([
-    getProjects({ limit: 6 }),
-    getServices({ limit: 6 }),
-    getPosts({ limit: 3 }),
-    getCourses({ limit: 3 }),
-    getHomepageContent(),
+    getProjects({ limit: 6 }).catch(() => []),
+    getServices({ limit: 6 }).catch(() => []),
+    getPosts({ limit: 3 }).catch(() => []),
+    getCourses({ limit: 3 }).catch(() => []),
+    getHomepageContent().catch(() => ({ slides: [], partners: [] })),
   ]);
 
   return (
