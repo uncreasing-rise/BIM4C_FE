@@ -37,6 +37,16 @@ export const metadata: Metadata = {
   description: DEFAULT_DESCRIPTION,
   keywords: DEFAULT_KEYWORDS,
   applicationName: SITE_NAME,
+  icons: {
+    icon: [
+      {
+        url: "/images/bim4c-logo.png",
+        type: "image/png",
+      },
+    ],
+    shortcut: "/images/bim4c-logo.png",
+    apple: "/images/bim4c-logo.png",
+  },
   authors: [{ name: SITE_NAME }],
   creator: SITE_NAME,
   publisher: SITE_NAME,
