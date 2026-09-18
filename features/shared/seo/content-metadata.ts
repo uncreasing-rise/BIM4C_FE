@@ -1,6 +1,11 @@
 import type { Metadata } from "next";
 import type { ContentEntry } from "@/types/content";
-import { DEFAULT_KEYWORDS, getAlternateLanguages, SITE_NAME } from "@/lib/seo/site";
+import {
+  absoluteUrl,
+  DEFAULT_KEYWORDS,
+  getAlternateLanguages,
+  SITE_NAME,
+} from "@/lib/seo/site";
 
 export function getContentMetadata(
   entry: ContentEntry,
@@ -27,14 +32,13 @@ export function getContentMetadata(
       locale: "vi_VN",
       alternateLocale: ["en_US"],
       type: "article",
-      images: [{ url: image, alt: entry.title }],
+      images: [{ url: absoluteUrl(image), alt: entry.title }],
     },
     twitter: {
       card: "summary_large_image",
       title,
       description,
-      images: [image],
+      images: [absoluteUrl(image)],
     },
   };
 }
-

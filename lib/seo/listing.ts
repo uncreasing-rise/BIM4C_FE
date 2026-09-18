@@ -1,5 +1,12 @@
 import type { Metadata } from "next";
-import { canonicalPath, DEFAULT_KEYWORDS, DEFAULT_SOCIAL_IMAGE, getAlternateLanguages, SITE_NAME } from "./site";
+import {
+  absoluteUrl,
+  canonicalPath,
+  DEFAULT_KEYWORDS,
+  DEFAULT_SOCIAL_IMAGE,
+  getAlternateLanguages,
+  SITE_NAME,
+} from "./site";
 
 export type ListingSearchParams = Record<string, string | string[] | undefined>;
 
@@ -25,13 +32,13 @@ export function pageMetadata(
       siteName: SITE_NAME,
       locale: "vi_VN",
       alternateLocale: ["en_US"],
-      images: [{ url: image, alt: title }],
+      images: [{ url: absoluteUrl(image), alt: title }],
     },
     twitter: {
       card: "summary_large_image",
       title,
       description,
-      images: [image],
+      images: [absoluteUrl(image)],
     },
   };
 }
@@ -72,13 +79,13 @@ export function listingMetadata(
       siteName: SITE_NAME,
       locale: "vi_VN",
       alternateLocale: ["en_US"],
-      images: [{ url: image, alt: fullTitle }],
+      images: [{ url: absoluteUrl(image), alt: fullTitle }],
     },
     twitter: {
       card: "summary_large_image",
       title: fullTitle,
       description,
-      images: [image],
+      images: [absoluteUrl(image)],
     },
   };
 }

@@ -36,8 +36,25 @@ export const DEFAULT_SOCIAL_IMAGE = "/images/news-project-coordination.webp";
 export const canonicalOrigin = env.appUrl;
 
 export function absoluteUrl(pathname = "/"): string {
-  const cleanPath = pathname.startsWith("/") ? pathname : `/${pathname}`;
-  return new URL(cleanPath, `${canonicalOrigin}/`).toString();
+  try {
+    const parsed = new URL(pathname, `${canonicalOrigin}/`);
+    // Content may contain an old absolute URL from a deployment/preview. Keep
+    // external media untouched, but never expose a Vercel deployment origin
+    // through production SEO metadata or structured data.
+    if (
+      parsed.hostname.endsWith(".vercel.app") &&
+      parsed.hostname !== new URL(canonicalOrigin).hostname
+    ) {
+      return new URL(
+        `${parsed.pathname}${parsed.search}${parsed.hash}`,
+        `${canonicalOrigin}/`,
+      ).toString();
+    }
+    return parsed.toString();
+  } catch {
+    const cleanPath = pathname.startsWith("/") ? pathname : `/${pathname}`;
+    return new URL(cleanPath, `${canonicalOrigin}/`).toString();
+  }
 }
 
 export function canonicalPath(pathname: string, page = 1): string {
@@ -52,4 +69,3 @@ export function getAlternateLanguages(pathname: string) {
     "x-default": url,
   };
 }
-

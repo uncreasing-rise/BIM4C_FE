@@ -55,6 +55,20 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  async redirects() {
+    return [
+      {
+        source: "/index.php/services",
+        destination: "/dich-vu",
+        permanent: true,
+      },
+      {
+        source: "/index.php/gioi-thieu-cong-ty",
+        destination: "/gioi-thieu",
+        permanent: true,
+      },
+    ];
+  },
 };
 
 export default nextConfig;
