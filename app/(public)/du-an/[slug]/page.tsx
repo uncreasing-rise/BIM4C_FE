@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ProjectDetailView } from "@/components/projects/ProjectDetailView";
+import { PublicDataFallback } from "@/components/shared/PublicDataFallback";
 import { ROUTES } from "@/constants/routes";
 import { getProjectBySlug, getProjects } from "@/features/projects/api/queries";
 import { getContentMetadata } from "@/features/shared/seo/content-metadata";
@@ -35,11 +36,14 @@ export default async function ProjectDetail({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const [entry, projects] = await Promise.all([
-    getProjectBySlug(slug),
-    getProjects({ limit: 6 }),
-  ]);
+  let entry;
+  try {
+    entry = await getProjectBySlug(slug);
+  } catch {
+    return <PublicDataFallback title="Dự án BIM & công nghệ xây dựng" description="Nội dung dự án đang được cập nhật. Vui lòng thử lại sau." />;
+  }
   if (!entry) notFound();
+  const projects = await getProjects({ limit: 6 }).catch(() => []);
   return (
     <main>
       <ProjectDetailView

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { BlogDetailView } from "@/components/blog/BlogDetailView";
+import { PublicDataFallback } from "@/components/shared/PublicDataFallback";
 import { ROUTES } from "@/constants/routes";
 import { getPostBySlug, getPosts } from "@/features/blog/api/queries";
 import { getContentMetadata } from "@/features/shared/seo/content-metadata";
@@ -35,11 +36,14 @@ export default async function BlogDetail({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const [entry, posts] = await Promise.all([
-    getPostBySlug(slug),
-    getPosts({ limit: 6 }),
-  ]);
+  let entry;
+  try {
+    entry = await getPostBySlug(slug);
+  } catch {
+    return <PublicDataFallback title="Bài viết BIM & công nghệ xây dựng" description="Nội dung bài viết đang được cập nhật. Vui lòng thử lại sau." />;
+  }
   if (!entry) notFound();
+  const posts = await getPosts({ limit: 6 }).catch(() => []);
   const candidates = posts.filter((post) => post.slug !== slug);
   const related = selectRelatedContent(entry, candidates);
   return (

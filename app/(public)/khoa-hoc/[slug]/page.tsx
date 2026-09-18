@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { CourseDetailView } from "@/components/courses/CourseDetailView";
+import { PublicDataFallback } from "@/components/shared/PublicDataFallback";
 import { ROUTES } from "@/constants/routes";
 import { getCourseBySlug, getCourses } from "@/features/courses/api/queries";
 import { getContentMetadata } from "@/features/shared/seo/content-metadata";
@@ -35,11 +36,14 @@ export default async function CourseDetail({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const [entry, courses] = await Promise.all([
-    getCourseBySlug(slug),
-    getCourses({ limit: 6 }),
-  ]);
+  let entry;
+  try {
+    entry = await getCourseBySlug(slug);
+  } catch {
+    return <PublicDataFallback title="Khóa học BIM" description="Nội dung khóa học đang được cập nhật. Vui lòng thử lại sau." />;
+  }
   if (!entry) notFound();
+  const courses = await getCourses({ limit: 6 }).catch(() => []);
   return (
     <main>
       <CourseDetailView

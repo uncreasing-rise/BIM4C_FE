@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ServiceDetailView } from "@/components/services/ServiceDetailView";
+import { PublicDataFallback } from "@/components/shared/PublicDataFallback";
 import { ROUTES } from "@/constants/routes";
 import { getServiceBySlug, getServices } from "@/features/services/api/queries";
 import { getContentMetadata } from "@/features/shared/seo/content-metadata";
@@ -21,11 +22,7 @@ export async function generateMetadata({
   try {
     entry = await getServiceBySlug(slug);
   } catch {
-    return pageMetadata(
-      "Dịch vụ BIM & công nghệ xây dựng | BIM4C",
-      "Giải pháp tư vấn BIM, phối hợp mô hình và công nghệ xây dựng của BIM4C.",
-      ROUTES.serviceDetail(slug),
-    );
+    return pageMetadata("Dịch vụ BIM & công nghệ xây dựng | BIM4C", "Giải pháp tư vấn BIM, phối hợp mô hình và công nghệ xây dựng của BIM4C.", ROUTES.serviceDetail(slug));
   }
   if (!entry) notFound();
   return getContentMetadata(entry, ROUTES.serviceDetail(entry.slug));
@@ -36,11 +33,14 @@ export default async function ServiceDetail({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const [entry, services] = await Promise.all([
-    getServiceBySlug(slug),
-    getServices({ limit: 6 }),
-  ]);
+  let entry;
+  try {
+    entry = await getServiceBySlug(slug);
+  } catch {
+    return <PublicDataFallback title="Dịch vụ BIM & công nghệ xây dựng" description="Nội dung dịch vụ đang được cập nhật. Vui lòng thử lại sau." />;
+  }
   if (!entry) notFound();
+  const services = await getServices({ limit: 6 }).catch(() => []);
   return (
     <main>
       <ServiceDetailView
