@@ -5,16 +5,25 @@ import {
   DEFAULT_KEYWORDS,
   getAlternateLanguages,
   SITE_NAME,
+  localizedPath,
 } from "@/lib/seo/site";
+import { getRequestLocale } from "@/lib/i18n/request";
+import { localizeContent } from "@/lib/i18n/localize";
 
-export function getContentMetadata(
+export async function getContentMetadata(
   entry: ContentEntry,
   pathname: string,
-): Metadata {
-  const title = entry.seoTitle || entry.title;
-  const description = entry.seoDescription || entry.description;
+): Promise<Metadata> {
+  const locale = await getRequestLocale();
+  const localized = localizeContent(entry, locale);
+  const title = locale === "vi"
+    ? entry.seoTitle_vi || localized.title
+    : entry.seoTitle || localized.title;
+  const description = locale === "vi"
+    ? entry.seoDescription_vi || localized.description
+    : entry.seoDescription || localized.description;
   const image = entry.seoImage || entry.image;
-  const canonical = pathname;
+  const canonical = localizedPath(pathname, locale);
 
   return {
     title,
@@ -29,8 +38,8 @@ export function getContentMetadata(
       description,
       url: canonical,
       siteName: SITE_NAME,
-      locale: "vi_VN",
-      alternateLocale: ["en_US"],
+      locale: locale === "vi" ? "vi_VN" : "en_US",
+      alternateLocale: [locale === "vi" ? "en_US" : "vi_VN"],
       type: "article",
       images: [{ url: absoluteUrl(image), alt: entry.title }],
     },

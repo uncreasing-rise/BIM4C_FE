@@ -22,10 +22,10 @@ export async function generateMetadata({
   try {
     entry = await getServiceBySlug(slug);
   } catch {
-    return pageMetadata("Dịch vụ BIM & công nghệ xây dựng | BIM4C", "Giải pháp tư vấn BIM, phối hợp mô hình và công nghệ xây dựng của BIM4C.", ROUTES.serviceDetail(slug));
+    return await pageMetadata("Dịch vụ BIM & công nghệ xây dựng | BIM4C", "Giải pháp tư vấn BIM, phối hợp mô hình và công nghệ xây dựng của BIM4C.", ROUTES.serviceDetail(slug));
   }
   if (!entry) notFound();
-  return getContentMetadata(entry, ROUTES.serviceDetail(entry.slug));
+  return await getContentMetadata(entry, ROUTES.serviceDetail(entry.slug));
 }
 export default async function ServiceDetail({
   params,

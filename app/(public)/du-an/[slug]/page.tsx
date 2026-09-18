@@ -21,14 +21,14 @@ export async function generateMetadata({
   try {
     entry = await getProjectBySlug(slug);
   } catch {
-    return pageMetadata(
+    return await pageMetadata(
       "Dự án BIM & công nghệ xây dựng | BIM4C",
       "Các dự án BIM, tư vấn kỹ thuật và chuyển đổi số tiêu biểu của BIM4C.",
       ROUTES.projectDetail(slug),
     );
   }
   if (!entry) notFound();
-  return getContentMetadata(entry, ROUTES.projectDetail(entry.slug));
+  return await getContentMetadata(entry, ROUTES.projectDetail(entry.slug));
 }
 export default async function ProjectDetail({
   params,

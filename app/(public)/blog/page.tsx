@@ -17,7 +17,7 @@ export async function generateMetadata({
 }: {
   searchParams: Promise<ListingSearchParams>;
 }): Promise<Metadata> {
-  return listingMetadata(
+  return await listingMetadata(
     "Insights",
     description,
     ROUTES.blog,

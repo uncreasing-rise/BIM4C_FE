@@ -4,11 +4,13 @@ import { pageMetadata } from "@/lib/seo/listing";
 import { AboutView } from "@/components/sections/AboutView";
 import { getHomepageContent } from "@/features/homepage/queries";
 
-export const metadata: Metadata = pageMetadata(
-  "About",
-  "Meet BIM4C: connecting construction expertise, BIM workflows and project information.",
-  ROUTES.about,
-);
+export async function generateMetadata(): Promise<Metadata> {
+  return pageMetadata(
+    "About",
+    "Meet BIM4C: connecting construction expertise, BIM workflows and project information.",
+    ROUTES.about,
+  );
+}
 
 export default async function AboutPage() {
   const homepage = await getHomepageContent();

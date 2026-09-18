@@ -3,6 +3,8 @@
 import { useLanguage } from "@/lib/i18n/context";
 import { LOCALE_LABELS, SUPPORTED_LOCALES } from "@/lib/i18n/config";
 import { cn } from "@/lib/utils";
+import { localePrefix } from "@/lib/i18n/path";
+import { usePathname, useRouter } from "next/navigation";
 
 interface LanguageSwitcherProps {
   variant?: "pill" | "select" | "compact";
@@ -15,6 +17,12 @@ export function LanguageSwitcher({
   isOverHero = false,
 }: LanguageSwitcherProps) {
   const { locale, setLocale } = useLanguage();
+  const pathname = usePathname();
+  const router = useRouter();
+  const switchTo = (nextLocale: (typeof SUPPORTED_LOCALES)[number]) => {
+    setLocale(nextLocale);
+    router.push(localePrefix(nextLocale, pathname.replace(/^\/(vi|en)(?=\/|$)/, "") || "/"));
+  };
   return (
     <div
       role="group"
@@ -28,10 +36,13 @@ export function LanguageSwitcher({
       )}
     >
       {SUPPORTED_LOCALES.map((loc) => (
-        <button
+        <a
           key={loc}
-          type="button"
-          onClick={() => setLocale(loc)}
+          href={localePrefix(loc, pathname.replace(/^\/(vi|en)(?=\/|$)/, "") || "/")}
+          onClick={(event) => {
+            event.preventDefault();
+            switchTo(loc);
+          }}
           aria-pressed={locale === loc}
           aria-label={`Switch language to ${LOCALE_LABELS[loc].label}`}
           className={cn(
@@ -47,7 +58,7 @@ export function LanguageSwitcher({
           )}
         >
           {LOCALE_LABELS[loc].code}
-        </button>
+        </a>
       ))}
     </div>
   );

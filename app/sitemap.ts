@@ -3,7 +3,8 @@ import { getAllPosts } from "@/features/blog/api/queries";
 import { getCourses } from "@/features/courses/api/queries";
 import { getAllProjects } from "@/features/projects/api/queries";
 import { getServices } from "@/features/services/api/queries";
-import { absoluteUrl } from "@/lib/seo/site";
+import { absoluteUrl, localizedPath } from "@/lib/seo/site";
+import type { Locale } from "@/lib/i18n/config";
 import type { ContentEntry } from "@/types/content";
 import type { MetadataRoute } from "next";
 
@@ -45,6 +46,23 @@ const lastModified = (entry: ContentEntry) => {
     : undefined;
 };
 
+function localizedEntries(
+  pathname: string,
+  values: Omit<MetadataRoute.Sitemap[number], "url" | "alternates">,
+): MetadataRoute.Sitemap {
+  return (["vi", "en"] as Locale[]).map((locale) => ({
+    ...values,
+    url: absoluteUrl(localizedPath(pathname, locale)),
+    alternates: {
+      languages: {
+        "vi-VN": absoluteUrl(localizedPath(pathname, "vi")),
+        "en-US": absoluteUrl(localizedPath(pathname, "en")),
+        "x-default": absoluteUrl(localizedPath(pathname, "vi")),
+      },
+    },
+  }));
+}
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const [services, projects, courses, posts] = await Promise.all([
     getServices({ strict: false }).catch(() => []),
@@ -53,96 +71,54 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     getAllPosts({ strict: false }).catch(() => []),
   ]);
 
-  const staticEntries: MetadataRoute.Sitemap = staticConfigs.map((cfg) => ({
-    url: absoluteUrl(cfg.path),
+  const staticEntries: MetadataRoute.Sitemap = staticConfigs.flatMap((cfg) => localizedEntries(cfg.path, {
     lastModified: new Date(),
     changeFrequency: cfg.changeFrequency,
     priority: cfg.priority,
-    alternates: {
-      languages: {
-        "vi-VN": absoluteUrl(cfg.path),
-        "en-US": absoluteUrl(cfg.path),
-      },
-    },
   }));
 
   const dynamicServices: MetadataRoute.Sitemap = services
     .filter(published)
-    .map((entry) => ({
-      url: absoluteUrl(`/dich-vu/${entry.slug}`),
+    .flatMap((entry) => localizedEntries(`/dich-vu/${entry.slug}`, {
       lastModified: lastModified(entry) || new Date(),
       changeFrequency: "weekly",
       priority: 0.85,
-      alternates: {
-        languages: {
-          "vi-VN": absoluteUrl(`/dich-vu/${entry.slug}`),
-          "en-US": absoluteUrl(`/dich-vu/${entry.slug}`),
-        },
-      },
     }));
 
   const dynamicProjects: MetadataRoute.Sitemap = projects
     .filter(published)
-    .map((entry) => ({
-      url: absoluteUrl(`/du-an/${entry.slug}`),
+    .flatMap((entry) => localizedEntries(`/du-an/${entry.slug}`, {
       lastModified: lastModified(entry) || new Date(),
       changeFrequency: "monthly",
       priority: 0.8,
-      alternates: {
-        languages: {
-          "vi-VN": absoluteUrl(`/du-an/${entry.slug}`),
-          "en-US": absoluteUrl(`/du-an/${entry.slug}`),
-        },
-      },
     }));
 
   const dynamicCourses: MetadataRoute.Sitemap = courses
     .filter(published)
-    .map((entry) => ({
-      url: absoluteUrl(`/khoa-hoc/${entry.slug}`),
+    .flatMap((entry) => localizedEntries(`/khoa-hoc/${entry.slug}`, {
       lastModified: lastModified(entry) || new Date(),
       changeFrequency: "weekly",
       priority: 0.85,
-      alternates: {
-        languages: {
-          "vi-VN": absoluteUrl(`/khoa-hoc/${entry.slug}`),
-          "en-US": absoluteUrl(`/khoa-hoc/${entry.slug}`),
-        },
-      },
     }));
 
   const dynamicPosts: MetadataRoute.Sitemap = posts
     .filter(published)
-    .map((entry) => ({
-      url: absoluteUrl(`/blog/${entry.slug}`),
+    .flatMap((entry) => localizedEntries(`/blog/${entry.slug}`, {
       lastModified: lastModified(entry) || new Date(),
       changeFrequency: "monthly",
       priority: 0.75,
-      alternates: {
-        languages: {
-          "vi-VN": absoluteUrl(`/blog/${entry.slug}`),
-          "en-US": absoluteUrl(`/blog/${entry.slug}`),
-        },
-      },
     }));
 
-  const legalEntries: MetadataRoute.Sitemap = legalDocuments.map((document) => {
+  const legalEntries: MetadataRoute.Sitemap = legalDocuments.flatMap((document) => {
     const [day, month, year] = document.updatedAt.split(".").map(Number);
-    return {
-      url: absoluteUrl(`/phap-ly/${document.slug}`),
+    return localizedEntries(`/phap-ly/${document.slug}`, {
       lastModified:
         day && month && year
           ? new Date(Date.UTC(year, month - 1, day))
           : undefined,
       changeFrequency: "yearly",
       priority: 0.4,
-      alternates: {
-        languages: {
-          "vi-VN": absoluteUrl(`/phap-ly/${document.slug}`),
-          "en-US": absoluteUrl(`/phap-ly/${document.slug}`),
-        },
-      },
-    };
+    });
   });
 
   const allEntries = [

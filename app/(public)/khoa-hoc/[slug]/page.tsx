@@ -21,14 +21,14 @@ export async function generateMetadata({
   try {
     entry = await getCourseBySlug(slug);
   } catch {
-    return pageMetadata(
+    return await pageMetadata(
       "Khóa học BIM | BIM4C",
       "Chương trình đào tạo BIM và công nghệ xây dựng thực tiễn từ BIM4C.",
       ROUTES.courseDetail(slug),
     );
   }
   if (!entry) notFound();
-  return getContentMetadata(entry, ROUTES.courseDetail(entry.slug));
+  return await getContentMetadata(entry, ROUTES.courseDetail(entry.slug));
 }
 export default async function CourseDetail({
   params,

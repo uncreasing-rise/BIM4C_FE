@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { cookies } from "next/headers";
+import { getRequestLocale } from "@/lib/i18n/request";
+import { localizedPath } from "@/lib/seo/site";
 import { env } from "@/lib/config/env";
 import {
   DEFAULT_DESCRIPTION,
@@ -13,11 +14,7 @@ import "./globals.css";
 import { Manrope } from "next/font/google";
 import { cn } from "@/lib/utils";
 import { LanguageProvider } from "@/lib/i18n/context";
-import {
-  DEFAULT_LOCALE,
-  LOCALE_COOKIE_NAME,
-  type Locale,
-} from "@/lib/i18n/config";
+import type { Locale } from "@/lib/i18n/config";
 import { Toaster } from "sonner";
 
 const fontSans = Manrope({
@@ -31,7 +28,10 @@ const fontSans = Manrope({
 // DYNAMIC_SERVER_USAGE when they traverse the root layout.
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = {
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getRequestLocale();
+  const canonical = localizedPath("/", locale);
+  return {
   metadataBase: new URL(env.appUrl),
   title: { default: DEFAULT_TITLE, template: `%s | ${SITE_NAME}` },
   description: DEFAULT_DESCRIPTION,
@@ -51,7 +51,7 @@ export const metadata: Metadata = {
   creator: SITE_NAME,
   publisher: SITE_NAME,
   alternates: {
-    canonical: "/",
+    canonical,
     languages: getAlternateLanguages("/"),
   },
   robots: {
@@ -70,8 +70,8 @@ export const metadata: Metadata = {
     description: DEFAULT_DESCRIPTION,
     siteName: SITE_NAME,
     type: "website",
-    locale: "vi_VN",
-    alternateLocale: ["en_US"],
+    locale: locale === "vi" ? "vi_VN" : "en_US",
+    alternateLocale: [locale === "vi" ? "en_US" : "vi_VN"],
     url: "/",
     images: [{ url: DEFAULT_SOCIAL_IMAGE, alt: "BIM4C Digital Construction" }],
   },
@@ -87,15 +87,14 @@ export const metadata: Metadata = {
       ? { "msvalidate.01": env.bingSiteVerification }
       : undefined,
   },
-};
+  };
+}
 
 
 export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
-  const cookieStore = await cookies();
-  const rawLocale = cookieStore.get(LOCALE_COOKIE_NAME)?.value as Locale;
-  const locale: Locale = rawLocale === "vi" ? "vi" : DEFAULT_LOCALE;
+  const locale: Locale = await getRequestLocale();
 
   return (
     <html

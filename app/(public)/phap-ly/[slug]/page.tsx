@@ -16,7 +16,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const document = getLegalDocument((await params).slug);
   if (!document) notFound();
-  return pageMetadata(
+  return await pageMetadata(
     document.title,
     document.summary,
     ROUTES.legalDetail(document.slug),

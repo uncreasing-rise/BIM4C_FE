@@ -21,14 +21,14 @@ export async function generateMetadata({
   try {
     entry = await getPostBySlug(slug);
   } catch {
-    return pageMetadata(
+    return await pageMetadata(
       "Bài viết BIM & công nghệ xây dựng | BIM4C",
       "Góc nhìn chuyên môn về BIM, dữ liệu xây dựng và chuyển đổi số từ BIM4C.",
       ROUTES.blogDetail(slug),
     );
   }
   if (!entry) notFound();
-  return getContentMetadata(entry, ROUTES.blogDetail(slug));
+  return await getContentMetadata(entry, ROUTES.blogDetail(slug));
 }
 export default async function BlogDetail({
   params,

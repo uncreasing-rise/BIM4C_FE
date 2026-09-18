@@ -1,4 +1,6 @@
 import { env } from "@/lib/config/env";
+import { localePrefix } from "@/lib/i18n/path";
+import type { Locale } from "@/lib/i18n/config";
 
 export const SITE_NAME = "BIM4C";
 export const DEFAULT_TITLE =
@@ -61,11 +63,15 @@ export function canonicalPath(pathname: string, page = 1): string {
   return page > 1 ? `${pathname}?page=${page}` : pathname;
 }
 
+export function localizedPath(pathname: string, locale: Locale): string {
+  const clean = pathname.replace(/^\/(vi|en)(?=\/|$)/, "") || "/";
+  return localePrefix(locale, clean);
+}
+
 export function getAlternateLanguages(pathname: string) {
-  const url = absoluteUrl(pathname);
   return {
-    "vi-VN": url,
-    "en-US": url,
-    "x-default": url,
+    "vi-VN": absoluteUrl(localizedPath(pathname, "vi")),
+    "en-US": absoluteUrl(localizedPath(pathname, "en")),
+    "x-default": absoluteUrl(localizedPath(pathname, "vi")),
   };
 }
