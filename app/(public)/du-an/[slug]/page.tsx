@@ -5,6 +5,7 @@ import { ROUTES } from "@/constants/routes";
 import { getProjectBySlug, getProjects } from "@/features/projects/api/queries";
 import { getContentMetadata } from "@/features/shared/seo/content-metadata";
 import { selectRelatedContent } from "@/features/shared/selectors/related-content";
+import { pageMetadata } from "@/lib/seo/listing";
 
 export function generateStaticParams() {
   return [];
@@ -14,7 +15,17 @@ export async function generateMetadata({
 }: {
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
-  const entry = await getProjectBySlug((await params).slug);
+  const slug = (await params).slug;
+  let entry;
+  try {
+    entry = await getProjectBySlug(slug);
+  } catch {
+    return pageMetadata(
+      "Dự án BIM & công nghệ xây dựng | BIM4C",
+      "Các dự án BIM, tư vấn kỹ thuật và chuyển đổi số tiêu biểu của BIM4C.",
+      ROUTES.projectDetail(slug),
+    );
+  }
   if (!entry) notFound();
   return getContentMetadata(entry, ROUTES.projectDetail(entry.slug));
 }

@@ -5,6 +5,7 @@ import { ROUTES } from "@/constants/routes";
 import { getPostBySlug, getPosts } from "@/features/blog/api/queries";
 import { getContentMetadata } from "@/features/shared/seo/content-metadata";
 import { selectRelatedContent } from "@/features/shared/selectors/related-content";
+import { pageMetadata } from "@/lib/seo/listing";
 
 export function generateStaticParams() {
   return [];
@@ -15,7 +16,16 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const entry = await getPostBySlug(slug);
+  let entry;
+  try {
+    entry = await getPostBySlug(slug);
+  } catch {
+    return pageMetadata(
+      "Bài viết BIM & công nghệ xây dựng | BIM4C",
+      "Góc nhìn chuyên môn về BIM, dữ liệu xây dựng và chuyển đổi số từ BIM4C.",
+      ROUTES.blogDetail(slug),
+    );
+  }
   if (!entry) notFound();
   return getContentMetadata(entry, ROUTES.blogDetail(slug));
 }
