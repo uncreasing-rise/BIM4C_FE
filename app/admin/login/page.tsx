@@ -55,8 +55,8 @@ function LoginForm() {
       }
 
       const next = params.get("next");
-      router.replace(next?.startsWith("/admin") ? next : "/admin");
-      router.refresh();
+      const targetUrl = next?.startsWith("/admin") && next !== "/admin/login" ? next : "/admin";
+      window.location.href = targetUrl;
     } catch (e) {
       setError(
         e instanceof Error

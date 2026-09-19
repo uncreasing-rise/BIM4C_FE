@@ -2,11 +2,19 @@ import { NextRequest, NextResponse } from "next/server";
 import { handleMockApiRequest } from "./mock-store";
 
 export async function backendProxy(request: NextRequest, path: string) {
-  const expectedOrigin =
-    process.env.NEXT_PUBLIC_APP_URL ?? request.nextUrl.origin;
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL;
+  const currentOrigin = request.nextUrl.origin;
+  const expectedOrigin = appUrl ?? currentOrigin;
+
   if (!["GET", "HEAD", "OPTIONS"].includes(request.method)) {
     const incomingOrigin = request.headers.get("origin");
-    if (incomingOrigin && incomingOrigin !== expectedOrigin) {
+    if (
+      incomingOrigin &&
+      incomingOrigin !== currentOrigin &&
+      incomingOrigin !== appUrl &&
+      !incomingOrigin.endsWith("bim4c.vn") &&
+      !incomingOrigin.includes("localhost")
+    ) {
       return NextResponse.json(
         {
           error: "Invalid request origin",
@@ -151,14 +159,64 @@ export async function backendProxy(request: NextRequest, path: string) {
   for (const name of [
     "content-type",
     "content-disposition",
-    "set-cookie",
     "x-request-id",
   ]) {
     const value = response.headers.get(name);
     if (value) outputHeaders.set(name, value);
   }
-  return new NextResponse(
+
+  const nextResponse = new NextResponse(
     response.status === 204 ? null : await response.arrayBuffer(),
     { status: response.status, headers: outputHeaders },
   );
+
+  // Transfer Set-Cookie headers properly to ensure auth session cookies persist
+  const rawSetCookies: string[] = [];
+  if (typeof response.headers.getSetCookie === "function") {
+    rawSetCookies.push(...response.headers.getSetCookie());
+  } else {
+    const single = response.headers.get("set-cookie");
+    if (single) rawSetCookies.push(single);
+  }
+
+  for (const cookieStr of rawSetCookies) {
+    if (!cookieStr) continue;
+    nextResponse.headers.append("set-cookie", cookieStr);
+
+    const parts = cookieStr.split(";").map((p) => p.trim());
+    const [nameVal, ...attrs] = parts;
+    const eqIdx = nameVal.indexOf("=");
+    if (eqIdx > 0) {
+      const name = nameVal.slice(0, eqIdx).trim();
+      const val = nameVal.slice(eqIdx + 1).trim();
+
+      const options: {
+        path?: string;
+        maxAge?: number;
+        expires?: Date;
+        httpOnly?: boolean;
+        secure?: boolean;
+        sameSite?: "lax" | "strict" | "none";
+      } = { path: "/" };
+
+      for (const attr of attrs) {
+        const [k, v] = attr.split("=").map((s) => s.trim());
+        const lk = k.toLowerCase();
+        if (lk === "path" && v) options.path = v;
+        else if (lk === "max-age" && v) options.maxAge = parseInt(v, 10);
+        else if (lk === "expires" && v) options.expires = new Date(v);
+        else if (lk === "httponly") options.httpOnly = true;
+        else if (lk === "secure") options.secure = true;
+        else if (lk === "samesite" && v) {
+          const lv = v.toLowerCase();
+          if (lv === "lax" || lv === "strict" || lv === "none") {
+            options.sameSite = lv;
+          }
+        }
+      }
+      nextResponse.cookies.set(name, val, options);
+    }
+  }
+
+  return nextResponse;
 }
