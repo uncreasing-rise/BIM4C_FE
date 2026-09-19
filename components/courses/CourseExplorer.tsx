@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
+import { LocalizedLink as Link } from "@/components/shared/LocalizedLink";
 import { ArrowUpRight, Clock3 } from "lucide-react";
 import {
   CatalogCategories,

@@ -3,7 +3,7 @@
 import { usePublicMotion } from "@/components/motion/hooks/use-public-motion";
 
 import Image from "next/image";
-import Link from "next/link";
+import { LocalizedLink as Link } from "@/components/shared/LocalizedLink";
 import { ArrowRight, ArrowUpRight, Check, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ROUTES, CONTACT_EMAIL } from "@/constants/routes";

@@ -2,7 +2,7 @@
 
 import { usePublicMotion } from "@/components/motion/hooks/use-public-motion";
 
-import Link from "next/link";
+import { LocalizedLink as Link } from "@/components/shared/LocalizedLink";
 import { ArrowUpRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PageHero } from "@/components/shared/PageHero";

@@ -1,8 +1,8 @@
-﻿"use client";
+"use client";
 
 import { useLanguage } from "@/lib/i18n/context";
 import { ArrowLeft, Box, Layers, Upload } from "lucide-react";
-import Link from "next/link";
+import { LocalizedLink as Link } from "@/components/shared/LocalizedLink";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { BimCanvas } from "./BimCanvas";

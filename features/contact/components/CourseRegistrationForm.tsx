@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { registerCourse } from "../api/mutations";
 import { getZodFieldErrors } from "../utils/zod-errors";
-import Link from "next/link";
+import { LocalizedLink as Link } from "@/components/shared/LocalizedLink";
 import { ROUTES } from "@/constants/routes";
 import { useLanguage } from "@/lib/i18n/context";
 import { toast } from "sonner";

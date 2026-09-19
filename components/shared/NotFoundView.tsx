@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { LocalizedLink as Link } from "@/components/shared/LocalizedLink";
 import { Box, Compass, Home, Phone } from "lucide-react";
 import { ROUTES } from "@/constants/routes";
 import { Button } from "@/components/ui/button";

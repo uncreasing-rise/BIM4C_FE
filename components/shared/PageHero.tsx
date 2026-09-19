@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
+import { LocalizedLink as Link } from "@/components/shared/LocalizedLink";
 import { ChevronRight, Home } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toLocalizedLabel } from "@/lib/utils/public-labels";

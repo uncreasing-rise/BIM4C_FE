@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
+import { LocalizedLink as Link } from "@/components/shared/LocalizedLink";
 import { ArrowUpRight, Building2, Calendar, MapPin, ShieldCheck } from "lucide-react";
 import type { Project } from "@/features/projects/types/project";
 import { ROUTES } from "@/constants/routes";

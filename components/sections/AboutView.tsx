@@ -24,7 +24,7 @@ import {
   Workflow,
 } from "lucide-react";
 import Image from "next/image";
-import Link from "next/link";
+import { LocalizedLink as Link } from "@/components/shared/LocalizedLink";
 
 export function AboutView({ partners = [] }: { partners?: Array<{ name: string; logo: string; website?: string | null; sortOrder: number; isActive: boolean }> }) {
   usePublicMotion();

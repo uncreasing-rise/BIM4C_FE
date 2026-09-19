@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { submitContactForm } from "../api/mutations";
 import { getZodFieldErrors } from "../utils/zod-errors";
-import Link from "next/link";
+import { LocalizedLink as Link } from "@/components/shared/LocalizedLink";
 import { ROUTES } from "@/constants/routes";
 import { contactSchema } from "../schemas/contact.schema";
 import { CheckCircle2 } from "lucide-react";

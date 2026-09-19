@@ -2,7 +2,7 @@
 
 import { usePublicMotion } from "@/components/motion/hooks/use-public-motion";
 
-import Link from "next/link";
+import { LocalizedLink as Link } from "@/components/shared/LocalizedLink";
 import { PageHero } from "@/components/shared/PageHero";
 import { getLegalDocuments } from "@/constants/legal-content";
 import { ROUTES } from "@/constants/routes";

@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
 import { Maximize2, Layers } from "lucide-react";
-import Link from "next/link";
+import { LocalizedLink as Link } from "@/components/shared/LocalizedLink";
 import { ROUTES } from "@/constants/routes";
 import { useLanguage } from "@/lib/i18n/context";
 
