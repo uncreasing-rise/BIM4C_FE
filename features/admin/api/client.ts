@@ -53,9 +53,11 @@ function sanitizeAdminPayload(body: unknown): unknown {
   if (Array.isArray(body)) return body.map(sanitizeAdminPayload);
   const copy = { ...(body as Record<string, unknown>) };
   delete copy.id;
+  delete copy.type;
   delete copy.createdAt;
   delete copy.updatedAt;
   delete copy.deletedAt;
+  delete copy.author;
   if (copy.status) {
     const norm = normalizeStatus(copy.status);
     if (norm) copy.status = norm;

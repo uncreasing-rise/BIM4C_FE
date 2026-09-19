@@ -18,6 +18,7 @@ import { ContentBlockEditor } from "./ContentBlockEditor";
 import { MediaPicker } from "./MediaPicker";
 import { BilingualFormTabs } from "./BilingualFormTabs";
 import { LivePreviewModal } from "./LivePreviewModal";
+import { BulletListEditor } from "./BulletListEditor";
 import { revalidateCmsCache } from "@/features/admin/api/revalidate";
 import {
   Eye,
@@ -775,24 +776,18 @@ export function ContentManager({
                 )}
 
                 {/* Highlights / Bullet points */}
-                <div className="space-y-1.5 pt-2">
-                  <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                    {adminLangTab === "en" ? "Điểm nổi bật (English - mỗi dòng một mục)" : "Điểm nổi bật (Tiếng Việt - mỗi dòng một mục)"}
-                  </label>
-                  <textarea
-                    rows={3}
-                    placeholder={adminLangTab === "en" ? "BIM Execution Planning\nOpenBIM IFC Standards\nClash Detection Workflow" : "Kế hoạch thực thi BIM\nChuẩn OpenBIM IFC\nQuy trình kiểm tra xung đột"}
-                    value={adminLangTab === "en" ? editor.highlights.join("\n") : (editor.highlights_vi ?? []).join("\n")}
-                    onChange={(e) =>
-                      update(
-                        adminLangTab === "en"
-                          ? { highlights: e.target.value.split("\n").filter(Boolean) }
-                          : { highlights_vi: e.target.value.split("\n").filter(Boolean) },
-                      )
-                    }
-                    className="w-full rounded-xl border border-border bg-background p-3 text-sm text-foreground placeholder:text-muted-foreground/60 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20 font-mono text-xs"
-                  />
-                </div>
+                <BulletListEditor
+                  label={adminLangTab === "en" ? "Điểm nổi bật (Key Highlights)" : "Điểm nổi bật (Tiếng Việt)"}
+                  placeholder={adminLangTab === "en" ? "Ví dụ: BIM Execution Planning..." : "Ví dụ: Kế hoạch thực thi BIM..."}
+                  items={adminLangTab === "en" ? (editor.highlights ?? []) : (editor.highlights_vi ?? [])}
+                  onChange={(items) =>
+                    update(
+                      adminLangTab === "en"
+                        ? { highlights: items }
+                        : { highlights_vi: items },
+                    )
+                  }
+                />
               </div>
 
               {/* SPECIFIC ATTRIBUTES CARD: DỰ ÁN */}
@@ -998,24 +993,18 @@ export function ContentManager({
                     </div>
                   </div>
 
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                      Mục tiêu & Kết quả học tập (Mỗi dòng một mục)
-                    </label>
-                    <textarea
-                      rows={3}
-                      placeholder="Làm chủ mô hình Revit & IFC&#10;Quy trình quản lý dữ liệu CDE&#10;Tự động hóa với Dynamo"
-                      value={((adminLangTab === "en" ? editor.learningOutcomes : editor.learningOutcomes_vi) ?? []).join("\n")}
-                      onChange={(e) =>
-                        update(
-                          adminLangTab === "en"
-                            ? { learningOutcomes: e.target.value.split("\n").filter(Boolean) }
-                            : { learningOutcomes_vi: e.target.value.split("\n").filter(Boolean) },
-                        )
-                      }
-                      className="w-full rounded-xl border border-border bg-background p-3 text-sm text-foreground outline-none transition focus:border-primary font-mono text-xs"
-                    />
-                  </div>
+                  <BulletListEditor
+                    label={adminLangTab === "en" ? "Mục tiêu & Chuẩn đầu ra khóa học (English)" : "Mục tiêu & Chuẩn đầu ra khóa học (Tiếng Việt)"}
+                    placeholder={adminLangTab === "en" ? "Ví dụ: Master Revit & IFC openBIM workflows..." : "Ví dụ: Làm chủ mô hình Revit & IFC..."}
+                    items={((adminLangTab === "en" ? editor.learningOutcomes : editor.learningOutcomes_vi) ?? [])}
+                    onChange={(items) =>
+                      update(
+                        adminLangTab === "en"
+                          ? { learningOutcomes: items }
+                          : { learningOutcomes_vi: items },
+                      )
+                    }
+                  />
 
                   {/* Course Curriculum Modules */}
                   <div className="border-t border-border pt-5 space-y-4">
@@ -1325,7 +1314,7 @@ export function ContentManager({
                     Google Search Preview
                   </span>
                   <div className="text-xs text-emerald-600 dark:text-emerald-400 font-mono truncate">
-                    https://bim4c.com{publicBase}/{editor.slug || "slug-url"}
+                    https://bim4c.vn{publicBase}/{editor.slug || "slug-url"}
                   </div>
                   <div className="text-sm font-semibold text-blue-600 dark:text-blue-400 line-clamp-1 hover:underline cursor-pointer">
                     {activeSeoTitle || "Tiêu đề SEO của bạn"}
@@ -1398,7 +1387,7 @@ export function ContentManager({
                 <div className="space-y-1.5">
                   <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Canonical URL</label>
                   <input
-                    placeholder="https://bim4c.com/..."
+                    placeholder="https://bim4c.vn/..."
                     value={editor.canonicalUrl ?? ""}
                     onChange={(e) => update({ canonicalUrl: e.target.value })}
                     className="w-full rounded-xl border border-border bg-background px-3.5 py-2 text-xs font-mono text-foreground outline-none transition focus:border-primary"

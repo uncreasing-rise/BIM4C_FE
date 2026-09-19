@@ -148,7 +148,7 @@ export function UsersManager() {
             </div>
             <div>
               <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Địa chỉ Email</label>
-              <Input name="email" required type="email" placeholder="admin@bim4c.com" className="bg-white dark:bg-background border-slate-200 dark:border-border" />
+              <Input name="email" required type="email" placeholder="admin@bim4c.vn" className="bg-white dark:bg-background border-slate-200 dark:border-border" />
             </div>
             <div>
               <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Mật khẩu (tối thiểu 12 ký tự)</label>

@@ -113,7 +113,7 @@ function LoginForm() {
                 maxLength={254}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="admin@bim4c.com"
+                placeholder="admin@bim4c.vn"
                 className="w-full rounded-xl border border-slate-700/70 bg-slate-900/80 px-4 py-3 text-sm text-slate-100 placeholder-slate-500 outline-none transition-all duration-200 hover:border-slate-600 focus:border-teal-400 focus:bg-slate-900 focus:ring-2 focus:ring-teal-400/20"
               />
             </div>

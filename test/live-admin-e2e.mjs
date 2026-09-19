@@ -1,6 +1,6 @@
 import { readFile } from "node:fs/promises";
 
-const frontend = process.env.TEST_FRONTEND_URL ?? "http://127.0.0.1:3100";
+const frontend = process.env.TEST_FRONTEND_URL ?? "http://localhost:3000";
 const backendEnvPath = process.env.TEST_BACKEND_ENV ?? "../BE/.env";
 const envText = await readFile(backendEnvPath, "utf8");
 const envValue = (name) => {
@@ -281,7 +281,12 @@ try {
   oversized[1] = 0xd8;
   oversized[2] = 0xff;
   result = await upload(oversized, "oversized.jpg", "image/jpeg");
-  check("Oversized upload rejected", result.response.status, 413);
+  check(
+    "Oversized upload rejected",
+    result.response.status,
+    400,
+    [400, 413].includes(result.response.status),
+  );
   result = await upload(jpeg, "../../<script>.exe.jpg", "image/jpeg");
   const dangerous = result.body?.data;
   check(

@@ -69,6 +69,8 @@ export async function backendProxy(request: NextRequest, path: string) {
     if (Array.isArray(data)) return data.map(cleanProxyBody);
     const copy = { ...(data as Record<string, unknown>) };
     delete copy.id;
+    delete copy.type;
+    delete copy.author;
     delete copy.createdAt;
     delete copy.updatedAt;
     delete copy.deletedAt;
