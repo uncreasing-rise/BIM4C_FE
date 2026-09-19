@@ -26,7 +26,7 @@ import {
 import Image from "next/image";
 import { LocalizedLink as Link } from "@/components/shared/LocalizedLink";
 import type { SiteSettingsData } from "@/features/settings/types";
-import { Download, FileText } from "lucide-react";
+import { Download } from "lucide-react";
 
 export function AboutView({
   partners = [],
