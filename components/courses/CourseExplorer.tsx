@@ -18,6 +18,7 @@ import { toLocalizedLabel } from "@/lib/utils/public-labels";
 import type { PageMeta } from "@/features/shared/types/pagination";
 import { useLanguage } from "@/lib/i18n/context";
 import { localizeContentList } from "@/lib/i18n/localize";
+import { resolveCoverImage } from "@/lib/content/cover-images";
 
 const COURSE_BASE_CATEGORIES = [
   "Nền tảng",
@@ -125,7 +126,12 @@ export function CourseExplorer({
 
                 <div className="relative aspect-[16/9] w-full overflow-hidden bg-muted">
                   <Image
-                    src={course.image}
+                    src={resolveCoverImage({
+                      slug: course.slug,
+                      category: course.category,
+                      currentImage: course.image,
+                      type: "course",
+                    })}
                     alt={course.title}
                     fill
                     sizes="(max-width:767px) 100vw, (max-width:1023px) 50vw, 33vw"

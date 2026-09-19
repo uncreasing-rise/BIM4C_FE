@@ -8,6 +8,7 @@ import { ROUTES } from "@/constants/routes";
 import { toLocalizedLabel } from "@/lib/utils/public-labels";
 import { useLanguage } from "@/lib/i18n/context";
 import { localizeContent } from "@/lib/i18n/localize";
+import { resolveCoverImage } from "@/lib/content/cover-images";
 
 export function ProjectCard({
   project: rawProject,
@@ -28,7 +29,12 @@ export function ProjectCard({
       {/* Top Image Stage with Zoom & Badges */}
       <div className="relative aspect-[16/10] w-full overflow-hidden bg-slate-950">
         <Image
-          src={project.image || "/images/news-project-coordination.webp"}
+          src={resolveCoverImage({
+            slug: project.slug,
+            category: project.category,
+            currentImage: project.image,
+            type: "project",
+          })}
           alt={project.title}
           fill
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"

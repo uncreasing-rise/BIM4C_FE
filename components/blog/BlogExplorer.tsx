@@ -16,6 +16,7 @@ import { toLocalizedLabel } from "@/lib/utils/public-labels";
 import type { PageMeta } from "@/features/shared/types/pagination";
 import { useLanguage } from "@/lib/i18n/context";
 import { localizeContentList } from "@/lib/i18n/localize";
+import { resolveCoverImage } from "@/lib/content/cover-images";
 import { cn } from "@/lib/utils";
 
 const BLOG_BASE_CATEGORIES = [
@@ -117,7 +118,12 @@ export function BlogExplorer({
                 <div className="relative aspect-[16/10] w-full overflow-hidden bg-muted">
                   <Image
                     className="object-cover transition-transform duration-700 ease-out group-hover:scale-110"
-                    src={visible[0].image}
+                    src={resolveCoverImage({
+                      slug: visible[0].slug,
+                      category: visible[0].category,
+                      currentImage: visible[0].image,
+                      type: "post",
+                    })}
                     alt={visible[0].title}
                     fill
                     sizes="(max-width:1023px) 100vw, 60vw"
@@ -176,7 +182,12 @@ export function BlogExplorer({
                   <div className="relative aspect-[16/10] sm:aspect-square w-full sm:w-36 shrink-0 overflow-hidden rounded-xl bg-muted">
                     <Image
                       className="object-cover transition-transform duration-500 ease-out group-hover:scale-110"
-                      src={item.image}
+                      src={resolveCoverImage({
+                        slug: item.slug,
+                        category: item.category,
+                        currentImage: item.image,
+                        type: "post",
+                      })}
                       alt={item.title}
                       fill
                       sizes="(max-width:639px) 100vw, 150px"

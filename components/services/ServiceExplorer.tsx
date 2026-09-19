@@ -17,6 +17,7 @@ import { toLocalizedLabel } from "@/lib/utils/public-labels";
 import type { PageMeta } from "@/features/shared/types/pagination";
 import { useLanguage } from "@/lib/i18n/context";
 import { localizeContentList } from "@/lib/i18n/localize";
+import { resolveCoverImage } from "@/lib/content/cover-images";
 
 const LEGACY_SERVICE_BASE_CATEGORIES = [
   "Tư vấn BIM",
@@ -126,7 +127,12 @@ export function ServiceExplorer({
                 >
                   <div className="relative aspect-[16/8] overflow-hidden bg-muted">
                     <Image
-                      src={service.image}
+                      src={resolveCoverImage({
+                        slug: service.slug,
+                        category: service.category,
+                        currentImage: service.image,
+                        type: "service",
+                      })}
                       alt={service.title}
                       fill
                       sizes="(max-width:767px) 100vw, (max-width:1279px) 50vw, 33vw"

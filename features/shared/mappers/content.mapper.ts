@@ -1,5 +1,6 @@
 import { getMediaUrl } from "@/lib/utils/media";
 import { getSafeVideoUrl } from "@/lib/utils/safe-url";
+import { resolveCoverImage } from "@/lib/content/cover-images";
 import type { ContentEntry } from "@/types/content";
 import type { ContentEntryDto } from "../types/content-dto";
 import {
@@ -119,9 +120,14 @@ export function mapContentDto(dto: ContentEntryDto): ContentEntry {
     title: requireString(dto.title, "title"),
     description: requireString(dto.description, "description"),
     image: getMediaUrl(
-      dto.image === "/images/service-training.jpg"
-        ? "/images/news-bim-training.webp"
-        : requireString(dto.image, "image"),
+      resolveCoverImage({
+        slug: dto.slug,
+        category:
+          typeof dto.category === "string"
+            ? dto.category
+            : dto.category?.name,
+        currentImage: dto.image,
+      }),
     ),
     eyebrow: requireString(dto.eyebrow, "eyebrow"),
     category:
