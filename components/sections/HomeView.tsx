@@ -17,6 +17,7 @@ import { toLocalizedLabel } from "@/lib/utils/public-labels";
 import type { ContentEntry } from "@/types/content";
 import type { Project } from "@/features/projects/types/project";
 import type { StrategicPartner } from "@/features/homepage/types";
+import type { SiteSettingsData } from "@/features/settings/types";
 
 interface HomeViewProps {
   rawProjects: Project[];
@@ -24,6 +25,7 @@ interface HomeViewProps {
   rawPosts: ContentEntry[];
   rawCourses: ContentEntry[];
   rawPartners?: StrategicPartner[];
+  rawSettings?: SiteSettingsData;
 }
 
 export function HomeView({
@@ -32,6 +34,7 @@ export function HomeView({
   rawPosts,
   rawCourses,
   rawPartners,
+  rawSettings,
 }: HomeViewProps) {
   usePublicMotion();
   const { t, locale } = useLanguage();
@@ -41,6 +44,13 @@ export function HomeView({
   const services = localizeContentList(rawServices, locale);
   const posts = localizeContentList(rawPosts, locale);
   const courses = localizeContentList(rawCourses, locale);
+
+  const displayMetrics = rawSettings?.metrics && rawSettings.metrics.length > 0
+    ? rawSettings.metrics.map((m) => ({
+        value: m.value,
+        label: isVi ? m.label_vi : m.label_en,
+      }))
+    : t.aboutPage.trackRecord.metrics;
 
   const servicePriority = ["tu-van-bim", "bim-coordination", "thiet-ke"];
   const orderedServices = [...services].sort((a, b) => {
@@ -123,8 +133,8 @@ export function HomeView({
 
               {/* Metrics Strip */}
               <div className="mt-8 grid grid-cols-2 gap-4 border-t border-white/15 pt-6">
-                {t.aboutPage.trackRecord.metrics.map((metric) => (
-                  <div key={metric.value}>
+                {displayMetrics.map((metric, idx) => (
+                  <div key={idx}>
                     <strong className="text-xl text-teal-300">
                       {metric.value}
                     </strong>

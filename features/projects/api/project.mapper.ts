@@ -6,7 +6,7 @@ export interface ProjectDto extends ContentEntryDto {
   category: string | { name: string };
   location: string;
   location_vi?: string | null;
-  year: string | number;
+  year?: string | number | null;
   investor?: string | null;
   investor_vi?: string | null;
   expectedCompletion?: string | null;
@@ -24,25 +24,36 @@ const PROJECT_STATUS_LABELS: Record<string, string> = {
   in_progress: "Đang thi công",
   completed: "Hoàn thành",
   archived: "Đã lưu trữ",
+  profiled: "Hồ sơ dự án",
+  DRAFT: "Bản nháp",
+  PLANNED: "Sắp triển khai",
+  IN_PROGRESS: "Đang thi công",
+  COMPLETED: "Hoàn thành",
+  ARCHIVED: "Đã lưu trữ",
+  PROFILED: "Hồ sơ dự án",
 };
 
 export function mapProjectDto(dto: ProjectDto): Project {
   const content = mapContentDto(dto);
   const category =
-    typeof dto.category === "string" ? dto.category : dto.category?.name;
-  if (!category || !dto.location || dto.year == null || !dto.status) {
-    throw new Error(
-      "Invalid project API contract: category, location, year and status are required.",
-    );
-  }
-  const rawStatus = PROJECT_STATUS_LABELS[dto.status] ?? dto.status;
+    typeof dto.category === "string"
+      ? dto.category
+      : (dto.category?.name || "Dự án");
+  const location = dto.location || "Việt Nam";
+  const year = dto.year != null ? String(dto.year) : "";
+  const rawStatus = dto.status
+    ? (PROJECT_STATUS_LABELS[dto.status] ??
+       PROJECT_STATUS_LABELS[dto.status.toLowerCase()] ??
+       dto.status)
+    : "Hồ sơ dự án";
+
   return {
     ...content,
     id: dto.id ?? undefined,
     category,
-    location: dto.location,
-    location_vi: dto.location_vi ?? dto.location,
-    year: String(dto.year),
+    location,
+    location_vi: dto.location_vi ?? location,
+    year,
     investor: dto.investor ?? undefined,
     investor_vi: dto.investor_vi ?? dto.investor ?? undefined,
     expectedCompletion: dto.expectedCompletion ?? undefined,

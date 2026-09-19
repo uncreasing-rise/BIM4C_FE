@@ -43,9 +43,8 @@ const queryString = (input: Record<string, string | number | undefined>) => {
 function normalizeStatus(val: unknown): string | undefined {
   if (typeof val !== "string") return undefined;
   const upper = val.trim().toUpperCase();
-  if (["PUBLISHED", "ACTIVE"].includes(upper)) return "PUBLISHED";
-  if (["ARCHIVED", "INACTIVE"].includes(upper)) return "ARCHIVED";
-  if (["DRAFT", "PLANNED"].includes(upper)) return "DRAFT";
+  if (upper === "ACTIVE") return "PUBLISHED";
+  if (upper === "INACTIVE") return "ARCHIVED";
   return upper;
 }
 

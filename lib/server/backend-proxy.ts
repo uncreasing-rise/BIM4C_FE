@@ -66,9 +66,8 @@ export async function backendProxy(request: NextRequest, path: string) {
     delete copy.deletedAt;
     if (typeof copy.status === "string") {
       const upper = copy.status.trim().toUpperCase();
-      if (["PUBLISHED", "ACTIVE"].includes(upper)) copy.status = "PUBLISHED";
-      else if (["ARCHIVED", "INACTIVE"].includes(upper)) copy.status = "ARCHIVED";
-      else if (["DRAFT", "PLANNED"].includes(upper)) copy.status = "DRAFT";
+      if (upper === "ACTIVE") copy.status = "PUBLISHED";
+      else if (upper === "INACTIVE") copy.status = "ARCHIVED";
       else copy.status = upper;
     }
     if (copy.category && typeof copy.category === "object") {

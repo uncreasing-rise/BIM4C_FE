@@ -62,26 +62,25 @@ export function resolveCoverImage(options: {
 }): string {
   const { slug, category, currentImage, type } = options;
 
-  // 1. If custom valid image provided that is not a restricted placeholder
-  if (currentImage && currentImage.trim() && !currentImage.includes("about.jpg") && !currentImage.includes("hero.jpg")) {
-    // If it was the legacy service-training.jpg which had visual quirks, redirect to webp
+  // 1. If valid image provided in database/admin, strictly respect and return it
+  if (typeof currentImage === "string" && currentImage.trim().length > 0) {
     if (currentImage === "/images/service-training.jpg") {
       return "/images/news-bim-training.webp";
     }
-    return currentImage;
+    return currentImage.trim();
   }
 
-  // 2. Lookup by explicit slug mapping
+  // 2. Fallback lookup by explicit slug mapping if no image is set
   if (slug && SERVICE_COVER_MAP[slug]) {
     return SERVICE_COVER_MAP[slug];
   }
 
-  // 3. Lookup by category
+  // 3. Fallback lookup by category
   if (category && CATEGORY_FALLBACK_MAP[category]) {
     return CATEGORY_FALLBACK_MAP[category];
   }
 
-  // 4. Lookup by content type default
+  // 4. Content type default fallback
   if (type === "project") return "/images/project-matrix.jpg";
   if (type === "course") return "/images/news-bim-training.webp";
   if (type === "post") return "/images/news-project-coordination.webp";

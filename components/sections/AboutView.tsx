@@ -25,10 +25,26 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { LocalizedLink as Link } from "@/components/shared/LocalizedLink";
+import type { SiteSettingsData } from "@/features/settings/types";
+import { Download, FileText } from "lucide-react";
 
-export function AboutView({ partners = [] }: { partners?: Array<{ name: string; logo: string; website?: string | null; sortOrder: number; isActive: boolean }> }) {
+export function AboutView({
+  partners = [],
+  rawSettings,
+}: {
+  partners?: Array<{ name: string; logo: string; website?: string | null; sortOrder: number; isActive: boolean }>;
+  rawSettings?: SiteSettingsData;
+}) {
   usePublicMotion();
   const { t, locale } = useLanguage();
+
+  const isVi = locale === "vi";
+  const displayMetrics = rawSettings?.metrics && rawSettings.metrics.length > 0
+    ? rawSettings.metrics.map((m) => ({
+        value: m.value,
+        label: isVi ? m.label_vi : m.label_en,
+      }))
+    : t.aboutPage.trackRecord.metrics;
 
   const values = [
     {
@@ -332,6 +348,24 @@ export function AboutView({ partners = [] }: { partners?: Array<{ name: string; 
       <DeliveryProcess />
       <Partners customPartners={partners} />
 
+      {/* Track Record Key Metrics Strip */}
+      <section className="border-y bg-slate-900 py-12 text-white">
+        <div className="site-container">
+          <div className="grid grid-cols-2 gap-6 md:grid-cols-4 md:divide-x md:divide-white/10">
+            {displayMetrics.map((metric, idx) => (
+              <div key={idx} className={idx !== 0 ? "md:pl-6" : ""}>
+                <span className="text-3xl font-extrabold text-teal-300 sm:text-4xl">
+                  {metric.value}
+                </span>
+                <p className="mt-1 text-xs font-medium text-slate-300 sm:text-sm">
+                  {metric.label}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Bottom CTA */}
       <section className="py-16 border-t bg-card/60">
         <div className="site-container flex flex-col items-start justify-between gap-6 rounded-2xl border bg-card p-8 md:p-12 md:flex-row md:items-center shadow-lg">
@@ -341,16 +375,36 @@ export function AboutView({ partners = [] }: { partners?: Array<{ name: string; 
               {t.aboutPage.ctaTitle}
             </h2>
           </div>
-          <Button
-            asChild
-            size="lg"
-            className="rounded-xl font-semibold shadow-md shrink-0"
-          >
-            <Link href={ROUTES.contact}>
-              {t.common.discussProject}{" "}
-              <ArrowUpRight className="ml-1.5 size-4" />
-            </Link>
-          </Button>
+          <div className="flex flex-wrap items-center gap-3.5">
+            {rawSettings?.brochureUrl && (
+              <Button
+                asChild
+                variant="outline"
+                size="lg"
+                className="rounded-xl font-semibold shadow-xs"
+              >
+                <a
+                  href={rawSettings.brochureUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="gap-2 inline-flex items-center"
+                >
+                  <Download className="size-4 text-primary" />
+                  <span>{isVi ? "Tải Hồ sơ năng lực (PDF)" : "Download Brochure (PDF)"}</span>
+                </a>
+              </Button>
+            )}
+            <Button
+              asChild
+              size="lg"
+              className="rounded-xl font-semibold shadow-md shrink-0"
+            >
+              <Link href={ROUTES.contact}>
+                {t.common.discussProject}{" "}
+                <ArrowUpRight className="ml-1.5 size-4" />
+              </Link>
+            </Button>
+          </div>
         </div>
       </section>
     </>

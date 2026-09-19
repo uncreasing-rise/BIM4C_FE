@@ -1,22 +1,11 @@
 "use client";
 
-import { ZaloIcon } from "@/components/shared/SocialLinks";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { revalidateCmsCache } from "@/features/admin/api/revalidate";
-import {
-  Bell,
-  Building2,
-  CheckCircle2,
-  FileText,
-  Globe,
-  MailCheck,
-  Save,
-  Send,
-  Share2,
-  Zap,
-} from "lucide-react";
+import { DEFAULT_METRICS, type CompanyMetric } from "@/features/settings/types";
+import { BarChart3, Building2, FileText, Globe, Save, Share2 } from "lucide-react";
 import { FormEvent, useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -25,19 +14,12 @@ type Settings = {
   email: string;
   phone?: string;
   address?: string;
+  brochureUrl?: string;
+  metrics?: CompanyMetric[];
   socialLinks: Record<string, string>;
   defaultSeoTitle: string;
   defaultSeoDescription: string;
   defaultOgImage?: string;
-  telegramBotToken?: string;
-  telegramChatId?: string;
-  alertEmail?: string;
-  zaloAdminPhone?: string;
-  zaloOaId?: string;
-  zaloWebhookUrl?: string;
-  autoResponderSubject?: string;
-  autoResponderBody?: string;
-  autoResponderBrochureUrl?: string;
 };
 
 export function SettingsManager() {
@@ -47,9 +29,6 @@ export function SettingsManager() {
   const [msg, setMsg] = useState("");
   const [socialLinksJson, setSocialLinksJson] = useState("");
   const [socialLinksError, setSocialLinksError] = useState("");
-  const [testingTg, setTestingTg] = useState(false);
-  const [testingEmail, setTestingEmail] = useState(false);
-  const [testingZalo, setTestingZalo] = useState(false);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -68,7 +47,13 @@ export function SettingsManager() {
           throw new Error(body?.message ?? "Không thể tải cài đặt");
         }
 
-        const merged = body.data;
+        const merged: Settings = {
+          ...body.data,
+          metrics:
+            body.data.metrics && Array.isArray(body.data.metrics) && body.data.metrics.length > 0
+              ? body.data.metrics
+              : DEFAULT_METRICS,
+        };
         setData(merged);
         setSocialLinksJson(JSON.stringify(merged.socialLinks, null, 2));
         setMsg("");
@@ -85,6 +70,16 @@ export function SettingsManager() {
     void load();
     return () => controller.abort();
   }, []);
+
+  const handleMetricChange = (index: number, field: keyof CompanyMetric, val: string) => {
+    if (!data) return;
+    const currentMetrics = [...(data.metrics || DEFAULT_METRICS)];
+    if (!currentMetrics[index]) {
+      currentMetrics[index] = { value: "", label_vi: "", label_en: "" };
+    }
+    currentMetrics[index] = { ...currentMetrics[index], [field]: val };
+    setData({ ...data, metrics: currentMetrics });
+  };
 
   async function save(e: FormEvent) {
     e.preventDefault();
@@ -110,13 +105,26 @@ export function SettingsManager() {
     }
     setBusy(true);
     setMsg("");
-    const toastId = toast.loading("Đang lưu cấu hình hệ thống & thông báo...");
+    const toastId = toast.loading("Đang lưu cấu hình hệ thống...");
 
     try {
+      const payload: Settings = {
+        companyName: data.companyName,
+        email: data.email,
+        phone: data.phone || (null as unknown as string),
+        address: data.address || (null as unknown as string),
+        brochureUrl: data.brochureUrl || (null as unknown as string),
+        metrics: data.metrics || DEFAULT_METRICS,
+        socialLinks,
+        defaultSeoTitle: data.defaultSeoTitle,
+        defaultSeoDescription: data.defaultSeoDescription,
+        defaultOgImage: data.defaultOgImage || (null as unknown as string),
+      };
+
       const response = await fetch("/api/admin/settings", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...data, socialLinks }),
+        body: JSON.stringify(payload),
       });
       const body = (await response.json().catch(() => null)) as {
         message?: string;
@@ -135,116 +143,6 @@ export function SettingsManager() {
       setMsg("Không thể kết nối đến máy chủ.");
     } finally {
       setBusy(false);
-    }
-  }
-
-  async function handleTestTelegram() {
-    if (!data?.telegramBotToken || !data?.telegramChatId) {
-      toast.error(
-        "Vui lòng nhập Telegram Bot Token và Chat ID trước khi gửi thử!",
-      );
-      return;
-    }
-    setTestingTg(true);
-    const toastId = toast.loading(
-      "Đang gửi thông báo Lead mẫu tới Telegram của Quản trị viên...",
-    );
-    try {
-      const res = await fetch("/api/admin/automation/test", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          type: "telegram",
-          botToken: data.telegramBotToken,
-          chatId: data.telegramChatId,
-        }),
-      });
-      const resJson = await res.json();
-      if (!res.ok) {
-        throw new Error(resJson.message || "Lỗi khi gửi Telegram");
-      }
-      toast.success(
-        resJson.data?.message ||
-          "Đã gửi thông báo thử nghiệm thành công tới Telegram!",
-        { id: toastId },
-      );
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Kiểm tra thất bại", {
-        id: toastId,
-      });
-    } finally {
-      setTestingTg(false);
-    }
-  }
-
-  async function handleTestZalo() {
-    if (!data?.zaloAdminPhone && !data?.zaloWebhookUrl) {
-      toast.error("Vui lòng nhập Số điện thoại Zalo của Quản trị viên!");
-      return;
-    }
-    setTestingZalo(true);
-    const toastId = toast.loading(
-      "Đang gửi tin nhắn báo Lead mới tới Zalo của Quản trị viên...",
-    );
-    try {
-      const res = await fetch("/api/admin/automation/test", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          type: "zalo",
-          zaloAdminPhone: data.zaloAdminPhone,
-          zaloOaId: data.zaloOaId,
-          zaloWebhookUrl: data.zaloWebhookUrl,
-        }),
-      });
-      const resJson = await res.json();
-      if (!res.ok) {
-        throw new Error(resJson.message || "Lỗi kiểm tra Zalo");
-      }
-      toast.success(
-        resJson.data?.message ||
-          "Đã gửi tin nhắn báo Lead tới Zalo của Quản trị viên!",
-        { id: toastId },
-      );
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Kiểm tra thất bại", {
-        id: toastId,
-      });
-    } finally {
-      setTestingZalo(false);
-    }
-  }
-
-  async function handleTestEmail() {
-    if (!data?.alertEmail) {
-      toast.error("Vui lòng nhập Email nhận thông báo!");
-      return;
-    }
-    setTestingEmail(true);
-    const toastId = toast.loading("Đang kiểm tra kết nối dịch vụ Email...");
-    try {
-      const res = await fetch("/api/admin/automation/test", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          type: "email",
-          recipientEmail: data.alertEmail,
-        }),
-      });
-      const resJson = await res.json();
-      if (!res.ok) {
-        throw new Error(resJson.message || "Lỗi cấu hình Email");
-      }
-      toast.success(
-        `Đã kích hoạt gửi email thông báo tới ${data.alertEmail}!`,
-        { id: toastId },
-      );
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Kiểm tra thất bại", {
-        id: toastId,
-      });
-    } finally {
-      setTestingEmail(false);
     }
   }
 
@@ -270,7 +168,7 @@ export function SettingsManager() {
   return (
     <form className="space-y-6" onSubmit={save}>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Card 1: Thông tin doanh nghiệp */}
+        {/* Card 1: Thông tin doanh nghiệp & Hồ sơ năng lực */}
         <div className="rounded-2xl border border-slate-200/80 dark:border-border bg-white dark:bg-card p-6 shadow-xs flex flex-col gap-4">
           <h3 className="text-base font-semibold text-foreground flex items-center gap-2 border-b border-slate-200/80 dark:border-border/80 pb-3">
             <Building2 className="size-4 text-primary" /> Thông tin doanh nghiệp
@@ -284,6 +182,7 @@ export function SettingsManager() {
               onChange={(e) =>
                 setData({ ...data, companyName: e.target.value })
               }
+              required
               className="bg-white dark:bg-background border-slate-200 dark:border-border"
             />
           </div>
@@ -295,6 +194,7 @@ export function SettingsManager() {
               type="email"
               value={data.email ?? ""}
               onChange={(e) => setData({ ...data, email: e.target.value })}
+              required
               className="bg-white dark:bg-background border-slate-200 dark:border-border"
             />
           </div>
@@ -318,6 +218,17 @@ export function SettingsManager() {
               className="bg-white dark:bg-background border-slate-200 dark:border-border"
             />
           </div>
+          <div>
+            <label className="block text-xs font-semibold text-muted-foreground mb-1.5 flex items-center gap-1.5">
+              <FileText className="size-3.5 text-primary" /> Đường dẫn tải Brochure / Hồ sơ năng lực (PDF)
+            </label>
+            <Input
+              value={data.brochureUrl ?? ""}
+              placeholder="https://www.bim4c.vn/brochure.pdf hoặc /files/hsnl.pdf"
+              onChange={(e) => setData({ ...data, brochureUrl: e.target.value })}
+              className="bg-white dark:bg-background border-slate-200 dark:border-border"
+            />
+          </div>
         </div>
 
         {/* Card 2: Cấu hình SEO mặc định & Mạng xã hội */}
@@ -334,6 +245,7 @@ export function SettingsManager() {
               onChange={(e) =>
                 setData({ ...data, defaultSeoTitle: e.target.value })
               }
+              required
               className="bg-white dark:bg-background border-slate-200 dark:border-border"
             />
           </div>
@@ -347,6 +259,7 @@ export function SettingsManager() {
               onChange={(e) =>
                 setData({ ...data, defaultSeoDescription: e.target.value })
               }
+              required
               className="bg-white dark:bg-background border-slate-200 dark:border-border resize-none"
             />
           </div>
@@ -421,212 +334,65 @@ export function SettingsManager() {
                 />
               </div>
             </div>
+            {socialLinksError && (
+              <p className="text-xs text-destructive">{socialLinksError}</p>
+            )}
           </div>
         </div>
+      </div>
 
-
-        {/* Card 3: Tự động hóa Thông báo Lead (Zalo, Telegram & Email cho Quản trị viên) */}
-        <div className="rounded-2xl border border-slate-200/80 dark:border-border bg-white dark:bg-card p-6 shadow-xs flex flex-col gap-4">
-          <div className="flex items-center justify-between border-b border-slate-200/80 dark:border-border/80 pb-3">
-            <h3 className="text-base font-semibold text-foreground flex items-center gap-2">
-              <Zap className="size-4 text-amber-500" /> Báo Lead mới cho Ban
-              Quản trị
-            </h3>
-            <span className="text-[11px] font-semibold bg-sky-50 text-sky-700 dark:bg-sky-950/40 dark:text-sky-300 px-2 py-0.5 rounded-full border border-sky-200/60 dark:border-sky-800/60 flex items-center gap-1">
-              <Bell className="size-3" /> Zalo & Telegram Alert
-            </span>
-          </div>
-
-          <p className="text-xs text-muted-foreground leading-relaxed">
-            Ngay khi có khách hàng để lại thông tin cần tư vấn hoặc đăng ký học,
-            hệ thống sẽ{" "}
-            <strong>tức thì gửi tin nhắn báo cho Quản trị viên</strong> qua
-            Zalo, Telegram và Email để kịp thời liên hệ tư vấn.
-          </p>
-
-          {/* 1. Zalo Alert cho Quản trị viên */}
-          <div className="rounded-xl border border-sky-500/20 bg-sky-500/[0.04] p-3.5 space-y-2.5">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-sky-700 dark:text-sky-400 flex items-center gap-1.5">
-                <ZaloIcon className="size-3.5 text-[#0068FF]" /> 1. Báo Lead qua
-                Zalo Quản trị viên
-              </span>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                disabled={testingZalo}
-                onClick={handleTestZalo}
-                className="h-7 px-2.5 text-[11px] font-semibold text-[#0068FF] hover:bg-[#0068FF]/10"
-              >
-                {testingZalo ? "Đang gửi..." : "⚡ Test Báo Zalo"}
-              </Button>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+      {/* Card 3: Chỉ số năng lực & Thành tựu (Track Record Metrics) */}
+      <div className="rounded-2xl border border-slate-200/80 dark:border-border bg-white dark:bg-card p-6 shadow-xs flex flex-col gap-4">
+        <h3 className="text-base font-semibold text-foreground flex items-center gap-2 border-b border-slate-200/80 dark:border-border/80 pb-3">
+          <BarChart3 className="size-4 text-primary" /> Chỉ số Năng lực & Thành tựu (Track Record Metrics)
+        </h3>
+        <p className="text-xs text-muted-foreground">
+          Các chỉ số này được hiển thị nổi bật trên Trang Chủ (Hero / Stats section) và Trang Giới Thiệu (About Us).
+        </p>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 pt-2">
+          {(data.metrics || DEFAULT_METRICS).map((metric, idx) => (
+            <div
+              key={idx}
+              className="rounded-xl border border-slate-200 dark:border-border/80 p-4 bg-slate-50/50 dark:bg-muted/20 space-y-3"
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-primary uppercase">Chỉ số #{idx + 1}</span>
+              </div>
               <div>
                 <label className="block text-[11px] font-medium text-muted-foreground mb-1">
-                  SĐT Zalo nhận tin nhắn báo Lead
+                  Giá trị (Số liệu)
                 </label>
                 <Input
-                  placeholder="0901 234 567"
-                  value={data.zaloAdminPhone ?? ""}
-                  onChange={(e) =>
-                    setData({ ...data, zaloAdminPhone: e.target.value })
-                  }
-                  className="bg-white dark:bg-background border-slate-200 dark:border-border font-mono text-xs h-8"
+                  value={metric.value}
+                  placeholder="50+, 100+, 98%..."
+                  onChange={(e) => handleMetricChange(idx, "value", e.target.value)}
+                  className="bg-white dark:bg-background text-sm font-bold"
                 />
               </div>
               <div>
                 <label className="block text-[11px] font-medium text-muted-foreground mb-1">
-                  Zalo OA ID / Webhook URL
+                  Nhãn Tiếng Việt
                 </label>
                 <Input
-                  placeholder="18293847291029 hoặc Webhook"
-                  value={data.zaloWebhookUrl ?? ""}
-                  onChange={(e) =>
-                    setData({ ...data, zaloWebhookUrl: e.target.value })
-                  }
-                  className="bg-white dark:bg-background border-slate-200 dark:border-border font-mono text-xs h-8"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* 2. Telegram Alert cho Quản trị viên */}
-          <div className="rounded-xl border border-slate-200/80 dark:border-border/70 bg-slate-50/70 dark:bg-muted/30 p-3.5 space-y-2.5">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-foreground flex items-center gap-1.5">
-                <Send className="size-3.5 text-sky-500" /> 2. Báo Lead qua
-                Telegram Group
-              </span>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                disabled={testingTg}
-                onClick={handleTestTelegram}
-                className="h-7 px-2.5 text-[11px] text-sky-600 hover:text-sky-700 hover:bg-sky-50 dark:hover:bg-sky-950/50"
-              >
-                {testingTg ? "Đang gửi..." : "🔔 Test Telegram"}
-              </Button>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              <div>
-                <label className="block text-[11px] font-medium text-muted-foreground mb-1">
-                  Bot API Token
-                </label>
-                <Input
-                  type="password"
-                  placeholder="123456:ABC-DEF..."
-                  value={data.telegramBotToken ?? ""}
-                  onChange={(e) =>
-                    setData({ ...data, telegramBotToken: e.target.value })
-                  }
-                  className="bg-white dark:bg-background border-slate-200 dark:border-border font-mono text-xs h-8"
+                  value={metric.label_vi}
+                  placeholder="Dự án BIM & Quản lý"
+                  onChange={(e) => handleMetricChange(idx, "label_vi", e.target.value)}
+                  className="bg-white dark:bg-background text-xs"
                 />
               </div>
               <div>
                 <label className="block text-[11px] font-medium text-muted-foreground mb-1">
-                  Chat ID / Group nhận tin
+                  Nhãn Tiếng Anh
                 </label>
                 <Input
-                  placeholder="-100192837465"
-                  value={data.telegramChatId ?? ""}
-                  onChange={(e) =>
-                    setData({ ...data, telegramChatId: e.target.value })
-                  }
-                  className="bg-white dark:bg-background border-slate-200 dark:border-border font-mono text-xs h-8"
+                  value={metric.label_en}
+                  placeholder="BIM & Management Projects"
+                  onChange={(e) => handleMetricChange(idx, "label_en", e.target.value)}
+                  className="bg-white dark:bg-background text-xs"
                 />
               </div>
             </div>
-          </div>
-
-          {/* 3. Email Alert cho Quản trị viên */}
-          <div className="rounded-xl border border-slate-200/80 dark:border-border/70 bg-slate-50/70 dark:bg-muted/30 p-3.5 space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-foreground flex items-center gap-1.5">
-                <MailCheck className="size-3.5 text-primary" /> 3. Email nhận
-                thông báo Lead mới
-              </span>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                disabled={testingEmail}
-                onClick={handleTestEmail}
-                className="h-7 px-2.5 text-[11px] text-primary hover:bg-primary/10"
-              >
-                {testingEmail ? "Đang gửi..." : "✉️ Test Email"}
-              </Button>
-            </div>
-            <Input
-              type="email"
-              placeholder="admin@bim4c.com"
-              value={data.alertEmail ?? ""}
-              onChange={(e) => setData({ ...data, alertEmail: e.target.value })}
-              className="bg-white dark:bg-background border-slate-200 dark:border-border text-xs h-8"
-            />
-          </div>
-        </div>
-
-        {/* Card 4: Email Chào Mừng & Phản hồi Tự động (Auto-responder) */}
-        <div className="rounded-2xl border border-slate-200/80 dark:border-border bg-white dark:bg-card p-6 shadow-xs flex flex-col gap-4">
-          <div className="flex items-center justify-between border-b border-slate-200/80 dark:border-border/80 pb-3">
-            <h3 className="text-base font-semibold text-foreground flex items-center gap-2">
-              <MailCheck className="size-4 text-emerald-500" /> Email cảm ơn &
-              Gửi tài liệu tự động
-            </h3>
-            <span className="text-[11px] font-semibold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 px-2 py-0.5 rounded-full border border-emerald-200/60 dark:border-emerald-800/60 flex items-center gap-1">
-              <CheckCircle2 className="size-3" /> Đang bật
-            </span>
-          </div>
-
-          <p className="text-xs text-muted-foreground leading-relaxed">
-            Hệ thống tự động gửi email chào mừng và gửi kèm tài liệu / đề cương
-            khóa học ngay khi khách hàng để lại thông tin tư vấn thành công.
-          </p>
-
-          <div>
-            <label className="block text-xs font-semibold text-muted-foreground mb-1.5">
-              Tiêu đề Email gửi khách hàng
-            </label>
-            <Input
-              value={data.autoResponderSubject ?? ""}
-              onChange={(e) =>
-                setData({ ...data, autoResponderSubject: e.target.value })
-              }
-              className="bg-white dark:bg-background border-slate-200 dark:border-border text-xs"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-muted-foreground mb-1.5">
-              Nội dung thư cảm ơn & Lộ trình tư vấn
-            </label>
-            <Textarea
-              rows={4}
-              value={data.autoResponderBody ?? ""}
-              onChange={(e) =>
-                setData({ ...data, autoResponderBody: e.target.value })
-              }
-              className="bg-white dark:bg-background border-slate-200 dark:border-border resize-none text-xs leading-relaxed"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-muted-foreground mb-1.5 flex items-center gap-1">
-              <FileText className="size-3.5 text-primary" /> Link đính kèm
-              Brochure / Tài liệu BIM
-            </label>
-            <Input
-              value={data.autoResponderBrochureUrl ?? ""}
-              onChange={(e) =>
-                setData({ ...data, autoResponderBrochureUrl: e.target.value })
-              }
-              placeholder="/documents/hsnl-bim4c-2026.pdf"
-              className="bg-white dark:bg-background border-slate-200 dark:border-border text-xs font-mono"
-            />
-          </div>
+          ))}
         </div>
       </div>
 
@@ -637,7 +403,7 @@ export function SettingsManager() {
           className="gap-2 px-8 py-2.5 font-semibold shadow-xs text-sm"
         >
           <Save className="size-4" />
-          <span>{busy ? "Đang lưu cấu hình…" : "Lưu tất cả cấu hình"}</span>
+          <span>{busy ? "Đang lưu cấu hình…" : "Lưu cài đặt"}</span>
         </Button>
       </div>
     </form>

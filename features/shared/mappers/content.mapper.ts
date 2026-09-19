@@ -17,44 +17,58 @@ export class ContentMappingError extends Error {
   }
 }
 
-function requireString(value: unknown, field: string): string {
-  if (typeof value !== "string" || !value.trim())
-    throw new ContentMappingError(field);
-  return value;
+function safeString(value: unknown, fallback = ""): string {
+  if (typeof value === "string" && value.trim()) return value.trim();
+  return fallback;
 }
 
 export function mapContentDto(dto: ContentEntryDto): ContentEntry {
-  if (!dto || typeof dto !== "object") throw new ContentMappingError("content");
-  if (!Array.isArray(dto.sections) && !Array.isArray(dto.contentBlocks))
-    throw new ContentMappingError("sections/contentBlocks");
-  if (
-    !Array.isArray(dto.highlights) ||
-    !dto.highlights.every((item) => typeof item === "string")
-  )
-    throw new ContentMappingError("highlights");
-  const sections = (dto.sections ?? []).map((section, index) => ({
-    title: requireString(section?.title, `sections[${index}].title`),
-    body: requireString(section?.body, `sections[${index}].body`),
-    images: section.images?.map((image, imageIndex) => ({
-      url: requireString(
-        image.url,
-        `sections[${index}].images[${imageIndex}].url`,
-      ),
-      alt: image.alt?.trim() || "",
-      caption: image.caption?.trim() || undefined,
-      width: image.width,
-      height: image.height,
-    })),
-    imageLayout: section.imageLayout,
-    unorderedList: section.unorderedList
-      ?.filter((item) => typeof item === "string" && item.trim())
-      .map((item) => item.trim()),
-    orderedList: section.orderedList
-      ?.filter((item) => typeof item === "string" && item.trim())
-      .map((item) => item.trim()),
-    quote: section.quote?.trim() || undefined,
-    videoUrl: getSafeVideoUrl(section.videoUrl),
+  if (!dto || typeof dto !== "object") {
+    return {
+      slug: "content",
+      title: "",
+      description: "",
+      image: "/images/service-bim.jpg",
+      eyebrow: "",
+      highlights: [],
+      sections: [],
+      contentBlocks: [],
+    };
+  }
+
+  const rawSections = Array.isArray(dto.sections) ? dto.sections : [];
+  const sections = rawSections.map((section, index) => ({
+    title: safeString(section?.title, `Mục ${index + 1}`),
+    body: safeString(section?.body, ""),
+    images: Array.isArray(section?.images)
+      ? section.images
+          .map((image, imageIndex) => ({
+            url: safeString(
+              image?.url,
+              "",
+            ),
+            alt: safeString(image?.alt, ""),
+            caption: image?.caption?.trim() || undefined,
+            width: image?.width,
+            height: image?.height,
+          }))
+          .filter((img) => Boolean(img.url))
+      : undefined,
+    imageLayout: section?.imageLayout,
+    unorderedList: Array.isArray(section?.unorderedList)
+      ? section.unorderedList
+          .filter((item) => typeof item === "string" && item.trim())
+          .map((item) => item.trim())
+      : undefined,
+    orderedList: Array.isArray(section?.orderedList)
+      ? section.orderedList
+          .filter((item) => typeof item === "string" && item.trim())
+          .map((item) => item.trim())
+      : undefined,
+    quote: section?.quote?.trim() || undefined,
+    videoUrl: getSafeVideoUrl(section?.videoUrl),
   }));
+
   const legacyBlocks: ContentBlock[] = sections.flatMap((section, index) => {
     const slug = section.title
       ? section.title
@@ -114,22 +128,30 @@ export function mapContentDto(dto: ContentEntryDto): ContentEntry {
       });
     return blocks;
   });
+
+  const rawImage =
+    typeof dto.image === "string" && dto.image.trim().length > 0
+      ? dto.image.trim()
+      : resolveCoverImage({
+          slug: dto.slug,
+          category:
+            typeof dto.category === "string"
+              ? dto.category
+              : dto.category?.name,
+          currentImage: dto.image,
+        });
+
+  const rawHighlights = Array.isArray(dto.highlights)
+    ? dto.highlights.filter((item): item is string => typeof item === "string")
+    : [];
+
   const rawContent = {
     id: typeof dto.id === "string" && dto.id ? dto.id : undefined,
-    slug: requireString(dto.slug, "slug"),
-    title: requireString(dto.title, "title"),
-    description: requireString(dto.description, "description"),
-    image: getMediaUrl(
-      resolveCoverImage({
-        slug: dto.slug,
-        category:
-          typeof dto.category === "string"
-            ? dto.category
-            : dto.category?.name,
-        currentImage: dto.image,
-      }),
-    ),
-    eyebrow: requireString(dto.eyebrow, "eyebrow"),
+    slug: safeString(dto.slug, "content"),
+    title: safeString(dto.title, ""),
+    description: safeString(dto.description, ""),
+    image: getMediaUrl(rawImage),
+    eyebrow: safeString(dto.eyebrow, ""),
     category:
       typeof dto.category === "string"
         ? dto.category
@@ -140,16 +162,18 @@ export function mapContentDto(dto: ContentEntryDto): ContentEntry {
       dto.contentBlocks === undefined
         ? legacyBlocks
         : parseContentBlocks(dto.contentBlocks),
-    highlights: dto.highlights,
+    highlights: rawHighlights,
     seoTitle: dto.seoTitle?.trim() || undefined,
     seoDescription: dto.seoDescription?.trim() || undefined,
     seoImage: dto.seoImage ? getMediaUrl(dto.seoImage) : undefined,
     canonicalUrl: dto.canonicalUrl?.trim() || undefined,
     authorName: dto.authorName?.trim() || undefined,
-    relatedIds: dto.relatedIds?.filter(
-      (item): item is string =>
-        typeof item === "string" && Boolean(item.trim()),
-    ),
+    relatedIds: Array.isArray(dto.relatedIds)
+      ? dto.relatedIds.filter(
+          (item): item is string =>
+            typeof item === "string" && Boolean(item.trim()),
+        )
+      : undefined,
     status: dto.status ?? undefined,
     publishedAt: dto.publishedAt ?? undefined,
     createdAt: dto.createdAt ?? undefined,
@@ -158,27 +182,36 @@ export function mapContentDto(dto: ContentEntryDto): ContentEntry {
     level: dto.level?.trim() || undefined,
     price: dto.price == null ? undefined : String(dto.price),
     instructor: dto.instructor?.trim() || undefined,
-    learningOutcomes: dto.learningOutcomes?.filter(
-      (item): item is string =>
-        typeof item === "string" && Boolean(item.trim()),
-    ),
-    gallery: dto.gallery?.map((image) => ({
-      url: getMediaUrl(image.url),
-      alt: image.alt?.trim() || "",
-      caption: image.caption?.trim() || undefined,
-      width: image.width,
-      height: image.height,
-    })),
-    curriculum: dto.curriculum
-      ?.filter(
-        (item) => typeof item?.title === "string" && Boolean(item.title.trim()),
-      )
-      .map((item) => ({
-        id: item.id,
-        title: item.title.trim(),
-        description: item.description?.trim() || undefined,
-        sortOrder: item.sortOrder,
-      })),
+    learningOutcomes: Array.isArray(dto.learningOutcomes)
+      ? dto.learningOutcomes.filter(
+          (item): item is string =>
+            typeof item === "string" && Boolean(item.trim()),
+        )
+      : undefined,
+    gallery: Array.isArray(dto.gallery)
+      ? dto.gallery
+          .map((image) => ({
+            url: getMediaUrl(image?.url || ""),
+            alt: image?.alt?.trim() || "",
+            caption: image?.caption?.trim() || undefined,
+            width: image?.width,
+            height: image?.height,
+          }))
+          .filter((img) => Boolean(img.url))
+      : undefined,
+    curriculum: Array.isArray(dto.curriculum)
+      ? dto.curriculum
+          .filter(
+            (item) =>
+              typeof item?.title === "string" && Boolean(item.title.trim()),
+          )
+          .map((item) => ({
+            id: item.id,
+            title: item.title.trim(),
+            description: item.description?.trim() || undefined,
+            sortOrder: item.sortOrder,
+          }))
+      : undefined,
   };
 
   return {
