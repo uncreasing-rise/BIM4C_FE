@@ -36,7 +36,7 @@ export function BlogExplorer({
   posts: rawPosts,
   meta,
   categoryItems = [],
-  detailRoute = ROUTES.technicalDetail,
+  detailRoute = ROUTES.technical,
   catalogueEyebrow,
   catalogueTitle,
   catalogueDesc,
@@ -47,7 +47,7 @@ export function BlogExplorer({
   posts: ContentEntry[];
   meta: PageMeta;
   categoryItems?: PostCategoryItem[];
-  detailRoute?: (slug: string) => string;
+  detailRoute?: string;
   catalogueEyebrow?: string;
   catalogueTitle?: string;
   catalogueDesc?: string;
@@ -80,6 +80,7 @@ export function BlogExplorer({
   const pages = meta.totalPages;
   const page = meta.page;
   const visible = posts;
+  const detailHref = (slug: string) => `${detailRoute}/${slug}`;
 
   const formatFilterLabel = (val: string) => toLocalizedLabel(val, locale);
 
@@ -136,7 +137,7 @@ export function BlogExplorer({
               >
                 <Link
                   className="absolute inset-0 z-20 rounded-3xl focus:outline-none"
-                  href={detailRoute(visible[0].slug)}
+                  href={detailHref(visible[0].slug)}
                   aria-label={
                     (locale === "vi" ? "Xem bài viết: " : "View article: ") +
                     visible[0].title
@@ -200,7 +201,7 @@ export function BlogExplorer({
                 >
                   <Link
                     className="absolute inset-0 z-20 rounded-2xl focus:outline-none"
-                    href={detailRoute(item.slug)}
+                    href={detailHref(item.slug)}
                     aria-label={
                       (locale === "vi" ? "Xem bài viết: " : "View article: ") +
                       item.title

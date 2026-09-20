@@ -72,7 +72,7 @@ export default async function NewsPage({
         posts={postsPage.items}
         meta={postsPage.meta}
         categoryItems={categories}
-        detailRoute={ROUTES.newsDetail}
+        detailRoute={ROUTES.news}
         catalogueEyebrow="BẢN TIN HOẠT ĐỘNG"
         catalogueTitle="Tin tức Mới nhất"
         catalogueDesc="Khám phá các dấu mốc phát triển, sự kiện chuyên ngành và câu chuyện văn hóa doanh nghiệp tại BIM4C."

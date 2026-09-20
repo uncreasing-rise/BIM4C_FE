@@ -75,7 +75,7 @@ export default async function TechnicalKnowledgePage({
         posts={postsPage.items}
         meta={postsPage.meta}
         categoryItems={categories}
-        detailRoute={ROUTES.technicalDetail}
+        detailRoute={ROUTES.technical}
         catalogueEyebrow="KHO TRI THỨC KỸ THUẬT SỐ"
         catalogueTitle="Nghiên cứu & Báo cáo Chuyên môn"
         catalogueDesc="Khám phá các hướng dẫn kỹ thuật, giải pháp xử lý va chạm và ứng dụng thực tiễn trong công trình từ đội ngũ chuyên gia BIM4C."
