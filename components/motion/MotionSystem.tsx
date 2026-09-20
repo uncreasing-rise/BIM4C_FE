@@ -22,7 +22,7 @@ export function MotionSystem() {
     if (!root) return;
 
     const ctx = gsap.context(() => {
-      // 1. HERO ENTRANCE (Runs on page mount with high-end spring stagger)
+      // 1. HERO ENTRANCE (Smooth polish without blocking LCP/FCP)
       const hero = root.querySelector<HTMLElement>("[data-motion='hero'], .page-hero");
       if (hero) {
         const heroItems = Array.from(hero.querySelectorAll<HTMLElement>(
@@ -31,13 +31,11 @@ export function MotionSystem() {
 
         if (heroItems.length > 0) {
           gsap.from(heroItems, {
-            y: 40,
-            opacity: 0,
-            scale: 0.98,
-            duration: 0.85,
-            stagger: 0.08,
-            ease: "power3.out",
-            clearProps: "transform,opacity,scale",
+            y: 20,
+            duration: 0.6,
+            stagger: 0.05,
+            ease: "power2.out",
+            clearProps: "transform",
           });
         }
       }
@@ -46,16 +44,14 @@ export function MotionSystem() {
       const slideInElements = root.querySelectorAll<HTMLElement>("[data-motion='slide-in'], .hero-visual-container");
       if (slideInElements.length) {
         gsap.from(slideInElements, {
-          x: 40,
-          y: 20,
-          opacity: 0,
-          scale: 0.95,
-          duration: 1,
-          delay: 0.15,
-          ease: "power3.out",
-          clearProps: "transform,opacity,scale",
+          x: 30,
+          duration: 0.8,
+          delay: 0.1,
+          ease: "power2.out",
+          clearProps: "transform",
         });
       }
+
 
       // 2. UNIVERSAL SECTION REVEAL (Automatically discovers all sections on any page)
       const sections = root.querySelectorAll<HTMLElement>("section, [data-home-section], .site-container > header");

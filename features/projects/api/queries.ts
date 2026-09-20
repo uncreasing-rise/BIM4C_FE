@@ -31,7 +31,7 @@ export async function getProjects(
       ApiResponse<ProjectDto[]> | ProjectDto[]
     >(endpoint, {
       signal: params.signal,
-      cache: "no-store",
+      next: { revalidate: 300, tags: ["projects"] },
     });
     return unwrapPage<ProjectDto>(
       response,
@@ -73,7 +73,7 @@ export async function getProjectsPage(
     const response = await apiClient.get<
       ApiResponse<ProjectDto[]> | ProjectDto[]
     >(endpoint, {
-      cache: "no-store",
+      next: { revalidate: 300, tags: ["projects"] },
       signal: params.signal,
     });
     const result = unwrapPage<ProjectDto>(response, page, limit);
@@ -89,7 +89,7 @@ export async function getProjectBySlug(slug: string): Promise<Project | null> {
   try {
     const response = await apiClient.get<ApiResponse<ProjectDto> | ProjectDto>(
       API_ENDPOINTS.projects.detail(slug),
-      { cache: "no-store" },
+      { next: { revalidate: 300, tags: ["projects", `project-${slug}`] } },
     );
     return mapProjectDto(unwrapData(response));
   } catch (error) {
@@ -97,6 +97,7 @@ export async function getProjectBySlug(slug: string): Promise<Project | null> {
     throw error;
   }
 }
+
 
 export async function getAllProjects(): Promise<Project[]> {
   const results: Project[] = [];

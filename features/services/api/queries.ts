@@ -21,7 +21,7 @@ export async function getServices(
     const response = await apiClient.get<
       ApiResponse<ContentEntryDto[]> | ContentEntryDto[]
     >(withQueryParams(API_ENDPOINTS.services.list, { limit: options.limit }), {
-      cache: "no-store",
+      next: { revalidate: 300, tags: ["services"] },
     });
     return unwrapPage<ContentEntryDto>(response).items.map(mapContentDto);
   } catch (error) {
@@ -47,7 +47,7 @@ export async function getServicesPage(
     const response = await apiClient.get<
       ApiResponse<ContentEntryDto[]> | ContentEntryDto[]
     >(endpoint, {
-      cache: "no-store",
+      next: { revalidate: 300, tags: ["services"] },
       signal: params.signal,
     });
     const result = unwrapPage<ContentEntryDto>(response, page, limit);
@@ -66,7 +66,7 @@ export async function getServiceBySlug(
     const response = await apiClient.get<
       ApiResponse<ContentEntryDto> | ContentEntryDto
     >(API_ENDPOINTS.services.detail(slug), {
-      cache: "no-store",
+      next: { revalidate: 300, tags: ["services", `service-${slug}`] },
     });
     return mapContentDto(unwrapData(response));
   } catch (error) {
@@ -74,3 +74,4 @@ export async function getServiceBySlug(
     throw error;
   }
 }
+

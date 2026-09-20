@@ -13,8 +13,10 @@ export const API_ENDPOINTS = {
   },
   posts: {
     list: "/posts",
+    categories: "/posts/categories",
     detail: (slug: string) => `/posts/${encodeURIComponent(slug)}`,
   },
+
   contact: { submit: "/contact" },
   courseRegistrations: { create: "/course-registrations" },
   newsletter: { subscribe: "/newsletter/subscriptions" },

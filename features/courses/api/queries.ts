@@ -21,7 +21,7 @@ export async function getCourses(
     const response = await apiClient.get<
       ApiResponse<ContentEntryDto[]> | ContentEntryDto[]
     >(withQueryParams(API_ENDPOINTS.courses.list, { limit: options.limit }), {
-      cache: "no-store",
+      next: { revalidate: 300, tags: ["courses"] },
     });
     return unwrapPage<ContentEntryDto>(response).items.map(mapContentDto);
   } catch (error) {
@@ -47,7 +47,7 @@ export async function getCoursesPage(
     const response = await apiClient.get<
       ApiResponse<ContentEntryDto[]> | ContentEntryDto[]
     >(endpoint, {
-      cache: "no-store",
+      next: { revalidate: 300, tags: ["courses"] },
       signal: params.signal,
     });
     const result = unwrapPage<ContentEntryDto>(response, page, limit);
@@ -66,7 +66,7 @@ export async function getCourseBySlug(
     const response = await apiClient.get<
       ApiResponse<ContentEntryDto> | ContentEntryDto
     >(API_ENDPOINTS.courses.detail(slug), {
-      cache: "no-store",
+      next: { revalidate: 300, tags: ["courses", `course-${slug}`] },
     });
     return mapContentDto(unwrapData(response));
   } catch (error) {
@@ -74,3 +74,4 @@ export async function getCourseBySlug(
     throw error;
   }
 }
+

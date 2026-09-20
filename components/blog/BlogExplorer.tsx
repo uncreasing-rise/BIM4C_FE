@@ -19,29 +19,40 @@ import { localizeContentList } from "@/lib/i18n/localize";
 import { resolveCoverImage } from "@/lib/content/cover-images";
 import { cn } from "@/lib/utils";
 
+import type { PostCategoryItem } from "@/features/blog/api/queries";
+
 const BLOG_BASE_CATEGORIES = [
-  "Dự án",
-  "Công nghệ",
-  "Đào tạo",
-  "An toàn",
-  "Chuyên môn",
-  "Con người",
+  "Khảo sát & Scan-to-BIM",
+  "Quy trình & Tiêu chuẩn",
+  "Công nghệ & Tự động hóa",
+  "Phối hợp & Xử lý va chạm",
+  "Quản lý Dự án BIM",
+  "Vận hành & Digital Twin",
+  "Kiến thức BIM",
+  "Đào tạo BIM",
 ];
 
 export function BlogExplorer({
   posts: rawPosts,
   meta,
+  categoryItems = [],
 }: {
   posts: ContentEntry[];
   meta: PageMeta;
+  categoryItems?: PostCategoryItem[];
 }) {
   const { t, locale } = useLanguage();
   const posts = localizeContentList(rawPosts, locale);
 
   const allLabel = t.common.all;
+  const rawCatList =
+    categoryItems.length > 0
+      ? categoryItems.map((c) => c.name)
+      : BLOG_BASE_CATEGORIES;
+
   const categories = [
     allLabel,
-    ...BLOG_BASE_CATEGORIES.map((cat) => toLocalizedLabel(cat, locale)),
+    ...rawCatList.map((cat) => toLocalizedLabel(cat, locale)),
   ];
 
   const { searchParams, query, setQuery, update, reset, pending } =
@@ -57,6 +68,7 @@ export function BlogExplorer({
   const visible = posts;
 
   const formatFilterLabel = (val: string) => toLocalizedLabel(val, locale);
+
 
   return (
     <section className="bg-background py-12 lg:py-16" aria-busy={pending}>
@@ -156,7 +168,7 @@ export function BlogExplorer({
                       {t.blogPage.readMore} →
                     </span>
                     <span className="text-xs text-muted-foreground font-medium">
-                      BIM4C Engineering Insights
+                      {visible[0].authorName || (locale === "vi" ? "Chuyên gia BIM4C" : "BIM4C Specialist")}
                     </span>
                   </div>
                 </div>
@@ -203,7 +215,7 @@ export function BlogExplorer({
                       <div className="hidden sm:flex items-center gap-2 text-[11px] font-semibold text-primary">
                         <span>{toLocalizedLabel(item.eyebrow, locale)}</span>
                         <span className="text-muted-foreground font-normal">·</span>
-                        <time className="text-muted-foreground font-normal">{item.meta}</time>
+                        <time className="text-muted-foreground font-normal">{item.meta || (item.publishedAt ? new Date(item.publishedAt).toLocaleDateString(locale === "vi" ? "vi-VN" : "en-US") : "")}</time>
                       </div>
                       <h3 className="mt-1 text-base sm:text-lg font-bold leading-snug tracking-tight text-foreground group-hover:text-primary transition-colors line-clamp-2">
                         {item.title}
@@ -215,13 +227,14 @@ export function BlogExplorer({
                     <div className="mt-3 flex items-center justify-between text-xs font-semibold text-primary">
                       <span>{t.blogPage.readMore}</span>
                       <span className="text-[11px] text-muted-foreground font-normal">
-                        {locale === "vi" ? "4 phút đọc" : "4 min read"}
+                        {item.authorName || (locale === "vi" ? "Chuyên gia BIM4C" : "BIM4C Specialist")}
                       </span>
                     </div>
                   </div>
                 </article>
               ))}
             </div>
+
           </div>
         ) : (
           <EmptyState

@@ -34,7 +34,10 @@ const nextConfig: NextConfig = {
   allowedDevOrigins: ["192.168.1.12"],
   images: {
     remotePatterns: mediaPatterns(),
+    formats: ["image/avif", "image/webp"],
+    minimumCacheTTL: 2592000,
   },
+
   async headers() {
     const securityHeaders = [
       { key: "X-Content-Type-Options", value: "nosniff" },

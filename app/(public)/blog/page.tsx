@@ -6,7 +6,7 @@ import {
   type ListingSearchParams,
 } from "@/lib/seo/listing";
 import { ROUTES } from "@/constants/routes";
-import { getPostsPage } from "@/features/blog/api/queries";
+import { getPostsPage, getPostCategories } from "@/features/blog/api/queries";
 import { BlogPageView } from "@/components/blog/BlogPageView";
 
 const description =
@@ -31,21 +31,24 @@ export default async function BlogPage({
   searchParams: Promise<ListingSearchParams>;
 }) {
   const params = await searchParams;
-  const postsPage = await getPostsPage({
-    page: Number(params.page ?? 1),
-    limit: 5,
-    search: typeof params.q === "string" ? params.q : undefined,
-    category:
-      typeof params.category === "string" && params.category !== "All"
-        ? params.category
-        : undefined,
-  });
+  const [postsPage, categories] = await Promise.all([
+    getPostsPage({
+      page: Number(params.page ?? 1),
+      limit: 6,
+      search: typeof params.q === "string" ? params.q : undefined,
+      category:
+        typeof params.category === "string" && params.category !== "All"
+          ? params.category
+          : undefined,
+    }),
+    getPostCategories().catch(() => []),
+  ]);
 
   const destination = normalizedPageRedirect(
     ROUTES.blog,
     params,
     postsPage.meta.total,
-    5,
+    6,
   );
   if (destination) redirect(destination);
 
@@ -53,6 +56,8 @@ export default async function BlogPage({
     <BlogPageView
       posts={postsPage.items}
       meta={postsPage.meta}
+      categories={categories}
     />
   );
 }
+

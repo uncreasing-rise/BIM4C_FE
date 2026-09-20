@@ -30,7 +30,7 @@ export async function getPosts(
       ApiResponse<ContentEntryDto[]> | ContentEntryDto[]
     >(endpoint, {
       signal: params.signal,
-      cache: "no-store",
+      next: { revalidate: 300, tags: ["posts"] },
     });
     return unwrapPage<ContentEntryDto>(
       response,
@@ -50,7 +50,7 @@ export async function getPostBySlug(
     const response = await apiClient.get<
       ApiResponse<ContentEntryDto> | ContentEntryDto
     >(API_ENDPOINTS.posts.detail(slug), {
-      cache: "no-store",
+      next: { revalidate: 300, tags: ["posts", `post-${slug}`] },
     });
     return mapContentDto(unwrapData(response));
   } catch (error) {
@@ -77,7 +77,7 @@ export async function getPostsPage(
       ApiResponse<ContentEntryDto[]> | ContentEntryDto[]
     >(endpoint, {
       signal: params.signal,
-      cache: "no-store",
+      next: { revalidate: 300, tags: ["posts"] },
     });
     const result = unwrapPage<ContentEntryDto>(response, page, limit);
     return { ...result, items: result.items.map(mapContentDto) };
@@ -87,6 +87,28 @@ export async function getPostsPage(
     throw error;
   }
 }
+
+export interface PostCategoryItem {
+  id: string;
+  name: string;
+  slug: string;
+  count: number;
+}
+
+export async function getPostCategories(): Promise<PostCategoryItem[]> {
+  try {
+    const response = await apiClient.get<
+      ApiResponse<PostCategoryItem[]> | PostCategoryItem[]
+    >(API_ENDPOINTS.posts.categories, {
+      next: { revalidate: 300, tags: ["posts", "post-categories"] },
+    });
+    return unwrapData(response);
+  } catch (error) {
+    if (canDeferBuildData(error)) return [];
+    throw error;
+  }
+}
+
 
 export async function getAllPosts(
   options: { strict?: boolean } = {},
@@ -98,3 +120,4 @@ export async function getAllPosts(
     if (batch.length < 100) return results;
   }
 }
+

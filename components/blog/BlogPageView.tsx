@@ -8,12 +8,16 @@ import type { ContentEntry } from "@/types/content";
 import type { PageMeta } from "@/features/shared/types/pagination";
 import { useLanguage } from "@/lib/i18n/context";
 
+import type { PostCategoryItem } from "@/features/blog/api/queries";
+
 export function BlogPageView({
   posts,
   meta,
+  categories = [],
 }: {
   posts: ContentEntry[];
   meta: PageMeta;
+  categories?: PostCategoryItem[];
 }) {
   usePublicMotion();
   const { t } = useLanguage();
@@ -27,7 +31,8 @@ export function BlogPageView({
         description={t.blogPage.description}
         image="/images/news-site-safety.webp"
       />
-      <BlogExplorer posts={posts} meta={meta} />
+      <BlogExplorer posts={posts} meta={meta} categoryItems={categories} />
     </main>
   );
 }
+

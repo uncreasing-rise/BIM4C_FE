@@ -1,7 +1,7 @@
 import type { Locale } from "../i18n/config";
 
 const viToEnLabels: Record<string, string> = {
-  // Service Categories & Names
+  // Categories & Names
   "Tư vấn BIM": "BIM Consulting",
   "Đào tạo": "Training",
   "ĐÀO TẠO": "Training",
@@ -17,9 +17,26 @@ const viToEnLabels: Record<string, string> = {
   "Khảo sát & Số hóa": "Survey & Digitization",
   "Khảo sát & số hóa": "Survey & Digitization",
   "KHẢO SÁT & SỐ HÓA": "Survey & Digitization",
+  "Khảo sát & Scan-to-BIM": "Survey & Scan-to-BIM",
+  "KHẢO SÁT & SCAN-TO-BIM": "SURVEY & SCAN-TO-BIM",
+  "Quy trình & Tiêu chuẩn": "Processes & Standards",
+  "QUY TRÌNH & TIÊU CHUẨN": "PROCESSES & STANDARDS",
+  "Công nghệ & Tự động hóa": "Technology & Automation",
+  "CÔNG NGHỆ & TỰ ĐỘNG HÓA": "TECHNOLOGY & AUTOMATION",
+  "Phối hợp & Xử lý va chạm": "Coordination & Clash Detection",
+  "PHỐI HỢP & XỬ LÝ VA CHẠM": "COORDINATION & CLASH DETECTION",
+  "Quản lý Dự án BIM": "Project Management BIM",
+  "QUẢN LÝ DỰ ÁN BIM": "PROJECT MANAGEMENT BIM",
+  "Vận hành & Digital Twin": "Operations & Digital Twin",
+  "VẬN HÀNH & DIGITAL TWIN": "OPERATIONS & DIGITAL TWIN",
+  "Kiến thức BIM": "BIM Knowledge",
+  "KIẾN THỨC BIM": "BIM KNOWLEDGE",
+  "Đào tạo BIM": "BIM Training",
+  "ĐÀO TẠO BIM": "BIM TRAINING",
   "Tư vấn & Quản lý": "Consulting & Management",
   "Tư vấn & quản lý": "Consulting & Management",
   "TƯ VẤN & QUẢN LÝ": "Consulting & Management",
+
   "BIM 3D": "BIM 3D",
   "BIM 4D": "BIM 4D",
   "BIM 5D": "BIM 5D",
