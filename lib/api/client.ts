@@ -68,7 +68,11 @@ async function request<T>(
     ) {
       throw new ApiError(499, "The request was cancelled.", "REQUEST_ABORTED");
     }
-    throw normalizeRequestError(error);
+    const normalized = normalizeRequestError(error);
+    console.error(
+      `[API Client] ❌ ${method} ${env.apiUrl}${endpoint} (Status ${normalized.status}): ${normalized.message}`,
+    );
+    throw normalized;
   } finally {
     clearTimeout(timeoutId);
   }
