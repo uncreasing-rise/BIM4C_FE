@@ -75,5 +75,6 @@ export const MAIN_NAVIGATION = [
   { key: "services", href: ROUTES.services },
   { key: "projects", href: ROUTES.projects },
   { key: "courses", href: ROUTES.courses },
-  { key: "blog", href: ROUTES.blog },
+  { key: "technical", href: ROUTES.technical },
+  { key: "news", href: ROUTES.news },
 ] as const;

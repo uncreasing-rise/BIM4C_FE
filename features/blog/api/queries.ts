@@ -15,7 +15,7 @@ import { canDeferBuildData } from "@/lib/config/build";
 import type { ContentEntry } from "@/types/content";
 
 export async function getPosts(
-  params: ContentQueryParams & { strict?: boolean } = {},
+  params: ContentQueryParams & { strict?: boolean; group?: "technical" | "news" } = {},
 ): Promise<ContentEntry[]> {
   const endpoint = withQueryParams(API_ENDPOINTS.posts.list, {
     page: params.page,
@@ -24,6 +24,7 @@ export async function getPosts(
     category: params.category,
     sortBy: params.sortBy,
     sortOrder: params.sortOrder,
+    group: params.group,
   });
   try {
     const response = await apiClient.get<
@@ -60,7 +61,7 @@ export async function getPostBySlug(
 }
 
 export async function getPostsPage(
-  params: ContentQueryParams & { strict?: boolean } = {},
+  params: ContentQueryParams & { strict?: boolean; group?: "technical" | "news" } = {},
 ): Promise<PageResult<ContentEntry>> {
   const page = params.page ?? 1;
   const limit = params.limit ?? 5;
@@ -71,6 +72,7 @@ export async function getPostsPage(
     category: params.category,
     sortBy: params.sortBy,
     sortOrder: params.sortOrder,
+    group: params.group,
   });
   try {
     const response = await apiClient.get<
@@ -95,11 +97,12 @@ export interface PostCategoryItem {
   count: number;
 }
 
-export async function getPostCategories(): Promise<PostCategoryItem[]> {
+export async function getPostCategories(group?: "technical" | "news"): Promise<PostCategoryItem[]> {
   try {
+    const endpoint = withQueryParams(API_ENDPOINTS.posts.categories, { group });
     const response = await apiClient.get<
       ApiResponse<PostCategoryItem[]> | PostCategoryItem[]
-    >(API_ENDPOINTS.posts.categories, {
+    >(endpoint, {
       next: { revalidate: 300, tags: ["posts", "post-categories"] },
     });
     return unwrapData(response);

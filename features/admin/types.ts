@@ -1,6 +1,6 @@
 import type { ContentBlock } from "@/features/shared/schemas/content-block.schema";
 
-export type AdminContentType = "Dự án" | "Tin tức" | "Khóa học" | "Dịch vụ";
+export type AdminContentType = "Dự án" | "Tin tức" | "Chuyên môn" | "Khóa học" | "Dịch vụ";
 export type AdminContentStatus =
   "DRAFT" | "PUBLISHED" | "ARCHIVED" | "PLANNED" | "IN_PROGRESS" | "COMPLETED";
 export interface AdminContentBlock {

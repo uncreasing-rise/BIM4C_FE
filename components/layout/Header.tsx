@@ -207,14 +207,24 @@ export function Header() {
                   {isVi ? "Đào tạo" : "Training"}
                 </Link>
                 <Link
-                  href={ROUTES.blog}
+                  href={ROUTES.technical}
                   onClick={closeMobile}
                   className={cn(
                     "flex min-h-12 items-center rounded-lg px-3 text-base font-semibold hover:bg-muted",
-                    active(ROUTES.blog) && "text-primary"
+                    active(ROUTES.technical) && "text-primary"
                   )}
                 >
-                  {isVi ? "Tin tức" : "Insights"}
+                  {isVi ? "Chuyên môn BIM" : "Technical Hub"}
+                </Link>
+                <Link
+                  href={ROUTES.news}
+                  onClick={closeMobile}
+                  className={cn(
+                    "flex min-h-12 items-center rounded-lg px-3 text-base font-semibold hover:bg-muted",
+                    active(ROUTES.news) && "text-primary"
+                  )}
+                >
+                  {isVi ? "Tin tức" : "News & Events"}
                 </Link>
                 <Link
                   href={ROUTES.contact}
@@ -330,8 +340,11 @@ export function Header() {
           <Link href={ROUTES.courses} className={navClass(ROUTES.courses)}>
             {isVi ? "Đào tạo" : "Training"}
           </Link>
-          <Link href={ROUTES.blog} className={navClass(ROUTES.blog)}>
-            {isVi ? "Tin tức" : "Insights"}
+          <Link href={ROUTES.technical} className={navClass(ROUTES.technical)}>
+            {isVi ? "Chuyên môn BIM" : "Technical"}
+          </Link>
+          <Link href={ROUTES.news} className={navClass(ROUTES.news)}>
+            {isVi ? "Tin tức" : "News"}
           </Link>
           <Link href={ROUTES.bimViewer} className={cn(navClass(ROUTES.bimViewer), "border border-current/20")}>
             <Box className="size-4" />

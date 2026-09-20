@@ -10,6 +10,7 @@ import {
   Search,
   LayoutDashboard,
   FileText,
+  BookOpen,
   Layers,
   GraduationCap,
   Wrench,
@@ -32,7 +33,8 @@ import { toast } from "sonner";
 const navigation = [
   { href: "/admin", label: "Tổng quan", icon: LayoutDashboard },
   { href: "/admin/trang-chu", label: "Trang chủ", icon: Sparkles },
-  { href: "/admin/tin-tuc", label: "Tin tức", icon: FileText },
+  { href: "/admin/chuyen-mon", label: "Chuyên môn BIM", icon: BookOpen },
+  { href: "/admin/tin-tuc", label: "Tin tức & Sự kiện", icon: FileText },
   { href: "/admin/du-an", label: "Dự án", icon: Layers },
   { href: "/admin/khoa-hoc", label: "Khóa học", icon: GraduationCap },
   { href: "/admin/dich-vu", label: "Dịch vụ", icon: Wrench },

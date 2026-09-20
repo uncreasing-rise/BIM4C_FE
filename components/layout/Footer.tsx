@@ -14,7 +14,8 @@ export function Footer() {
     { label: t.navigation.services, href: ROUTES.services },
     { label: t.navigation.projects, href: ROUTES.projects },
     { label: t.navigation.courses, href: ROUTES.courses },
-    { label: t.navigation.blog, href: ROUTES.blog },
+    { label: t.navigation.technical, href: ROUTES.technical },
+    { label: t.navigation.news, href: ROUTES.news },
     { label: t.navigation.bimViewer, href: ROUTES.bimViewer },
     { label: t.navigation.contact, href: ROUTES.contact },
   ];

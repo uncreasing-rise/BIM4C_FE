@@ -55,6 +55,8 @@ export const enDictionary: Dictionary = {
     projects: "Projects",
     courses: "Academy",
     blog: "Insights",
+    technical: "Technical Insights",
+    news: "Company News",
     bimViewer: "Explore BIM in 3D",
     contact: "Contact",
     legal: "Legal",

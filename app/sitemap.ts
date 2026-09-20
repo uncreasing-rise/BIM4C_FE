@@ -20,7 +20,9 @@ const staticConfigs: StaticConfig[] = [
   { path: "/dich-vu", changeFrequency: "weekly", priority: 0.9 },
   { path: "/du-an", changeFrequency: "weekly", priority: 0.9 },
   { path: "/khoa-hoc", changeFrequency: "weekly", priority: 0.9 },
-  { path: "/blog", changeFrequency: "daily", priority: 0.9 },
+  { path: "/chuyen-mon", changeFrequency: "daily", priority: 0.9 },
+  { path: "/tin-tuc", changeFrequency: "daily", priority: 0.85 },
+  { path: "/blog", changeFrequency: "daily", priority: 0.8 },
   { path: "/bim-viewer", changeFrequency: "monthly", priority: 0.8 },
   { path: "/phap-ly", changeFrequency: "yearly", priority: 0.5 },
   { path: "/lien-he", changeFrequency: "monthly", priority: 0.7 },
@@ -71,65 +73,89 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     getAllPosts({ strict: false }).catch(() => []),
   ]);
 
-  const staticEntries: MetadataRoute.Sitemap = staticConfigs.flatMap((cfg) => localizedEntries(cfg.path, {
-    lastModified: new Date(),
-    changeFrequency: cfg.changeFrequency,
-    priority: cfg.priority,
-  }));
+  const staticEntries: MetadataRoute.Sitemap = staticConfigs.flatMap((cfg) =>
+    localizedEntries(cfg.path, {
+      lastModified: new Date(),
+      changeFrequency: cfg.changeFrequency,
+      priority: cfg.priority,
+    }),
+  );
 
   const dynamicServices: MetadataRoute.Sitemap = services
     .filter(published)
-    .flatMap((entry) => localizedEntries(`/dich-vu/${entry.slug}`, {
-      lastModified: lastModified(entry) || new Date(),
-      changeFrequency: "weekly",
-      priority: 0.85,
-    }));
+    .flatMap((entry) =>
+      localizedEntries(`/dich-vu/${entry.slug}`, {
+        lastModified: lastModified(entry) || new Date(),
+        changeFrequency: "weekly",
+        priority: 0.85,
+      }),
+    );
 
   const dynamicProjects: MetadataRoute.Sitemap = projects
     .filter(published)
-    .flatMap((entry) => localizedEntries(`/du-an/${entry.slug}`, {
-      lastModified: lastModified(entry) || new Date(),
-      changeFrequency: "monthly",
-      priority: 0.8,
-    }));
+    .flatMap((entry) =>
+      localizedEntries(`/du-an/${entry.slug}`, {
+        lastModified: lastModified(entry) || new Date(),
+        changeFrequency: "monthly",
+        priority: 0.8,
+      }),
+    );
 
   const dynamicCourses: MetadataRoute.Sitemap = courses
     .filter(published)
-    .flatMap((entry) => localizedEntries(`/khoa-hoc/${entry.slug}`, {
-      lastModified: lastModified(entry) || new Date(),
-      changeFrequency: "weekly",
-      priority: 0.85,
-    }));
+    .flatMap((entry) =>
+      localizedEntries(`/khoa-hoc/${entry.slug}`, {
+        lastModified: lastModified(entry) || new Date(),
+        changeFrequency: "weekly",
+        priority: 0.85,
+      }),
+    );
 
-  const dynamicPosts: MetadataRoute.Sitemap = posts
+  const dynamicTechnicalPosts: MetadataRoute.Sitemap = posts
     .filter(published)
-    .flatMap((entry) => localizedEntries(`/blog/${entry.slug}`, {
-      lastModified: lastModified(entry) || new Date(),
-      changeFrequency: "monthly",
-      priority: 0.75,
-    }));
+    .flatMap((entry) =>
+      localizedEntries(`/chuyen-mon/${entry.slug}`, {
+        lastModified: lastModified(entry) || new Date(),
+        changeFrequency: "monthly",
+        priority: 0.85,
+      }),
+    );
 
-  const legalEntries: MetadataRoute.Sitemap = legalDocuments.flatMap((document) => {
-    const [day, month, year] = document.updatedAt.split(".").map(Number);
-    return localizedEntries(`/phap-ly/${document.slug}`, {
-      lastModified:
-        day && month && year
-          ? new Date(Date.UTC(year, month - 1, day))
-          : undefined,
-      changeFrequency: "yearly",
-      priority: 0.4,
-    });
-  });
+  const dynamicNewsPosts: MetadataRoute.Sitemap = posts
+    .filter(published)
+    .flatMap((entry) =>
+      localizedEntries(`/tin-tuc/${entry.slug}`, {
+        lastModified: lastModified(entry) || new Date(),
+        changeFrequency: "monthly",
+        priority: 0.75,
+      }),
+    );
+
+  const legalEntries: MetadataRoute.Sitemap = legalDocuments.flatMap(
+    (document) => {
+      const [day, month, year] = document.updatedAt.split(".").map(Number);
+      return localizedEntries(`/phap-ly/${document.slug}`, {
+        lastModified:
+          day && month && year
+            ? new Date(Date.UTC(year, month - 1, day))
+            : undefined,
+        changeFrequency: "yearly",
+        priority: 0.4,
+      });
+    },
+  );
 
   const allEntries = [
     ...staticEntries,
     ...dynamicServices,
     ...dynamicProjects,
     ...dynamicCourses,
-    ...dynamicPosts,
+    ...dynamicTechnicalPosts,
+    ...dynamicNewsPosts,
     ...legalEntries,
   ];
 
-  return Array.from(new Map(allEntries.map((item) => [item.url, item])).values());
+  return Array.from(
+    new Map(allEntries.map((item) => [item.url, item])).values(),
+  );
 }
-

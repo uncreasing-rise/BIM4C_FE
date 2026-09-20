@@ -79,6 +79,8 @@ const viDictionaryRaw: Dictionary = {
         projects: "Dự án",
         courses: "Học viện",
         blog: "Kiến thức",
+        technical: "Chuyên môn BIM",
+        news: "Tin tức",
         bimViewer: "Khám phá BIM 3D",
         contact: "Liên hệ",
         legal: "Pháp lý",

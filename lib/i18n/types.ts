@@ -55,6 +55,8 @@ export interface Dictionary {
     projects: string;
     courses: string;
     blog: string;
+    technical: string;
+    news: string;
     bimViewer: string;
     contact: string;
     legal: string;

@@ -8,6 +8,7 @@ import type {
 const domain: Record<AdminContentType, string> = {
   "Dự án": "projects",
   "Tin tức": "posts",
+  "Chuyên môn": "posts",
   "Khóa học": "courses",
   "Dịch vụ": "services",
 };
@@ -102,7 +103,7 @@ export const adminContentApi = {
       body: JSON.stringify({ ids, action }),
     }),
   categories: (type: AdminContentType, signal?: AbortSignal) =>
-    type === "Dự án" || type === "Tin tức"
+    type === "Dự án" || type === "Tin tức" || type === "Chuyên môn"
       ? request<{ data: AdminCategory[] }>(
           type === "Dự án" ? "project-categories" : "post-categories",
           { signal },

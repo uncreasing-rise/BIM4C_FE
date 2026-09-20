@@ -36,10 +36,24 @@ export function BlogExplorer({
   posts: rawPosts,
   meta,
   categoryItems = [],
+  detailRoute = ROUTES.technicalDetail,
+  catalogueEyebrow,
+  catalogueTitle,
+  catalogueDesc,
+  searchLabel,
+  searchPlaceholder,
+  baseCategories,
 }: {
   posts: ContentEntry[];
   meta: PageMeta;
   categoryItems?: PostCategoryItem[];
+  detailRoute?: (slug: string) => string;
+  catalogueEyebrow?: string;
+  catalogueTitle?: string;
+  catalogueDesc?: string;
+  searchLabel?: string;
+  searchPlaceholder?: string;
+  baseCategories?: string[];
 }) {
   const { t, locale } = useLanguage();
   const posts = localizeContentList(rawPosts, locale);
@@ -48,7 +62,7 @@ export function BlogExplorer({
   const rawCatList =
     categoryItems.length > 0
       ? categoryItems.map((c) => c.name)
-      : BLOG_BASE_CATEGORIES;
+      : (baseCategories || BLOG_BASE_CATEGORIES);
 
   const categories = [
     allLabel,
@@ -75,15 +89,15 @@ export function BlogExplorer({
       <div className="site-container">
         <header className="mb-8 grid gap-4 border-b pb-8 md:grid-cols-[.8fr_1.2fr] md:items-end">
           <div>
-            <p className="eyebrow">{t.blogPage.catalogueEyebrow}</p>
-            <h2 className="section-title">{t.blogPage.catalogueTitle}</h2>
+            <p className="eyebrow">{catalogueEyebrow || t.blogPage.catalogueEyebrow}</p>
+            <h2 className="section-title">{catalogueTitle || t.blogPage.catalogueTitle}</h2>
           </div>
           <p className="max-w-xl text-sm leading-7 text-muted-foreground md:justify-self-end">
-            {t.blogPage.catalogueDesc}
+            {catalogueDesc || t.blogPage.catalogueDesc}
           </p>
         </header>
         <CatalogCategories
-          ariaLabel={t.blogPage.catalogueEyebrow}
+          ariaLabel={catalogueEyebrow || t.blogPage.catalogueEyebrow}
           items={categories}
           value={category === "All" ? allLabel : category}
           formatLabel={formatFilterLabel}
@@ -93,15 +107,16 @@ export function BlogExplorer({
         />
         <CatalogFilterBar>
           <CatalogSearch
-            label={t.blogPage.searchLabel}
-            placeholder={t.blogPage.searchPlaceholder}
+            label={searchLabel || t.blogPage.searchLabel}
+            placeholder={searchPlaceholder || t.blogPage.searchPlaceholder}
             value={query}
             onChange={setQuery}
           />
         </CatalogFilterBar>
-        {(query || (categoryParam !== "All" && categoryParam !== allLabel)) && (
+        {categoryParam !== "All" && (
           <button
-            className="mb-4 min-h-11 rounded-lg px-3 text-sm font-semibold text-primary hover:bg-muted"
+            type="button"
+            className="mb-6 inline-flex min-h-8 items-center rounded-lg border border-primary/30 bg-primary/10 px-3 text-xs font-semibold text-primary hover:bg-primary/20"
             onClick={reset}
           >
             {t.common.clearFilters}
@@ -121,7 +136,7 @@ export function BlogExplorer({
               >
                 <Link
                   className="absolute inset-0 z-20 rounded-3xl focus:outline-none"
-                  href={ROUTES.blogDetail(visible[0].slug)}
+                  href={detailRoute(visible[0].slug)}
                   aria-label={
                     (locale === "vi" ? "Xem bài viết: " : "View article: ") +
                     visible[0].title
@@ -185,7 +200,7 @@ export function BlogExplorer({
                 >
                   <Link
                     className="absolute inset-0 z-20 rounded-2xl focus:outline-none"
-                    href={ROUTES.blogDetail(item.slug)}
+                    href={detailRoute(item.slug)}
                     aria-label={
                       (locale === "vi" ? "Xem bài viết: " : "View article: ") +
                       item.title
