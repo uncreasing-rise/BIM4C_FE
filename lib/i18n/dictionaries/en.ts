@@ -505,7 +505,7 @@ export const enDictionary: Dictionary = {
     searchLabel: "Search insights",
     searchPlaceholder: "Search insights...",
     matchingCount: (count) => `${count} matching articles`,
-    readMore: "Read more â†’",
+    readMore: "Read more →",
     emptyTitle: "No articles found",
     emptyDesc: "Try a different keyword or topic.",
   },

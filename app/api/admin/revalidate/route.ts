@@ -1,25 +1,22 @@
 import { revalidatePath, revalidateTag } from "next/cache";
 import { NextResponse } from "next/server";
+import { appLogger } from "@/lib/logging/logger";
 
 export const dynamic = "force-dynamic";
 
 export async function POST() {
   try {
-    // Revalidate main public routes & tags
     revalidatePath("/", "layout");
-    revalidatePath("/du-an", "page");
-    revalidatePath("/khoa-hoc", "page");
-    revalidatePath("/dich-vu", "page");
-    revalidatePath("/blog", "page");
-    revalidatePath("/gioi-thieu", "page");
-    revalidatePath("/lien-he", "page");
+    for (const path of ["/du-an", "/khoa-hoc", "/dich-vu", "/blog", "/gioi-thieu", "/lien-he"]) {
+      revalidatePath(path, "page");
+    }
 
     const tags = ["projects", "courses", "services", "posts", "homepage", "settings"];
     for (const tag of tags) {
       try {
         revalidateTag(tag, "max");
-      } catch {
-        // ignore
+      } catch (error) {
+        appLogger.warn("cache.tag_revalidate.failed", { tag, error });
       }
     }
 
@@ -31,6 +28,7 @@ export async function POST() {
       },
     });
   } catch (error) {
+    appLogger.error("cache.revalidate.failed", error);
     return NextResponse.json(
       { message: error instanceof Error ? error.message : "Lỗi khi xóa cache" },
       { status: 500 },

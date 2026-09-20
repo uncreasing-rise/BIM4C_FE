@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { ErrorState } from "@/components/ui/ErrorState";
+import { appLogger } from "@/lib/logging/logger";
 
 export default function GlobalError({
   error,
@@ -11,7 +12,7 @@ export default function GlobalError({
   retry: () => void;
 }) {
   useEffect(() => {
-    console.error("[Global Error Boundary caught]:", error);
+    appLogger.error("ui.global_error_boundary", error, { digest: error.digest });
   }, [error]);
 
   return (

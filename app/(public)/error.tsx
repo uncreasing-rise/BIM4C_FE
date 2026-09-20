@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { ErrorState } from "@/components/ui/ErrorState";
+import { appLogger } from "@/lib/logging/logger";
 
 export default function PublicError({
   error,
@@ -11,7 +12,7 @@ export default function PublicError({
   retry: () => void;
 }) {
   useEffect(() => {
-    console.error("[Public Error Boundary caught]:", error);
+    appLogger.error("ui.public_error_boundary", error, { digest: error.digest });
   }, [error]);
 
   return (

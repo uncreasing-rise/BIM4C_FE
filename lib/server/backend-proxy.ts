@@ -1,7 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { handleMockApiRequest } from "./mock-store";
 
+function logProxy(level: "info" | "warn" | "error", event: string, data: Record<string, unknown>): void {
+  const payload = JSON.stringify({ timestamp: new Date().toISOString(), level, event, ...data });
+  if (level === "error") console.error(payload);
+  else if (level === "warn") console.warn(payload);
+  else console.info(payload);
+}
+
 export async function backendProxy(request: NextRequest, path: string) {
+  const requestId = request.headers.get("x-request-id") || crypto.randomUUID();
+  const startedAt = Date.now();
   const appUrl = process.env.NEXT_PUBLIC_APP_URL;
   const currentOrigin = request.nextUrl.origin;
   const expectedOrigin = appUrl ?? currentOrigin;
@@ -63,6 +72,7 @@ export async function backendProxy(request: NextRequest, path: string) {
     const value = request.headers.get(name);
     if (value) headers.set(name, value);
   }
+  headers.set("x-request-id", requestId);
 
   function cleanProxyBody(data: unknown): unknown {
     if (typeof data !== "object" || data === null) return data;
@@ -135,9 +145,23 @@ export async function backendProxy(request: NextRequest, path: string) {
         request.nextUrl.searchParams,
         bodyData,
       );
+      logProxy("warn", "proxy.backend.5xx_fallback", {
+        requestId,
+        method: request.method,
+        path,
+        status: response.status,
+        durationMs: Date.now() - startedAt,
+      });
       return NextResponse.json(mockRes.body, { status: mockRes.status });
     }
   } catch (error) {
+    logProxy("error", "proxy.backend.unavailable", {
+      requestId,
+      method: request.method,
+      path,
+      durationMs: Date.now() - startedAt,
+      error: error instanceof Error ? { name: error.name, message: error.message, stack: error.stack } : error,
+    });
     console.warn(
       `Backend unavailable at ${path}, using mock store fallback.`,
       error instanceof Error ? error.message : error,
@@ -154,6 +178,12 @@ export async function backendProxy(request: NextRequest, path: string) {
       request.nextUrl.searchParams,
       bodyData,
     );
+    logProxy("warn", "proxy.mock_fallback", {
+      requestId,
+      method: request.method,
+      path,
+      durationMs: Date.now() - startedAt,
+    });
     return NextResponse.json(mockRes.body, { status: mockRes.status });
   }
 
@@ -171,6 +201,14 @@ export async function backendProxy(request: NextRequest, path: string) {
     response.status === 204 ? null : await response.arrayBuffer(),
     { status: response.status, headers: outputHeaders },
   );
+  nextResponse.headers.set("x-request-id", requestId);
+  logProxy(response.ok ? "info" : "warn", "proxy.request.completed", {
+    requestId,
+    method: request.method,
+    path,
+    status: response.status,
+    durationMs: Date.now() - startedAt,
+  });
 
   // Transfer Set-Cookie headers properly to ensure auth session cookies persist
   const rawSetCookies: string[] = [];
