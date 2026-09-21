@@ -87,7 +87,7 @@ export function AboutView({
         <div className="site-container grid gap-10 lg:grid-cols-[0.7fr_1.3fr]">
           <div>
             <p className="eyebrow">{t.aboutPage.letter.title}</p>
-            <h2 className="section-title mt-1">{t.aboutPage.whoWeAreTitle}</h2>
+            <h2 className="section-title mt-1">{t.aboutPage.letter.subtitle || t.aboutPage.letter.title}</h2>
           </div>
           <div className="space-y-5 text-base leading-8 text-muted-foreground">
             {t.aboutPage.letter.paragraphs.map((paragraph) => (

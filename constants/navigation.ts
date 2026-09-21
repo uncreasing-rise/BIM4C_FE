@@ -16,7 +16,6 @@ export const ABOUT_MENU_ITEMS: NavigationItem[] = [
   { vi: "Vì sao chọn BIM4C", en: "Why BIM4C", href: `${ROUTES.about}#why-bim4c` },
   { vi: "Đội ngũ", en: "Team", href: ROUTES.about },
   { vi: "Đối tác", en: "Partners", href: `${ROUTES.about}#partners` },
-  { vi: "Chứng nhận", en: "Certifications", href: ROUTES.about },
 ];
 
 export const SERVICE_MENU_GROUPS: NavigationGroup[] = [

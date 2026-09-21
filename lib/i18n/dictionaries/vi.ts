@@ -216,6 +216,7 @@ const viDictionaryRaw: Dictionary = {
             "Chúng tôi kết nối con người, quy trình và thông tin dự án để hỗ trợ thiết kế, thi công và vận hành tốt hơn.",
         letter: {
             title: "Lời ngỏ từ BIM4C",
+            subtitle: "Đồng hành kiến tạo giá trị bền vững cho ngành xây dựng",
             paragraphs: [
                 "Từ giai đoạn hoạch định đầu tư, thiết kế cho đến thi công và quản lý tài sản, chúng tôi đồng hành cùng khách hàng trong quá trình chuyển đổi số bằng những giải pháp thiết thực, hiệu quả. Với cam kết đổi mới và không ngừng hoàn thiện, BIM4C giúp các tổ chức xây dựng hạ tầng thông minh hơn, bền vững hơn và sẵn sàng cho tương lai thông qua việc tích hợp công nghệ vào mọi giai đoạn của dự án.",
                 "Công ty Cổ phần Công nghệ và Xây dựng BIM4C là đơn vị tư vấn và thi công tập trung vào chuyển đổi số trong ngành xây dựng. Chúng tôi kết hợp tư vấn chuyên môn với việc triển khai thực tế các công nghệ như Mô hình thông tin công trình (BIM) nhằm nâng cao hiệu quả, tối ưu quy trình làm việc và tăng cường phối hợp.",

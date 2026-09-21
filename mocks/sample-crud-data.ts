@@ -763,17 +763,17 @@ export const SAMPLE_HERO_SLIDE: HeroSlide = {
 export const SAMPLE_PARTNERS: StrategicPartner[] = [
   {
     id: "partner-sample-1",
-    name: "Autodesk Construction Cloud",
-    logo: "/images/bim4c-logo.png",
-    website: "https://www.autodesk.com",
+    name: "Bitexco Group",
+    logo: "/images/partners/bitexco.png",
+    website: "https://www.bitexco.com.vn",
     sortOrder: 1,
     isActive: true,
   },
   {
     id: "partner-sample-2",
-    name: "BuildingSMART International",
-    logo: "/images/bim4c-logo.png",
-    website: "https://www.buildingsmart.org",
+    name: "Masterise Homes",
+    logo: "/images/partners/masterise.png",
+    website: "https://masterisehomes.com",
     sortOrder: 2,
     isActive: true,
   },

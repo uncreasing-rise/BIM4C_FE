@@ -192,6 +192,7 @@ export const enDictionary: Dictionary = {
       "We bring people, processes and project information together to support better design, construction and operations.",
     letter: {
       title: "A message from BIM4C",
+      subtitle: "Partnering to build sustainable value for digital construction",
       paragraphs: [
         "From investment planning and design through construction and asset management, we accompany clients through digital transformation with practical, effective solutions. With a commitment to innovation and excellence, BIM4C helps organizations build smarter, more sustainable and future ready infrastructure by integrating technology across every project stage.",
         "BIM4C Construction & Technology Joint Stock Company is a consulting and construction company focused on digital transformation in the built environment. We combine specialist advice with practical implementation of technologies such as Building Information Modelling (BIM) to improve efficiency, streamline workflows and strengthen coordination.",

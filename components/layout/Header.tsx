@@ -184,6 +184,14 @@ export function Header() {
                         ))}
                       </div>
                     ))}
+                    <Link
+                      href={ROUTES.services}
+                      onClick={closeMobile}
+                      className="mt-1 flex min-h-10 items-center justify-between rounded-lg bg-primary/10 px-3 text-sm font-bold text-primary hover:bg-primary/20"
+                    >
+                      <span>{isVi ? "Xem tất cả dịch vụ" : "View all services"}</span>
+                      <span>→</span>
+                    </Link>
                   </div>
                 )}
                 <Link
@@ -310,26 +318,41 @@ export function Header() {
             </button>
             {openMenu === "services" && (
               <div className="fixed right-4 top-20 z-50 w-[min(62rem,calc(100vw-2rem))] max-h-[calc(100vh-6rem)] overflow-y-auto pt-2">
-                <div className="grid grid-cols-2 gap-4 rounded-xl border border-border bg-white p-4 text-slate-800 shadow-xl md:grid-cols-3 lg:grid-cols-5 lg:gap-5 lg:p-5">
-                  {serviceGroups.map((group) => (
-                    <div key={group.vi}>
-                      <h3 className="border-b border-border pb-2 text-xs font-bold uppercase tracking-wider text-primary">
-                        {text(group, locale)}
-                      </h3>
-                      <div className="mt-2 grid gap-1">
-                        {group.items.map((item) => (
-                          <Link
-                            key={item.vi}
-                            href={item.href}
-                            onClick={() => setOpenMenu(null)}
-                            className="rounded-lg px-2 py-2 text-sm font-medium hover:bg-muted hover:text-primary"
-                          >
-                            {text(item, locale)}
-                          </Link>
-                        ))}
+                <div className="rounded-xl border border-border bg-white p-4 text-slate-800 shadow-xl lg:p-5">
+                  <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5 lg:gap-5">
+                    {serviceGroups.map((group) => (
+                      <div key={group.vi}>
+                        <h3 className="border-b border-border pb-2 text-xs font-bold uppercase tracking-wider text-primary">
+                          {text(group, locale)}
+                        </h3>
+                        <div className="mt-2 grid gap-1">
+                          {group.items.map((item) => (
+                            <Link
+                              key={item.vi}
+                              href={item.href}
+                              onClick={() => setOpenMenu(null)}
+                              className="rounded-lg px-2 py-2 text-sm font-medium hover:bg-muted hover:text-primary"
+                            >
+                              {text(item, locale)}
+                            </Link>
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
+                  <div className="mt-4 flex items-center justify-between border-t border-border pt-3">
+                    <p className="text-xs text-muted-foreground">
+                      {isVi ? "Giải pháp tư vấn và triển khai BIM toàn diện từ BIM4C" : "Comprehensive BIM consultancy and implementation solutions"}
+                    </p>
+                    <Link
+                      href={ROUTES.services}
+                      onClick={() => setOpenMenu(null)}
+                      className="inline-flex items-center gap-1.5 rounded-lg bg-primary/10 px-3.5 py-1.5 text-xs font-bold text-primary transition-colors hover:bg-primary hover:text-white"
+                    >
+                      <span>{isVi ? "Xem tất cả dịch vụ" : "View all services"}</span>
+                      <span>→</span>
+                    </Link>
+                  </div>
                 </div>
               </div>
             )}

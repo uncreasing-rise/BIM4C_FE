@@ -73,7 +73,7 @@ export function TableOfContents({
                     }
                   }}
                 >
-                  <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[11px] font-bold text-primary group-hover:bg-primary group-hover:text-white transition-colors mt-0.5">
+                  <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[11px] font-bold text-primary group-hover:bg-primary group-hover:text-white transition-colors mt-0.5" aria-hidden="true">
                     {idx + 1}
                   </span>
                   <span className="underline-offset-4 group-hover:underline leading-snug">

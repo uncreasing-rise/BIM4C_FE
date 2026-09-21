@@ -158,7 +158,7 @@ export interface Dictionary {
     eyebrow: string;
     heroTitle: string;
     heroDesc: string;
-    letter: { title: string; paragraphs: string[] };
+    letter: { title: string; subtitle?: string; paragraphs: string[] };
     visionMission: { vision: { title: string; text: string }; mission: { title: string; text: string } };
     workMethod: { eyebrow: string; title: string; intro: string; items: { title: string; text: string }[] };
     operation: { eyebrow: string; title: string; items: { title: string; text: string }[] };

@@ -4,29 +4,43 @@ import { useLanguage } from "@/lib/i18n/context";
 import Image from "next/image";
 
 export const DEFAULT_PARTNERS = [
-  { name: "ATool", src: "/images/partners/logo-atool.png" },
-  { name: "BSI", src: "/images/partners/logo-bsi.jpg" },
-  { name: "BTF", src: "/images/partners/logo-btf.png" },
-  { name: "By Royal Charter", src: "/images/partners/logo-royal-charter.jpg" },
-  { name: "Công ty Kiến trúc AVA", src: "/images/partners/logo-ava.png" },
+  { name: "Bitexco Group", src: "/images/partners/bitexco.png" },
+  { name: "Ecopark", src: "/images/partners/ecopark.png" },
+  { name: "Gamuda Land", src: "/images/partners/gamuda.png" },
+  { name: "Masterise Homes", src: "/images/partners/masterise.png" },
+  { name: "MIK Group", src: "/images/partners/mik.png" },
+  { name: "Nam Long Group", src: "/images/partners/namlong.png" },
   { name: "Dacinco", src: "/images/partners/logo-dacinco.png" },
+  { name: "Tecco 5", src: "/images/partners/logo-tecco5.png" },
+  { name: "TDIC", src: "/images/partners/logo-tdic.png" },
+  { name: "TCM", src: "/images/partners/logo-tcm.png" },
+  { name: "Công ty Kiến trúc AVA", src: "/images/partners/logo-ava.png" },
   { name: "Viện Quy Hoạch Đô Thị", src: "/images/partners/logo-dothi.png" },
   { name: "Office of Cities & Architecture", src: "/images/partners/logo-office-of-cities.png" },
-  { name: "OneBIM", src: "/images/partners/logo-onebim.png" },
   { name: "Strader", src: "/images/partners/logo-strader.png" },
-  { name: "TCM", src: "/images/partners/logo-tcm.png" },
-  { name: "TDIC", src: "/images/partners/logo-tdic.png" },
-  { name: "Tecco 5", src: "/images/partners/logo-tecco5.png" },
   { name: "ZFenix", src: "/images/partners/logo-zfenix.png" },
+  { name: "OneBIM", src: "/images/partners/logo-onebim.png" },
+  { name: "BTF", src: "/images/partners/logo-btf.png" },
+  { name: "ATool", src: "/images/partners/logo-atool.png" },
+  { name: "BSI", src: "/images/partners/logo-bsi.png" },
 ];
 
 const LOGO_MAP: Record<string, string> = {
+  "bitexco": "/images/partners/bitexco.png",
+  "bitexco group": "/images/partners/bitexco.png",
+  "ecopark": "/images/partners/ecopark.png",
+  "gamuda": "/images/partners/gamuda.png",
+  "gamuda land": "/images/partners/gamuda.png",
+  "masterise": "/images/partners/masterise.png",
+  "masterise homes": "/images/partners/masterise.png",
+  "mik": "/images/partners/mik.png",
+  "mik group": "/images/partners/mik.png",
+  "nam long": "/images/partners/namlong.png",
+  "nam long group": "/images/partners/namlong.png",
   "atool": "/images/partners/logo-atool.png",
   "a-tool": "/images/partners/logo-atool.png",
-  "bsi": "/images/partners/logo-bsi.jpg",
+  "bsi": "/images/partners/logo-bsi.png",
   "btf": "/images/partners/logo-btf.png",
-  "by royal charter": "/images/partners/logo-royal-charter.jpg",
-  "royal charter": "/images/partners/logo-royal-charter.jpg",
   "công ty kiến trúc ava": "/images/partners/logo-ava.png",
   "công ty ava": "/images/partners/logo-ava.png",
   "ava": "/images/partners/logo-ava.png",
@@ -60,16 +74,29 @@ interface PartnersProps {
 export function Partners({ compact = false, customPartners }: PartnersProps) {
   const { t } = useLanguage();
   const rawList = customPartners && customPartners.length > 0 ? customPartners : DEFAULT_PARTNERS;
+  const seenSrc = new Set<string>();
+  const seenName = new Set<string>();
+
   const partners = rawList
     .map((p) => {
       const item = p as { name: string; src?: string; logo?: string };
       const normalizedName = item.name.toLowerCase().trim();
       const mappedLogo = LOGO_MAP[normalizedName];
       const directSrc = item.src || item.logo || "";
-      const finalSrc = directSrc.startsWith("/images/partners/") ? directSrc : (mappedLogo || directSrc || DEFAULT_PARTNERS[0].src);
+      const finalSrc = directSrc.startsWith("/images/partners/")
+        ? directSrc
+        : (mappedLogo || directSrc || "");
       return { name: item.name, src: finalSrc };
     })
-    .filter((p): p is { name: string; src: string } => Boolean(p.src));
+    .filter((p): p is { name: string; src: string } => {
+      if (!p.src || !p.name) return false;
+      const normSrc = p.src.toLowerCase();
+      const normName = p.name.toLowerCase().trim();
+      if (seenSrc.has(normSrc) || seenName.has(normName)) return false;
+      seenSrc.add(normSrc);
+      seenName.add(normName);
+      return true;
+    });
   if (!partners.length) return null;
 
   return (
