@@ -17,20 +17,24 @@ export async function backendProxy(request: NextRequest, path: string) {
 
   if (!["GET", "HEAD", "OPTIONS"].includes(request.method)) {
     const incomingOrigin = request.headers.get("origin");
-    if (
-      incomingOrigin &&
-      incomingOrigin !== currentOrigin &&
-      incomingOrigin !== appUrl &&
-      !incomingOrigin.endsWith("bim4c.vn") &&
-      !incomingOrigin.includes("localhost")
-    ) {
-      return NextResponse.json(
-        {
-          error: "Invalid request origin",
-          message: "Nguồn yêu cầu không hợp lệ.",
-        },
-        { status: 403 },
-      );
+    if (incomingOrigin) {
+      const isAllowed =
+        incomingOrigin === currentOrigin ||
+        incomingOrigin === appUrl ||
+        incomingOrigin.endsWith("bim4c.vn") ||
+        incomingOrigin.includes("localhost") ||
+        incomingOrigin.includes("127.0.0.1") ||
+        incomingOrigin.endsWith(".vercel.app");
+
+      if (!isAllowed) {
+        return NextResponse.json(
+          {
+            error: "Invalid request origin",
+            message: "Nguồn yêu cầu không hợp lệ.",
+          },
+          { status: 403 },
+        );
+      }
     }
   }
 
@@ -59,9 +63,10 @@ export async function backendProxy(request: NextRequest, path: string) {
   request.nextUrl.searchParams.forEach((value, name) =>
     target.searchParams.append(name, value),
   );
+  const forwardedOrigin = request.headers.get("origin") ?? expectedOrigin;
   const headers = new Headers({
     Accept: request.headers.get("accept") ?? "application/json",
-    Origin: expectedOrigin,
+    Origin: forwardedOrigin,
   });
   for (const name of [
     "authorization",
