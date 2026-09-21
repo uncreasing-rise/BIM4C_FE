@@ -96,17 +96,6 @@ const empty = (type: AdminContentType): AdminContent => ({
   seoDescription_vi: "",
 });
 
-function getListBlockItems(blocks?: ContentBlock[]): string[] {
-  if (!blocks || !Array.isArray(blocks)) return [];
-  for (const b of blocks) {
-    if (b && b.type === "feature-list" && Array.isArray(b.items)) {
-      const valid = b.items.filter((x) => typeof x === "string" && x.trim().length > 0);
-      if (valid.length > 0) return valid;
-    }
-  }
-  return [];
-}
-
 export function ContentManager({
   contentType,
 }: {
@@ -783,57 +772,6 @@ export function ContentManager({
                   </>
                 )}
 
-                {/* Highlights / Bullet points */}
-                {(() => {
-                  const availableItems =
-                    adminLangTab === "en"
-                      ? getListBlockItems(editor.contentBlocks)
-                      : getListBlockItems(editor.contentBlocks_vi);
-
-                  return (
-                    <BulletListEditor
-                      label={
-                        adminLangTab === "en"
-                          ? "Điểm nổi bật ngoài Thẻ Card (Key Highlights)"
-                          : "Điểm nổi bật ngoài Thẻ Card (Tiếng Việt)"
-                      }
-                      badge="Hiển thị ngoài Card"
-                      description="2-3 gạch đầu dòng tóm tắt xuất hiện trên thẻ Card ở trang Danh mục & Trang chủ. (Tùy chọn - nếu để trống sẽ tự động trích xuất từ Khối danh sách nội dung bên dưới)."
-                      placeholder={
-                        adminLangTab === "en"
-                          ? "Ví dụ: BIM Execution Planning & CDE..."
-                          : "Ví dụ: Kế hoạch thực thi BIM & quản trị CDE..."
-                      }
-                      items={
-                        adminLangTab === "en"
-                          ? (editor.highlights ?? [])
-                          : (editor.highlights_vi ?? [])
-                      }
-                      onExtract={
-                        availableItems.length > 0
-                          ? () => {
-                              if (adminLangTab === "en") {
-                                update({ highlights: availableItems.slice(0, 4) });
-                              } else {
-                                update({ highlights_vi: availableItems.slice(0, 4) });
-                              }
-                              toast.success(
-                                `Đã trích xuất ${Math.min(availableItems.length, 4)} điểm nổi bật từ Khối danh sách nội dung!`,
-                              );
-                            }
-                          : undefined
-                      }
-                      extractLabel={`Lấy từ Khối danh sách (${availableItems.length} mục)`}
-                      onChange={(items) =>
-                        update(
-                          adminLangTab === "en"
-                            ? { highlights: items }
-                            : { highlights_vi: items },
-                        )
-                      }
-                    />
-                  );
-                })()}
               </div>
 
               {/* SPECIFIC ATTRIBUTES CARD: DỰ ÁN */}
@@ -1267,17 +1205,6 @@ export function ContentManager({
                     </select>
                   </div>
                 )}
-
-                <div className="space-y-1.5">
-                  <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Thứ tự hiển thị</label>
-                  <input
-                    type="number"
-                    min="0"
-                    value={editor.sortOrder}
-                    onChange={(e) => update({ sortOrder: Number(e.target.value) })}
-                    className="w-full rounded-xl border border-border bg-background px-3.5 py-2 text-sm text-foreground outline-none transition focus:border-primary"
-                  />
-                </div>
 
                 <label className="flex items-center gap-2.5 pt-2 text-xs text-foreground cursor-pointer select-none">
                   <input
