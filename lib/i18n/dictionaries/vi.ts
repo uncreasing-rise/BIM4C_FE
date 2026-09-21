@@ -1,30 +1,6 @@
 import type { Dictionary } from "../types";
 
-/** Repairs Vietnamese strings that were accidentally decoded as ANSI. */
-function repairMojibake(value: unknown): unknown {
-    if (typeof value === "string") {
-        if (!/[ÃÂÄÅÆÐÑĂ]|á(?:»|º)|â(?:€|€“|-)|�/u.test(value)) {
-            return value;
-        }
-
-        const bytes = Uint8Array.from(value, (character) => character.charCodeAt(0));
-        return new TextDecoder("utf-8", { fatal: false }).decode(bytes);
-    }
-
-    if (Array.isArray(value)) {
-        return value.map(repairMojibake);
-    }
-
-    if (value && typeof value === "object") {
-        return Object.fromEntries(
-            Object.entries(value).map(([key, entry]) => [key, repairMojibake(entry)]),
-        );
-    }
-
-    return value;
-}
-
-const viDictionaryRaw: Dictionary = {
+export const viDictionary: Dictionary = {
     common: {
         talkToExpert: "Trao đổi với chuyên gia",
         contact: "Liên hệ",
@@ -781,5 +757,3 @@ const viDictionaryRaw: Dictionary = {
         },
     },
 };
-
-export const viDictionary = repairMojibake(viDictionaryRaw) as Dictionary;

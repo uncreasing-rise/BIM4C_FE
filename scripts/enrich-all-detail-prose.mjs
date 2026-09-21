@@ -3,16 +3,11 @@ const email = process.env.BIM4C_ADMIN_EMAIL;
 const password = process.env.BIM4C_ADMIN_PASSWORD;
 if (!email || !password) throw new Error("BIM4C_ADMIN_EMAIL and BIM4C_ADMIN_PASSWORD are required");
 
-function repair(value) {
-  if (typeof value !== "string") return value;
-  if (!/[ÃÂÄÅÆÐÑĂ]|á(?:»|º)|â(?:€|€“|-)|�/u.test(value)) return value;
-  return new TextDecoder("utf-8").decode(Uint8Array.from(value, (c) => c.charCodeAt(0)));
-}
 function cleanSections(sections) {
   return (Array.isArray(sections) ? sections : []).map((section) => ({
     ...section,
-    title: repair(section.title),
-    body: repair(section.body),
+    title: typeof section.title === "string" ? section.title.trim() : section.title,
+    body: typeof section.body === "string" ? section.body.trim() : section.body,
   }));
 }
 

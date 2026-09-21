@@ -16,7 +16,6 @@ export const DEFAULT_PARTNERS = [
   { name: "TCM", src: "/images/partners/logo-tcm.png" },
   { name: "Công ty Kiến trúc AVA", src: "/images/partners/logo-ava.png" },
   { name: "Viện Quy Hoạch Đô Thị", src: "/images/partners/logo-dothi.png" },
-  { name: "Office of Cities & Architecture", src: "/images/partners/logo-office-of-cities.png" },
   { name: "Strader", src: "/images/partners/logo-strader.png" },
   { name: "ZFenix", src: "/images/partners/logo-zfenix.png" },
   { name: "OneBIM", src: "/images/partners/logo-onebim.png" },
