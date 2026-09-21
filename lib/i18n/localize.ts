@@ -10,6 +10,20 @@ import type { ContentEntry } from "@/types/content";
  *         or returns translated Vietnamese content.
  * - 'en': Uses explicit English authored fields if present, or applies the dictionary/pattern translation.
  */
+function extractHighlightsFromBlocks(blocks: unknown): string[] {
+  if (!Array.isArray(blocks)) return [];
+  for (const block of blocks) {
+    if (block && typeof block === "object" && (block as { type?: string }).type === "feature-list") {
+      const items = (block as { items?: unknown[] }).items;
+      if (Array.isArray(items)) {
+        const valid = items.filter((x): x is string => typeof x === "string" && x.trim().length > 0);
+        if (valid.length > 0) return valid.slice(0, 4);
+      }
+    }
+  }
+  return [];
+}
+
 export function localizeContent<T extends { title: string }>(
   entry: T,
   locale: Locale = "vi",
@@ -65,6 +79,12 @@ export function localizeContent<T extends { title: string }>(
         ? legacyBlocks({ ...(entry as unknown as ContentEntry), sections: item.sections_vi })
         : (item as unknown as { contentBlocks?: unknown }).contentBlocks;
 
+    const viHighlights = item.highlights_vi?.length
+      ? item.highlights_vi
+      : (item as unknown as { highlights?: string[] }).highlights?.length
+        ? (item as unknown as { highlights: string[] }).highlights.map(toVietnameseLabel)
+        : extractHighlightsFromBlocks(viContentBlocks);
+
     return {
       ...entry,
       title: item.title_vi || toVietnameseLabel(entry.title),
@@ -75,11 +95,7 @@ export function localizeContent<T extends { title: string }>(
           ? { eyebrow: toVietnameseLabel((entry as unknown as { eyebrow: string }).eyebrow) }
           : {}),
       ...(item.meta_vi ? { meta: item.meta_vi } : {}),
-      ...(item.highlights_vi?.length
-        ? { highlights: item.highlights_vi }
-        : (item as unknown as { highlights?: string[] }).highlights?.length
-          ? { highlights: (item as unknown as { highlights: string[] }).highlights.map(toVietnameseLabel) }
-          : {}),
+      ...(viHighlights.length ? { highlights: viHighlights } : {}),
       ...(viSections ? { sections: viSections } : {}),
       ...(viContentBlocks ? { contentBlocks: viContentBlocks } : {}),
       ...(item.duration_vi
@@ -130,7 +146,15 @@ export function localizeContent<T extends { title: string }>(
         : (entry as unknown as { eyebrow?: string }).eyebrow
           ? { eyebrow: toEnglishLabel((entry as unknown as { eyebrow: string }).eyebrow) }
           : {}),
-      ...(item.highlights_en?.length ? { highlights: item.highlights_en } : {}),
+      ...((item.highlights_en?.length
+        ? item.highlights_en
+        : extractHighlightsFromBlocks(enContentBlocks)).length
+        ? {
+            highlights: item.highlights_en?.length
+              ? item.highlights_en
+              : extractHighlightsFromBlocks(enContentBlocks),
+          }
+        : {}),
       ...(enSections ? { sections: enSections } : {}),
       ...(enContentBlocks ? { contentBlocks: enContentBlocks } : {}),
       ...(item.duration_en

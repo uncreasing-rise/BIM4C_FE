@@ -405,16 +405,19 @@ export function ContentBlockEditor({
                   {/* FEATURE LIST */}
                   {block.type === "feature-list" && (
                     <>
+                      <div className="rounded-lg bg-muted/40 p-2.5 text-[11px] text-muted-foreground flex items-center justify-between">
+                        <span>Danh sách mục / tính năng hiển thị chi tiết trong <strong>thân bài viết</strong>.</span>
+                      </div>
                       <div className="space-y-1.5">
                         <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                          Tiêu đề danh sách
+                          Tiêu đề danh sách (Tùy chọn)
                         </label>
                         <Input
                           value={block.heading ?? ""}
                           onChange={(e) =>
                             update(index, { ...block, heading: e.target.value })
                           }
-                          placeholder="Ví dụ: Các tính năng cốt lõi"
+                          placeholder="Ví dụ: Các tính năng & phạm vi thực thi"
                           className="bg-white dark:bg-card border-slate-200/80 dark:border-border text-sm"
                         />
                       </div>

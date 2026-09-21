@@ -96,6 +96,17 @@ const empty = (type: AdminContentType): AdminContent => ({
   seoDescription_vi: "",
 });
 
+function getListBlockItems(blocks?: ContentBlock[]): string[] {
+  if (!blocks || !Array.isArray(blocks)) return [];
+  for (const b of blocks) {
+    if (b && b.type === "feature-list" && Array.isArray(b.items)) {
+      const valid = b.items.filter((x) => typeof x === "string" && x.trim().length > 0);
+      if (valid.length > 0) return valid;
+    }
+  }
+  return [];
+}
+
 export function ContentManager({
   contentType,
 }: {
@@ -493,9 +504,6 @@ export function ContentManager({
   if (editor) {
     const isEdit = Boolean(editor.id);
     const previewUrl = editor.slug ? `${publicBase}/${editor.slug}` : "";
-    const activeTitle = adminLangTab === "vi" ? (editor.title_vi || editor.title) : editor.title;
-    const activeSeoTitle = adminLangTab === "vi" ? (editor.seoTitle_vi || editor.seoTitle || activeTitle) : (editor.seoTitle || activeTitle);
-    const activeSeoDesc = adminLangTab === "vi" ? (editor.seoDescription_vi || editor.seoDescription || editor.description_vi || editor.description) : (editor.seoDescription || editor.description);
 
     return (
       <div className="fullscreen-crud-editor relative -mx-4 -my-6 sm:-mx-6 sm:-my-8 lg:-mx-8 lg:-my-8 min-h-[calc(100vh-70px)] bg-slate-50/50 dark:bg-background text-foreground flex flex-col">
@@ -776,18 +784,56 @@ export function ContentManager({
                 )}
 
                 {/* Highlights / Bullet points */}
-                <BulletListEditor
-                  label={adminLangTab === "en" ? "Điểm nổi bật (Key Highlights)" : "Điểm nổi bật (Tiếng Việt)"}
-                  placeholder={adminLangTab === "en" ? "Ví dụ: BIM Execution Planning..." : "Ví dụ: Kế hoạch thực thi BIM..."}
-                  items={adminLangTab === "en" ? (editor.highlights ?? []) : (editor.highlights_vi ?? [])}
-                  onChange={(items) =>
-                    update(
-                      adminLangTab === "en"
-                        ? { highlights: items }
-                        : { highlights_vi: items },
-                    )
-                  }
-                />
+                {(() => {
+                  const availableItems =
+                    adminLangTab === "en"
+                      ? getListBlockItems(editor.contentBlocks)
+                      : getListBlockItems(editor.contentBlocks_vi);
+
+                  return (
+                    <BulletListEditor
+                      label={
+                        adminLangTab === "en"
+                          ? "Điểm nổi bật ngoài Thẻ Card (Key Highlights)"
+                          : "Điểm nổi bật ngoài Thẻ Card (Tiếng Việt)"
+                      }
+                      badge="Hiển thị ngoài Card"
+                      description="2-3 gạch đầu dòng tóm tắt xuất hiện trên thẻ Card ở trang Danh mục & Trang chủ. (Tùy chọn - nếu để trống sẽ tự động trích xuất từ Khối danh sách nội dung bên dưới)."
+                      placeholder={
+                        adminLangTab === "en"
+                          ? "Ví dụ: BIM Execution Planning & CDE..."
+                          : "Ví dụ: Kế hoạch thực thi BIM & quản trị CDE..."
+                      }
+                      items={
+                        adminLangTab === "en"
+                          ? (editor.highlights ?? [])
+                          : (editor.highlights_vi ?? [])
+                      }
+                      onExtract={
+                        availableItems.length > 0
+                          ? () => {
+                              if (adminLangTab === "en") {
+                                update({ highlights: availableItems.slice(0, 4) });
+                              } else {
+                                update({ highlights_vi: availableItems.slice(0, 4) });
+                              }
+                              toast.success(
+                                `Đã trích xuất ${Math.min(availableItems.length, 4)} điểm nổi bật từ Khối danh sách nội dung!`,
+                              );
+                            }
+                          : undefined
+                      }
+                      extractLabel={`Lấy từ Khối danh sách (${availableItems.length} mục)`}
+                      onChange={(items) =>
+                        update(
+                          adminLangTab === "en"
+                            ? { highlights: items }
+                            : { highlights_vi: items },
+                        )
+                      }
+                    />
+                  );
+                })()}
               </div>
 
               {/* SPECIFIC ATTRIBUTES CARD: DỰ ÁN */}
@@ -1246,10 +1292,18 @@ export function ContentManager({
 
               {/* Featured Image Card */}
               <div className="rounded-2xl border border-border bg-card p-6 shadow-xs space-y-4">
-                <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
-                  <ImageIcon className="size-4 text-primary" />
-                  <span>Ảnh đại diện (Thumbnail)</span>
-                </h3>
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
+                    <ImageIcon className="size-4 text-primary" />
+                    <span>Ảnh đại diện (Thumbnail)</span>
+                  </h3>
+                  {editor.image && (
+                    <MediaPicker
+                      label="Đổi ảnh"
+                      onSelect={(media) => update({ image: media.url })}
+                    />
+                  )}
+                </div>
 
                 {editor.image ? (
                   <div className="relative aspect-video w-full overflow-hidden rounded-xl border border-border bg-muted group">
@@ -1279,140 +1333,13 @@ export function ContentManager({
                     <ImageIcon className="size-8 text-muted-foreground mx-auto" />
                     <p className="text-xs text-muted-foreground">Chưa có ảnh đại diện cho nội dung này</p>
                     <MediaPicker
-                      label="Chọn ảnh từ Thư viện"
+                      label="Tải ảnh lên / Chọn từ Thư viện"
                       onSelect={(media) => update({ image: media.url })}
                     />
                   </div>
                 )}
-
-                <div className="space-y-1.5">
-                  <label className="text-xs font-mono text-muted-foreground">URL Ảnh trực tiếp</label>
-                  <input
-                    placeholder="/images/example.webp hoặc https://..."
-                    value={editor.image}
-                    onChange={(e) => update({ image: e.target.value })}
-                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-xs font-mono text-foreground outline-none"
-                  />
-                </div>
               </div>
-
-              {/* SEO & Social Metadata Card */}
-              <div className="rounded-2xl border border-border bg-card p-6 shadow-xs space-y-4">
-                <div className="flex items-center justify-between border-b border-border pb-3">
-                  <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
-                    <Globe className="size-4 text-primary" />
-                    <span>Tối ưu SEO & Metadata</span>
-                  </h3>
-                  <span className="text-xs text-muted-foreground">
-                    {adminLangTab === "en" ? "🇬🇧 English Meta" : "🇻🇳 Tiếng Việt Meta"}
-                  </span>
-                </div>
-
-                {/* Google SERP Snippet Preview */}
-                <div className="rounded-xl border border-border/80 bg-muted/40 p-3.5 space-y-1 font-sans text-left">
-                  <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                    Google Search Preview
-                  </span>
-                  <div className="text-xs text-emerald-600 dark:text-emerald-400 font-mono truncate">
-                    https://bim4c.vn{publicBase}/{editor.slug || "slug-url"}
-                  </div>
-                  <div className="text-sm font-semibold text-blue-600 dark:text-blue-400 line-clamp-1 hover:underline cursor-pointer">
-                    {activeSeoTitle || "Tiêu đề SEO của bạn"}
-                  </div>
-                  <div className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
-                    {activeSeoDesc || "Mô tả SEO xuất hiện trên trang tìm kiếm Google và các mạng xã hội khi chia sẻ liên kết."}
-                  </div>
-                </div>
-
-                {adminLangTab === "en" ? (
-                  <>
-                    <div className="space-y-1.5">
-                      <div className="flex justify-between text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                        <span>SEO Title (English)</span>
-                        <span className="font-mono text-[10px]">{(editor.seoTitle ?? "").length}/60</span>
-                      </div>
-                      <input
-                        placeholder="Meta title in English..."
-                        value={editor.seoTitle ?? ""}
-                        onChange={(e) => update({ seoTitle: e.target.value })}
-                        className="w-full rounded-xl border border-border bg-background px-3.5 py-2 text-xs text-foreground outline-none transition focus:border-primary"
-                      />
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <div className="flex justify-between text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                        <span>SEO Description (English)</span>
-                        <span className="font-mono text-[10px]">{(editor.seoDescription ?? "").length}/160</span>
-                      </div>
-                      <textarea
-                        rows={3}
-                        placeholder="Meta description in English..."
-                        value={editor.seoDescription ?? ""}
-                        onChange={(e) => update({ seoDescription: e.target.value })}
-                        className="w-full rounded-xl border border-border bg-background p-3 text-xs text-foreground outline-none transition focus:border-primary"
-                      />
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div className="space-y-1.5">
-                      <div className="flex justify-between text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                        <span>SEO Title (Tiếng Việt)</span>
-                        <span className="font-mono text-[10px]">{(editor.seoTitle_vi ?? "").length}/60</span>
-                      </div>
-                      <input
-                        placeholder="Tiêu đề SEO Tiếng Việt..."
-                        value={editor.seoTitle_vi ?? ""}
-                        onChange={(e) => update({ seoTitle_vi: e.target.value })}
-                        className="w-full rounded-xl border border-border bg-background px-3.5 py-2 text-xs text-foreground outline-none transition focus:border-primary"
-                      />
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <div className="flex justify-between text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                        <span>SEO Description (Tiếng Việt)</span>
-                        <span className="font-mono text-[10px]">{(editor.seoDescription_vi ?? "").length}/160</span>
-                      </div>
-                      <textarea
-                        rows={3}
-                        placeholder="Mô tả SEO Tiếng Việt..."
-                        value={editor.seoDescription_vi ?? ""}
-                        onChange={(e) => update({ seoDescription_vi: e.target.value })}
-                        className="w-full rounded-xl border border-border bg-background p-3 text-xs text-foreground outline-none transition focus:border-primary"
-                      />
-                    </div>
-                  </>
-                )}
-
-                <div className="space-y-1.5">
-                  <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Canonical URL</label>
-                  <input
-                    placeholder="https://bim4c.vn/..."
-                    value={editor.canonicalUrl ?? ""}
-                    onChange={(e) => update({ canonicalUrl: e.target.value })}
-                    className="w-full rounded-xl border border-border bg-background px-3.5 py-2 text-xs font-mono text-foreground outline-none transition focus:border-primary"
-                  />
-                </div>
-
-                <div className="space-y-1.5">
-                  <div className="flex items-center justify-between">
-                    <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Ảnh chia sẻ SEO (Social Card)</label>
-                    <MediaPicker
-                      label="Chọn ảnh SEO"
-                      onSelect={(media) => update({ seoImage: media.url })}
-                    />
-                  </div>
-                  <input
-                    placeholder="/images/seo-share.webp"
-                    value={editor.seoImage ?? ""}
-                    onChange={(e) => update({ seoImage: e.target.value })}
-                    className="w-full rounded-xl border border-border bg-background px-3.5 py-2 text-xs font-mono text-foreground outline-none transition focus:border-primary"
-                  />
-                </div>
-              </div>
-
             </div>
-
           </div>
         </div>
 
