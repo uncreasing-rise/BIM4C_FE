@@ -3,15 +3,15 @@ import { canDeferBuildData } from "@/lib/config/build";
 import { DEFAULT_METRICS, type SiteSettingsData } from "./types";
 
 export const DEFAULT_SITE_SETTINGS: SiteSettingsData = {
-  companyName: "BIM4C",
-  email: "info@bim4c.vn",
-  phone: "+84 28 1234 5678",
-  address: "Toà nhà BIM4C, TP. Hồ Chí Minh, Việt Nam",
-  brochureUrl: "https://www.bim4c.vn/brochure.pdf",
+  companyName: "Công ty Cổ phần Công nghệ và Xây dựng BIM4C",
+  email: "Bim4c.lab@gmail.com",
+  phone: "+84 93 2468 099",
+  address: "20 Bắc Sơn, Đà Nẵng, Việt Nam",
+  brochureUrl: "/documents/bim4c-profile-2026-vi.pdf",
   metrics: DEFAULT_METRICS,
   socialLinks: {
+    linkedin: "https://www.linkedin.com/company/bim4c",
     facebook: "https://facebook.com/bim4c",
-    linkedin: "https://linkedin.com/company/bim4c",
     youtube: "https://youtube.com/@bim4c",
   },
   defaultSeoTitle: "BIM4C - Tiên phong Chuyển đổi số Xây dựng",

@@ -280,25 +280,12 @@ export function SettingsManager() {
             <label className="block text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
               <Share2 className="size-3.5 text-primary" /> Liên kết Mạng xã hội
             </label>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-              <div>
-                <span className="text-[11px] font-medium text-muted-foreground block mb-1">Facebook Fanpage:</span>
-                <Input
-                  value={data.socialLinks?.facebook ?? ""}
-                  placeholder="https://facebook.com/..."
-                  onChange={(e) => {
-                    const next = { ...(data.socialLinks || {}), facebook: e.target.value };
-                    setData({ ...data, socialLinks: next });
-                    setSocialLinksJson(JSON.stringify(next, null, 2));
-                  }}
-                  className="bg-white dark:bg-background border-slate-200 dark:border-border text-xs"
-                />
-              </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
               <div>
                 <span className="text-[11px] font-medium text-muted-foreground block mb-1">LinkedIn Company:</span>
                 <Input
                   value={data.socialLinks?.linkedin ?? ""}
-                  placeholder="https://linkedin.com/company/..."
+                  placeholder="https://linkedin.com/company/bim4c"
                   onChange={(e) => {
                     const next = { ...(data.socialLinks || {}), linkedin: e.target.value };
                     setData({ ...data, socialLinks: next });
@@ -308,12 +295,12 @@ export function SettingsManager() {
                 />
               </div>
               <div>
-                <span className="text-[11px] font-medium text-muted-foreground block mb-1">Zalo Official / SĐT:</span>
+                <span className="text-[11px] font-medium text-muted-foreground block mb-1">Facebook Fanpage:</span>
                 <Input
-                  value={data.socialLinks?.zalo ?? ""}
-                  placeholder="https://zalo.me/..."
+                  value={data.socialLinks?.facebook ?? ""}
+                  placeholder="https://facebook.com/bim4c"
                   onChange={(e) => {
-                    const next = { ...(data.socialLinks || {}), zalo: e.target.value };
+                    const next = { ...(data.socialLinks || {}), facebook: e.target.value };
                     setData({ ...data, socialLinks: next });
                     setSocialLinksJson(JSON.stringify(next, null, 2));
                   }}
@@ -324,7 +311,7 @@ export function SettingsManager() {
                 <span className="text-[11px] font-medium text-muted-foreground block mb-1">YouTube Channel:</span>
                 <Input
                   value={data.socialLinks?.youtube ?? ""}
-                  placeholder="https://youtube.com/@..."
+                  placeholder="https://youtube.com/@bim4c"
                   onChange={(e) => {
                     const next = { ...(data.socialLinks || {}), youtube: e.target.value };
                     setData({ ...data, socialLinks: next });

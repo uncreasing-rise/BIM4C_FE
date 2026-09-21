@@ -6,6 +6,7 @@ import { useLanguage } from "@/lib/i18n/context";
 import { ArrowUpRight, Mail, MapPin, Phone } from "lucide-react";
 import Image from "next/image";
 import { LocalizedLink as Link } from "@/components/shared/LocalizedLink";
+import { SocialLinks } from "@/components/shared/SocialLinks";
 
 export function Footer() {
   const { t, locale } = useLanguage();
@@ -66,6 +67,12 @@ export function Footer() {
               <Phone className="size-4 text-teal-300" />
               +84 93 2468 099
             </a>
+            <div className="pt-2">
+              <span className="text-[11px] font-medium tracking-wider uppercase text-slate-400 block mb-2.5">
+                {locale === "vi" ? "Kết nối mạng xã hội" : "Connect with us"}
+              </span>
+              <SocialLinks variant="icons" />
+            </div>
           </div>
         </div>
         <div>

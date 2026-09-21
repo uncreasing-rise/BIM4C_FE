@@ -20,6 +20,7 @@ import {
   FileClock,
   Settings,
   Sparkles,
+  Handshake,
   RotateCw,
   ExternalLink,
   X,
@@ -32,7 +33,7 @@ import { toast } from "sonner";
 
 const navigation = [
   { href: "/admin", label: "Tổng quan", icon: LayoutDashboard },
-  { href: "/admin/trang-chu", label: "Trang chủ", icon: Sparkles },
+  { href: "/admin/trang-chu", label: "Đối tác & Khách hàng", icon: Handshake },
   { href: "/admin/chuyen-mon", label: "Chuyên môn BIM", icon: BookOpen },
   { href: "/admin/tin-tuc", label: "Tin tức & Sự kiện", icon: FileText },
   { href: "/admin/du-an", label: "Dự án", icon: Layers },

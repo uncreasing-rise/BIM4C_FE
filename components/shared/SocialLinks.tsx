@@ -61,17 +61,6 @@ export const YoutubeIcon = ({
   </svg>
 );
 
-export const ZaloIcon = ({ className = "size-4" }: { className?: string }) => (
-  <svg
-    viewBox="0 0 24 24"
-    fill="currentColor"
-    className={className}
-    aria-hidden="true"
-  >
-    <path d="M12 2C6.48 2 2 6.03 2 11c0 2.87 1.5 5.43 3.84 7.02-.17.96-.68 2.5-1.57 3.56 1.83-.2 3.8-.93 4.92-1.78.9.26 1.84.4 2.81.4 5.52 0 10-4.03 10-9s-4.48-9-10-9zm-1.8 12.8H7.4v-1.2l2.4-3.2H7.6v-1.2h3.8v1.2l-2.4 3.2h2.8v1.2zm3.8 0h-1.4V8.4h1.4v6.4zm4.2 0h-1.4v-2.8h-2v2.8h-1.4V8.4h1.4v2.4h2V8.4h1.4v6.4z" />
-  </svg>
-);
-
 export const GithubIcon = ({
   className = "size-4",
 }: {
@@ -87,25 +76,112 @@ export const GithubIcon = ({
   </svg>
 );
 
-// No social account URLs are supplied in the company profile.
-export const SOCIAL_NETWORKS: SocialItem[] = [];
+export const SOCIAL_TEMPLATES: Record<string, Omit<SocialItem, "url">> = {
+  linkedin: {
+    id: "linkedin",
+    name: "LinkedIn",
+    handle: "BIM4C Company",
+    icon: LinkedinIcon,
+    color: "text-[#0A66C2]",
+    hoverBg: "hover:bg-[#0A66C2]/10",
+    hoverBorder: "hover:border-[#0A66C2]/40",
+    description:
+      "Mạng lưới doanh nghiệp, cơ hội hợp tác & cập nhật dự án chuyển đổi số BIM4C.",
+    description_en:
+      "Corporate network, partnership opportunities and BIM4C digital project updates.",
+  },
+  facebook: {
+    id: "facebook",
+    name: "Facebook",
+    handle: "@bim4c",
+    icon: FacebookIcon,
+    color: "text-[#1877F2]",
+    hoverBg: "hover:bg-[#1877F2]/10",
+    hoverBorder: "hover:border-[#1877F2]/40",
+    description:
+      "Cộng đồng BIM4C, tin tức hoạt động và chia sẻ kiến thức công nghệ xây dựng.",
+    description_en:
+      "BIM4C community, activities, events and digital construction insights.",
+  },
+  youtube: {
+    id: "youtube",
+    name: "YouTube",
+    handle: "@bim4c",
+    icon: YoutubeIcon,
+    color: "text-[#FF0000]",
+    hoverBg: "hover:bg-[#FF0000]/10",
+    hoverBorder: "hover:border-[#FF0000]/40",
+    description:
+      "Video hướng dẫn chuyên sâu về Revit, Dynamo, Navisworks và quy trình OpenBIM.",
+    description_en:
+      "In-depth video tutorials on Revit, Dynamo, Navisworks and OpenBIM workflows.",
+  },
+  github: {
+    id: "github",
+    name: "GitHub",
+    handle: "bim4c",
+    icon: GithubIcon,
+    color: "text-slate-800 dark:text-slate-200",
+    hoverBg: "hover:bg-slate-500/10",
+    hoverBorder: "hover:border-slate-500/40",
+    description: "Kho mã nguồn mở, add-in và công cụ số hóa BIM4C.",
+    description_en: "Open-source repositories, add-ins and BIM4C automation tools.",
+  },
+};
+
+export const DEFAULT_SOCIAL_NETWORKS: SocialItem[] = [
+  {
+    ...SOCIAL_TEMPLATES.linkedin,
+    url: "https://www.linkedin.com/company/bim4c",
+  },
+  {
+    ...SOCIAL_TEMPLATES.facebook,
+    url: "https://www.facebook.com/bim4c",
+  },
+  {
+    ...SOCIAL_TEMPLATES.youtube,
+    url: "https://www.youtube.com/@bim4c",
+  },
+];
+
+export const SOCIAL_NETWORKS: SocialItem[] = DEFAULT_SOCIAL_NETWORKS;
 
 interface SocialLinksProps {
   variant?: "cards" | "icons" | "pills";
   className?: string;
+  customLinks?: Record<string, string>;
 }
 
 export function SocialLinks({
   variant = "icons",
   className = "",
+  customLinks,
 }: SocialLinksProps) {
   const { locale } = useLanguage();
+
+  let networks: SocialItem[];
+
+  if (customLinks) {
+    networks = Object.entries(customLinks)
+      .filter(([id, url]) => Boolean(url && typeof url === "string" && url.trim() && SOCIAL_TEMPLATES[id]))
+      .map(([id, url]) => ({
+        ...SOCIAL_TEMPLATES[id],
+        url: url.trim(),
+      }));
+  } else {
+    networks = DEFAULT_SOCIAL_NETWORKS.filter((item) => Boolean(item.url && item.url.trim()));
+  }
+
+  if (networks.length === 0) {
+    return null;
+  }
+
   if (variant === "cards") {
     return (
       <div
-        className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 ${className}`}
+        className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 ${className}`}
       >
-        {SOCIAL_NETWORKS.map((item) => {
+        {networks.map((item) => {
           const Icon = item.icon;
           return (
             <a
@@ -143,7 +219,7 @@ export function SocialLinks({
   if (variant === "pills") {
     return (
       <div className={`flex flex-wrap items-center gap-2.5 ${className}`}>
-        {SOCIAL_NETWORKS.map((item) => {
+        {networks.map((item) => {
           const Icon = item.icon;
           return (
             <a
@@ -163,8 +239,8 @@ export function SocialLinks({
   }
 
   return (
-    <div className={`flex items-center gap-2 ${className}`}>
-      {SOCIAL_NETWORKS.map((item) => {
+    <div className={`flex items-center gap-2.5 ${className}`}>
+      {networks.map((item) => {
         const Icon = item.icon;
         return (
           <a
@@ -174,7 +250,7 @@ export function SocialLinks({
             rel="noopener noreferrer"
             title={`${item.name} - ${item.handle}`}
             aria-label={item.name}
-            className={`flex size-9 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-slate-300 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md ${item.hoverBg} ${item.hoverBorder}`}
+            className={`flex size-9 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-slate-300 transition-all duration-200 hover:-translate-y-0.5 hover:text-white hover:shadow-md ${item.hoverBg} ${item.hoverBorder}`}
           >
             <Icon className="size-4" />
           </a>
