@@ -24,6 +24,18 @@ export const DEFAULT_PARTNERS = [
   { name: "BSI", src: "/images/partners/logo-bsi.png" },
 ];
 
+const EXCLUDED_PARTNER_NAMES = new Set([
+  "office of cities & architecture",
+  "office of cities_architecture",
+  "office of cities",
+  "by royal charter",
+  "royal charter",
+  "bim4c",
+  "bim4c jsc",
+  "bim4c construction",
+  "công ty cổ phần công nghệ và xây dựng bim4c",
+]);
+
 const LOGO_MAP: Record<string, string> = {
   "bitexco": "/images/partners/bitexco.png",
   "bitexco group": "/images/partners/bitexco.png",
@@ -47,8 +59,6 @@ const LOGO_MAP: Record<string, string> = {
   "viện quy hoạch đô thị": "/images/partners/logo-dothi.png",
   "dothi": "/images/partners/logo-dothi.png",
   "dothico": "/images/partners/logo-dothi.png",
-  "office of cities & architecture": "/images/partners/logo-office-of-cities.png",
-  "office of cities_architecture": "/images/partners/logo-office-of-cities.png",
   "onebim": "/images/partners/logo-onebim.png",
   "strader": "/images/partners/logo-strader.png",
   "strader consult": "/images/partners/logo-strader.png",
@@ -91,6 +101,16 @@ export function Partners({ compact = false, customPartners }: PartnersProps) {
       if (!p.src || !p.name) return false;
       const normSrc = p.src.toLowerCase();
       const normName = p.name.toLowerCase().trim();
+      if (
+        EXCLUDED_PARTNER_NAMES.has(normName) ||
+        normSrc.includes("office-of-cities") ||
+        normSrc.includes("royal-charter") ||
+        normSrc.includes("bim4c-logo") ||
+        normSrc.endsWith("/images/logo.png") ||
+        normSrc.endsWith("/images/logo.jpg")
+      ) {
+        return false;
+      }
       if (seenSrc.has(normSrc) || seenName.has(normName)) return false;
       seenSrc.add(normSrc);
       seenName.add(normName);

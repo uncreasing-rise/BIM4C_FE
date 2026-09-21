@@ -184,25 +184,25 @@ export function AboutView({
             </p>
           </div>
 
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-6">
+          <div className="grid gap-6 md:grid-cols-3">
             {values.map((v, i) => {
               const Icon = v.icon;
               return (
                 <div
                   key={i}
-                  className={`${i === 0 ? "lg:col-span-2 lg:row-span-2" : "lg:col-span-2"} rounded-2xl border border-white/10 bg-white/[0.06] p-7 shadow-xs transition-all duration-300 hover:-translate-y-1 hover:bg-white/[0.1] flex flex-col justify-between`}
+                  className="rounded-2xl border border-white/10 bg-white/[0.06] p-8 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:bg-white/[0.1] hover:border-primary/40 flex flex-col justify-between h-full"
                   data-motion="tile"
                 >
                   <div>
                     <span
-                      className={`grid size-12 place-items-center rounded-xl ${v.bg} ${v.color} mb-4`}
+                      className={`grid size-12 place-items-center rounded-xl ${v.bg} ${v.color} mb-5`}
                     >
                       <Icon className="size-6" />
                     </span>
-                    <h3 className="text-lg font-bold text-white">
+                    <h3 className="text-xl font-bold text-white">
                       {v.title}
                     </h3>
-                    <p className="mt-2 text-sm leading-relaxed text-slate-300">
+                    <p className="mt-3 text-sm leading-relaxed text-slate-300">
                       {v.text}
                     </p>
                   </div>
