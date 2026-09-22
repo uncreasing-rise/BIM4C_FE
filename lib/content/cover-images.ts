@@ -3,55 +3,72 @@
  * Ensures every card, listing, and detail page has a high-quality contextual cover image.
  */
 
+export const SUPABASE_MEDIA_URLS = {
+  heroSkyline: "https://kpetxiswbznomxsfaavv.supabase.co/storage/v1/object/public/media/media-1790093849834-hero-skyline-bim.jpg",
+  projHoaXuan: "https://kpetxiswbznomxsfaavv.supabase.co/storage/v1/object/public/media/media-1790093851283-project-hoa-xuan.jpg",
+  projNamHaiVan: "https://kpetxiswbznomxsfaavv.supabase.co/storage/v1/object/public/media/media-1790093852470-project-nam-hai-van.jpg",
+  projMBeach: "https://kpetxiswbznomxsfaavv.supabase.co/storage/v1/object/public/media/media-1790093853589-project-m-beach.jpg",
+  projTranNamTrung: "https://kpetxiswbznomxsfaavv.supabase.co/storage/v1/object/public/media/media-1790093854008-project-tran-nam-trung.jpg",
+  projSchool: "https://kpetxiswbznomxsfaavv.supabase.co/storage/v1/object/public/media/media-1790093854452-project-school.jpg",
+  projHoaNhon: "https://kpetxiswbznomxsfaavv.supabase.co/storage/v1/object/public/media/media-1790093855087-project-hoa-nhon.jpg",
+  servBim3D: "https://kpetxiswbznomxsfaavv.supabase.co/storage/v1/object/public/media/media-1790093855737-service-bim-3d.jpg",
+  servScanBim: "https://kpetxiswbznomxsfaavv.supabase.co/storage/v1/object/public/media/media-1790093856181-service-scan-bim.jpg",
+  courseLab: "https://kpetxiswbznomxsfaavv.supabase.co/storage/v1/object/public/media/media-1790093856721-course-bim-lab.jpg",
+  postDigitalTwin: "https://kpetxiswbznomxsfaavv.supabase.co/storage/v1/object/public/media/media-1790093857089-post-digital-twin.jpg",
+  postSiteSafety: "https://kpetxiswbznomxsfaavv.supabase.co/storage/v1/object/public/media/media-1790093857436-post-site-safety.jpg",
+};
+
 export const SERVICE_COVER_MAP: Record<string, string> = {
   // 1. BIM Services
-  "bim-3d": "/images/service-bim.jpg",
-  "bim-4d": "/images/news-project-coordination.webp",
-  "bim-5d": "/images/news-digital-twin.webp",
-  "bim-6d": "/images/news-digital-twin.webp",
-  "bim-7d": "/images/news-digital-twin.webp",
-  "tu-van-mo-hinh-hoa-bim-3d": "/images/service-bim.jpg",
+  "bim-3d": SUPABASE_MEDIA_URLS.servBim3D,
+  "bim-4d": SUPABASE_MEDIA_URLS.postSiteSafety,
+  "bim-5d": SUPABASE_MEDIA_URLS.postDigitalTwin,
+  "bim-6d": SUPABASE_MEDIA_URLS.postDigitalTwin,
+  "bim-7d": SUPABASE_MEDIA_URLS.postDigitalTwin,
+  "tu-van-mo-hinh-hoa-bim-3d": SUPABASE_MEDIA_URLS.servBim3D,
 
   // 2. Survey & Digitization
-  "laser-scan": "/images/service-bim.jpg",
-  "lidar": "/images/news-digital-twin.webp",
-  "scan-to-bim": "/images/service-bim.jpg",
+  "laser-scan": SUPABASE_MEDIA_URLS.servScanBim,
+  "lidar": SUPABASE_MEDIA_URLS.servScanBim,
+  "scan-to-bim": SUPABASE_MEDIA_URLS.servScanBim,
+  "khao-sat-laser-scan-to-bim": SUPABASE_MEDIA_URLS.servScanBim,
 
   // 3. Design
-  "kien-truc": "/images/service-design.jpg",
-  "noi-that": "/images/service-design.jpg",
-  "canh-quan": "/images/service-design.jpg",
-  "ha-tang": "/images/project-matrix.jpg",
-  "quy-hoach-1-500": "/images/service-design.jpg",
+  "kien-truc": SUPABASE_MEDIA_URLS.projMBeach,
+  "noi-that": SUPABASE_MEDIA_URLS.projMBeach,
+  "canh-quan": SUPABASE_MEDIA_URLS.projSchool,
+  "ha-tang": SUPABASE_MEDIA_URLS.projHoaXuan,
+  "quy-hoach-1-500": SUPABASE_MEDIA_URLS.projHoaXuan,
 
   // 4. Consulting & Management
-  "quan-ly-du-an": "/images/service-consulting.jpg",
-  "giam-sat-thi-cong": "/images/news-site-safety.webp",
-  "giam-sat-lap-dat-thiet-bi": "/images/service-consulting.jpg",
-  "tham-tra-tham-dinh-thiet-ke": "/images/service-consulting.jpg",
+  "quan-ly-du-an": SUPABASE_MEDIA_URLS.postSiteSafety,
+  "giam-sat-thi-cong": SUPABASE_MEDIA_URLS.postSiteSafety,
+  "giam-sat-lap-dat-thiet-bi": SUPABASE_MEDIA_URLS.postSiteSafety,
+  "tham-tra-tham-dinh-thiet-ke": SUPABASE_MEDIA_URLS.postSiteSafety,
 
   // 5. Training
-  "dao-tao-chuyen-giao-cong-nghe": "/images/news-bim-training.webp",
+  "dao-tao-chuyen-giao-cong-nghe": SUPABASE_MEDIA_URLS.courseLab,
+  "chuyen-vien-phoi-hop-bim-3d": SUPABASE_MEDIA_URLS.courseLab,
 };
 
 export const CATEGORY_FALLBACK_MAP: Record<string, string> = {
-  "BIM": "/images/service-bim.jpg",
-  "Tư vấn BIM": "/images/service-bim.jpg",
-  "BIM services": "/images/service-bim.jpg",
-  "Khảo sát & Số hóa": "/images/service-bim.jpg",
-  "Survey & digitization": "/images/service-bim.jpg",
-  "Thiết kế": "/images/service-design.jpg",
-  "Design": "/images/service-design.jpg",
-  "Tư vấn & Quản lý": "/images/service-consulting.jpg",
-  "Consulting & management": "/images/service-consulting.jpg",
-  "Đào tạo": "/images/news-bim-training.webp",
-  "Training": "/images/news-bim-training.webp",
-  "Công trình cao tầng": "/images/project-matrix.jpg",
-  "Khu phức hợp": "/images/project-lumi.jpg",
-  "Chung cư cao cấp": "/images/project-elysian.jpg",
-  "Công nghệ": "/images/news-digital-twin.webp",
-  "An toàn": "/images/news-site-safety.webp",
-  "Dự án": "/images/news-project-coordination.webp",
+  "BIM": SUPABASE_MEDIA_URLS.servBim3D,
+  "Tư vấn BIM": SUPABASE_MEDIA_URLS.servBim3D,
+  "BIM services": SUPABASE_MEDIA_URLS.servBim3D,
+  "Khảo sát & Số hóa": SUPABASE_MEDIA_URLS.servScanBim,
+  "Survey & digitization": SUPABASE_MEDIA_URLS.servScanBim,
+  "Thiết kế": SUPABASE_MEDIA_URLS.projMBeach,
+  "Design": SUPABASE_MEDIA_URLS.projMBeach,
+  "Tư vấn & Quản lý": SUPABASE_MEDIA_URLS.postSiteSafety,
+  "Consulting & management": SUPABASE_MEDIA_URLS.postSiteSafety,
+  "Đào tạo": SUPABASE_MEDIA_URLS.courseLab,
+  "Training": SUPABASE_MEDIA_URLS.courseLab,
+  "Công trình cao tầng": SUPABASE_MEDIA_URLS.projMBeach,
+  "Khu phức hợp": SUPABASE_MEDIA_URLS.heroSkyline,
+  "Chung cư cao cấp": SUPABASE_MEDIA_URLS.projMBeach,
+  "Công nghệ": SUPABASE_MEDIA_URLS.postDigitalTwin,
+  "An toàn": SUPABASE_MEDIA_URLS.postSiteSafety,
+  "Dự án": SUPABASE_MEDIA_URLS.projHoaXuan,
 };
 
 export function resolveCoverImage(options: {
