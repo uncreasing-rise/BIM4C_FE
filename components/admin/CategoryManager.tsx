@@ -60,7 +60,7 @@ export function CategoryManager({
       }
       setName("");
       setEditing(null);
-      void revalidateCmsCache();
+      await revalidateCmsCache();
       await load();
       onChange();
     } catch (e) {
@@ -77,7 +77,7 @@ export function CategoryManager({
     try {
       await adminContentApi.deleteCategory(type, id);
       toast.success("Đã xóa danh mục!", { id: toastId });
-      void revalidateCmsCache();
+      await revalidateCmsCache();
       await load();
       onChange();
     } catch (e) {

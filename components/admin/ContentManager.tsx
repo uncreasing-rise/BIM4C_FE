@@ -338,8 +338,8 @@ export function ContentManager({
       }
       setDirty(false);
       setEditor(null);
-      void revalidateCmsCache();
-      void load();
+      await revalidateCmsCache();
+      await load();
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : "Không thể lưu nội dung.",
@@ -359,8 +359,8 @@ export function ContentManager({
     try {
       await adminContentApi.remove(contentType, id);
       toast.success("Xóa nội dung thành công!", { id: toastId });
-      void revalidateCmsCache();
-      void load();
+      await revalidateCmsCache();
+      await load();
     } catch (error) {
       setItems(prevItems);
       toast.error(error instanceof Error ? error.message : "Không thể xóa.", {
@@ -404,8 +404,8 @@ export function ContentManager({
         );
       }
       setSelected([]);
-      void revalidateCmsCache();
-      void load();
+      await revalidateCmsCache();
+      await load();
     } catch (error) {
       setItems(prevItems);
       toast.error(

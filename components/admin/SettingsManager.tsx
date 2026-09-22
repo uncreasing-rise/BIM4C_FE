@@ -124,7 +124,7 @@ export function SettingsManager() {
       });
       toast.success("Đã lưu cài đặt hệ thống thành công!", { id: toastId });
       setMsg("Đã lưu cài đặt.");
-      void revalidateCmsCache();
+      await revalidateCmsCache();
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : "Không thể lưu cài đặt";
       toast.error(errorMsg, { id: toastId });

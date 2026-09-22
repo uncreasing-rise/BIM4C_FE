@@ -86,7 +86,7 @@ export function HomepageManager() {
       });
       setEditing(null);
       toast.success("Đã cập nhật đối tác thành công!", { id: toastId });
-      void revalidateCmsCache();
+      await revalidateCmsCache();
       await load();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Không thể lưu dữ liệu.", { id: toastId });
@@ -107,8 +107,8 @@ export function HomepageManager() {
     try {
       await adminRequest(`homepage/partners/${item.id}`, { method: "DELETE" });
       toast.success("Đã xóa đối tác thành công!", { id: toastId });
-      void revalidateCmsCache();
-      void load();
+      await revalidateCmsCache();
+      await load();
     } catch (err) {
       setItems(prevItems);
       toast.error(err instanceof Error ? err.message : "Không thể xóa nội dung.", { id: toastId });
@@ -129,8 +129,8 @@ export function HomepageManager() {
         body: JSON.stringify({ isActive: newActive }),
       });
       toast.success("Đã đổi trạng thái hiển thị!", { id: toastId });
-      void revalidateCmsCache();
-      void load();
+      await revalidateCmsCache();
+      await load();
     } catch (err) {
       setItems(prevItems);
       toast.error(err instanceof Error ? err.message : "Không thể cập nhật trạng thái.", { id: toastId });
@@ -163,8 +163,8 @@ export function HomepageManager() {
         });
       }
       toast.success("Đã thay đổi thứ tự!");
-      void revalidateCmsCache();
-      void load();
+      await revalidateCmsCache();
+      await load();
     } catch {
       setItems(prevItems);
       toast.error("Không thể thay đổi vị trí.");

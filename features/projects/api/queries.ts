@@ -56,6 +56,13 @@ export async function getProjectsPage(
     infrastructure: "ha-tang",
     mep: "co-dien",
   };
+  const statusSlug: Record<string, string> = {
+    "in delivery": "in_progress",
+    "in progress": "in_progress",
+    completed: "completed",
+    planned: "planned",
+    profiled: "profiled",
+  };
   const endpoint = withQueryParams(API_ENDPOINTS.projects.list, {
     page,
     limit,
@@ -65,7 +72,9 @@ export async function getProjectsPage(
       params.category?.toLowerCase().replace(/\s+/g, "-"),
     location: params.location,
     year: params.year,
-    status: params.status,
+    status:
+      statusSlug[params.status?.trim().toLowerCase() ?? ""] ??
+      params.status?.trim().toLowerCase(),
     sortBy: params.sortBy,
     sortOrder: params.sortOrder,
   });
