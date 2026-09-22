@@ -277,7 +277,7 @@ export function parseIfcData(
             geometry.delete();
           }
         }
-      } catch (error) {
+    } catch {
         diagnostics.failedGeometry++;
         return;
       }

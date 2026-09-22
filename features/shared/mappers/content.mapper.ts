@@ -42,7 +42,7 @@ export function mapContentDto(dto: ContentEntryDto): ContentEntry {
     body: safeString(section?.body, ""),
     images: Array.isArray(section?.images)
       ? section.images
-          .map((image, imageIndex) => ({
+          .map((image) => ({
             url: safeString(
               image?.url,
               "",

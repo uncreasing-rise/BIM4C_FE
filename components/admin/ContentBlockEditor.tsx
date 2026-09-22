@@ -63,8 +63,8 @@ const blockConfigs: Record<
   },
 };
 
-function createBlock(type: ContentBlock["type"]): ContentBlock {
-  const id = createId();
+function createBlock(type: ContentBlock["type"], explicitId?: string): ContentBlock {
+  const id = explicitId || createId();
   switch (type) {
     case "rich-text":
       return { id, type, heading: "", content: "" };
@@ -83,39 +83,308 @@ function createBlock(type: ContentBlock["type"]): ContentBlock {
   }
 }
 
+/**
+ * Creates a counterpart block in the opposite language matching the structure and ID
+ */
+function scaffoldCounterpartBlock(source: ContentBlock, existingCounterpart?: ContentBlock): ContentBlock {
+  const id = source.id;
+  const type = source.type;
+
+  // If counterpart already exists with matching type, preserve its localized text while syncing structure
+  if (existingCounterpart && existingCounterpart.type === type) {
+    switch (type) {
+      case "rich-text":
+        {
+        const counterpart = existingCounterpart as Extract<ContentBlock, { type: "rich-text" }>;
+        return {
+          id,
+          type,
+          heading: counterpart.heading ?? "",
+          content: counterpart.content ?? "",
+        };
+        }
+      case "image":
+        {
+        const counterpart = existingCounterpart as Extract<ContentBlock, { type: "image" }>;
+        return {
+          id,
+          type,
+          image: {
+            url: source.image.url || counterpart.image.url || "",
+            alt: counterpart.image.alt ?? "",
+            caption: counterpart.image.caption ?? source.image.caption,
+          },
+        };
+        }
+      case "gallery":
+        return {
+          id,
+          type,
+          images: source.images || [],
+        };
+      case "quote":
+        {
+        const counterpart = existingCounterpart as Extract<ContentBlock, { type: "quote" }>;
+        return {
+          id,
+          type,
+          quote: counterpart.quote ?? "",
+          author: counterpart.author ?? source.author ?? "",
+        };
+        }
+      case "feature-list": {
+        const sourceItems = source.items || [];
+        const counterpart = existingCounterpart as Extract<ContentBlock, { type: "feature-list" }>;
+        const existingItems = counterpart.items || [];
+        const items = sourceItems.map((_: string, idx: number) => existingItems[idx] ?? "");
+        return {
+          id,
+          type,
+          heading: counterpart.heading ?? "",
+          items: items.length > 0 ? items : [""],
+          ordered: source.ordered ?? false,
+        };
+      }
+      case "video":
+        {
+        const counterpart = existingCounterpart as Extract<ContentBlock, { type: "video" }>;
+        return {
+          id,
+          type,
+          url: source.url || counterpart.url || "",
+          title: counterpart.title ?? "",
+        };
+        }
+      case "divider":
+        return { id, type };
+    }
+  }
+
+  // Otherwise create a fresh scaffold matching the source structure
+  switch (type) {
+    case "rich-text":
+      return { id, type, heading: "", content: "" };
+    case "image":
+      return {
+        id,
+        type,
+        image: {
+          url: source.image?.url || "/images/news-project-coordination.webp",
+          alt: "",
+          caption: source.image?.caption || "",
+        },
+      };
+    case "gallery":
+      return { id, type, images: source.images || [] };
+    case "quote":
+      return { id, type, quote: "", author: source.author || "" };
+    case "feature-list": {
+      const sourceItems = source.items || [""];
+      return {
+        id,
+        type,
+        heading: "",
+        items: sourceItems.map(() => ""),
+        ordered: source.ordered ?? false,
+      };
+    }
+    case "video":
+      return { id, type, url: source.url || "", title: "" };
+    case "divider":
+      return { id, type };
+  }
+}
+
+export interface BilingualContentBlockEditorProps {
+  valueVi?: ContentBlock[];
+  valueEn?: ContentBlock[];
+  activeLang?: "vi" | "en";
+  onChangeBilingual?: (payload: { contentBlocks_vi: ContentBlock[]; contentBlocks: ContentBlock[] }) => void;
+  // Backward compatibility props
+  value?: ContentBlock[];
+  onChange?: (value: ContentBlock[]) => void;
+}
+
 export function ContentBlockEditor({
+  valueVi,
+  valueEn,
+  activeLang = "vi",
+  onChangeBilingual,
   value,
   onChange,
-}: {
-  value: ContentBlock[];
-  onChange: (value: ContentBlock[]) => void;
-}) {
-  const update = (index: number, block: ContentBlock) =>
-    onChange(value.map((item, itemIndex) => (itemIndex === index ? block : item)));
+}: BilingualContentBlockEditorProps) {
+  // Support both dual bilingual mode and single array mode
+  const isBilingualMode = Boolean(onChangeBilingual);
+  const blocksVi = valueVi ?? value ?? [];
+  const blocksEn = valueEn ?? [];
+  const currentList = isBilingualMode ? (activeLang === "en" ? blocksEn : blocksVi) : (value ?? []);
+  const counterpartList = activeLang === "en" ? blocksVi : blocksEn;
+
+  const emitBilingual = (nextActive: ContentBlock[], nextCounterpart: ContentBlock[]) => {
+    if (onChangeBilingual) {
+      if (activeLang === "en") {
+        onChangeBilingual({ contentBlocks: nextActive, contentBlocks_vi: nextCounterpart });
+      } else {
+        onChangeBilingual({ contentBlocks_vi: nextActive, contentBlocks: nextCounterpart });
+      }
+    } else if (onChange) {
+      onChange(nextActive);
+    }
+  };
+
+  const update = (index: number, block: ContentBlock) => {
+    const nextActive = currentList.map((item, itemIndex) => (itemIndex === index ? block : item));
+    if (!isBilingualMode) {
+      onChange?.(nextActive);
+      return;
+    }
+
+    // When updating media assets / non-text structures, sync them to counterpart
+    const counterpartMap = new Map(counterpartList.map((item) => [item.id, item]));
+    const nextCounterpart = nextActive.map((activeItem) => {
+      const existing = counterpartMap.get(activeItem.id);
+      if (!existing) return scaffoldCounterpartBlock(activeItem);
+
+      // If this is the edited block, sync shared non-translatable attributes
+      if (activeItem.id === block.id) {
+        if (block.type === "image") {
+          const existingImage = existing as Extract<ContentBlock, { type: "image" }>;
+          return {
+            ...existing,
+            image: {
+              ...existingImage.image,
+              url: block.image.url,
+            },
+          };
+        }
+        if (block.type === "gallery") {
+          return {
+            ...existing,
+            images: block.images,
+          };
+        }
+        if (block.type === "video") {
+          return {
+            ...existing,
+            url: block.url,
+          };
+        }
+        if (block.type === "feature-list") {
+          const existingFeatureList = existing as Extract<ContentBlock, { type: "feature-list" }>;
+          const activeItems = block.items || [];
+          const existingItems = existingFeatureList.items || [];
+          const syncedItems = activeItems.map((_: string, idx: number) => existingItems[idx] ?? "");
+          return {
+            ...existing,
+            items: syncedItems.length > 0 ? syncedItems : [""],
+            ordered: block.ordered,
+          };
+        }
+      }
+      return existing;
+    });
+
+    emitBilingual(nextActive, nextCounterpart);
+  };
 
   const move = (index: number, direction: -1 | 1) => {
     const target = index + direction;
-    if (target < 0 || target >= value.length) return;
-    const next = [...value];
-    [next[index], next[target]] = [next[target], next[index]];
-    onChange(next);
+    if (target < 0 || target >= currentList.length) return;
+    const nextActive = [...currentList];
+    [nextActive[index], nextActive[target]] = [nextActive[target], nextActive[index]];
+
+    if (!isBilingualMode) {
+      onChange?.(nextActive);
+      return;
+    }
+
+    // Align counterpart order strictly by matching ID sequence
+    const counterpartMap = new Map(counterpartList.map((item) => [item.id, item]));
+    const nextCounterpart = nextActive.map((activeItem) => {
+      const existing = counterpartMap.get(activeItem.id);
+      return existing ? existing : scaffoldCounterpartBlock(activeItem);
+    });
+
+    emitBilingual(nextActive, nextCounterpart);
   };
 
   const addBlock = (type: ContentBlock["type"]) => {
-    onChange([...value, createBlock(type)]);
+    const newId = createId();
+    const newBlockActive = createBlock(type, newId);
+    const nextActive = [...currentList, newBlockActive];
+
+    if (!isBilingualMode) {
+      onChange?.(nextActive);
+      return;
+    }
+
+    const newBlockCounterpart = scaffoldCounterpartBlock(newBlockActive);
+    const nextCounterpart = [...counterpartList, newBlockCounterpart];
+    emitBilingual(nextActive, nextCounterpart);
   };
+
+  const removeBlock = (index: number) => {
+    const targetBlock = currentList[index];
+    if (!targetBlock) return;
+    const nextActive = currentList.filter((_, itemIndex) => itemIndex !== index);
+
+    if (!isBilingualMode) {
+      onChange?.(nextActive);
+      return;
+    }
+
+    // Remove matching ID from counterpart
+    const nextCounterpart = counterpartList.filter((item) => item.id !== targetBlock.id);
+    emitBilingual(nextActive, nextCounterpart);
+  };
+
+  const syncStructure = () => {
+    if (!isBilingualMode) return;
+    const counterpartMap = new Map(counterpartList.map((item) => [item.id, item]));
+    const nextCounterpart = currentList.map((activeItem) => {
+      const existing = counterpartMap.get(activeItem.id);
+      return existing && existing.type === activeItem.type
+        ? existing
+        : scaffoldCounterpartBlock(activeItem, existing);
+    });
+    emitBilingual(currentList, nextCounterpart);
+  };
+
+  const isAligned =
+    isBilingualMode &&
+    currentList.length === counterpartList.length &&
+    currentList.every((item, i) => counterpartList[i]?.id === item.id && counterpartList[i]?.type === item.type);
 
   return (
     <div className="space-y-4">
-      {/* TOOLBAR ADD BLOCKS */}
+      {/* TOOLBAR ADD BLOCKS & BILINGUAL SYNC STATUS */}
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200/80 dark:border-border bg-slate-50/80 dark:bg-muted/30 p-3.5">
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2.5">
           <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
             Thêm khối nội dung:
           </span>
-          <span className="text-[11px] font-medium text-muted-foreground">
-            ({value.length} khối hiện tại)
+          <span className="text-[11px] font-semibold text-foreground bg-background px-2 py-0.5 rounded-md border border-border">
+            {currentList.length} khối
           </span>
+          {isBilingualMode && (
+            <div className="flex items-center gap-1.5">
+              {isAligned ? (
+                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 px-2 py-0.5 text-[10px] font-bold">
+                  ● Đồng bộ song ngữ 100%
+                </span>
+              ) : (
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={syncStructure}
+                  className="h-6 text-[10px] font-bold text-amber-700 dark:text-amber-300 bg-amber-500/10 border-amber-500/30 hover:bg-amber-500/20 px-2 rounded-full"
+                >
+                  ⚡ Đồng bộ cấu trúc 2 ngôn ngữ
+                </Button>
+              )}
+            </div>
+          )}
         </div>
 
         <div className="flex flex-wrap items-center gap-1.5">
@@ -141,12 +410,12 @@ export function ContentBlockEditor({
       </div>
 
       {/* BLOCKS LIST */}
-      {value.length === 0 ? (
+      {currentList.length === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-200 dark:border-border/60 py-10 px-4 text-center bg-slate-50/40 dark:bg-transparent">
           <FileText className="size-10 text-muted-foreground/40 mb-3" />
           <h4 className="text-sm font-bold text-foreground">Chưa có khối nội dung nào</h4>
           <p className="text-xs text-muted-foreground max-w-md mt-1 mb-4">
-            Bấm vào các nút bên trên để thêm đoạn văn bản, hình ảnh, trích dẫn hoặc danh sách cho bài viết.
+            Bấm vào các nút bên trên để thêm đoạn văn bản, hình ảnh, trích dẫn hoặc danh sách cho bài viết (tự động đồng bộ cấu trúc sang cả Tiếng Việt và Tiếng Anh).
           </p>
           <Button
             type="button"
@@ -159,7 +428,7 @@ export function ContentBlockEditor({
         </div>
       ) : (
         <div className="space-y-3.5">
-          {value.map((block, index) => {
+          {currentList.map((block, index) => {
             const config = blockConfigs[block.type] ?? {
               label: "Khối nội dung",
               icon: FileText,
@@ -203,7 +472,7 @@ export function ContentBlockEditor({
                       type="button"
                       variant="ghost"
                       size="icon"
-                      disabled={index === value.length - 1}
+                      disabled={index === currentList.length - 1}
                       aria-label="Di chuyển xuống"
                       title="Di chuyển xuống"
                       onClick={() => move(index, 1)}
@@ -216,10 +485,8 @@ export function ContentBlockEditor({
                       variant="ghost"
                       size="icon"
                       aria-label={`Xóa khối ${index + 1}`}
-                      title="Xóa khối này"
-                      onClick={() =>
-                        onChange(value.filter((_, itemIndex) => itemIndex !== index))
-                      }
+                      title="Xóa khối này (đồng bộ xóa cả 2 ngôn ngữ)"
+                      onClick={() => removeBlock(index)}
                       className="size-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
                     >
                       <Trash2 className="size-3.5" />

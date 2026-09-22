@@ -19,16 +19,15 @@ import {
   Users,
   FileClock,
   Settings,
-  Sparkles,
   Handshake,
   RotateCw,
   ExternalLink,
   X,
-  Shield,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { can, currentAdmin, clearAdminCache, type AdminIdentity } from "@/features/admin/auth";
+import { env } from "@/lib/config/env";
 import { toast } from "sonner";
 
 const navigation = [
@@ -99,7 +98,7 @@ export function AdminShell({
     return () => {
       active = false;
     };
-  }, []);
+  }, [pathname, router]);
 
   // Global Ctrl+K / Cmd+K listener
   useEffect(() => {
@@ -163,7 +162,12 @@ export function AdminShell({
     clearAdminCache();
     setUser(null);
     setOpen(false);
-    await fetch("/api/auth/logout", { method: "POST" });
+    try {
+      await fetch(`${env.apiUrl}/auth/logout`, {
+        method: "POST",
+        credentials: "include",
+      });
+    } catch {}
     router.replace("/admin/login");
     router.refresh();
   }
@@ -172,7 +176,7 @@ export function AdminShell({
     setRevalidating(true);
     const toastId = toast.loading("Đang làm mới bộ nhớ đệm (ISR Cache)...");
     try {
-      const res = await fetch("/api/admin/revalidate", { method: "POST" });
+      const res = await fetch("/api/revalidate", { method: "POST" });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Lỗi khi xóa cache");
       toast.success(data.data?.message || "Đã làm mới bộ nhớ đệm toàn bộ website!", { id: toastId });

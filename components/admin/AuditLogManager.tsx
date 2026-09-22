@@ -1,8 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { AlertCircle, Clock, UserCheck, Activity, Database } from "lucide-react";
+import { Clock, UserCheck, Activity, Database } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { ErrorState } from "@/components/ui/ErrorState";
+
+import { adminRequest } from "@/features/admin/api/http-client";
 
 type Log = {
   id: string;
@@ -19,20 +22,31 @@ export function AuditLogManager() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  function retry() {
+    setLoading(true);
+    setError("");
+    void adminRequest<{ data: Log[] } | Log[]>("audit-logs?limit=50")
+      .then((x) => {
+        const list = Array.isArray((x as { data?: Log[] })?.data)
+          ? (x as { data: Log[] }).data
+          : Array.isArray(x)
+            ? x
+            : [];
+        setLogs(list);
+      })
+      .catch((e) =>
+        setError(e instanceof Error ? e.message : "Không thể tải nhật ký"),
+      )
+      .finally(() => setLoading(false));
+  }
+
   useEffect(() => {
     let active = true;
-    fetch("/api/admin/audit-logs?limit=50", { cache: "no-store" })
-      .then(async (r) => {
-        if (!r.ok) {
-          const body = await r.json().catch(() => null);
-          throw new Error(body?.message || `Lỗi HTTP ${r.status}`);
-        }
-        return r.json();
-      })
+    adminRequest<{ data: Log[] } | Log[]>("audit-logs?limit=50")
       .then((x) => {
         if (!active) return;
-        const list = Array.isArray(x?.data)
-          ? x.data
+        const list = Array.isArray((x as { data?: Log[] })?.data)
+          ? (x as { data: Log[] }).data
           : Array.isArray(x)
             ? x
             : [];
@@ -52,12 +66,7 @@ export function AuditLogManager() {
 
   return (
     <section className="overflow-hidden rounded-2xl border border-slate-200/80 dark:border-border bg-white dark:bg-card shadow-xs">
-      {error && (
-        <div className="m-4 flex items-center gap-2 rounded-xl bg-destructive/10 p-3 text-sm text-destructive">
-          <AlertCircle className="size-4 shrink-0" />
-          <span>{error}</span>
-        </div>
-      )}
+      {error && <ErrorState message={error} onRetry={retry} />}
       <div className="w-full overflow-x-auto">
         <table className="w-full text-left text-sm">
           <thead className="border-b border-slate-200/80 dark:border-border bg-slate-50/80 dark:bg-muted/40 text-xs font-semibold uppercase tracking-wider text-muted-foreground">

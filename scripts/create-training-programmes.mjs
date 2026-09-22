@@ -71,7 +71,7 @@ const list = await listResponse.json();
 
 for (const [index, programme] of programmes.entries()) {
   if (list.data.some((item) => item.slug === programme.slug)) continue;
-  const { outcomes, outcomes_vi, ...course } = programme;
+  const course = programme;
   const payload = {
     ...course,
     image: "/images/service-training.jpg",

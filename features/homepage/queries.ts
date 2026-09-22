@@ -16,8 +16,8 @@ export async function getHomepageContent(): Promise<{
       }),
     ]);
     return {
-      slides: slides.filter((item) => item.isActive),
-      partners: partners.filter((item) => item.isActive),
+      slides: (slides || []).filter((item) => item?.isActive),
+      partners: (partners || []).filter((item) => item?.isActive),
     };
   } catch (error) {
     if (canDeferBuildData(error)) return { slides: [], partners: [] };

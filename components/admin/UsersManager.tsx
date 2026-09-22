@@ -7,6 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 
+import { adminRequest } from "@/features/admin/api/http-client";
+
 type UserItem = {
   id: string;
   email: string;
@@ -15,14 +17,15 @@ type UserItem = {
   roles: { role: string }[];
 };
 
-async function api(path: string, init?: RequestInit) {
-  const r = await fetch(`/api/admin/users${path}`, {
-    ...init,
-    headers: { "Content-Type": "application/json", ...init?.headers },
-  });
-  const b = await r.json().catch(() => null);
-  if (!r.ok) throw new Error(b?.message ?? "Yêu cầu thất bại");
-  return b;
+type UsersResponse = { data: UserItem[] } | UserItem[];
+
+function api(path: string, init?: RequestInit): Promise<UsersResponse> {
+  const cleanPath = path
+    ? path.startsWith("?")
+      ? `users${path}`
+      : `users/${path.replace(/^\/+/, "")}`
+    : "users";
+  return adminRequest<UsersResponse>(cleanPath, init);
 }
 
 export function UsersManager() {
@@ -39,10 +42,10 @@ export function UsersManager() {
       const qs = search.trim() ? `?search=${encodeURIComponent(search.trim())}` : "";
       const result = await api(qs, { signal });
       if (!signal?.aborted) {
-        const list = Array.isArray(result?.data)
-          ? result.data
-          : Array.isArray(result)
-            ? result
+        const list = Array.isArray(result)
+          ? result
+          : Array.isArray(result.data)
+            ? result.data
             : [];
         setItems(list);
       }

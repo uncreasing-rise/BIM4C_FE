@@ -20,6 +20,7 @@ import {
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { FormEvent, Suspense, useState } from "react";
+import { env } from "@/lib/config/env";
 
 function LoginForm() {
   const params = useSearchParams();
@@ -37,9 +38,13 @@ function LoginForm() {
     setError("");
 
     try {
-      const response = await fetch("/api/auth/login", {
+      const response = await fetch(`${env.apiUrl}/auth/login`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        credentials: "include",
         body: JSON.stringify({ email, password }),
       });
 

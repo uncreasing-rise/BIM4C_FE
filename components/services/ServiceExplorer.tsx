@@ -28,6 +28,8 @@ const LEGACY_SERVICE_BASE_CATEGORIES = [
   "Digital Twin & Dữ liệu tài sản",
 ];
 
+void LEGACY_SERVICE_BASE_CATEGORIES;
+
 const SERVICE_BASE_CATEGORIES = [
   "Tư vấn BIM",
   "Đào tạo",

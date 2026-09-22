@@ -23,6 +23,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 
+import { adminRequest } from "@/features/admin/api/http-client";
+
 export function HomepageManager() {
   const [items, setItems] = useState<StrategicPartner[]>([]);
   const [editing, setEditing] = useState<StrategicPartner | null>(null);
@@ -32,17 +34,15 @@ export function HomepageManager() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await fetch("/api/admin/homepage/partners", {
-        cache: "no-store",
-      });
-      if (!response.ok) {
-        throw new Error(
-          (await response.json().catch(() => null))?.message ??
-            "Không thể tải dữ liệu",
-        );
-      }
-      const data = (await response.json()) as StrategicPartner[];
-      setItems(data);
+      const response = await adminRequest<
+        StrategicPartner[] | { data: StrategicPartner[] }
+      >("homepage/partners");
+      const list = Array.isArray(response)
+        ? response
+        : Array.isArray((response as { data?: StrategicPartner[] })?.data)
+          ? (response as { data: StrategicPartner[] }).data
+          : [];
+      setItems(list);
     } catch (error) {
       setItems([]);
       toast.error(
@@ -58,9 +58,6 @@ export function HomepageManager() {
     return () => window.clearTimeout(timer);
   }, [load]);
 
-  const endpoint = (item?: StrategicPartner) =>
-    `/api/admin/homepage/partners${item?.id ? `/${item.id}` : ""}`;
-
   const fresh = (): StrategicPartner => ({
     name: "",
     logo: "/images/partners/bitexco.png",
@@ -68,33 +65,6 @@ export function HomepageManager() {
     sortOrder: items.length,
     isActive: true,
   });
-
-  const mutate = async (
-    url: string,
-    init: RequestInit,
-    message: string,
-    toastId?: string | number,
-  ) => {
-    try {
-      const response = await fetch(url, init);
-      if (response.ok) return true;
-      const body = (await response.json().catch(() => null)) as {
-        message?: string;
-      } | null;
-      if (toastId) {
-        toast.error(body?.message ?? message, { id: toastId });
-      } else {
-        toast.error(body?.message ?? message);
-      }
-    } catch {
-      if (toastId) {
-        toast.error("Không thể kết nối đến máy chủ.", { id: toastId });
-      } else {
-        toast.error("Không thể kết nối đến máy chủ.");
-      }
-    }
-    return false;
-  };
 
   const save = async () => {
     if (!editing) return;
@@ -109,21 +79,17 @@ export function HomepageManager() {
     setSaving(true);
     const toastId = toast.loading("Đang lưu...");
     try {
-      const ok = await mutate(
-        endpoint(editing),
-        {
-          method: editing.id ? "PATCH" : "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(editing),
-        },
-        "Không thể lưu dữ liệu.",
-        toastId,
-      );
-      if (!ok) return;
+      const path = editing.id ? `homepage/partners/${editing.id}` : "homepage/partners";
+      await adminRequest(path, {
+        method: editing.id ? "PATCH" : "POST",
+        body: JSON.stringify(editing),
+      });
       setEditing(null);
       toast.success("Đã cập nhật đối tác thành công!", { id: toastId });
       void revalidateCmsCache();
       await load();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Không thể lưu dữ liệu.", { id: toastId });
     } finally {
       setSaving(false);
     }
@@ -135,69 +101,74 @@ export function HomepageManager() {
       !window.confirm(`Xóa đối tác “${item.name}”?`)
     )
       return;
+    const prevItems = [...items];
+    setItems((prev) => prev.filter((p) => p.id !== item.id));
     const toastId = toast.loading("Đang xóa...");
-    if (
-      await mutate(
-        endpoint(item),
-        { method: "DELETE" },
-        "Không thể xóa nội dung.",
-        toastId,
-      )
-    ) {
+    try {
+      await adminRequest(`homepage/partners/${item.id}`, { method: "DELETE" });
       toast.success("Đã xóa đối tác thành công!", { id: toastId });
       void revalidateCmsCache();
-      await load();
+      void load();
+    } catch (err) {
+      setItems(prevItems);
+      toast.error(err instanceof Error ? err.message : "Không thể xóa nội dung.", { id: toastId });
     }
   };
 
   const toggle = async (item: StrategicPartner) => {
     if (!item.id) return;
+    const prevItems = [...items];
+    const newActive = !item.isActive;
+    setItems((prev) =>
+      prev.map((p) => (p.id === item.id ? { ...p, isActive: newActive } : p)),
+    );
     const toastId = toast.loading("Đang cập nhật trạng thái...");
-    if (
-      await mutate(
-        endpoint(item),
-        {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ isActive: !item.isActive }),
-        },
-        "Không thể cập nhật trạng thái.",
-        toastId,
-      )
-    ) {
+    try {
+      await adminRequest(`homepage/partners/${item.id}`, {
+        method: "PATCH",
+        body: JSON.stringify({ isActive: newActive }),
+      });
       toast.success("Đã đổi trạng thái hiển thị!", { id: toastId });
       void revalidateCmsCache();
-      await load();
+      void load();
+    } catch (err) {
+      setItems(prevItems);
+      toast.error(err instanceof Error ? err.message : "Không thể cập nhật trạng thái.", { id: toastId });
     }
   };
 
   const move = async (index: number, direction: -1 | 1) => {
     const target = index + direction;
     if (target < 0 || target >= items.length) return;
+    const prevItems = [...items];
     const first = items[index],
       second = items[target];
     if (!first.id || !second.id) return;
+
+    // Optimistic swap
+    const nextItems = [...items];
+    nextItems[index] = second;
+    nextItems[target] = first;
+    setItems(nextItems);
+
     const requests = [
       [first, second.sortOrder],
       [second, first.sortOrder],
     ] as const;
-    for (const [item, sortOrder] of requests) {
-      if (
-        !(await mutate(
-          endpoint(item),
-          {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ sortOrder }),
-          },
-          "Không thể thay đổi vị trí.",
-        ))
-      )
-        return;
+    try {
+      for (const [item, sortOrder] of requests) {
+        await adminRequest(`homepage/partners/${item.id}`, {
+          method: "PATCH",
+          body: JSON.stringify({ sortOrder }),
+        });
+      }
+      toast.success("Đã thay đổi thứ tự!");
+      void revalidateCmsCache();
+      void load();
+    } catch {
+      setItems(prevItems);
+      toast.error("Không thể thay đổi vị trí.");
     }
-    toast.success("Đã thay đổi thứ tự!");
-    void revalidateCmsCache();
-    await load();
   };
 
   return (

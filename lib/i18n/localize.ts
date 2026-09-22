@@ -129,32 +129,59 @@ export function localizeContent<T extends { title: string }>(
   }
 
   // Locale is English
-  const enSections = item.sections_en ?? (item as unknown as { sections?: ContentEntry["sections"] }).sections;
+  const enSections =
+    item.sections_en ??
+    (item as unknown as { sections?: ContentEntry["sections"] }).sections;
   const enContentBlocks = item.contentBlocks_en
     ? item.contentBlocks_en
-    : enSections?.length
-      ? legacyBlocks({ ...(entry as unknown as ContentEntry), sections: enSections })
-      : undefined;
+    : (item as unknown as { contentBlocks?: unknown }).contentBlocks
+      ? (item as unknown as { contentBlocks?: unknown }).contentBlocks
+      : enSections?.length
+        ? legacyBlocks({ ...(entry as unknown as ContentEntry), sections: enSections })
+        : undefined;
 
-  if (item.title_en || item.description_en || item.eyebrow_en || item.sections_en) {
+  const rawEnHighlights =
+    item.highlights_en?.length
+      ? item.highlights_en
+      : (item as unknown as { highlights?: string[] }).highlights?.length
+        ? (item as unknown as { highlights: string[] }).highlights
+        : extractHighlightsFromBlocks(enContentBlocks);
+
+  if (
+    item.title_en ||
+    item.description_en ||
+    item.eyebrow_en ||
+    item.sections_en ||
+    item.contentBlocks_en ||
+    (item as unknown as { contentBlocks?: unknown }).contentBlocks ||
+    entry.title ||
+    (item as unknown as { description?: string }).description
+  ) {
     return {
       ...entry,
-      title: item.title_en || toEnglishLabel(item.title_vi || entry.title),
-      ...(item.description_en ? { description: item.description_en } : {}),
+      title:
+        item.title_en ||
+        (item.title_vi ? entry.title : toEnglishLabel(entry.title)),
+      ...(item.description_en
+        ? { description: item.description_en }
+        : item.description_vi
+          ? { description: (item as unknown as { description?: string }).description || "" }
+          : (item as unknown as { description?: string }).description
+            ? { description: (item as unknown as { description: string }).description }
+            : {}),
       ...(item.eyebrow_en
         ? { eyebrow: toEnglishLabel(item.eyebrow_en) }
-        : (entry as unknown as { eyebrow?: string }).eyebrow
-          ? { eyebrow: toEnglishLabel((entry as unknown as { eyebrow: string }).eyebrow) }
+        : item.eyebrow_vi
+          ? { eyebrow: (entry as unknown as { eyebrow?: string }).eyebrow || toEnglishLabel(item.eyebrow_vi) }
+          : (entry as unknown as { eyebrow?: string }).eyebrow
+            ? { eyebrow: toEnglishLabel((entry as unknown as { eyebrow: string }).eyebrow) }
+            : {}),
+      ...(item.meta_en
+        ? { meta: item.meta_en }
+        : (item as unknown as { meta?: string }).meta
+          ? { meta: (item as unknown as { meta: string }).meta }
           : {}),
-      ...((item.highlights_en?.length
-        ? item.highlights_en
-        : extractHighlightsFromBlocks(enContentBlocks)).length
-        ? {
-            highlights: item.highlights_en?.length
-              ? item.highlights_en
-              : extractHighlightsFromBlocks(enContentBlocks),
-          }
-        : {}),
+      ...(rawEnHighlights.length ? { highlights: rawEnHighlights } : {}),
       ...(enSections ? { sections: enSections } : {}),
       ...(enContentBlocks ? { contentBlocks: enContentBlocks } : {}),
       ...(item.duration_en
@@ -167,11 +194,31 @@ export function localizeContent<T extends { title: string }>(
         : (item as unknown as { level?: string }).level
           ? { level: toEnglishLabel((item as unknown as { level: string }).level) }
           : {}),
-      ...(item.price_en ? { price: item.price_en } : {}),
-      ...(item.instructor_en ? { instructor: item.instructor_en } : {}),
-      ...(item.learningOutcomes_en?.length ? { learningOutcomes: item.learningOutcomes_en } : {}),
-      ...(item.curriculum_en?.length ? { curriculum: item.curriculum_en } : {}),
-      ...(item.location ? { location: toEnglishLabel(item.location) } : {}),
+      ...(item.price_en
+        ? { price: item.price_en }
+        : (item as unknown as { price?: string }).price
+          ? { price: (item as unknown as { price: string }).price }
+          : {}),
+      ...(item.instructor_en
+        ? { instructor: item.instructor_en }
+        : (item as unknown as { instructor?: string }).instructor
+          ? { instructor: (item as unknown as { instructor: string }).instructor }
+          : {}),
+      ...(item.learningOutcomes_en?.length
+        ? { learningOutcomes: item.learningOutcomes_en }
+        : (item as unknown as { learningOutcomes?: string[] }).learningOutcomes?.length
+          ? { learningOutcomes: (item as unknown as { learningOutcomes: string[] }).learningOutcomes }
+          : {}),
+      ...(item.curriculum_en?.length
+        ? { curriculum: item.curriculum_en }
+        : (item as unknown as { curriculum?: unknown[] }).curriculum?.length
+          ? { curriculum: (item as unknown as { curriculum: unknown[] }).curriculum }
+          : {}),
+      ...(item.location_en
+        ? { location: item.location_en }
+        : item.location
+          ? { location: toEnglishLabel(item.location) }
+          : {}),
       ...(item.status ? { status: toEnglishLabel(item.status) } : {}),
       ...(item.category ? { category: toEnglishLabel(item.category) } : {}),
     };

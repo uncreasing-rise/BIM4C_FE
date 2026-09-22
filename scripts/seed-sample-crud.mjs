@@ -11,11 +11,6 @@ const api = process.env.BIM4C_API_URL ?? "http://127.0.0.1:8080";
 const email = process.env.BIM4C_ADMIN_EMAIL ?? "admin@bim4c.vn";
 const password = process.env.BIM4C_ADMIN_PASSWORD ?? "BIM4C!Admin#2026-Aug-24@Q7";
 
-function cleanPayload(item) {
-  const { id, createdAt, updatedAt, ...rest } = item;
-  return rest;
-}
-
 async function main() {
   console.log(`[Seed] Connecting to Backend API at ${api}...`);
 

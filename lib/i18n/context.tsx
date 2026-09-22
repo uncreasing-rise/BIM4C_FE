@@ -18,7 +18,7 @@ const dictionaries: Record<Locale, Dictionary> = {
   vi: viDictionary,
 };
 
-const LanguageContext = createContext<LanguageContextType | null>(null);
+export const LanguageContext = createContext<LanguageContextType | null>(null);
 
 function setLocaleCookie(locale: Locale) {
   if (typeof document === "undefined") return;

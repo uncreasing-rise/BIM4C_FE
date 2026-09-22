@@ -91,8 +91,8 @@ async function run() {
     { name: "12. Đăng ký Khóa học", path: "/admin/course-registrations?page=1&limit=20" },
     { name: "13. Form Liên hệ", path: "/admin/contacts?page=1&limit=20" },
     { name: "14. Đăng ký Bản tin", path: "/admin/newsletter/subscriptions?page=1&limit=20" },
-    { name: "15. Nhật ký Audit", path: "/audit?page=1&limit=20" },
-    { name: "16. Quản lý Admin Users", path: "/users?page=1&limit=20" },
+    { name: "15. Nhật ký Audit", path: "/admin/audit-logs?page=1&limit=20" },
+    { name: "16. Quản lý Admin Users", path: "/admin/users" },
   ];
 
   const adminTable = [];
@@ -129,7 +129,8 @@ async function run() {
   const okCount = allResponses.filter(r => r.ok).length;
 
   console.log(` -> Tổng số request:     100`);
-  console.log(` -> Thành công:           ${okCount}/100 (100% OK) ✅`);
+  const successRate = Math.round((okCount / 100) * 100);
+  console.log(` -> Thành công:           ${okCount}/100 (${successRate}% OK)`);
   console.log(` -> Tổng thời gian:       ${pTotal}ms`);
   console.log(` -> Thời gian / 1 request: ${(pTotal / 100).toFixed(1)}ms`);
   console.log(` -> Khả năng phục vụ:     ~${Math.round((100 / pTotal) * 1000)} requests / giây ⚡⚡\n`);

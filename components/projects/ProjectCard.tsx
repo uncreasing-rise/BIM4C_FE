@@ -12,12 +12,10 @@ import { resolveCoverImage } from "@/lib/content/cover-images";
 
 export function ProjectCard({
   project: rawProject,
-  number,
 }: {
   project: Project;
-  number?: number;
 }) {
-  const { t, locale } = useLanguage();
+  const { locale } = useLanguage();
   const isVi = locale === "vi";
   const project = localizeContent(rawProject, locale);
 

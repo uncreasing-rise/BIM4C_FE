@@ -1,6 +1,5 @@
 "use client";
 
-import type { ReactNode } from "react";
 import { BookOpen, ArrowUpRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/lib/i18n/context";

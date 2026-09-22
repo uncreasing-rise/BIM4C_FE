@@ -9,6 +9,8 @@ import { BarChart3, Building2, FileText, Globe, Save, Share2 } from "lucide-reac
 import { FormEvent, useEffect, useState } from "react";
 import { toast } from "sonner";
 
+import { adminRequest } from "@/features/admin/api/http-client";
+
 type Settings = {
   companyName: string;
   email: string;
@@ -35,16 +37,11 @@ export function SettingsManager() {
     async function load() {
       setLoading(true);
       try {
-        const response = await fetch("/api/admin/settings", {
-          cache: "no-store",
+        const body = await adminRequest<{ data: Settings }>("settings", {
           signal: controller.signal,
         });
-        const body = (await response.json().catch(() => null)) as {
-          data?: Settings;
-          message?: string;
-        } | null;
-        if (!response.ok || !body?.data) {
-          throw new Error(body?.message ?? "Không thể tải cài đặt");
+        if (!body?.data) {
+          throw new Error("Không thể tải cài đặt");
         }
 
         const merged: Settings = {
@@ -121,26 +118,17 @@ export function SettingsManager() {
         defaultOgImage: data.defaultOgImage || (null as unknown as string),
       };
 
-      const response = await fetch("/api/admin/settings", {
+      await adminRequest<{ data: Settings }>("settings", {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-      const body = (await response.json().catch(() => null)) as {
-        message?: string;
-      } | null;
-      if (response.ok) {
-        toast.success("Đã lưu cài đặt hệ thống thành công!", { id: toastId });
-        setMsg("Đã lưu cài đặt.");
-        void revalidateCmsCache();
-      } else {
-        const err = body?.message ?? "Không thể lưu cài đặt";
-        toast.error(err, { id: toastId });
-        setMsg(err);
-      }
-    } catch {
-      toast.error("Không thể kết nối đến máy chủ", { id: toastId });
-      setMsg("Không thể kết nối đến máy chủ.");
+      toast.success("Đã lưu cài đặt hệ thống thành công!", { id: toastId });
+      setMsg("Đã lưu cài đặt.");
+      void revalidateCmsCache();
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : "Không thể lưu cài đặt";
+      toast.error(errorMsg, { id: toastId });
+      setMsg(errorMsg);
     } finally {
       setBusy(false);
     }

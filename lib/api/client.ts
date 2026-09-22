@@ -51,12 +51,20 @@ async function request<T>(method: HttpMethod, endpoint: string, options: Request
       throw new ApiError(499, "The request was cancelled.", "REQUEST_ABORTED");
     }
     const normalized = normalizeRequestError(error);
-    appLogger.error("api.request.failed", normalized, {
-      method,
-      endpoint,
-      status: normalized.status,
-      code: normalized.code,
-    });
+    if (normalized.status === 404) {
+      appLogger.info("api.request.not_found", {
+        method,
+        endpoint,
+        status: 404,
+      });
+    } else {
+      appLogger.error("api.request.failed", normalized, {
+        method,
+        endpoint,
+        status: normalized.status,
+        code: normalized.code,
+      });
+    }
     throw normalized;
   } finally {
     clearTimeout(timeoutId);

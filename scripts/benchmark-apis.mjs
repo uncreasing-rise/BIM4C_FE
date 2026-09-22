@@ -58,7 +58,7 @@ async function benchmark() {
         const t1 = performance.now();
         status = res.status;
         times.push(Math.round(t1 - t0));
-      } catch (err) {
+      } catch {
         status = "ERR";
         times.push(9999);
       }

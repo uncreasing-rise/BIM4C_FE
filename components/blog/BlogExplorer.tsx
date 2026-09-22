@@ -17,7 +17,6 @@ import type { PageMeta } from "@/features/shared/types/pagination";
 import { useLanguage } from "@/lib/i18n/context";
 import { localizeContentList } from "@/lib/i18n/localize";
 import { resolveCoverImage } from "@/lib/content/cover-images";
-import { cn } from "@/lib/utils";
 
 import type { PostCategoryItem } from "@/features/blog/api/queries";
 

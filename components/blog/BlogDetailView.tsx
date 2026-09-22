@@ -10,7 +10,6 @@ import {
   Calendar,
   User,
   Share2,
-  BookOpen,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -53,10 +52,6 @@ export function BlogDetailView({
   ];
 
   const blocks = entry.contentBlocks ?? legacyBlocks(entry);
-  const headings = blocks.filter(
-    (block) => block.type === "rich-text" && block.heading,
-  );
-
   const formattedDate = entry.publishedAt
     ? new Intl.DateTimeFormat(isVi ? "vi-VN" : "en-GB", {
         dateStyle: "long",

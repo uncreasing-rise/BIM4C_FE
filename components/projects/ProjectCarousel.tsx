@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { ChevronLeft, ChevronRight, Play, Pause } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import type { Project } from "@/features/projects/types/project";
 import { ProjectRow } from "@/components/projects/ProjectRow";
 import { useSlideshow } from "@/components/motion/hooks/use-slideshow";
@@ -15,7 +15,7 @@ export function ProjectCarousel({ projects }: { projects: Project[] }) {
 
   useEffect(() => {
     if (!slider.reduced && !slider.playing) slider.toggle();
-  }, [slider.reduced, slider.playing, slider.toggle]);
+  }, [slider, slider.reduced, slider.playing, slider.toggle]);
 
   if (!projects.length) return null;
 
@@ -124,4 +124,3 @@ export function ProjectCarousel({ projects }: { projects: Project[] }) {
     </div>
   );
 }
-

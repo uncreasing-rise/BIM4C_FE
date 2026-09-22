@@ -143,8 +143,8 @@ async function testAllPublicApis() {
       ep.expectedFields = ["success", "message"];
     }
 
-    const t0 = performance.now();
     try {
+      const t0 = performance.now();
       const opts = {
         method: ep.method,
         headers: { "Content-Type": "application/json" },
@@ -189,7 +189,6 @@ async function testAllPublicApis() {
 
   for (const ep of detailEndpoints) {
     if (!ep.url) continue;
-    const t0 = performance.now();
     try {
       await fetch(ep.url); // Cold
       const tWarm0 = performance.now();

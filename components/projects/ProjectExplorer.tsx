@@ -141,11 +141,10 @@ export function ProjectExplorer({
           </button>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 pt-6" id="project-grid">
-          {visible.map((project, index) => (
+          {visible.map((project) => (
             <ProjectCard
               key={project.slug}
               project={project}
-              number={(page - 1) * PROJECT_PAGE_SIZE + index + 1}
             />
           ))}
           {visible.length === 0 && (

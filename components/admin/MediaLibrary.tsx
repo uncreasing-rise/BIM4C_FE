@@ -14,6 +14,8 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { ErrorState } from "@/components/ui/ErrorState";
+import { LoadingState } from "@/components/ui/LoadingState";
 import { toast } from "sonner";
 
 export function MediaLibrary() {
@@ -21,12 +23,15 @@ export function MediaLibrary() {
   const [selected, setSelected] = useState<AdminMedia | null>(null);
   const [search, setSearch] = useState("");
   const [feedback, setFeedback] = useState("");
+  const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [copied, setCopied] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const load = useCallback(
     async (signal?: AbortSignal) => {
+      setLoading(true);
+      setFeedback("");
       try {
         const result = await adminMediaApi.list(search, signal);
         const list = Array.isArray(result?.data)
@@ -42,6 +47,8 @@ export function MediaLibrary() {
         setFeedback(
           error instanceof Error ? error.message : "Không thể tải media",
         );
+      } finally {
+        if (!signal?.aborted) setLoading(false);
       }
     },
     [search],
@@ -166,7 +173,19 @@ export function MediaLibrary() {
       {/* 2-Column: Grid & Detail Inspector */}
       <div className="grid min-w-0 grid-cols-1 lg:grid-cols-[1fr_340px]">
         <div className="grid min-w-0 grid-cols-2 gap-4 p-4 sm:p-6 md:grid-cols-3 xl:grid-cols-4">
-          {items.map((item) => (
+          {loading && (
+            <div className="col-span-full">
+              <LoadingState label="Đang tải thư viện media…" />
+            </div>
+          )}
+
+          {!loading && feedback && (
+            <div className="col-span-full">
+              <ErrorState message={feedback} onRetry={() => void load()} />
+            </div>
+          )}
+
+          {!loading && !feedback && items.map((item) => (
             <button
               className={`group relative overflow-hidden rounded-xl border bg-background p-2.5 text-left transition-all hover:border-primary hover:shadow-md ${
                 selected?.id === item.id
@@ -194,7 +213,7 @@ export function MediaLibrary() {
             </button>
           ))}
 
-          {!items.length && (
+          {!loading && !feedback && !items.length && (
             <div className="col-span-full py-16 text-center text-sm text-muted-foreground">
               <ImageIcon className="mx-auto size-8 text-muted-foreground/50 mb-2" />
               Chưa có tệp nào trong thư viện media. Hãy nhấn &quot;Tải ảnh mới&quot; để đưa ảnh lên Supabase.

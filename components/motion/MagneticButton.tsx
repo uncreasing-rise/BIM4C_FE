@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef } from "react";
+import React from "react";
 import { useMagnetic } from "./hooks/use-gsap";
 import { cn } from "@/lib/utils";
 

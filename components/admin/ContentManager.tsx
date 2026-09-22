@@ -5,11 +5,16 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { adminContentApi } from "@/features/admin/api/client";
+import { createEmptyContent } from "@/features/admin/serializers";
 import type {
   AdminCategory,
   AdminContent,
   AdminContentStatus,
   AdminContentType,
+  AdminCourseContent,
+  AdminPostContent,
+  AdminProjectContent,
+  AdminServiceContent,
 } from "@/features/admin/types";
 import { slugify } from "@/lib/utils/slug";
 import { scrollToPageTop } from "@/lib/utils/scroll";
@@ -18,8 +23,13 @@ import { ContentBlockEditor } from "./ContentBlockEditor";
 import { MediaPicker } from "./MediaPicker";
 import { BilingualFormTabs } from "./BilingualFormTabs";
 import { LivePreviewModal } from "./LivePreviewModal";
-import { BulletListEditor } from "./BulletListEditor";
 import { revalidateCmsCache } from "@/features/admin/api/revalidate";
+import {
+  PostFields,
+  ProjectFields,
+  CourseFields,
+  ServiceFields,
+} from "./editors";
 import {
   Eye,
   ArrowLeft,
@@ -28,19 +38,17 @@ import {
   Plus,
   Trash2,
   Globe,
-  Layers,
-  GraduationCap,
   Image as ImageIcon,
   Search,
   FileText,
-  MoveUp,
-  MoveDown,
   X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { LoadingState } from "@/components/ui/LoadingState";
+import { ErrorState } from "@/components/ui/ErrorState";
 import { toast } from "sonner";
 import {
-  contentBlocksSchema,
+  parseContentBlocks,
   type ContentBlock,
 } from "@/features/shared/schemas/content-block.schema";
 
@@ -62,40 +70,6 @@ const statusColors: Record<AdminContentStatus, string> = {
   COMPLETED: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30",
 };
 
-const empty = (type: AdminContentType): AdminContent => ({
-  id: "",
-  type,
-  title: "",
-  slug: "",
-  image: "",
-  status: "DRAFT",
-  description: "",
-  eyebrow: "",
-  meta: "",
-  highlights: [],
-  sections: [],
-  contentBlocks: [],
-  publishedAt: null,
-  updatedAt: new Date().toISOString(),
-  sortOrder: 0,
-  isFeatured: false,
-  location: "",
-  year: new Date().getFullYear(),
-  categoryId: null,
-  authorName: "",
-  duration: "",
-  level: "",
-  price: "",
-  instructor: "",
-  learningOutcomes: [],
-  title_vi: "",
-  description_vi: "",
-  eyebrow_vi: "",
-  highlights_vi: [],
-  seoTitle_vi: "",
-  seoDescription_vi: "",
-});
-
 export function ContentManager({
   contentType,
 }: {
@@ -113,17 +87,13 @@ export function ContentManager({
   const [totalPages, setTotalPages] = useState(1);
   const [selected, setSelected] = useState<string[]>([]);
   const [editor, setEditor] = useState<AdminContent | null>(() =>
-    params.get("create") ? empty(contentType) : null,
+    params.get("create") ? createEmptyContent(contentType) : null,
   );
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [feedback, setFeedback] = useState("");
   const [dirty, setDirty] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
-  const [newCurriculum, setNewCurriculum] = useState({
-    title: "",
-    description: "",
-  });
 
   const publicBase =
     contentType === "Dịch vụ"
@@ -208,10 +178,11 @@ export function ContentManager({
     if (query) q.set("search", query);
     if (status) q.set("status", status);
     const text = q.toString();
+    if (params.toString() === text) return;
     router.replace(text ? `?${text}` : window.location.pathname, {
       scroll: false,
     });
-  }, [page, query, router, status]);
+  }, [page, query, params, router, status]);
 
   function closeEditor() {
     if (dirty && !window.confirm("Có thay đổi chưa lưu. Bạn có muốn thoát khỏi trình soạn thảo?"))
@@ -225,11 +196,100 @@ export function ContentManager({
     setDirty(true);
   }
 
+  function validateContentBlocks(
+    blocks: ContentBlock[] | undefined,
+    lang: "vi" | "en",
+  ): { isValid: boolean; message?: string } {
+    if (!blocks || blocks.length === 0) return { isValid: true };
+    const langLabel = lang === "vi" ? "Bản Tiếng Việt" : "Bản English";
+
+    for (let i = 0; i < blocks.length; i++) {
+      const block = blocks[i];
+      const indexStr = `Khối #${i + 1} (${langLabel})`;
+
+      if (block.type === "rich-text") {
+        if (!block.content || !block.content.trim()) {
+          return {
+            isValid: false,
+            message: `${indexStr} kiểu "Văn bản" đang để trống nội dung. Vui lòng nhập nội dung hoặc xóa khối trước khi lưu.`,
+          };
+        }
+      } else if (block.type === "image") {
+        if (!block.image?.url || !block.image.url.trim()) {
+          return {
+            isValid: false,
+            message: `${indexStr} kiểu "Hình ảnh" chưa được chọn ảnh. Vui lòng chọn ảnh hoặc xóa khối.`,
+          };
+        }
+      } else if (block.type === "gallery") {
+        if (!block.images || block.images.length === 0) {
+          return {
+            isValid: false,
+            message: `${indexStr} kiểu "Thư viện ảnh" chưa có hình ảnh nào.`,
+          };
+        }
+        const missingIdx = block.images.findIndex((img) => !img.url || !img.url.trim());
+        if (missingIdx !== -1) {
+          return {
+            isValid: false,
+            message: `${indexStr} kiểu "Thư viện ảnh" có ảnh thứ ${missingIdx + 1} chưa có ảnh hợp lệ.`,
+          };
+        }
+      } else if (block.type === "quote") {
+        if (!block.quote || !block.quote.trim()) {
+          return {
+            isValid: false,
+            message: `${indexStr} kiểu "Trích dẫn" đang để trống câu trích dẫn. Vui lòng nhập nội dung hoặc xóa khối.`,
+          };
+        }
+      } else if (block.type === "feature-list") {
+        if (!block.items || block.items.length === 0) {
+          return {
+            isValid: false,
+            message: `${indexStr} kiểu "Danh sách" chưa có mục nào.`,
+          };
+        }
+        const emptyItemIdx = block.items.findIndex((item) => !item || !item.trim());
+        if (emptyItemIdx !== -1) {
+          return {
+            isValid: false,
+            message: `${indexStr} kiểu "Danh sách" có dòng thứ ${emptyItemIdx + 1} bị bỏ trống. Vui lòng nhập hoặc xóa dòng đó.`,
+          };
+        }
+      } else if (block.type === "video") {
+        if (!block.url || !block.url.trim()) {
+          return {
+            isValid: false,
+            message: `${indexStr} kiểu "Video" đang để trống đường dẫn URL.`,
+          };
+        }
+      }
+    }
+
+    return { isValid: true };
+  }
+
   async function save() {
     if (!editor) return;
     const title = editor.title?.trim() || editor.title_vi?.trim();
     if (!title) {
       toast.error("Vui lòng nhập tiêu đề (Tiếng Việt hoặc Tiếng Anh).");
+      return;
+    }
+
+    // Kiểm tra tính hợp lệ của Khối nội dung Tiếng Việt
+    const viValidation = validateContentBlocks(editor.contentBlocks_vi, "vi");
+    if (!viValidation.isValid) {
+      toast.error(viValidation.message, { duration: 5000 });
+      setAdminLangTab("vi");
+      return;
+    }
+
+    // Kiểm tra tính hợp lệ của Khối nội dung English
+    const enValidation = validateContentBlocks(editor.contentBlocks, "en");
+    if (!enValidation.isValid) {
+      toast.error(enValidation.message, { duration: 5000 });
+      setAdminLangTab("en");
       return;
     }
 
@@ -239,9 +299,11 @@ export function ContentManager({
     setSaving(true);
     const toastId = toast.loading("Đang lưu nội dung...");
     try {
-      if (editor.contentBlocks) {
-        contentBlocksSchema.parse(editor.contentBlocks);
-      }
+      const rawBlocks = editor.contentBlocks ? parseContentBlocks(editor.contentBlocks) : [];
+      const rawBlocksVi = editor.contentBlocks_vi ? parseContentBlocks(editor.contentBlocks_vi) : [];
+      const cleanBlocks = rawBlocks.length > 0 ? rawBlocks : rawBlocksVi;
+      const cleanBlocksVi = rawBlocksVi.length > 0 ? rawBlocksVi : rawBlocks;
+
       const slug = editor.slug?.trim() || slugify(title);
       const payload: AdminContent = {
         ...editor,
@@ -254,26 +316,30 @@ export function ContentManager({
         eyebrow: editor.eyebrow || editor.eyebrow_vi || "BIM4C Enterprise",
         highlights: Array.isArray(editor.highlights) ? editor.highlights : [],
         sections: Array.isArray(editor.sections) ? editor.sections : [],
-        ...(contentType === "Dự án"
-          ? {
-              location: editor.location || "Đà Nẵng, Việt Nam",
-              year: Number(editor.year) || new Date().getFullYear(),
-              categoryId: editor.categoryId || (categories[0]?.id ?? undefined),
-            }
-          : {}),
+        contentBlocks: cleanBlocks,
+        contentBlocks_vi: cleanBlocksVi,
       };
 
       if (editor.id) {
+        setItems((prev) =>
+          prev.map((x) =>
+            x.id === editor.id
+              ? { ...x, ...payload, updatedAt: new Date().toISOString() }
+              : x,
+          ),
+        );
         await adminContentApi.update(contentType, editor.id, payload);
         toast.success("Cập nhật nội dung thành công!", { id: toastId });
       } else {
-        await adminContentApi.create(contentType, payload);
+        const res = await adminContentApi.create(contentType, payload);
+        const newItem = (res?.data || payload) as AdminContent;
+        setItems((prev) => [{ ...newItem, type: contentType }, ...prev]);
         toast.success("Tạo mới nội dung thành công!", { id: toastId });
       }
       setDirty(false);
       setEditor(null);
       void revalidateCmsCache();
-      await load();
+      void load();
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : "Không thể lưu nội dung.",
@@ -286,14 +352,17 @@ export function ContentManager({
 
   async function remove(id: string) {
     if (!window.confirm("Bạn có chắc muốn xóa nội dung này?")) return;
+    const prevItems = [...items];
+    setItems((prev) => prev.filter((x) => x.id !== id));
     setSaving(true);
     const toastId = toast.loading("Đang xóa...");
     try {
       await adminContentApi.remove(contentType, id);
       toast.success("Xóa nội dung thành công!", { id: toastId });
       void revalidateCmsCache();
-      await load();
+      void load();
     } catch (error) {
+      setItems(prevItems);
       toast.error(error instanceof Error ? error.message : "Không thể xóa.", {
         id: toastId,
       });
@@ -304,6 +373,7 @@ export function ContentManager({
 
   async function bulk(action: "publish" | "archive" | "delete") {
     if (!selected.length) return;
+    const prevItems = [...items];
     setSaving(true);
     const toastId = toast.loading("Đang thực hiện thao tác hàng loạt...");
     try {
@@ -312,11 +382,17 @@ export function ContentManager({
           toast.dismiss(toastId);
           return;
         }
+        setItems((prev) => prev.filter((x) => !selected.includes(x.id)));
         await Promise.all(selected.map((id) => adminContentApi.remove(contentType, id)));
         toast.success(`Đã xóa ${selected.length} nội dung.`, { id: toastId });
       } else {
         const nextStatus: AdminContentStatus =
           action === "publish" ? "PUBLISHED" : "ARCHIVED";
+        setItems((prev) =>
+          prev.map((x) =>
+            selected.includes(x.id) ? { ...x, status: nextStatus } : x,
+          ),
+        );
         await Promise.all(
           selected.map((id) =>
             adminContentApi.update(contentType, id, { status: nextStatus }),
@@ -329,156 +405,15 @@ export function ContentManager({
       }
       setSelected([]);
       void revalidateCmsCache();
-      await load();
+      void load();
     } catch (error) {
+      setItems(prevItems);
       toast.error(
         error instanceof Error ? error.message : "Thao tác hàng loạt thất bại.",
         { id: toastId },
       );
     } finally {
       setSaving(false);
-    }
-  }
-
-  async function addProjectImage(media: { url: string; alt: string }) {
-    if (!editor) return;
-    if (!editor.id) {
-      update({
-        images: [
-          ...(editor.images ?? []),
-          {
-            id: `temp-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
-            url: media.url,
-            alt: media.alt || "Hình ảnh dự án",
-            caption: "",
-            sortOrder: (editor.images?.length ?? 0) + 1,
-          },
-        ],
-      });
-      toast.success("Đã thêm hình ảnh vào dự án!");
-      return;
-    }
-    try {
-      const created = await adminContentApi.addProjectImage(editor.id, {
-        url: media.url,
-        alt: media.alt || "Hình ảnh dự án",
-        sortOrder: (editor.images?.length ?? 0) + 1,
-      });
-      update({
-        images: [
-          ...(editor.images ?? []),
-          {
-            id: created.data.id,
-            url: media.url,
-            alt: media.alt || "Hình ảnh dự án",
-            caption: "",
-            sortOrder: (editor.images?.length ?? 0) + 1,
-          },
-        ],
-      });
-      toast.success("Đã thêm hình ảnh vào dự án!");
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Không thể thêm ảnh");
-    }
-  }
-
-  async function moveProjectImage(index: number, delta: number) {
-    if (!editor?.images) return;
-    const target = index + delta;
-    if (target < 0 || target >= editor.images.length) return;
-    const next = [...editor.images];
-    const [moved] = next.splice(index, 1);
-    next.splice(target, 0, moved);
-    update({ images: next });
-    if (!editor.id) return;
-    try {
-      await Promise.all(
-        next.filter((img) => !img.id.startsWith("temp-")).map((img, i) =>
-          adminContentApi.updateProjectImage(editor.id, img.id, {
-            sortOrder: i,
-          }),
-        ),
-      );
-    } catch {
-      toast.error("Không thể lưu thứ tự ảnh");
-    }
-  }
-
-  async function addCurriculum() {
-    if (!editor || !newCurriculum.title.trim()) return;
-    if (!editor.id) {
-      update({
-        curriculum: [
-          ...(editor.curriculum ?? []),
-          {
-            id: `temp-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
-            title: newCurriculum.title.trim(),
-            description: newCurriculum.description.trim(),
-            sortOrder: (editor.curriculum?.length ?? 0) + 1,
-          },
-        ],
-      });
-      setNewCurriculum({ title: "", description: "" });
-      toast.success("Đã thêm phần học mới!");
-      return;
-    }
-    try {
-      const created = await adminContentApi.addCourseSection(editor.id, {
-        title: newCurriculum.title.trim(),
-        description: newCurriculum.description.trim(),
-        sortOrder: (editor.curriculum?.length ?? 0) + 1,
-      });
-      update({
-        curriculum: [
-          ...(editor.curriculum ?? []),
-          {
-            id: created.data.id,
-            title: newCurriculum.title.trim(),
-            description: newCurriculum.description.trim(),
-            sortOrder: (editor.curriculum?.length ?? 0) + 1,
-          },
-        ],
-      });
-      setNewCurriculum({ title: "", description: "" });
-      toast.success("Đã thêm phần học mới!");
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Không thể thêm phần học");
-    }
-  }
-
-  async function saveCurriculumSection(
-    id: string,
-    patch: { title?: string; description?: string },
-  ) {
-    if (!editor?.id) return;
-    try {
-      await adminContentApi.updateCourseSection(editor.id, id, patch);
-    } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Không thể cập nhật phần học",
-      );
-    }
-  }
-
-  async function moveCurriculum(index: number, delta: number) {
-    if (!editor?.curriculum) return;
-    const target = index + delta;
-    if (target < 0 || target >= editor.curriculum.length) return;
-    const next = [...editor.curriculum];
-    const [moved] = next.splice(index, 1);
-    next.splice(target, 0, moved);
-    update({ curriculum: next });
-    if (!editor.id) return;
-    try {
-      await Promise.all(
-        next.map((sec, i) =>
-          adminContentApi.updateCourseSection(editor.id, sec.id, {
-            sortOrder: i,
-          }),
-        ),
-      );
-    } catch {
-      toast.error("Không thể lưu thứ tự phần học");
     }
   }
 
@@ -657,22 +592,28 @@ export function ContentManager({
 
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                       <div className="space-y-1.5">
-                        <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                          Nhãn phân loại (Eyebrow Tag)
-                        </label>
+                        <div className="flex items-center justify-between">
+                          <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                            Nhãn nổi bật đầu thẻ (Eyebrow Tag)
+                          </label>
+                          <span className="text-[11px] text-muted-foreground/80">Tag hiển thị trên tiêu đề</span>
+                        </div>
                         <input
-                          placeholder="e.g. BIM CONSULTING"
+                          placeholder="e.g. PRACTICAL BIM TRAINING"
                           value={editor.eyebrow}
                           onChange={(e) => update({ eyebrow: e.target.value })}
                           className="w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
                         />
                       </div>
                       <div className="space-y-1.5">
-                        <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                          Thông tin phụ (Meta / Date)
-                        </label>
+                        <div className="flex items-center justify-between">
+                          <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                            Thông tin phụ (Meta / Date)
+                          </label>
+                          <span className="text-[11px] text-muted-foreground/80">Thời lượng / Ngày / Quy mô</span>
+                        </div>
                         <input
-                          placeholder="e.g. 15.09.2026"
+                          placeholder="e.g. 8 weeks · Online hoặc 15.09.2026"
                           value={editor.meta ?? ""}
                           onChange={(e) => update({ meta: e.target.value })}
                           className="w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
@@ -683,23 +624,9 @@ export function ContentManager({
                 ) : (
                   <>
                     <div className="space-y-1.5">
-                      <div className="flex items-center justify-between">
-                        <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                          Tiêu đề Tiếng Việt
-                        </label>
-                        {editor.title_vi && (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              update({ slug: slugify(editor.title_vi!) });
-                              toast.success("Đã tạo đường dẫn (Slug) từ tiêu đề tiếng Việt!");
-                            }}
-                            className="text-primary text-[11px] font-bold hover:underline"
-                          >
-                            Tạo Slug từ tiêu đề
-                          </button>
-                        )}
-                      </div>
+                      <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                        Tiêu đề Tiếng Việt
+                      </label>
                       <input
                         autoFocus
                         placeholder="Ví dụ: Tư vấn Điều phối & Quản lý BIM Chuyên sâu"
@@ -708,7 +635,7 @@ export function ContentManager({
                           const val = e.target.value;
                           update({
                             title_vi: val,
-                            ...(!editor.id && !editor.slug ? { slug: slugify(val) } : {}),
+                            slug: editor.id ? (editor.slug || slugify(val)) : slugify(val),
                           });
                         }}
                         className="w-full rounded-xl border border-border bg-background px-4 py-3 text-base font-bold text-foreground placeholder:text-muted-foreground/60 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
@@ -748,21 +675,28 @@ export function ContentManager({
 
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                       <div className="space-y-1.5">
-                        <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                          Nhãn phân loại (Eyebrow Tiếng Việt)
-                        </label>
+                        <div className="flex items-center justify-between">
+                          <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                            Nhãn nổi bật đầu thẻ (Eyebrow Tiếng Việt)
+                          </label>
+                          <span className="text-[11px] text-muted-foreground/80">Tag hiển thị trên tiêu đề</span>
+                        </div>
                         <input
-                          placeholder="Ví dụ: TƯ VẤN BIM"
+                          placeholder="Ví dụ: ĐÀO TẠO THỰC CHIẾN"
                           value={editor.eyebrow_vi ?? ""}
                           onChange={(e) => update({ eyebrow_vi: e.target.value })}
                           className="w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
                         />
                       </div>
                       <div className="space-y-1.5">
-                        <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                          Thông tin phụ (Meta)
-                        </label>
+                        <div className="flex items-center justify-between">
+                          <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                            Thông tin phụ (Meta Tiếng Việt)
+                          </label>
+                          <span className="text-[11px] text-muted-foreground/80">Thời lượng / Ngày / Quy mô</span>
+                        </div>
                         <input
+                          placeholder="Ví dụ: 8 tuần · Khai giảng 15/10"
                           value={editor.meta ?? ""}
                           onChange={(e) => update({ meta: e.target.value })}
                           className="w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
@@ -774,331 +708,36 @@ export function ContentManager({
 
               </div>
 
-              {/* SPECIFIC ATTRIBUTES CARD: DỰ ÁN */}
+              {/* DOMAIN-SPECIFIC FIELDS */}
               {contentType === "Dự án" && (
-                <div className="rounded-2xl border border-border bg-card p-6 shadow-xs space-y-5">
-                  <div className="flex items-center gap-2 border-b border-border pb-3">
-                    <Layers className="size-4 text-primary" />
-                    <h3 className="text-base font-bold text-foreground">Thông tin dự án</h3>
-                  </div>
-
-                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Địa điểm</label>
-                      <input
-                        placeholder="Hà Nội, Việt Nam"
-                        value={adminLangTab === "en" ? editor.location ?? "" : editor.location_vi ?? ""}
-                        onChange={(e) => update(adminLangTab === "en" ? { location: e.target.value } : { location_vi: e.target.value })}
-                        className="w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-foreground outline-none transition focus:border-primary"
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Năm thực hiện</label>
-                      <input
-                        type="number"
-                        value={editor.year ?? ""}
-                        onChange={(e) => update({ year: Number(e.target.value) })}
-                        className="w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-foreground outline-none transition focus:border-primary"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Chủ đầu tư</label>
-                    <input
-                      placeholder="Tên chủ đầu tư / Tập đoàn"
-                      value={adminLangTab === "en" ? editor.investor ?? "" : editor.investor_vi ?? ""}
-                      onChange={(e) => update(adminLangTab === "en" ? { investor: e.target.value } : { investor_vi: e.target.value })}
-                      className="w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-foreground outline-none transition focus:border-primary"
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Dự kiến hoàn thành</label>
-                      <input
-                        placeholder="Quý 4 / 2026"
-                        value={adminLangTab === "en" ? editor.expectedCompletion ?? "" : editor.expectedCompletion_vi ?? ""}
-                        onChange={(e) => update(adminLangTab === "en" ? { expectedCompletion: e.target.value } : { expectedCompletion_vi: e.target.value })}
-                        className="w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-foreground outline-none transition focus:border-primary"
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Gói thầu</label>
-                      <input
-                        placeholder="Tư vấn BIM & Quản lý CDE"
-                        value={adminLangTab === "en" ? editor.contractPackage ?? "" : editor.contractPackage_vi ?? ""}
-                        onChange={(e) => update(adminLangTab === "en" ? { contractPackage: e.target.value } : { contractPackage_vi: e.target.value })}
-                        className="w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-foreground outline-none transition focus:border-primary"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Quy mô công trình</label>
-                    <textarea
-                      rows={2}
-                      placeholder="Diện tích sàn, số tầng, tổng vốn đầu tư..."
-                      value={adminLangTab === "en" ? editor.scale ?? "" : editor.scale_vi ?? ""}
-                      onChange={(e) => update(adminLangTab === "en" ? { scale: e.target.value } : { scale_vi: e.target.value })}
-                      className="w-full rounded-xl border border-border bg-background p-3 text-sm text-foreground outline-none transition focus:border-primary"
-                    />
-                  </div>
-
-                  {/* Project Gallery Sub-editor */}
-                  <div className="border-t border-border pt-5 space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h4 className="text-sm font-bold text-foreground">Bộ sưu tập hình ảnh ({editor.images?.length ?? 0})</h4>
-                        <p className="text-xs text-muted-foreground">Hình ảnh phối cảnh và tiến độ thực tế dự án</p>
-                      </div>
-                      <MediaPicker
-                        label="Thêm ảnh từ Media"
-                        onSelect={(media) => void addProjectImage(media)}
-                      />
-                    </div>
-
-                    <div className="grid gap-3">
-                      {editor.images?.map((image, index) => (
-                        <div key={image.id} className="flex items-center gap-4 rounded-xl border border-border bg-card p-3 shadow-2xs">
-                          <Image src={image.url} alt={image.alt} width={80} height={56} className="size-14 rounded-lg object-cover border border-border" />
-                          <div className="flex-1 space-y-1.5 min-w-0">
-                            <input
-                              placeholder="Mô tả alt ảnh..."
-                              value={image.alt}
-                              onChange={(e) =>
-                                update({
-                                  images: editor.images?.map((item) =>
-                                    item.id === image.id ? { ...item, alt: e.target.value } : item,
-                                  ),
-                                })
-                              }
-                              onBlur={() => void adminContentApi.updateProjectImage(editor.id, image.id, { alt: image.alt })}
-                              className="w-full rounded border border-border bg-background px-2.5 py-1 text-xs text-foreground outline-none"
-                            />
-                            <input
-                              placeholder="Chú thích ảnh (caption)..."
-                              value={image.caption ?? ""}
-                              onChange={(e) =>
-                                update({
-                                  images: editor.images?.map((item) =>
-                                    item.id === image.id ? { ...item, caption: e.target.value } : item,
-                                  ),
-                                })
-                              }
-                              onBlur={() => void adminContentApi.updateProjectImage(editor.id, image.id, { caption: image.caption ?? null })}
-                              className="w-full rounded border border-border bg-background px-2.5 py-1 text-xs text-muted-foreground outline-none"
-                            />
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <button
-                              type="button"
-                              disabled={index === 0}
-                              onClick={() => void moveProjectImage(index, -1)}
-                              className="p-1.5 text-muted-foreground hover:text-foreground disabled:opacity-30"
-                              title="Di chuyển lên"
-                            >
-                              <MoveUp className="size-4" />
-                            </button>
-                            <button
-                              type="button"
-                              disabled={index === (editor.images?.length ?? 0) - 1}
-                              onClick={() => void moveProjectImage(index, 1)}
-                              className="p-1.5 text-muted-foreground hover:text-foreground disabled:opacity-30"
-                              title="Di chuyển xuống"
-                            >
-                              <MoveDown className="size-4" />
-                            </button>
-                            <button
-                              type="button"
-                              onClick={async () => {
-                                if (editor.id && !image.id.startsWith("temp-")) {
-                                  await adminContentApi.deleteProjectImage(editor.id, image.id).catch(() => {});
-                                }
-                                update({ images: editor.images?.filter((x) => x.id !== image.id) });
-                              }}
-                              className="p-1.5 text-destructive hover:bg-destructive/10 rounded"
-                              title="Xóa ảnh"
-                            >
-                              <Trash2 className="size-4" />
-                            </button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
+                <ProjectFields
+                  content={editor as unknown as Partial<AdminProjectContent>}
+                  adminLangTab={adminLangTab}
+                  onChange={update}
+                />
               )}
 
-              {/* SPECIFIC ATTRIBUTES CARD: KHÓA HỌC */}
               {contentType === "Khóa học" && (
-                <div className="rounded-2xl border border-border bg-card p-6 shadow-xs space-y-5">
-                  <div className="flex items-center gap-2 border-b border-border pb-3">
-                    <GraduationCap className="size-4 text-primary" />
-                    <h3 className="text-base font-bold text-foreground">Thông số khóa học & Giáo trình</h3>
-                  </div>
-
-                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Thời lượng</label>
-                      <input
-                        placeholder="12 buổi (36 giờ)"
-                        value={adminLangTab === "en" ? editor.duration ?? "" : editor.duration_vi ?? ""}
-                        onChange={(e) => update(adminLangTab === "en" ? { duration: e.target.value } : { duration_vi: e.target.value })}
-                        className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground outline-none transition focus:border-primary"
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Cấp độ</label>
-                      <input
-                        placeholder="Cơ bản / Nâng cao"
-                        value={adminLangTab === "en" ? editor.level ?? "" : editor.level_vi ?? ""}
-                        onChange={(e) => update(adminLangTab === "en" ? { level: e.target.value } : { level_vi: e.target.value })}
-                        className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground outline-none transition focus:border-primary"
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Học phí</label>
-                      <input
-                        placeholder="Liên hệ / 4.500.000 đ"
-                        value={adminLangTab === "en" ? editor.price ?? "" : editor.price_vi ?? ""}
-                        onChange={(e) => update(adminLangTab === "en" ? { price: e.target.value } : { price_vi: e.target.value })}
-                        className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground outline-none transition focus:border-primary"
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Giảng viên</label>
-                      <input
-                        placeholder="Chuyên gia BIM Quốc tế"
-                        value={adminLangTab === "en" ? editor.instructor ?? "" : editor.instructor_vi ?? ""}
-                        onChange={(e) => update(adminLangTab === "en" ? { instructor: e.target.value } : { instructor_vi: e.target.value })}
-                        className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground outline-none transition focus:border-primary"
-                      />
-                    </div>
-                  </div>
-
-                  <BulletListEditor
-                    label={adminLangTab === "en" ? "Mục tiêu & Chuẩn đầu ra khóa học (English)" : "Mục tiêu & Chuẩn đầu ra khóa học (Tiếng Việt)"}
-                    placeholder={adminLangTab === "en" ? "Ví dụ: Master Revit & IFC openBIM workflows..." : "Ví dụ: Làm chủ mô hình Revit & IFC..."}
-                    items={((adminLangTab === "en" ? editor.learningOutcomes : editor.learningOutcomes_vi) ?? [])}
-                    onChange={(items) =>
-                      update(
-                        adminLangTab === "en"
-                          ? { learningOutcomes: items }
-                          : { learningOutcomes_vi: items },
-                      )
-                    }
-                  />
-
-                  {/* Course Curriculum Modules */}
-                  <div className="border-t border-border pt-5 space-y-4">
-                    <h4 className="text-sm font-bold text-foreground">Chương trình đào tạo chi tiết ({editor.curriculum?.length ?? 0} phần)</h4>
-                    
-                    <div className="rounded-xl border border-dashed border-border p-4 bg-muted/20 space-y-3">
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <input
-                          placeholder="Tên Module (Ví dụ: Module 1: Thiết lập môi trường CDE)"
-                          value={newCurriculum.title}
-                          onChange={(e) => setNewCurriculum((v) => ({ ...v, title: e.target.value }))}
-                          className="rounded-lg border border-border bg-background px-3 py-2 text-xs text-foreground outline-none"
-                        />
-                        <input
-                          placeholder="Mô tả nội dung bài học..."
-                          value={newCurriculum.description}
-                          onChange={(e) => setNewCurriculum((v) => ({ ...v, description: e.target.value }))}
-                          className="rounded-lg border border-border bg-background px-3 py-2 text-xs text-foreground outline-none"
-                        />
-                      </div>
-                      <Button
-                        type="button"
-                        size="sm"
-                        onClick={() => void addCurriculum()}
-                        className="w-full gap-2 text-xs font-semibold bg-primary text-white"
-                      >
-                        <Plus className="size-3.5" />
-                        <span>Thêm phần học vào giáo trình</span>
-                      </Button>
-                    </div>
-
-                    <div className="grid gap-3">
-                      {editor.curriculum?.map((section, index) => (
-                        <div key={section.id} className="rounded-xl border border-border bg-card p-4 space-y-2 shadow-2xs">
-                          <div className="flex items-center justify-between gap-3">
-                            <span className="text-xs font-bold text-primary font-mono">PHẦN {index + 1}</span>
-                            <div className="flex items-center gap-1">
-                              <button
-                                type="button"
-                                disabled={index === 0}
-                                onClick={() => void moveCurriculum(index, -1)}
-                                className="p-1 text-muted-foreground hover:text-foreground disabled:opacity-30"
-                              >
-                                <MoveUp className="size-3.5" />
-                              </button>
-                              <button
-                                type="button"
-                                disabled={index === (editor.curriculum?.length ?? 0) - 1}
-                                onClick={() => void moveCurriculum(index, 1)}
-                                className="p-1 text-muted-foreground hover:text-foreground disabled:opacity-30"
-                              >
-                                <MoveDown className="size-3.5" />
-                              </button>
-                              <button
-                                type="button"
-                                onClick={async () => {
-                                  if (editor.id && !section.id.startsWith("temp-")) {
-                                    await adminContentApi.deleteCourseSection(editor.id, section.id).catch(() => {});
-                                  }
-                                  update({ curriculum: editor.curriculum?.filter((x) => x.id !== section.id) });
-                                }}
-                                className="p-1 text-destructive hover:bg-destructive/10 rounded"
-                              >
-                                <Trash2 className="size-3.5" />
-                              </button>
-                            </div>
-                          </div>
-                          <input
-                            value={section.title}
-                            onChange={(e) =>
-                              update({
-                                curriculum: editor.curriculum?.map((item) =>
-                                  item.id === section.id ? { ...item, title: e.target.value } : item,
-                                ),
-                              })
-                            }
-                            onBlur={() => void saveCurriculumSection(section.id, { title: section.title })}
-                            className="w-full rounded border border-border bg-background px-3 py-1.5 text-xs font-semibold text-foreground outline-none"
-                          />
-                          <textarea
-                            rows={2}
-                            value={section.description}
-                            onChange={(e) =>
-                              update({
-                                curriculum: editor.curriculum?.map((item) =>
-                                  item.id === section.id ? { ...item, description: e.target.value } : item,
-                                ),
-                              })
-                            }
-                            onBlur={() => void saveCurriculumSection(section.id, { description: section.description })}
-                            className="w-full rounded border border-border bg-background p-2 text-xs text-muted-foreground outline-none"
-                          />
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
+                <CourseFields
+                  content={editor as unknown as Partial<AdminCourseContent>}
+                  adminLangTab={adminLangTab}
+                  onChange={update}
+                />
               )}
 
-              {/* SPECIFIC ATTRIBUTES CARD: TIN TỨC */}
-              {contentType === "Tin tức" && (
-                <div className="rounded-2xl border border-border bg-card p-6 shadow-xs space-y-4">
-                  <h3 className="text-sm font-bold text-foreground">Tác giả bài viết</h3>
-                  <input
-                    placeholder="Tác giả (Ví dụ: BIM4C Editorial Board)"
-                    value={editor.authorName ?? ""}
-                    onChange={(e) => update({ authorName: e.target.value })}
-                    className="w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-foreground outline-none transition focus:border-primary"
-                  />
-                </div>
+              {(contentType === "Tin tức" || contentType === "Chuyên môn") && (
+                <PostFields
+                  content={editor as unknown as Partial<AdminPostContent>}
+                  onChange={update}
+                />
+              )}
+
+              {contentType === "Dịch vụ" && (
+                <ServiceFields
+                  content={editor as unknown as Partial<AdminServiceContent>}
+                  adminLangTab={adminLangTab}
+                  onChange={update}
+                />
               )}
 
               {/* STRUCTURED CONTENT BLOCKS EDITOR CARD */}
@@ -1114,49 +753,16 @@ export function ContentManager({
                 </div>
 
                 <ContentBlockEditor
-                  value={
-                    adminLangTab === "en"
-                      ? editor.contentBlocks ?? []
-                      : editor.contentBlocks_vi ?? []
-                  }
-                  onChange={(contentBlocks) =>
-                    update(
-                      adminLangTab === "en"
-                        ? { contentBlocks }
-                        : { contentBlocks_vi: contentBlocks },
-                    )
+                  valueVi={editor.contentBlocks_vi ?? []}
+                  valueEn={editor.contentBlocks ?? []}
+                  activeLang={adminLangTab}
+                  onChangeBilingual={({ contentBlocks_vi, contentBlocks }) =>
+                    update({
+                      contentBlocks_vi,
+                      contentBlocks,
+                    })
                   }
                 />
-              </div>
-
-              {/* RELATED ITEMS CARD */}
-              <div className="rounded-2xl border border-border bg-card p-6 shadow-xs space-y-4">
-                <h3 className="text-base font-bold text-foreground">Liên kết nội dung liên quan</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-56 overflow-y-auto pr-1">
-                  {items.filter((item) => item.id !== editor.id).map((item) => (
-                    <label
-                      key={item.id}
-                      className="flex items-center gap-3 rounded-xl border border-border p-3 text-xs text-foreground cursor-pointer hover:bg-muted/40 transition select-none"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={(editor.relatedIds ?? []).includes(item.id)}
-                        onChange={(e) =>
-                          update({
-                            relatedIds: e.target.checked
-                              ? [...(editor.relatedIds ?? []), item.id]
-                              : (editor.relatedIds ?? []).filter((id) => id !== item.id),
-                          })
-                        }
-                        className="size-4 rounded accent-primary cursor-pointer"
-                      />
-                      <span className="truncate flex-1">{item.title}</span>
-                    </label>
-                  ))}
-                  {items.filter((item) => item.id !== editor.id).length === 0 && (
-                    <p className="text-xs text-muted-foreground col-span-2">Chưa có bài viết hoặc nội dung khác để liên kết.</p>
-                  )}
-                </div>
               </div>
 
             </div>
@@ -1188,11 +794,11 @@ export function ContentManager({
                   </select>
                 </div>
 
-                {(contentType === "Dự án" || contentType === "Tin tức") && (
+                {(contentType === "Dự án" || contentType === "Tin tức" || contentType === "Chuyên môn") && (
                   <div className="space-y-1.5">
                     <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Danh mục</label>
                     <select
-                      value={editor.categoryId ?? ""}
+                      value={"categoryId" in editor ? (editor.categoryId ?? "") : ""}
                       onChange={(e) => update({ categoryId: e.target.value || null })}
                       className="w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-foreground outline-none transition focus:border-primary"
                     >
@@ -1206,15 +812,17 @@ export function ContentManager({
                   </div>
                 )}
 
-                <label className="flex items-center gap-2.5 pt-2 text-xs text-foreground cursor-pointer select-none">
-                  <input
-                    type="checkbox"
-                    checked={editor.isFeatured ?? false}
-                    onChange={(e) => update({ isFeatured: e.target.checked })}
-                    className="size-4 rounded accent-primary cursor-pointer"
-                  />
-                  <span>Đánh dấu nổi bật (Featured item)</span>
-                </label>
+                {contentType === "Dự án" && (
+                  <label className="flex items-center gap-2.5 pt-2 text-xs text-foreground cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={Boolean("isFeatured" in editor && editor.isFeatured)}
+                      onChange={(e) => update({ isFeatured: e.target.checked })}
+                      className="size-4 rounded accent-primary cursor-pointer"
+                    />
+                    <span>Đánh dấu dự án nổi bật (Featured)</span>
+                  </label>
+                )}
               </div>
 
               {/* Featured Image Card */}
@@ -1318,7 +926,7 @@ export function ContentManager({
           </div>
 
           <Button
-            onClick={() => setEditor(empty(contentType))}
+            onClick={() => setEditor(createEmptyContent(contentType))}
             className="gap-2 bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-400 hover:to-emerald-400 text-slate-950 font-bold text-xs shadow-md shadow-teal-500/20 px-4"
           >
             <Plus className="size-4" />
@@ -1327,8 +935,9 @@ export function ContentManager({
         </div>
 
         {feedback && (
-          <div className="m-4 flex items-center justify-between rounded-xl bg-primary/10 border border-primary/20 px-4 py-3 text-xs text-primary">
-            <span>{feedback}</span>
+          <div className="m-4">
+            <ErrorState message={feedback} onRetry={() => void load()} />
+            <span className="sr-only">{feedback}</span>
             <button onClick={() => setFeedback("")} aria-label="Đóng thông báo">
               <X className="size-4" />
             </button>
@@ -1382,7 +991,14 @@ export function ContentManager({
               </tr>
             </thead>
             <tbody className="divide-y divide-border text-sm">
-              {items.map((item) => (
+              {loading && (
+                <tr>
+                  <td colSpan={6} className="py-12">
+                    <LoadingState label="Đang tải nội dung…" />
+                  </td>
+                </tr>
+              )}
+              {!loading && items.map((item) => (
                 <tr key={item.id} className="hover:bg-muted/20 transition-colors group">
                   <td className="px-4 py-3.5">
                     <input
@@ -1505,7 +1121,7 @@ export function ContentManager({
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => setEditor(empty(contentType))}
+                        onClick={() => setEditor(createEmptyContent(contentType))}
                         className="mt-2 text-xs"
                       >
                         ＋ Tạo mới ngay

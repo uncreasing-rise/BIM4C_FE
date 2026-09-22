@@ -64,10 +64,17 @@ export function resolveCoverImage(options: {
 
   // 1. If valid image provided in database/admin, strictly respect and return it
   if (typeof currentImage === "string" && currentImage.trim().length > 0) {
-    if (currentImage === "/images/service-training.jpg") {
-      return "/images/news-bim-training.webp";
+    const trimmed = currentImage.trim();
+    if (
+      trimmed.includes("cavendish.webp") ||
+      trimmed.includes("hero-1.webp") ||
+      trimmed === "/images/service-training.jpg"
+    ) {
+      if (type === "project") return "/images/project-matrix.jpg";
+      if (type === "course") return "/images/news-bim-training.webp";
+      return "/images/news-digital-twin.webp";
     }
-    return currentImage.trim();
+    return trimmed;
   }
 
   // 2. Fallback lookup by explicit slug mapping if no image is set

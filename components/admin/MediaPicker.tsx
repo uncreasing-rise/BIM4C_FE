@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ImageIcon, Search, UploadCloud, Loader2 } from "lucide-react";
 import { adminMediaApi, type AdminMedia } from "@/features/admin/api/media";
 import { Button } from "@/components/ui/button";
@@ -29,7 +29,7 @@ export function MediaPicker({
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const loadMedia = async (signal?: AbortSignal) => {
+  const loadMedia = useCallback(async (signal?: AbortSignal) => {
     try {
       setError("");
       const result = await adminMediaApi.list(search, signal);
@@ -48,7 +48,7 @@ export function MediaPicker({
         );
       }
     }
-  };
+  }, [search]);
 
   useEffect(() => {
     if (!open) return;
@@ -58,7 +58,7 @@ export function MediaPicker({
       window.clearTimeout(timer);
       controller.abort();
     };
-  }, [open, search]);
+  }, [loadMedia, open]);
 
   const handleUpload = async (file?: File) => {
     if (!file || uploading) return;
