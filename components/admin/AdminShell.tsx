@@ -26,7 +26,14 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { can, currentAdmin, clearAdminCache, type AdminIdentity } from "@/features/admin/auth";
+import {
+  can,
+  currentAdmin,
+  clearAdminAccessToken,
+  clearAdminCache,
+  getAdminAccessToken,
+  type AdminIdentity,
+} from "@/features/admin/auth";
 import { env } from "@/lib/config/env";
 import { toast } from "sonner";
 
@@ -166,8 +173,12 @@ export function AdminShell({
       await fetch(`${env.apiUrl}/auth/logout`, {
         method: "POST",
         credentials: "include",
+        headers: getAdminAccessToken()
+          ? { Authorization: `Bearer ${getAdminAccessToken()}` }
+          : undefined,
       });
     } catch {}
+    clearAdminAccessToken();
     router.replace("/admin/login");
     router.refresh();
   }

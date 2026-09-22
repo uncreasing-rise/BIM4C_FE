@@ -21,6 +21,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { FormEvent, Suspense, useState } from "react";
 import { env } from "@/lib/config/env";
+import { setAdminAccessToken } from "@/features/admin/auth";
 
 function LoginForm() {
   const params = useSearchParams();
@@ -57,6 +58,10 @@ function LoginForm() {
             "Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.",
         );
       }
+
+      const result = (await response.json()) as { token?: string };
+      if (!result.token) throw new Error("Đăng nhập thất bại: máy chủ không trả access token.");
+      setAdminAccessToken(result.token);
 
       const next = params.get("next");
       const targetUrl = next?.startsWith("/admin") && next !== "/admin/login" ? next : "/admin";

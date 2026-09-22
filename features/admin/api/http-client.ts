@@ -1,4 +1,5 @@
 import { env } from "@/lib/config/env";
+import { getAdminAccessToken } from "@/features/admin/auth";
 
 const DEFAULT_TIMEOUT_MS = 15_000;
 
@@ -17,6 +18,10 @@ export async function adminRequest<T>(
     ...(!isFormData && init?.body ? { "Content-Type": "application/json" } : {}),
     ...(init?.headers as Record<string, string> | undefined),
   };
+  const accessToken = getAdminAccessToken();
+  if (accessToken && !headers.Authorization && !headers.authorization) {
+    headers.Authorization = `Bearer ${accessToken}`;
+  }
   const timeoutController = new AbortController();
   const timeoutId = setTimeout(
     () => timeoutController.abort(),

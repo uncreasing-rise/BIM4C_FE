@@ -11,6 +11,20 @@ export interface AdminIdentity {
 let cachedAdmin: AdminIdentity | null = null;
 let currentAdminRequest: Promise<AdminIdentity> | null = null;
 const AUTH_TIMEOUT_MS = 15_000;
+const ACCESS_TOKEN_KEY = "bim4c_admin_access_token";
+
+export function getAdminAccessToken(): string | null {
+  if (typeof window === "undefined") return null;
+  return window.sessionStorage.getItem(ACCESS_TOKEN_KEY);
+}
+
+export function setAdminAccessToken(token: string): void {
+  if (typeof window !== "undefined") window.sessionStorage.setItem(ACCESS_TOKEN_KEY, token);
+}
+
+export function clearAdminAccessToken(): void {
+  if (typeof window !== "undefined") window.sessionStorage.removeItem(ACCESS_TOKEN_KEY);
+}
 
 export async function currentAdmin(forceRefresh = false): Promise<AdminIdentity> {
   if (cachedAdmin && !forceRefresh) {
@@ -26,10 +40,14 @@ export async function currentAdmin(forceRefresh = false): Promise<AdminIdentity>
         credentials: "include",
         cache: "no-store",
         headers: { Accept: "application/json" },
+        ...(getAdminAccessToken()
+          ? { headers: { Accept: "application/json", Authorization: `Bearer ${getAdminAccessToken()}` } }
+          : {}),
         signal: controller.signal,
       });
       if (!response.ok) {
         cachedAdmin = null;
+        if (response.status === 401) clearAdminAccessToken();
         throw new Error(String(response.status));
       }
       const json = (await response.json()) as { data: AdminIdentity };
