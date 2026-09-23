@@ -3,9 +3,11 @@
 import { SocialLinks } from "@/components/shared/SocialLinks";
 import { CONTACT_EMAIL, ROUTES } from "@/constants/routes";
 import { ConsultationForm } from "@/features/contact/components/ConsultationForm";
+import { AppointmentBooking } from "@/features/contact/components/AppointmentBooking";
 import { useLanguage } from "@/lib/i18n/context";
 import type { Dictionary } from "@/lib/i18n/types";
 import { ArrowUpRight, CheckCircle2, Clock3, Mail, Phone } from "lucide-react";
+import { useState } from "react";
 
 function OfficesAndVatCards({ t }: { t: Dictionary; locale: string }) {
   return (
@@ -21,6 +23,8 @@ function OfficesAndVatCards({ t }: { t: Dictionary; locale: string }) {
 
 export function ConsultationSection() {
   const { t, locale } = useLanguage();
+  const [mode, setMode] = useState<"inbox" | "appointment">("inbox");
+  const isAppointment = mode === "appointment";
 
   return (
     <section
@@ -93,20 +97,46 @@ export function ConsultationSection() {
           id="consultation-form"
           className="rounded-[2rem] border border-white/12 bg-white/[.07] p-5 shadow-2xl shadow-black/20 backdrop-blur-xl sm:p-8 lg:p-10"
         >
-          <div className="mb-7 flex items-start justify-between gap-6 border-b border-white/10 pb-6">
+          <div className="mb-6 border-b border-white/10 pb-6">
+            <div className="grid grid-cols-2 rounded-xl border border-white/10 bg-black/10 p-1" role="tablist" aria-label={locale === "vi" ? "Phương thức liên hệ" : "Contact method"}>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={!isAppointment}
+                onClick={() => setMode("inbox")}
+                className={`rounded-lg px-4 py-3 text-sm font-semibold transition ${!isAppointment ? "bg-primary text-white shadow-sm" : "text-white/65 hover:bg-white/10 hover:text-white"}`}
+              >
+                {locale === "vi" ? "Gửi yêu cầu" : "Send an enquiry"}
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={isAppointment}
+                onClick={() => setMode("appointment")}
+                className={`rounded-lg px-4 py-3 text-sm font-semibold transition ${isAppointment ? "bg-primary text-white shadow-sm" : "text-white/65 hover:bg-white/10 hover:text-white"}`}
+              >
+                {locale === "vi" ? "Đặt lịch tư vấn" : "Book an appointment"}
+              </button>
+            </div>
+          </div>
+          <div className="mb-7 flex items-start justify-between gap-6">
             <div>
               <p className="text-xl font-semibold">
-                {t.contactPage.enquiryTitle}
+                {isAppointment
+                  ? locale === "vi" ? "Đặt lịch tư vấn" : "Book a consultation"
+                  : t.contactPage.enquiryTitle}
               </p>
               <p className="mt-2 text-sm text-white/65">
-                {t.contactPage.enquiryDesc}
+                {isAppointment
+                  ? locale === "vi" ? "Chọn một khung giờ còn trống phù hợp với bạn." : "Choose an available time that works for you."
+                  : t.contactPage.enquiryDesc}
               </p>
             </div>
             <span className="hidden items-center gap-2 rounded-full border border-primary/25 bg-primary/10 px-3 py-1.5 text-xs text-primary sm:flex">
               <Clock3 className="size-3.5" /> {t.contactPage.responseTime}
             </span>
           </div>
-          <ConsultationForm />
+          {!isAppointment ? <ConsultationForm /> : <AppointmentBooking />}
         </div>
 
         {/* Mobile view for offices and VAT (Appears below form) */}

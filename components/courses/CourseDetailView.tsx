@@ -43,6 +43,7 @@ export type CourseDetailEntry = ContentEntry & {
   price?: string;
   duration?: string;
   level?: string;
+  softwareStack?: string[];
 };
 
 interface CourseDetailViewProps {
@@ -69,33 +70,33 @@ export function CourseDetailView({
     { name: entry.title, path: detailPath },
   ];
 
-  const durationVal =
+  const legacyDurationVal =
     entry.duration ||
     entry.eyebrow.split("·")[1]?.trim() ||
     (isVi ? "8 tuần" : "8 weeks");
-  const levelVal =
+  const legacyLevelVal =
     entry.level ||
     entry.eyebrow.split("·")[0]?.trim() ||
     (isVi ? "Chuyên sâu" : "Advanced");
-  const priceVal =
+  const legacyPriceVal =
     entry.price ||
     (isVi ? "Liên hệ ưu đãi khóa học" : "Contact for corporate/cohort pricing");
-  const instructorVal =
+  const legacyInstructorVal =
     entry.instructor ||
     (isVi
       ? "BIM Manager & Giảng viên BIM4C"
       : "BIM Manager & Senior Specialist");
 
-  const courseFacts = [
+  const legacyCourseFacts = [
     {
       label: t.detailPage.fields.duration,
-      value: toLocalizedLabel(durationVal, locale),
+      value: toLocalizedLabel(legacyDurationVal, locale),
     },
     {
       label: t.detailPage.fields.level,
-      value: toLocalizedLabel(levelVal, locale),
+      value: toLocalizedLabel(legacyLevelVal, locale),
     },
-    { label: t.detailPage.fields.price, value: priceVal },
+    { label: t.detailPage.fields.price, value: legacyPriceVal },
     {
       label: isVi ? "Hình thức học" : "Format",
       value: isVi ? "Online tương tác / Lab" : "Live Interactive / Lab",
@@ -104,10 +105,21 @@ export function CourseDetailView({
       label: isVi ? "Lịch khai giảng" : "Schedule",
       value: isVi ? "Định kỳ hàng tháng" : "Monthly Intakes",
     },
-    { label: t.detailPage.fields.instructor, value: instructorVal },
+    { label: t.detailPage.fields.instructor, value: legacyInstructorVal },
   ];
 
-  const blocks = entry.contentBlocks ?? legacyBlocks(entry);
+  const durationVal = entry.duration?.trim();
+  void legacyCourseFacts;
+  const levelVal = entry.level?.trim();
+  const priceVal = entry.price?.trim();
+  const instructorVal = entry.instructor?.trim();
+  const courseFacts = [
+    durationVal && { label: t.detailPage.fields.duration, value: durationVal },
+    levelVal && { label: t.detailPage.fields.level, value: levelVal },
+    priceVal && { label: t.detailPage.fields.price, value: priceVal },
+    instructorVal && { label: t.detailPage.fields.instructor, value: instructorVal },
+  ].filter((item): item is { label: string; value: string } => Boolean(item));
+  const blocks = entry.contentBlocks?.length ? entry.contentBlocks : legacyBlocks(entry);
 
   return (
     <>
@@ -148,10 +160,10 @@ export function CourseDetailView({
             </Button>
             <div className="flex items-center gap-2">
               <span className="rounded-md bg-teal-500/10 px-2.5 py-1 text-xs font-semibold text-teal-700 dark:text-teal-300 border border-teal-500/20">
-                {toLocalizedLabel(levelVal, locale)}
+                {levelVal ? toLocalizedLabel(levelVal, locale) : null}
               </span>
               <span className="rounded-md bg-muted px-2.5 py-1 text-xs font-semibold text-muted-foreground">
-                {toLocalizedLabel(durationVal, locale)}
+                {durationVal ? toLocalizedLabel(durationVal, locale) : null}
               </span>
             </div>
           </div>
@@ -243,19 +255,12 @@ export function CourseDetailView({
               )}
 
               {/* Software & Tools Stack */}
-              <div className="mt-10 rounded-2xl border bg-muted/30 p-6 sm:p-8">
+              {entry.softwareStack && entry.softwareStack.length > 0 && <div className="mt-10 rounded-2xl border bg-muted/30 p-6 sm:p-8">
                 <p className="text-xs font-semibold uppercase tracking-wider text-primary">
                   {t.detailPage.softwareStack}
                 </p>
                 <div className="mt-4 flex flex-wrap gap-2.5">
-                  {[
-                    "Autodesk Revit (BIM Modeling)",
-                    "Navisworks Manage (Clash Detective)",
-                    "Autodesk Construction Cloud (ACC CDE)",
-                    "OpenBIM IFC4 & BCF Standards",
-                    "Solibri Model Checker",
-                    "Dynamo & Python Automation",
-                  ].map((tool) => (
+                  {entry.softwareStack.map((tool) => (
                     <span
                       key={tool}
                       className="inline-flex items-center gap-1.5 rounded-lg border bg-card px-3.5 py-2 text-xs font-semibold text-foreground shadow-2xs"
@@ -265,7 +270,7 @@ export function CourseDetailView({
                     </span>
                   ))}
                 </div>
-              </div>
+              </div>}
 
               {/* B2B Cohort Training Banner */}
               <div className="mt-10 relative overflow-hidden rounded-2xl bg-brand-ink p-6 text-white sm:p-8">

@@ -20,6 +20,8 @@ export interface AdminCourseContent extends AdminBaseContent {
   instructor_vi?: string | null;
   learningOutcomes?: string[];
   learningOutcomes_vi?: string[];
+  softwareStack?: string[];
+  softwareStack_vi?: string[];
   curriculum?: CourseCurriculumSection[];
 }
 
@@ -46,6 +48,8 @@ export interface CreateCoursePayload {
   instructor_vi?: string | null;
   learningOutcomes?: string[];
   learningOutcomes_vi?: string[];
+  softwareStack?: string[];
+  softwareStack_vi?: string[];
   sortOrder?: number;
   publishedAt?: string | null;
   title_vi?: string | null;
@@ -65,4 +69,3 @@ export interface CreateCoursePayload {
 }
 
 export type UpdateCoursePayload = Partial<CreateCoursePayload>;
-

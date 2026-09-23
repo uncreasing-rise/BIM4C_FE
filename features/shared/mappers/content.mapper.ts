@@ -145,6 +145,7 @@ export function mapContentDto(dto: ContentEntryDto): ContentEntry {
     ? dto.highlights.filter((item): item is string => typeof item === "string")
     : [];
 
+  const parsedContentBlocks = parseContentBlocks(dto.contentBlocks);
   const rawContent = {
     id: typeof dto.id === "string" && dto.id ? dto.id : undefined,
     slug: safeString(dto.slug, "content"),
@@ -159,9 +160,9 @@ export function mapContentDto(dto: ContentEntryDto): ContentEntry {
     meta: dto.meta ?? undefined,
     sections,
     contentBlocks:
-      dto.contentBlocks === undefined
-        ? legacyBlocks
-        : parseContentBlocks(dto.contentBlocks),
+      parsedContentBlocks.length > 0 || rawSections.length === 0
+        ? parsedContentBlocks
+        : legacyBlocks,
     highlights: rawHighlights,
     seoTitle: dto.seoTitle?.trim() || undefined,
     seoDescription: dto.seoDescription?.trim() || undefined,
@@ -186,6 +187,11 @@ export function mapContentDto(dto: ContentEntryDto): ContentEntry {
       ? dto.learningOutcomes.filter(
           (item): item is string =>
             typeof item === "string" && Boolean(item.trim()),
+        )
+      : undefined,
+    softwareStack: Array.isArray(dto.softwareStack)
+      ? dto.softwareStack.filter(
+          (item): item is string => typeof item === "string" && Boolean(item.trim()),
         )
       : undefined,
     gallery: Array.isArray(dto.gallery)
@@ -272,5 +278,7 @@ export function mapContentDto(dto: ContentEntryDto): ContentEntry {
       dto.learningOutcomes_vi ?? dto.learningOutcomes ?? undefined,
     learningOutcomes_en:
       dto.learningOutcomes_en ?? undefined,
+    softwareStack_vi: dto.softwareStack_vi ?? dto.softwareStack ?? undefined,
+    softwareStack_en: dto.softwareStack_en ?? undefined,
   };
 }

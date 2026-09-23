@@ -43,6 +43,21 @@ export const adminContentApi = {
     }
   },
 
+  getById: (type: AdminContentType, id: string, signal?: AbortSignal) => {
+    switch (type) {
+      case "Dự án":
+        return projectsApi.getById(id, signal) as Promise<{ data: AdminContent }>;
+      case "Khóa học":
+        return coursesApi.getById(id, signal) as Promise<{ data: AdminContent }>;
+      case "Dịch vụ":
+        return servicesApi.getById(id, signal) as Promise<{ data: AdminContent }>;
+      case "Tin tức":
+      case "Chuyên môn":
+      default:
+        return postsApi.getById(id, signal) as Promise<{ data: AdminContent }>;
+    }
+  },
+
   create: (type: AdminContentType, body: Partial<AdminContent>) => {
     switch (type) {
       case "Dự án":

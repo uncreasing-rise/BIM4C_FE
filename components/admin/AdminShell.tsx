@@ -16,6 +16,7 @@ import {
   Wrench,
   Folder,
   Mail,
+  CalendarClock,
   Users,
   FileClock,
   Settings,
@@ -47,6 +48,7 @@ const navigation = [
   { href: "/admin/dich-vu", label: "Dịch vụ", icon: Wrench },
   { href: "/admin/media", label: "Thư viện", icon: Folder },
   { href: "/admin/lien-he", label: "Liên hệ", icon: Mail },
+  { href: "/admin/lich-tu-van", label: "Lịch tư vấn", icon: CalendarClock, permission: "appointments.read" },
   { href: "/admin/dang-ky-khoa-hoc", label: "Đăng ký khóa học", icon: GraduationCap },
   { href: "/admin/newsletter", label: "Newsletter", icon: Mail },
 ];

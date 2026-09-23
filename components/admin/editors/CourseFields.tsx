@@ -176,6 +176,15 @@ export function CourseFields({ content, adminLangTab, onChange }: CourseFieldsPr
         }
       />
 
+      <BulletListEditor
+        label={adminLangTab === "en" ? "Software & Technology Stack (English)" : "Phần mềm & Công nghệ sử dụng (Tiếng Việt)"}
+        placeholder={adminLangTab === "en" ? "Ví dụ: Autodesk Revit (BIM Modeling)" : "Ví dụ: Autodesk Revit (Mô hình BIM)"}
+        items={((adminLangTab === "en" ? content.softwareStack : content.softwareStack_vi) ?? [])}
+        onChange={(items) =>
+          onChange(adminLangTab === "en" ? { softwareStack: items } : { softwareStack_vi: items })
+        }
+      />
+
       {/* Course Curriculum Modules */}
       <div className="border-t border-border pt-5 space-y-4">
         <h4 className="text-sm font-bold text-foreground">Chương trình đào tạo chi tiết ({curriculum.length} phần)</h4>

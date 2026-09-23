@@ -15,6 +15,8 @@ export function createEmptyCourse(): AdminCourseContent {
     instructor_vi: "",
     learningOutcomes: [],
     learningOutcomes_vi: [],
+    softwareStack: [],
+    softwareStack_vi: [],
     curriculum: [],
   };
 }
@@ -35,11 +37,17 @@ export function serializeCoursePayload(data: Partial<AdminCourseContent>): Recor
   if (data.instructor) payload.instructor = data.instructor.trim();
   if (data.instructor_vi) payload.instructor_vi = data.instructor_vi.trim();
 
-  if (Array.isArray(data.learningOutcomes) && data.learningOutcomes.length > 0) {
+  if (Array.isArray(data.learningOutcomes)) {
     payload.learningOutcomes = data.learningOutcomes.map((item) => String(item).trim()).filter(Boolean);
   }
-  if (Array.isArray(data.learningOutcomes_vi) && data.learningOutcomes_vi.length > 0) {
+  if (Array.isArray(data.learningOutcomes_vi)) {
     payload.learningOutcomes_vi = data.learningOutcomes_vi.map((item) => String(item).trim()).filter(Boolean);
+  }
+  if (Array.isArray(data.softwareStack)) {
+    payload.softwareStack = data.softwareStack.map((item) => String(item).trim()).filter(Boolean);
+  }
+  if (Array.isArray(data.softwareStack_vi)) {
+    payload.softwareStack_vi = data.softwareStack_vi.map((item) => String(item).trim()).filter(Boolean);
   }
 
   return payload;

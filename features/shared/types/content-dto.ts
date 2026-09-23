@@ -68,6 +68,9 @@ export interface ContentEntryDto {
   learningOutcomes?: string[] | null;
   learningOutcomes_vi?: string[] | null;
   learningOutcomes_en?: string[] | null;
+  softwareStack?: string[] | null;
+  softwareStack_vi?: string[] | null;
+  softwareStack_en?: string[] | null;
   gallery?: ContentSectionDto["images"];
   curriculum?: { id?: string; title: string; description?: string | null; sortOrder?: number }[] | null;
   curriculum_vi?: { id?: string; title: string; description?: string | null; sortOrder?: number }[] | null;

@@ -18,6 +18,10 @@ export const API_ENDPOINTS = {
   },
 
   contact: { submit: "/contact" },
+  appointments: {
+    availability: "/appointments/availability",
+    create: "/appointments",
+  },
   courseRegistrations: { create: "/course-registrations" },
   newsletter: { subscribe: "/newsletter/subscriptions" },
 } as const;

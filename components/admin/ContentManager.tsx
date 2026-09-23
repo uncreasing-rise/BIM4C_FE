@@ -70,6 +70,38 @@ const statusColors: Record<AdminContentStatus, string> = {
   COMPLETED: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30",
 };
 
+function prepareEditorContent(value: AdminContent, contentType: AdminContentType): AdminContent {
+  const sections = Array.isArray(value.sections) ? value.sections : [];
+  const sectionsVi = Array.isArray(value.sections_vi) ? value.sections_vi : [];
+  const parsedContentBlocks = parseContentBlocks(value.contentBlocks);
+  const parsedContentBlocksVi = parseContentBlocks(value.contentBlocks_vi);
+  const contentBlocks = parsedContentBlocks.length > 0
+    ? parsedContentBlocks
+    : sections.map((section, index) => ({
+        id: `legacy-${index}`,
+        type: "rich-text" as const,
+        heading: section.title,
+        content: section.body,
+      }));
+  const contentBlocksVi = parsedContentBlocksVi.length > 0
+    ? parsedContentBlocksVi
+    : sectionsVi.map((section, index) => ({
+        id: `legacy-vi-${index}`,
+        type: "rich-text" as const,
+        heading: section.title,
+        content: section.body,
+      }));
+
+  return {
+    ...value,
+    type: contentType,
+    sections,
+    sections_vi: sectionsVi,
+    contentBlocks,
+    contentBlocks_vi: contentBlocksVi.length > 0 ? contentBlocksVi : contentBlocks,
+  } as AdminContent;
+}
+
 export function ContentManager({
   contentType,
 }: {
@@ -94,6 +126,7 @@ export function ContentManager({
   const [feedback, setFeedback] = useState("");
   const [dirty, setDirty] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [openingId, setOpeningId] = useState<string | null>(null);
 
   const publicBase =
     contentType === "Dịch vụ"
@@ -109,21 +142,18 @@ export function ContentManager({
       setLoading(true);
       setFeedback("");
       try {
-        const [result, categoryResult] = await Promise.all([
-          adminContentApi.list(
-            contentType,
-            {
-              page,
-              limit: 20,
-              search: query,
-              status,
-              sortBy: "updatedAt",
-              sortOrder: "desc",
-            },
-            signal,
-          ),
-          adminContentApi.categories(contentType, signal),
-        ]);
+        const result = await adminContentApi.list(
+          contentType,
+          {
+            page,
+            limit: 20,
+            search: query,
+            status,
+            sortBy: "updatedAt",
+            sortOrder: "desc",
+          },
+          signal,
+        );
         if (signal?.aborted) return;
         const list = Array.isArray(result?.data)
           ? result.data
@@ -138,12 +168,21 @@ export function ContentManager({
             Math.max(1, Math.ceil((result?.meta?.total ?? list.length) / 20)),
         );
         setTotalPages(totalPages || 1);
-        const catList = Array.isArray(categoryResult?.data)
-          ? categoryResult.data
-          : Array.isArray(categoryResult)
-            ? categoryResult
-            : [];
-        setCategories(catList);
+        // Categories are auxiliary data. A category permission/schema problem
+        // must not prevent the content list and editor from opening.
+        try {
+          const categoryResult = await adminContentApi.categories(contentType, signal);
+          const catList = Array.isArray(categoryResult?.data)
+            ? categoryResult.data
+            : Array.isArray(categoryResult)
+              ? categoryResult
+              : [];
+          setCategories(catList);
+        } catch (categoryError) {
+          if (signal?.aborted) return;
+          console.warn("Could not load content categories", categoryError);
+          setCategories([]);
+        }
       } catch (error) {
         if (signal?.aborted) return;
         setFeedback(
@@ -194,6 +233,20 @@ export function ContentManager({
   function update(patch: Partial<AdminContent>) {
     setEditor((old) => (old ? { ...old, ...patch } : old));
     setDirty(true);
+  }
+
+  async function openEditor(item: AdminContent) {
+    setOpeningId(item.id);
+    try {
+      const response = await adminContentApi.getById(contentType, item.id);
+      setEditor(prepareEditorContent(response?.data ?? item, contentType));
+    } catch (error) {
+      // Keep the editor usable even if the detail endpoint is temporarily unavailable.
+      setEditor(prepareEditorContent(item, contentType));
+      toast.error(error instanceof Error ? error.message : "Không thể tải chi tiết nội dung.");
+    } finally {
+      setOpeningId(null);
+    }
   }
 
   function validateContentBlocks(
@@ -1033,20 +1086,7 @@ export function ContentManager({
                       <div className="min-w-0">
                         <button
                           type="button"
-                          onClick={() => {
-                            const value = structuredClone(item);
-                            const blocks: ContentBlock[] = value.contentBlocks?.length
-                              ? value.contentBlocks
-                              : value.sections.flatMap((section, index) => [
-                                  {
-                                    id: `legacy-${index}`,
-                                    type: "rich-text" as const,
-                                    heading: section.title,
-                                    content: section.body,
-                                  },
-                                ]);
-                            setEditor({ ...value, contentBlocks: blocks });
-                          }}
+                          onClick={() => void openEditor(item)}
                           className="font-bold text-foreground hover:text-primary transition-colors text-left line-clamp-1 block"
                         >
                           {item.title}
@@ -1079,20 +1119,8 @@ export function ContentManager({
                         type="button"
                         variant="outline"
                         size="sm"
-                        onClick={() => {
-                          const value = structuredClone(item);
-                          const blocks: ContentBlock[] = value.contentBlocks?.length
-                            ? value.contentBlocks
-                            : value.sections.flatMap((section, index) => [
-                                {
-                                  id: `legacy-${index}`,
-                                  type: "rich-text" as const,
-                                  heading: section.title,
-                                  content: section.body,
-                                },
-                              ]);
-                          setEditor({ ...value, contentBlocks: blocks });
-                        }}
+                        onClick={() => void openEditor(item)}
+                        disabled={openingId === item.id}
                         className="h-8 px-2.5 text-xs font-semibold gap-1"
                       >
                         <span>Sửa</span>

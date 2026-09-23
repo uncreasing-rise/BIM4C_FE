@@ -100,9 +100,10 @@ export function ContentBlockRenderer({ blocks }: { blocks: ContentBlock[] }) {
             );
           case "feature-list": {
             const List = block.ordered ? "ol" : "ul";
+            const hasHeading = Boolean(block.heading?.trim());
             return (
-              <section key={block.id}>
-                {block.heading && (
+              <section className={hasHeading ? undefined : "-mt-8"} key={block.id}>
+                {hasHeading && (
                   <h2 className="mb-5 text-2xl font-semibold">
                     {block.heading}
                   </h2>

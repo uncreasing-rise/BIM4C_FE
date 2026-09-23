@@ -46,6 +46,7 @@ export function localizeContent<T extends { title: string }>(
     price_vi?: string | null;
     instructor_vi?: string | null;
     learningOutcomes_vi?: string[];
+    softwareStack_vi?: string[];
     curriculum_vi?: unknown[];
     location_vi?: string | null;
     investor_vi?: string | null;
@@ -66,6 +67,7 @@ export function localizeContent<T extends { title: string }>(
     price_en?: string | null;
     instructor_en?: string | null;
     learningOutcomes_en?: string[];
+    softwareStack_en?: string[];
     curriculum_en?: unknown[];
     location_en?: string | null;
     category_en?: string | null;
@@ -73,7 +75,7 @@ export function localizeContent<T extends { title: string }>(
 
   if (locale === "vi") {
     const viSections = item.sections_vi ?? (item as unknown as { sections?: ContentEntry["sections"] }).sections;
-    const viContentBlocks = item.contentBlocks_vi
+    const viContentBlocks = item.contentBlocks_vi && Array.isArray(item.contentBlocks_vi) && item.contentBlocks_vi.length > 0
       ? item.contentBlocks_vi
       : item.sections_vi
         ? legacyBlocks({ ...(entry as unknown as ContentEntry), sections: item.sections_vi })
@@ -111,6 +113,7 @@ export function localizeContent<T extends { title: string }>(
       ...(item.price_vi ? { price: item.price_vi } : {}),
       ...(item.instructor_vi ? { instructor: item.instructor_vi } : {}),
       ...(item.learningOutcomes_vi?.length ? { learningOutcomes: item.learningOutcomes_vi } : {}),
+      ...(item.softwareStack_vi?.length ? { softwareStack: item.softwareStack_vi } : {}),
       ...(item.curriculum_vi?.length ? { curriculum: item.curriculum_vi } : {}),
       ...(item.location_vi
         ? { location: item.location_vi }
@@ -132,7 +135,7 @@ export function localizeContent<T extends { title: string }>(
   const enSections =
     item.sections_en ??
     (item as unknown as { sections?: ContentEntry["sections"] }).sections;
-  const enContentBlocks = item.contentBlocks_en
+  const enContentBlocks = item.contentBlocks_en && Array.isArray(item.contentBlocks_en) && item.contentBlocks_en.length > 0
     ? item.contentBlocks_en
     : (item as unknown as { contentBlocks?: unknown }).contentBlocks
       ? (item as unknown as { contentBlocks?: unknown }).contentBlocks
@@ -208,6 +211,11 @@ export function localizeContent<T extends { title: string }>(
         ? { learningOutcomes: item.learningOutcomes_en }
         : (item as unknown as { learningOutcomes?: string[] }).learningOutcomes?.length
           ? { learningOutcomes: (item as unknown as { learningOutcomes: string[] }).learningOutcomes }
+          : {}),
+      ...(item.softwareStack_en?.length
+        ? { softwareStack: item.softwareStack_en }
+        : (item as unknown as { softwareStack?: string[] }).softwareStack?.length
+          ? { softwareStack: (item as unknown as { softwareStack: string[] }).softwareStack }
           : {}),
       ...(item.curriculum_en?.length
         ? { curriculum: item.curriculum_en }

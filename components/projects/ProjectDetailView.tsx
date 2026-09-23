@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ROUTES } from "@/constants/routes";
 import { ConsultationForm } from "@/features/contact/components/ConsultationForm";
+import { AppointmentBooking } from "@/features/contact/components/AppointmentBooking";
 import type { Project } from "@/features/projects/types/project";
 import { useLanguage } from "@/lib/i18n/context";
 import { localizeContent, localizeContentList } from "@/lib/i18n/localize";
@@ -61,7 +62,7 @@ export function ProjectDetailView({
     [t.detailPage.fields.status, toLocalizedLabel(entry.status ?? "", locale)],
   ].filter((item): item is [string, string] => Boolean(item[1]));
 
-  const blocks = entry.contentBlocks ?? legacyBlocks(entry);
+  const blocks = entry.contentBlocks?.length ? entry.contentBlocks : legacyBlocks(entry);
 
   return (
     <>
@@ -151,7 +152,7 @@ export function ProjectDetailView({
                     {t.detailPage.projectProfile}
                   </span>
                   <span className="font-mono text-xs font-bold text-teal-300 bg-teal-950/90 px-2.5 py-1 rounded-md border border-teal-400/50 shadow-xs">
-                    BIM DELIVERY
+                    {toLocalizedLabel(entry.eyebrow, locale)}
                   </span>
                 </div>
                 <CardTitle className="text-xl font-extrabold text-white mt-3 leading-snug">
@@ -169,6 +170,7 @@ export function ProjectDetailView({
                   compact
                   subject={`${t.detailPage.projectProfile}: ${entry.title}`}
                 />
+                <AppointmentBooking projectSlug={entry.slug} />
 
                 {/* Project Trust Signals (NDA, SLA, Expert) */}
                 {t.detailPage.trustSignals && (

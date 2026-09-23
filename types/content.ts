@@ -71,6 +71,9 @@ export interface ContentEntry {
   learningOutcomes?: string[];
   learningOutcomes_vi?: string[];
   learningOutcomes_en?: string[];
+  softwareStack?: string[];
+  softwareStack_vi?: string[];
+  softwareStack_en?: string[];
   gallery?: ContentMedia[];
   curriculum?: { id?: string; title: string; description?: string; sortOrder?: number }[];
   curriculum_vi?: { id?: string; title: string; description?: string; sortOrder?: number }[];

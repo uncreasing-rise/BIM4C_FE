@@ -97,7 +97,7 @@ export function AboutView({
         </div>
       </section>
 
-      <section className="py-16 lg:py-24">
+      <section id="vision-mission" className="scroll-mt-24 py-16 lg:py-24">
         <div className="site-container grid gap-6 lg:grid-cols-2">
           {[t.aboutPage.visionMission.vision, t.aboutPage.visionMission.mission].map((item) => (
             <article key={item.title} className="rounded-2xl border bg-card p-7 shadow-xs">
@@ -109,7 +109,7 @@ export function AboutView({
       </section>
 
       {/* Who We Are Story */}
-      <section id="about-us" className="py-16 lg:py-24">
+      <section id="about-us" className="scroll-mt-24 py-16 lg:py-24">
         <div className="site-container grid gap-12 lg:grid-cols-12 lg:items-center">
           <div className="lg:col-span-6 space-y-6">
             <div>
@@ -174,7 +174,7 @@ export function AboutView({
       </section>
 
       {/* Core Values */}
-      <section className="border-y bg-slate-950 py-16 text-white lg:py-24">
+      <section id="core-values" className="scroll-mt-24 border-y bg-slate-950 py-16 text-white lg:py-24">
         <div className="site-container">
           <div className="max-w-2xl mb-12">
             <p className="eyebrow text-primary-foreground/60">{t.aboutPage.guidesEyebrow}</p>
@@ -235,7 +235,7 @@ export function AboutView({
         </div>
       </section>
 
-      <section className="py-16 lg:py-24">
+      <section id="team" className="scroll-mt-24 py-16 lg:py-24">
         <div className="site-container">
           <header className="mb-10 max-w-2xl">
             <p className="eyebrow">{t.aboutPage.operation.eyebrow}</p>
