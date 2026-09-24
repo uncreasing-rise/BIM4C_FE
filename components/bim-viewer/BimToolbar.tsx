@@ -2,6 +2,7 @@
 import { useLanguage } from "@/lib/i18n/context";
 import {
   AlertTriangle,
+  Bookmark,
   Boxes,
   Camera,
   Layers,
@@ -38,6 +39,7 @@ export function BimToolbar(p: Props) {
     { id: "explode", icon: Sparkles },
     { id: "layers", icon: Layers },
     { id: "clashes", icon: AlertTriangle },
+    { id: "views", icon: Bookmark },
   ] as const;
   const views = ["perspective", "top", "front", "right", "isometric"] as const;
   return (
@@ -74,13 +76,15 @@ export function BimToolbar(p: Props) {
               type="button"
               data-tool={id}
               onClick={() => p.onSelectTool(id)}
-              title={v.tools[id]}
-              aria-label={v.tools[id]}
+              title={id === "views" ? "Saved viewpoints" : v.tools[id]}
+              aria-label={id === "views" ? "Saved viewpoints" : v.tools[id]}
               aria-pressed={p.activeTool === id}
               className={`relative flex min-h-10 min-w-10 items-center justify-center gap-1 rounded-lg px-2 text-xs ${p.activeTool === id ? "bg-teal-400 text-slate-950" : "text-slate-300 hover:bg-white/10"}`}
             >
               <Icon className="size-4" />
-              <span className="hidden xl:inline">{v.tools[id]}</span>
+              <span className="hidden xl:inline">
+                {id === "views" ? "Views" : v.tools[id]}
+              </span>
               {id === "models" && p.modelCount > 0 && (
                 <span className="absolute right-0 top-0 rounded bg-teal-600 px-1 text-[9px] text-white">
                   {p.modelCount}

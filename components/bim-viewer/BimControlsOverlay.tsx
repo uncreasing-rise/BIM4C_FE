@@ -1,9 +1,16 @@
 "use client";
+import { triangleMetrics } from "./measurement-math";
 import React from "react";
 import { Crosshair, Download, RotateCcw, Scan, Trash2, X } from "lucide-react";
 import { useLanguage } from "@/lib/i18n/context";
 import { defaultClip } from "./viewer-geometry";
-import { distanceSummary, formatLength, sceneToWorld, worldToMap, type Vec3 } from "./federation";
+import {
+  distanceSummary,
+  formatLength,
+  sceneToWorld,
+  worldToMap,
+  type Vec3,
+} from "./federation";
 import type {
   BimBounds,
   BimClashItem,
@@ -15,6 +22,9 @@ import type {
   MeasurePoint,
   Measurement,
   SnapSettings,
+  BimSavedView,
+  BimLocalIssue,
+  BimViewPreset,
 } from "./types";
 
 import { ui } from "@/lib/i18n/ui";
@@ -43,6 +53,18 @@ interface Props {
   clashes: BimClashItem[];
   onFocusClash: (clash: BimClashItem) => void;
   activeClashId: string | null;
+  onRunClashCheck: () => void;
+  savedViews: BimSavedView[];
+  currentViewPreset: BimViewPreset;
+  selectedElementIds: ReadonlySet<string>;
+  onSaveView: (name: string) => void;
+  onApplyView: (view: BimSavedView) => void;
+  onDeleteView: (id: string) => void;
+  selectedElementId: string | null;
+  issues: BimLocalIssue[];
+  onAddIssue: (title: string, description: string) => void;
+  onToggleIssue: (id: string) => void;
+  onDeleteIssue: (id: string) => void;
 }
 
 /**
@@ -81,7 +103,9 @@ function sectionAxes(origin: Vec3, bounds: BimBounds) {
 
 function downloadCsv(filename: string, rows: (string | number)[][]) {
   const csv = `\uFEFF${rows.map((r) => r.map((c) => `"${String(c).replaceAll('"', '""')}"`).join(",")).join("\r\n")}`;
-  const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+  const url = URL.createObjectURL(
+    new Blob([csv], { type: "text/csv;charset=utf-8" }),
+  );
   const a = document.createElement("a");
   a.href = url;
   a.download = filename;
@@ -91,27 +115,77 @@ function downloadCsv(filename: string, rows: (string | number)[][]) {
 
 export function BimControlsOverlay(p: Props) {
   const { t, locale } = useLanguage();
+  const [viewName, setViewName] = React.useState("");
+  const [issueTitle, setIssueTitle] = React.useState("");
+  const [issueDescription, setIssueDescription] = React.useState("");
   const v = t.bimViewerPage;
   if (p.activeTool === "orbit" || p.activeTool === "models") return null;
   const fmt = (n: number) => formatLength(n, locale);
   const title =
-    p.activeTool === "section" ? (ui(locale).bimControlsOverlay.t3DSectionBox) : v.tools[p.activeTool];
+    p.activeTool === "section"
+      ? ui(locale).bimControlsOverlay.t3DSectionBox
+      : p.activeTool === "views"
+        ? "Saved viewpoints"
+        : v.tools[p.activeTool];
   const button =
     "flex min-h-10 w-full items-center justify-center gap-2 rounded-lg border border-white/15 px-3 text-xs hover:bg-white/10 disabled:opacity-40";
   const world = (pt: MeasurePoint) => sceneToWorld(pt, p.sceneOrigin);
-  const snapLabel: Record<MeasurePoint["snap"], string> = ui(locale).formats.snap;
+  const snapLabel: Record<MeasurePoint["snap"], string> =
+    ui(locale).formats.snap;
 
   const exportMeasurements = () => {
     const rows: (string | number)[][] = [
-      [ui(locale).bimControlsOverlay.no, ui(locale).bimControlsOverlay.type, "L (m)", ui(locale).bimControlsOverlay.planM, "ΔX", "ΔY", "ΔZ", "X1", "Y1", "Z1", "X2", "Y2", "Z2"],
+      [
+        ui(locale).bimControlsOverlay.no,
+        ui(locale).bimControlsOverlay.type,
+        "L (m)",
+        ui(locale).bimControlsOverlay.planM,
+        "ΔX",
+        "ΔY",
+        "ΔZ",
+        "X1",
+        "Y1",
+        "Z1",
+        "X2",
+        "Y2",
+        "Z2",
+        "X3", "Y3", "Z3", "Angle (deg)", "Area (m2)",
+      ],
     ];
     p.measurements.forEach((m, i) => {
       const [a, b] = m.points.map(world);
       if (m.mode === "distance" && b) {
         const s = distanceSummary(m.points[0], m.points[1]);
-        rows.push([i + 1, ui(locale).bimControlsOverlay.distance, s.distance.toFixed(4), s.horizontal.toFixed(4), s.dx.toFixed(4), s.dy.toFixed(4), s.dz.toFixed(4), ...a.map((n) => n.toFixed(4)), ...b.map((n) => n.toFixed(4))]);
-      } else rows.push([i + 1, ui(locale).bimControlsOverlay.point, "", "", "", "", "", ...a.map((n) => n.toFixed(4)), "", "", ""]);
+        rows.push([
+          i + 1,
+          ui(locale).bimControlsOverlay.distance,
+          s.distance.toFixed(4),
+          s.horizontal.toFixed(4),
+          s.dx.toFixed(4),
+          s.dy.toFixed(4),
+          s.dz.toFixed(4),
+          ...a.map((n) => n.toFixed(4)),
+          ...b.map((n) => n.toFixed(4)),
+        ]);
+      } else if (m.mode === "angle" || m.mode === "triangle") {
+        const metrics = triangleMetrics(m.points);
+        rows.push([i + 1, ui(locale).bimControlsOverlay[m.mode], "", "", "", "", "", ...m.points.flatMap((pt) => world(pt).map((n) => n.toFixed(4))), m.mode === "angle" && metrics ? metrics.angle.toFixed(4) : "", m.mode === "triangle" && metrics ? metrics.area.toFixed(4) : ""]);
+      } else
+        rows.push([
+          i + 1,
+          ui(locale).bimControlsOverlay.point,
+          "",
+          "",
+          "",
+          "",
+          "",
+          ...a.map((n) => n.toFixed(4)),
+          "",
+          "",
+          "",
+        ]);
     });
+    for (const row of rows) while (row.length < rows[0].length) row.push("");
     downloadCsv(`BIM4C-measurements-${Date.now()}.csv`, rows);
   };
 
@@ -142,7 +216,12 @@ export function BimControlsOverlay(p: Props) {
             <input
               type="checkbox"
               checked={p.clipPlanes.enabled}
-              onChange={(e) => p.onChangeClipPlanes({ ...p.clipPlanes, enabled: e.target.checked })}
+              onChange={(e) =>
+                p.onChangeClipPlanes({
+                  ...p.clipPlanes,
+                  enabled: e.target.checked,
+                })
+              }
               className="size-4 accent-teal-400"
             />
           </label>
@@ -150,11 +229,20 @@ export function BimControlsOverlay(p: Props) {
             {ui(locale).bimControlsOverlay.dragTheRoundHandlesOn}
           </p>
           <div className="grid grid-cols-2 gap-2">
-            <button type="button" className={button} disabled={!p.hasSelection} onClick={() => p.onFitSection("selection")}>
+            <button
+              type="button"
+              className={button}
+              disabled={!p.hasSelection}
+              onClick={() => p.onFitSection("selection")}
+            >
               <Scan className="size-4" />
               {ui(locale).bimControlsOverlay.aroundSelection}
             </button>
-            <button type="button" className={button} onClick={() => p.onFitSection("all")}>
+            <button
+              type="button"
+              className={button}
+              onClick={() => p.onFitSection("all")}
+            >
               <RotateCcw className="size-4" />
               {ui(locale).bimControlsOverlay.wholeModel}
             </button>
@@ -165,7 +253,10 @@ export function BimControlsOverlay(p: Props) {
             const lower = axis.toWorld(p.clipPlanes[axis.lowerKey]);
             const upper = axis.toWorld(p.clipPlanes[axis.upperKey]);
             return (
-              <fieldset key={axis.id} className="space-y-2 rounded-lg border border-white/10 p-2">
+              <fieldset
+                key={axis.id}
+                className="space-y-2 rounded-lg border border-white/10 p-2"
+              >
                 <legend className="px-1 font-bold">
                   {axis.id} · {ui(locale).formats.axisHint[axis.id]} (m)
                 </legend>
@@ -191,10 +282,13 @@ export function BimControlsOverlay(p: Props) {
                       onChange={(e) => {
                         const w = Number(e.target.value);
                         const next =
-                          which === "lower" ? Math.min(w, upper) : Math.max(w, lower);
+                          which === "lower"
+                            ? Math.min(w, upper)
+                            : Math.max(w, lower);
                         p.onChangeClipPlanes({
                           ...p.clipPlanes,
-                          [which === "lower" ? axis.lowerKey : axis.upperKey]: axis.toScene(next),
+                          [which === "lower" ? axis.lowerKey : axis.upperKey]:
+                            axis.toScene(next),
                         });
                       }}
                       className="min-h-8 w-full accent-teal-400"
@@ -207,7 +301,9 @@ export function BimControlsOverlay(p: Props) {
           <button
             type="button"
             className={button}
-            onClick={() => p.onChangeClipPlanes({ ...defaultClip(p.bounds), enabled: true })}
+            onClick={() =>
+              p.onChangeClipPlanes({ ...defaultClip(p.bounds), enabled: true })
+            }
           >
             <RotateCcw className="size-4" />
             {v.sections.resetClipping}
@@ -217,11 +313,17 @@ export function BimControlsOverlay(p: Props) {
 
       {p.activeTool === "measure" && (
         <div className="space-y-3">
-          <div className="grid grid-cols-2 gap-1" role="radiogroup" aria-label={ui(locale).bimControlsOverlay.measureType}>
+          <div
+            className="grid grid-cols-2 gap-1"
+            role="radiogroup"
+            aria-label={ui(locale).bimControlsOverlay.measureType}
+          >
             {(
               [
                 ["distance", ui(locale).bimControlsOverlay.distance],
                 ["point", ui(locale).bimControlsOverlay.pointCoordinates],
+                ["angle", ui(locale).bimControlsOverlay.angle],
+                ["triangle", ui(locale).bimControlsOverlay.triangle],
               ] as const
             ).map(([mode, label]) => (
               <button
@@ -237,12 +339,22 @@ export function BimControlsOverlay(p: Props) {
             ))}
           </div>
           <fieldset className="rounded-lg border border-white/10 p-2">
-            <legend className="px-1 font-bold">{ui(locale).bimControlsOverlay.snapping}</legend>
+            <legend className="px-1 font-bold">
+              {ui(locale).bimControlsOverlay.snapping}
+            </legend>
             <div className="flex flex-wrap gap-x-3 gap-y-1">
               {(
                 [
-                  ["vertex", ui(locale).bimControlsOverlay.vertex, "bg-amber-500"],
-                  ["midpoint", ui(locale).bimControlsOverlay.midpoint, "bg-purple-500"],
+                  [
+                    "vertex",
+                    ui(locale).bimControlsOverlay.vertex,
+                    "bg-amber-500",
+                  ],
+                  [
+                    "midpoint",
+                    ui(locale).bimControlsOverlay.midpoint,
+                    "bg-purple-500",
+                  ],
                   ["edge", ui(locale).bimControlsOverlay.edge, "bg-cyan-500"],
                 ] as const
               ).map(([key, label, swatch]) => (
@@ -250,40 +362,57 @@ export function BimControlsOverlay(p: Props) {
                   <input
                     type="checkbox"
                     checked={p.snapSettings[key]}
-                    onChange={(e) => p.onSnapSettings({ ...p.snapSettings, [key]: e.target.checked })}
+                    onChange={(e) =>
+                      p.onSnapSettings({
+                        ...p.snapSettings,
+                        [key]: e.target.checked,
+                      })
+                    }
                     className="size-4 accent-teal-400"
                   />
-                  <span className={`size-2 rounded-full ${swatch}`} aria-hidden="true" />
+                  <span
+                    className={`size-2 rounded-full ${swatch}`}
+                    aria-hidden="true"
+                  />
                   {label}
                 </label>
               ))}
             </div>
           </fieldset>
           <p className="leading-relaxed text-slate-400">
-            {p.measureMode === "distance"
+            {p.measureMode === "angle" || p.measureMode === "triangle" ? ui(locale).bimControlsOverlay.threePointHelp : p.measureMode === "distance"
               ? ui(locale).bimControlsOverlay.hoverToPreviewTheSnapped
               : ui(locale).bimControlsOverlay.clickTheModelToRead}
           </p>
           {p.pendingPoint && (
             <p role="status" className="flex items-center gap-2 text-teal-200">
               <Crosshair className="size-4" />
-              {ui(locale).bimControlsOverlay.point1SetSelectPoint}
+              {p.measureMode === "angle" || p.measureMode === "triangle" ? ui(locale).bimControlsOverlay.threePointHelp : ui(locale).bimControlsOverlay.point1SetSelectPoint}
             </p>
           )}
           {p.measurements.length > 0 && (
             <ol className="space-y-2">
               {p.measurements.map((m, i) => {
+                const metrics = triangleMetrics(m.points);
                 const coords = m.points.map(world);
-                const s = m.mode === "distance" && m.points[1] ? distanceSummary(m.points[0], m.points[1]) : null;
+                const s =
+                  m.mode === "distance" && m.points[1]
+                    ? distanceSummary(m.points[0], m.points[1])
+                    : null;
                 return (
                   <li key={m.id} className="rounded-lg bg-teal-500/10 p-2">
                     <div className="mb-1 flex items-center justify-between">
                       <span className="font-semibold">
-                        #{i + 1} · {s ? (ui(locale).bimControlsOverlay.distance) : ui(locale).bimControlsOverlay.point}
+                        #{i + 1} ·{" "}
+                        {m.mode === "angle" || m.mode === "triangle" ? ui(locale).bimControlsOverlay[m.mode] : s
+                          ? ui(locale).bimControlsOverlay.distance
+                          : ui(locale).bimControlsOverlay.point}
                       </span>
                       <button
                         type="button"
-                        aria-label={ui(locale).bimControlsOverlay.deleteMeasurement}
+                        aria-label={
+                          ui(locale).bimControlsOverlay.deleteMeasurement
+                        }
                         onClick={() => p.onRemoveMeasurement(m.id)}
                         className="grid size-7 place-items-center rounded hover:bg-white/10"
                       >
@@ -291,11 +420,15 @@ export function BimControlsOverlay(p: Props) {
                       </button>
                     </div>
                     <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5 font-mono text-[11px]">
-                      {s ? (
+                      {m.mode === "angle" || m.mode === "triangle" ? <><dt>{ui(locale).bimControlsOverlay[m.mode]}</dt><dd className="text-right">{metrics ? `${fmt(m.mode === "angle" ? metrics.angle : metrics.area)} ${m.mode === "angle" ? "°" : "m²"}` : "—"}</dd></> : s ? (
                         <>
                           <dt className="text-slate-400">L</dt>
-                          <dd className="text-right text-teal-200">{fmt(s.distance)} m</dd>
-                          <dt className="text-slate-400">{ui(locale).bimControlsOverlay.plan}</dt>
+                          <dd className="text-right text-teal-200">
+                            {fmt(s.distance)} m
+                          </dd>
+                          <dt className="text-slate-400">
+                            {ui(locale).bimControlsOverlay.plan}
+                          </dt>
                           <dd className="text-right">{fmt(s.horizontal)} m</dd>
                           <dt className="text-slate-400">ΔX · ΔY · ΔZ</dt>
                           <dd className="text-right">
@@ -310,15 +443,20 @@ export function BimControlsOverlay(p: Props) {
                           </React.Fragment>
                         ))
                       )}
-                      {!s && p.mapConversion && (
+                      {m.mode === "point" && p.mapConversion && (
                         <>
                           <dt className="text-slate-400">E · N · H</dt>
-                          <dd className="text-right">{worldToMap(coords[0], p.mapConversion).map(fmt).join(" · ")}</dd>
+                          <dd className="text-right">
+                            {worldToMap(coords[0], p.mapConversion)
+                              .map(fmt)
+                              .join(" · ")}
+                          </dd>
                         </>
                       )}
                     </dl>
                     <p className="mt-1 text-[10px] text-slate-500">
-                      {ui(locale).bimControlsOverlay.snap}: {m.points.map((pt) => snapLabel[pt.snap]).join(" → ")}
+                      {ui(locale).bimControlsOverlay.snap}:{" "}
+                      {m.points.map((pt) => snapLabel[pt.snap]).join(" → ")}
                     </p>
                   </li>
                 );
@@ -327,11 +465,19 @@ export function BimControlsOverlay(p: Props) {
           )}
           {p.measurements.length > 0 && (
             <div className="grid grid-cols-2 gap-2">
-              <button type="button" className={button} onClick={exportMeasurements}>
+              <button
+                type="button"
+                className={button}
+                onClick={exportMeasurements}
+              >
                 <Download className="size-4" />
                 CSV
               </button>
-              <button type="button" className={button} onClick={p.onClearMeasurements}>
+              <button
+                type="button"
+                className={button}
+                onClick={p.onClearMeasurements}
+              >
                 <Trash2 className="size-4" />
                 {v.measure.clear}
               </button>
@@ -358,7 +504,11 @@ export function BimControlsOverlay(p: Props) {
               className="min-h-10 w-full accent-teal-400"
             />
           </label>
-          <button type="button" className={button} onClick={() => p.onChangeExplodeFactor(0)}>
+          <button
+            type="button"
+            className={button}
+            onClick={() => p.onChangeExplodeFactor(0)}
+          >
             {ui(locale).bimControlsOverlay.collapseModel}
           </button>
         </div>
@@ -366,28 +516,92 @@ export function BimControlsOverlay(p: Props) {
 
       {p.activeTool === "layers" && (
         <div className="space-y-2">
-          {(["architecture", "structure", "mep", "clash"] as const).map((id) => (
-            <label
-              key={id}
-              className="flex min-h-11 items-center justify-between gap-2 rounded-lg border border-white/10 px-2"
-            >
-              {id === "clash" ? v.layers.clashMarkers : v.layers[id]}
-              <input
-                type="checkbox"
-                checked={p.visibleLayers[id]}
-                onChange={() => p.onToggleLayer(id)}
-                className="size-4 accent-teal-400"
-              />
-            </label>
-          ))}
+          {(["architecture", "structure", "mep", "clash"] as const).map(
+            (id) => (
+              <label
+                key={id}
+                className="flex min-h-11 items-center justify-between gap-2 rounded-lg border border-white/10 px-2"
+              >
+                {id === "clash" ? v.layers.clashMarkers : v.layers[id]}
+                <input
+                  type="checkbox"
+                  checked={p.visibleLayers[id]}
+                  onChange={() => p.onToggleLayer(id)}
+                  className="size-4 accent-teal-400"
+                />
+              </label>
+            ),
+          )}
         </div>
       )}
 
       {p.activeTool === "clashes" && (
         <div className="space-y-3">
+          <button type="button" className={button} onClick={p.onRunClashCheck}>
+            {p.clashes.length
+              ? "Re-run local clash check"
+              : "Run local clash check"}
+          </button>
           <p className="leading-relaxed text-amber-200">
-            {ui(locale).bimControlsOverlay.noClashResultsAreAvailable}
+            {p.clashes.length
+              ? ui(locale).bimControlsOverlay.clashesLoaded(p.clashes.length)
+              : ui(locale).bimControlsOverlay.noClashResultsAreAvailable}
           </p>
+          <div className="space-y-2 rounded-lg border border-white/10 p-2">
+            <p className="font-semibold text-teal-200">Local issue note</p>
+            <input
+              value={issueTitle}
+              onChange={(e) => setIssueTitle(e.target.value)}
+              placeholder="Issue title"
+              className="min-h-9 w-full rounded border border-white/15 bg-slate-900 px-2"
+            />
+            <textarea
+              value={issueDescription}
+              onChange={(e) => setIssueDescription(e.target.value)}
+              placeholder="Describe the coordination issue"
+              rows={2}
+              className="w-full rounded border border-white/15 bg-slate-900 px-2 py-1"
+            />
+            <button
+              type="button"
+              disabled={!issueTitle.trim() || !p.selectedElementId}
+              className={button}
+              onClick={() => {
+                p.onAddIssue(issueTitle.trim(), issueDescription.trim());
+                setIssueTitle("");
+                setIssueDescription("");
+              }}
+            >
+              Add local issue to selected element
+            </button>
+          </div>
+          {p.issues.map((issue) => (
+            <div
+              key={issue.id}
+              className="rounded-lg border border-white/10 p-2"
+            >
+              <div className="flex items-start gap-2">
+                <button
+                  type="button"
+                  className="min-w-0 flex-1 text-left"
+                  onClick={() => p.onToggleIssue(issue.id)}
+                >
+                  <span className="block font-semibold">{issue.title}</span>
+                  <span className="block text-[10px] text-slate-400">
+                    {issue.status} · {issue.description || "No description"}
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  className="text-red-300"
+                  onClick={() => p.onDeleteIssue(issue.id)}
+                  aria-label={`Delete ${issue.title}`}
+                >
+                  ×
+                </button>
+              </div>
+            </div>
+          ))}
           {p.clashes.map((clash) => (
             <button
               key={clash.id}
@@ -401,8 +615,65 @@ export function BimControlsOverlay(p: Props) {
               </span>
               <span className="block font-semibold">{clash.title}</span>
               <span className="block text-slate-400">{clash.description}</span>
-              <span className="block text-teal-300">{v.clashes.focusClash} →</span>
+              <span className="block text-teal-300">
+                {v.clashes.focusClash} →
+              </span>
             </button>
+          ))}
+        </div>
+      )}
+
+      {p.activeTool === "views" && (
+        <div className="space-y-3">
+          <div className="flex gap-2">
+            <input
+              value={viewName}
+              onChange={(e) => setViewName(e.target.value)}
+              placeholder="View name"
+              aria-label="View name"
+              className="min-h-10 min-w-0 flex-1 rounded-lg border border-white/15 bg-slate-900 px-2"
+            />
+            <button
+              type="button"
+              className="min-h-10 rounded-lg border border-teal-500/40 px-3 text-teal-200"
+              onClick={() => {
+                const name =
+                  viewName.trim() || `View ${p.savedViews.length + 1}`;
+                p.onSaveView(name);
+                setViewName("");
+              }}
+            >
+              Save
+            </button>
+          </div>
+          <p className="text-slate-400">
+            Saves the current preset and selected elements locally in this
+            browser.
+          </p>
+          {!p.savedViews.length && (
+            <p className="text-slate-400">No saved viewpoints.</p>
+          )}
+          {p.savedViews.map((view) => (
+            <div
+              key={view.id}
+              className="flex items-center gap-2 rounded-lg border border-white/10 p-2"
+            >
+              <button
+                type="button"
+                className="min-w-0 flex-1 truncate text-left text-teal-200"
+                onClick={() => p.onApplyView(view)}
+              >
+                {view.name}
+              </button>
+              <button
+                type="button"
+                className="rounded px-2 text-red-300 hover:bg-white/10"
+                onClick={() => p.onDeleteView(view.id)}
+                aria-label={`Delete ${view.name}`}
+              >
+                ×
+              </button>
+            </div>
           ))}
         </div>
       )}

@@ -20,11 +20,19 @@ export function BimPropertyInspector({
   coordinates,
   isOpen,
   onClose,
+  onHide,
+  onIsolate,
+  onResetVisibility,
+  onFitSelection,
 }: {
   element: BimElementData | null;
   coordinates?: ElementCoordinates | null;
   isOpen: boolean;
   onClose: () => void;
+  onHide: () => void;
+  onIsolate: () => void;
+  onResetVisibility: () => void;
+  onFitSelection: () => void;
 }) {
   const { t, locale } = useLanguage();
   const v = t.bimViewerPage.properties;
@@ -60,11 +68,45 @@ export function BimPropertyInspector({
               {v.storey}: {e.storey || unknown}
             </p>
             <p>
-              {ui(locale).bimPropertyInspector.material}: {e.material || unknown}
+              {ui(locale).bimPropertyInspector.material}:{" "}
+              {e.material || unknown}
             </p>
+            <div className="grid grid-cols-3 gap-1 pt-1">
+              <button
+                type="button"
+                onClick={onHide}
+                className="min-h-9 rounded border border-white/15 px-2 hover:bg-white/10"
+              >
+                {ui(locale).bimPropertyInspector.hideElement}
+              </button>
+              <button
+                type="button"
+                onClick={onIsolate}
+                className="min-h-9 rounded border border-teal-500/40 px-2 text-teal-200 hover:bg-teal-500/10"
+              >
+                {ui(locale).bimPropertyInspector.isolateElement}
+              </button>
+              <button
+                type="button"
+                onClick={onResetVisibility}
+                className="min-h-9 rounded border border-white/15 px-2 hover:bg-white/10"
+              >
+                {ui(locale).bimPropertyInspector.showAllElements}
+              </button>
+              <button
+                type="button"
+                onClick={onFitSelection}
+                className="col-span-3 min-h-9 rounded border border-teal-500/40 px-2 text-teal-200 hover:bg-teal-500/10"
+              >
+                {ui(locale).bimPropertyInspector.fitSelection}
+              </button>
+            </div>
             {e.source !== "ifc" && (
               <p className="text-amber-200">
-                {ui(locale).bimPropertyInspector.illustrativePropertiesNotExtractedFrom}
+                {
+                  ui(locale).bimPropertyInspector
+                    .illustrativePropertiesNotExtractedFrom
+                }
               </p>
             )}
           </div>
@@ -73,25 +115,42 @@ export function BimPropertyInspector({
               <h4 className="mb-2 font-semibold">
                 {ui(locale).bimPropertyInspector.coordinatesIFCM}
               </h4>
-              <p className="mb-2 truncate text-[10px] text-slate-400" title={coordinates.modelName}>
+              <p
+                className="mb-2 truncate text-[10px] text-slate-400"
+                title={coordinates.modelName}
+              >
                 {ui(locale).bimPropertyInspector.model}: {coordinates.modelName}
               </p>
               <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5 font-mono text-[11px]">
                 {(["X", "Y", "Z"] as const).map((axis, i) => (
                   <React.Fragment key={axis}>
-                    <dt className="text-slate-400">{ui(locale).formats.centreAxis(axis)}</dt>
-                    <dd className="text-right">{formatLength(coordinates.center[i], locale)}</dd>
+                    <dt className="text-slate-400">
+                      {ui(locale).formats.centreAxis(axis)}
+                    </dt>
+                    <dd className="text-right">
+                      {formatLength(coordinates.center[i], locale)}
+                    </dd>
                   </React.Fragment>
                 ))}
-                <dt className="text-slate-400">{ui(locale).bimPropertyInspector.bottomElevation}</dt>
-                <dd className="text-right">{formatLength(coordinates.bottom, locale)}</dd>
-                <dt className="text-slate-400">{ui(locale).bimPropertyInspector.topElevation}</dt>
-                <dd className="text-right">{formatLength(coordinates.top, locale)}</dd>
+                <dt className="text-slate-400">
+                  {ui(locale).bimPropertyInspector.bottomElevation}
+                </dt>
+                <dd className="text-right">
+                  {formatLength(coordinates.bottom, locale)}
+                </dd>
+                <dt className="text-slate-400">
+                  {ui(locale).bimPropertyInspector.topElevation}
+                </dt>
+                <dd className="text-right">
+                  {formatLength(coordinates.top, locale)}
+                </dd>
                 {coordinates.map && (
                   <>
                     <dt className="text-slate-400">E · N · H</dt>
                     <dd className="text-right">
-                      {coordinates.map.map((n) => formatLength(n, locale)).join(" · ")}
+                      {coordinates.map
+                        .map((n) => formatLength(n, locale))
+                        .join(" · ")}
                     </dd>
                   </>
                 )}
@@ -120,7 +179,8 @@ export function BimPropertyInspector({
                 <div className="rounded-lg border border-white/10 p-3">
                   <h4 className="mb-2 font-semibold">
                     {e.dimensionsSource === "bounds"
-                      ? ui(locale).bimPropertyInspector.axisAlignedBoundingDimensionsEstimate
+                      ? ui(locale).bimPropertyInspector
+                          .axisAlignedBoundingDimensionsEstimate
                       : ui(locale).bimPropertyInspector.sampleDimensions}
                   </h4>
                   <dl className="grid grid-cols-2 gap-2">
@@ -128,9 +188,17 @@ export function BimPropertyInspector({
                       [
                         ["length", ui(locale).bimPropertyInspector.alongX, "m"],
                         ["width", ui(locale).bimPropertyInspector.alongY, "m"],
-                        ["height", ui(locale).bimPropertyInspector.heightZ, "m"],
+                        [
+                          "height",
+                          ui(locale).bimPropertyInspector.heightZ,
+                          "m",
+                        ],
                         ["area", ui(locale).bimPropertyInspector.area, "m²"],
-                        ["volume", ui(locale).bimPropertyInspector.volume, "m³"],
+                        [
+                          "volume",
+                          ui(locale).bimPropertyInspector.volume,
+                          "m³",
+                        ],
                       ] as const
                     ).map(([key, label, unit]) =>
                       e.dimensions?.[key] !== undefined ? (
@@ -148,7 +216,10 @@ export function BimPropertyInspector({
                   </dl>
                   {e.dimensionsSource === "bounds" && (
                     <p className="mt-2 text-[10px] text-slate-400">
-                      {ui(locale).bimPropertyInspector.boundingDimensionsAreNotQuantities}
+                      {
+                        ui(locale).bimPropertyInspector
+                          .boundingDimensionsAreNotQuantities
+                      }
                     </p>
                   )}
                 </div>

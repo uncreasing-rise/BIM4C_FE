@@ -9,7 +9,8 @@ export type BimTool =
   | "section"
   | "explode"
   | "layers"
-  | "clashes";
+  | "clashes"
+  | "views";
 
 export type BimViewPreset =
   "perspective" | "top" | "front" | "right" | "isometric";
@@ -171,16 +172,42 @@ export interface ModelPlacement {
 export type SnapKind = "vertex" | "midpoint" | "edge" | "face";
 
 export interface MeasurePoint extends MeasurementPoint {
+  modelKey?: string;
+  guid?: string;
+  localPoint?: [number, number, number];
   snap: SnapKind;
 }
 
-export type MeasureMode = "distance" | "point";
+export type MeasureMode = "distance" | "point" | "angle" | "triangle";
 
 export interface Measurement {
   id: string;
   mode: MeasureMode;
-  /** Scene coordinates; one point for "point", two for "distance". */
+  /** Scene metres: one point, two distance endpoints, or three angle/triangle vertices. */
   points: MeasurePoint[];
+}
+
+export interface BimSavedView {
+  camera?: { position: [number, number, number]; target: [number, number, number]; up: [number, number, number]; fov: number };
+  clip?: BimClipPlanes;
+  hiddenElements?: string[];
+  layers?: Record<BimDiscipline, boolean>;
+  explode?: number;
+  id: string;
+  name: string;
+  preset: BimViewPreset;
+  modelKey?: string;
+  elementIds: string[];
+}
+
+export interface BimLocalIssue {
+  id: string;
+  title: string;
+  description: string;
+  elementIds: string[];
+  clashId?: string;
+  status: "open" | "resolved";
+  createdAt: string;
 }
 
 export interface SnapSettings {

@@ -19,6 +19,7 @@ import {
   type Vec3,
 } from "./federation";
 import { buildFeatureEdges, edgeKey, snapPoint } from "./snapping";
+import { triangleMetrics } from "./measurement-math";
 import {
   axisDragValue,
   clipFromBox,
@@ -29,6 +30,7 @@ import {
 } from "./section-box";
 import type {
   BimBounds,
+  BimSavedView,
   BimClipPlanes,
   BimDiscipline,
   BimElementData,
@@ -53,10 +55,13 @@ export interface CanvasModel {
 }
 
 export interface ViewRequest {
+  camera?: BimSavedView["camera"];
   revision: number;
   preset: BimViewPreset;
   /** Fit to one model instead of everything visible. */
   modelKey?: string;
+  /** Fit to an explicit element selection instead of the whole scene. */
+  elementIds?: string[];
 }
 
 export interface SectionFitRequest {
@@ -65,13 +70,16 @@ export interface SectionFitRequest {
 }
 
 export interface BimCanvasProps {
+  onCameraChange: (camera: NonNullable<BimSavedView["camera"]>) => void;
   models: CanvasModel[];
   sceneBounds: BimBounds;
   sceneOrigin: Vec3;
   mapConversion?: BimMapConversion;
   activeTool: BimTool;
   selectedElementId: string | null;
-  onSelectElement: (element: BimElementData | null) => void;
+  selectedElementIds: ReadonlySet<string>;
+  hiddenElementIds: Set<string>;
+  onSelectElement: (element: BimElementData | null, append?: boolean) => void;
   visibleLayers: Record<BimDiscipline, boolean>;
   clipPlanes: BimClipPlanes;
   onClipPlanesChange: (clip: BimClipPlanes) => void;
@@ -86,6 +94,7 @@ export interface BimCanvasProps {
   snapSettings: SnapSettings;
   measurements: Measurement[];
   pendingPoint: MeasurePoint | null;
+  pendingPoints: MeasurePoint[];
   onMeasurePoint: (point: MeasurePoint) => void;
 }
 
@@ -113,7 +122,9 @@ export function BimCanvas(props: BimCanvasProps) {
   const labelsRef = useRef<HTMLDivElement>(null);
   const readoutRef = useRef<HTMLDivElement>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
-  const engineRef = useRef<{ update: (props: BimCanvasProps) => void } | null>(null);
+  const engineRef = useRef<{ update: (props: BimCanvasProps) => void } | null>(
+    null,
+  );
   const latestRef = useRef(props);
   const localeRef = useRef(locale);
   const [error, setError] = useState(false);
@@ -193,20 +204,28 @@ export function BimCanvas(props: BimCanvasProps) {
     let span = 10;
     const maxPixelRatio = Math.min(window.devicePixelRatio || 1, 2);
     // Handles and the hover marker keep a constant on-screen size.
-    const handleRadius = (p: THREE.Vector3) => Math.max(1e-3, camera.position.distanceTo(p) * 0.014);
+    const handleRadius = (p: THREE.Vector3) =>
+      Math.max(1e-3, camera.position.distanceTo(p) * 0.014);
     const pointRadius = () => Math.max(0.015, span * 0.0025);
 
     const requestRender = () => {
-      if (!disposed && !frame && !document.hidden) frame = requestAnimationFrame(render);
+      if (!disposed && !frame && !document.hidden)
+        frame = requestAnimationFrame(render);
     };
     const toScreen = (p: THREE.Vector3): [number, number, boolean] => {
       const v = p.clone().project(camera);
       const rect = renderer.domElement.getBoundingClientRect();
-      return [((v.x + 1) / 2) * rect.width, ((1 - v.y) / 2) * rect.height, v.z < 1 && v.z > -1];
+      return [
+        ((v.x + 1) / 2) * rect.width,
+        ((1 - v.y) / 2) * rect.height,
+        v.z < 1 && v.z > -1,
+      ];
     };
     function positionLabels() {
       for (const node of Array.from(labels!.children) as HTMLElement[]) {
-        const [x, y, z] = (node.dataset.anchor ?? "0,0,0").split(",").map(Number);
+        const [x, y, z] = (node.dataset.anchor ?? "0,0,0")
+          .split(",")
+          .map(Number);
         const [sx, sy, onScreen] = toScreen(new THREE.Vector3(x, y, z));
         node.style.transform = `translate(${sx}px, ${sy}px) translate(-50%, -130%)`;
         node.style.visibility = onScreen ? "visible" : "hidden";
@@ -218,8 +237,12 @@ export function BimCanvas(props: BimCanvasProps) {
       if (controls.update()) requestRender();
       if (gizmo.root.visible) gizmo.update(clip, handleRadius);
       if (hoverGroup.visible)
-        hoverMarker.scale.setScalar(camera.position.distanceTo(hoverMarker.position) * (hoverKind === "face" ? 0.005 : 0.008));
+        hoverMarker.scale.setScalar(
+          camera.position.distanceTo(hoverMarker.position) *
+            (hoverKind === "face" ? 0.005 : 0.008),
+        );
       renderer.render(scene, camera);
+      current.onCameraChange({ position: camera.position.toArray(), target: controls.target.toArray(), up: camera.up.toArray(), fov: camera.fov });
       positionLabels();
     }
 
@@ -241,7 +264,10 @@ export function BimCanvas(props: BimCanvasProps) {
       const key = [...bounds.min, ...bounds.max].join(",");
       if (key === lastBoundsKey) return;
       lastBoundsKey = key;
-      const box = new THREE.Box3(new THREE.Vector3(...bounds.min), new THREE.Vector3(...bounds.max));
+      const box = new THREE.Box3(
+        new THREE.Vector3(...bounds.min),
+        new THREE.Vector3(...bounds.max),
+      );
       center = box.getCenter(new THREE.Vector3());
       span = Math.max(1, box.getSize(new THREE.Vector3()).length());
       hemisphere.position.copy(center).add(new THREE.Vector3(0, span, 0));
@@ -264,7 +290,8 @@ export function BimCanvas(props: BimCanvasProps) {
       const list: THREE.Mesh[] = [];
       for (const entry of entries.values())
         if (entry.ready && entry.group.visible)
-          for (const mesh of entry.meshes.values()) if (mesh.visible) list.push(mesh);
+          for (const mesh of entry.meshes.values())
+            if (mesh.visible) list.push(mesh);
       return list;
     };
     const reportStats = () => {
@@ -277,7 +304,8 @@ export function BimCanvas(props: BimCanvasProps) {
           unique.add(mesh.geometry);
         }
       for (const g of unique) {
-        for (const a of Object.values(g.attributes)) bytes += a.array.byteLength;
+        for (const a of Object.values(g.attributes))
+          bytes += a.array.byteLength;
         bytes += g.index?.array.byteLength ?? 0;
       }
       current.onStats({ bytes, triangles });
@@ -301,8 +329,14 @@ export function BimCanvas(props: BimCanvasProps) {
         let lastYield = performance.now();
         for (const element of entry.source.model.elements) {
           if (disposed || !entries.has(entry.source.key)) return;
-          const mesh = createElementMesh(element, materials, primitiveGeometries);
-          const list = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+          const mesh = createElementMesh(
+            element,
+            materials,
+            primitiveGeometries,
+          );
+          const list = Array.isArray(mesh.material)
+            ? mesh.material
+            : [mesh.material];
           for (const m of list) m.clippingPlanes = activePlanes;
           entry.group.add(mesh);
           entry.meshes.set(element.id, mesh);
@@ -330,7 +364,10 @@ export function BimCanvas(props: BimCanvasProps) {
     const reconcileModels = (models: CanvasModel[]) => {
       const keys = new Set(models.map((m) => m.key));
       for (const [key, entry] of entries)
-        if (!keys.has(key) || entry.source.model !== models.find((m) => m.key === key)?.model) {
+        if (
+          !keys.has(key) ||
+          entry.source.model !== models.find((m) => m.key === key)?.model
+        ) {
           removeEntry(entry);
           entries.delete(key);
           meshStateKey = "";
@@ -350,7 +387,10 @@ export function BimCanvas(props: BimCanvasProps) {
             if (!disposed) setError(true);
           });
         }
-        if (entry.source.visible !== source.visible || entry.source.placement !== source.placement)
+        if (
+          entry.source.visible !== source.visible ||
+          entry.source.placement !== source.placement
+        )
           meshStateKey = "";
         entry.source = source;
         entry.group.visible = source.visible;
@@ -373,7 +413,7 @@ export function BimCanvas(props: BimCanvasProps) {
       return highlights.get(m)!;
     };
     const applyMeshState = (next: BimCanvasProps) => {
-      const key = `${next.explodeFactor}|${JSON.stringify(next.visibleLayers)}|${next.selectedElementId}|${lastBoundsKey}`;
+      const key = `${next.explodeFactor}|${JSON.stringify(next.visibleLayers)}|${[...next.selectedElementIds].join(",")}|${[...next.hiddenElementIds].join(",")}|${lastBoundsKey}`;
       if (key === meshStateKey) return;
       meshStateKey = key;
       for (const entry of entries.values()) {
@@ -382,44 +422,73 @@ export function BimCanvas(props: BimCanvasProps) {
         const localCenter = entry.group.worldToLocal(center.clone());
         for (const [id, mesh] of entry.meshes) {
           const element = mesh.userData.element as BimElementData;
-          mesh.visible = next.visibleLayers[element.discipline];
-          mesh.position.copy(explodedPosition(element, localCenter, next.explodeFactor));
-          const original = mesh.userData.baseMaterial as THREE.Material | THREE.Material[];
-          mesh.material =
-            id === next.selectedElementId
-              ? Array.isArray(original)
-                ? original.map(highlight)
-                : highlight(original)
-              : original;
+          mesh.visible =
+            next.visibleLayers[element.discipline] &&
+            !next.hiddenElementIds.has(element.id);
+          mesh.position.copy(
+            explodedPosition(element, localCenter, next.explodeFactor),
+          );
+          const original = mesh.userData.baseMaterial as
+            THREE.Material | THREE.Material[];
+          mesh.material = next.selectedElementIds.has(id)
+            ? Array.isArray(original)
+              ? original.map(highlight)
+              : highlight(original)
+            : original;
         }
-        entry.markers.visible = next.visibleLayers.clash && next.explodeFactor === 0;
+        entry.markers.visible =
+          next.visibleLayers.clash && next.explodeFactor === 0;
       }
       federation.updateMatrixWorld(true);
     };
 
     // ---- Measurements --------------------------------------------------
     let measurementsKey: unknown = null;
-    const vec = (p: { x: number; y: number; z: number }) => new THREE.Vector3(p.x, p.y, p.z);
-    const addLabel = (anchor: THREE.Vector3, text: string, tone: "result" | "point") => {
+    const vec = (p: { x: number; y: number; z: number }) =>
+      new THREE.Vector3(p.x, p.y, p.z);
+    const addLabel = (
+      anchor: THREE.Vector3,
+      text: string,
+      tone: "result" | "point",
+    ) => {
       const node = document.createElement("div");
       node.dataset.anchor = `${anchor.x},${anchor.y},${anchor.z}`;
       node.className = `pointer-events-none absolute left-0 top-0 whitespace-pre rounded-md px-2 py-1 font-mono text-[11px] font-semibold shadow ${
-        tone === "result" ? "bg-slate-950/90 text-teal-200" : "bg-white/95 text-slate-900"
+        tone === "result"
+          ? "bg-slate-950/90 text-teal-200"
+          : "bg-white/95 text-slate-900"
       }`;
       node.textContent = text;
       labels.appendChild(node);
     };
     const renderMeasurements = (next: BimCanvasProps) => {
-      const key = [next.measurements, next.pendingPoint, lastBoundsKey, localeRef.current, next.sceneOrigin];
-      if (Array.isArray(measurementsKey) && key.every((k, i) => k === (measurementsKey as unknown[])[i])) return;
+      const key = [
+        next.measurements,
+        next.pendingPoint,
+        next.pendingPoints,
+        lastBoundsKey,
+        localeRef.current,
+        next.sceneOrigin,
+        next.explodeFactor,
+      ];
+      if (
+        Array.isArray(measurementsKey) &&
+        key.every((k, i) => k === (measurementsKey as unknown[])[i])
+      )
+        return;
       measurementsKey = key;
       disposeObject(measurementGroup);
       labels.replaceChildren();
+      // Measurements refer to assembled geometry, not presentation offsets.
+      if (next.explodeFactor > 0) return;
       const markerGeometry = new THREE.SphereGeometry(pointRadius(), 12, 8);
       const marker = (p: MeasurePoint) => {
         const mesh = new THREE.Mesh(
           markerGeometry,
-          new THREE.MeshBasicMaterial({ color: SNAP_COLORS[p.snap], depthTest: false }),
+          new THREE.MeshBasicMaterial({
+            color: SNAP_COLORS[p.snap],
+            depthTest: false,
+          }),
         );
         mesh.position.copy(vec(p));
         mesh.renderOrder = 3;
@@ -436,29 +505,58 @@ export function BimCanvas(props: BimCanvasProps) {
           line.renderOrder = 3;
           measurementGroup.add(line);
           const s = distanceSummary(a, b);
-          addLabel(vec(a).add(vec(b)).multiplyScalar(0.5), `${fmt(s.distance)} m`, "result");
+          addLabel(
+            vec(a).add(vec(b)).multiplyScalar(0.5),
+            `${fmt(s.distance)} m`,
+            "result",
+          );
+        } else if ((m.mode === "angle" || m.mode === "triangle") && m.points.length === 3) {
+          const metrics = triangleMetrics(m.points);
+          const vertices = m.points.map(vec);
+          if (m.mode === "triangle") vertices.push(vec(m.points[0]));
+          const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(vertices), new THREE.LineBasicMaterial({ color: 0x0f766e, depthTest: false }));
+          line.renderOrder = 3;
+          measurementGroup.add(line);
+          addLabel(vec(m.points[1]), metrics ? (m.mode === "angle" ? `${fmt(metrics.angle)}°` : `${fmt(metrics.area)} m²`) : "—", "result");
         } else if (m.mode === "point" && m.points[0]) {
-          addLabel(vec(m.points[0]), coordinateText([m.points[0].x, m.points[0].y, m.points[0].z]), "point");
+          addLabel(
+            vec(m.points[0]),
+            coordinateText([m.points[0].x, m.points[0].y, m.points[0].z]),
+            "point",
+          );
         }
       }
-      if (next.pendingPoint) marker(next.pendingPoint);
+      next.pendingPoints.forEach(marker);
+      if (next.pendingPoints.length > 1) measurementGroup.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(next.pendingPoints.map(vec)), new THREE.LineBasicMaterial({ color: 0x0f766e, depthTest: false })));
       requestRender();
     };
 
     // ---- Hover: snapping preview and coordinate readout ------------------
     const hoverMarker = new THREE.Mesh(
       new THREE.SphereGeometry(1, 12, 8),
-      new THREE.MeshBasicMaterial({ color: SNAP_COLORS.face, depthTest: false }),
+      new THREE.MeshBasicMaterial({
+        color: SNAP_COLORS.face,
+        depthTest: false,
+      }),
     );
     hoverMarker.renderOrder = 7;
     const hoverEdge = new THREE.Line(
       new THREE.BufferGeometry(),
-      new THREE.LineBasicMaterial({ color: SNAP_COLORS.edge, depthTest: false, linewidth: 2 }),
+      new THREE.LineBasicMaterial({
+        color: SNAP_COLORS.edge,
+        depthTest: false,
+        linewidth: 2,
+      }),
     );
     hoverEdge.renderOrder = 7;
     const rubberBand = new THREE.Line(
       new THREE.BufferGeometry(),
-      new THREE.LineDashedMaterial({ color: 0x0f766e, depthTest: false, dashSize: 0.2, gapSize: 0.1 }),
+      new THREE.LineDashedMaterial({
+        color: 0x0f766e,
+        depthTest: false,
+        dashSize: 0.2,
+        gapSize: 0.1,
+      }),
     );
     rubberBand.renderOrder = 7;
     hoverGroup.add(hoverMarker, hoverEdge, rubberBand);
@@ -470,7 +568,10 @@ export function BimCanvas(props: BimCanvasProps) {
     const pointerNdc = (clientX: number, clientY: number) => {
       const rect = renderer.domElement.getBoundingClientRect();
       return {
-        ndc: new THREE.Vector2(((clientX - rect.left) / rect.width) * 2 - 1, (-(clientY - rect.top) / rect.height) * 2 + 1),
+        ndc: new THREE.Vector2(
+          ((clientX - rect.left) / rect.width) * 2 - 1,
+          (-(clientY - rect.top) / rect.height) * 2 + 1,
+        ),
         local: [clientX - rect.left, clientY - rect.top] as [number, number],
       };
     };
@@ -480,15 +581,27 @@ export function BimCanvas(props: BimCanvasProps) {
       ray.setFromCamera(ndc, camera);
       return local;
     };
-    const snapLabels = (): Record<SnapKind, string> => ui(localeRef.current).formats.snap;
+    const snapLabels = (): Record<SnapKind, string> =>
+      ui(localeRef.current).formats.snap;
 
     /** Surface hit under the pointer, snapped when measuring. */
     const pick = (clientX: number, clientY: number, snap: boolean) => {
       const pointer = castFrom(clientX, clientY);
-      const hit = visibleHit(ray.intersectObjects(pickable(), false), activePlanes);
+      // A clipped nearest triangle must not hide a deeper visible surface.
+      ray.firstHitOnly = activePlanes.length === 0;
+      const hit = visibleHit(
+        ray.intersectObjects(pickable(), false),
+        activePlanes,
+      );
       if (!hit) return null;
       const mesh = hit.object as THREE.Mesh;
-      if (!snap || !hit.face) return { hit, point: hit.point.clone(), kind: "face" as SnapKind, edge: undefined };
+      if (!snap || !hit.face)
+        return {
+          hit,
+          point: hit.point.clone(),
+          kind: "face" as SnapKind,
+          edge: undefined,
+        };
       const position = mesh.geometry.getAttribute("position");
       const index = mesh.geometry.index;
       let features = featureEdges.get(mesh.geometry);
@@ -498,10 +611,17 @@ export function BimCanvas(props: BimCanvasProps) {
       }
       const corners = [hit.face.a, hit.face.b, hit.face.c];
       const triangle = corners.map((i) =>
-        new THREE.Vector3().fromBufferAttribute(position, i).applyMatrix4(mesh.matrixWorld).toArray(),
+        new THREE.Vector3()
+          .fromBufferAttribute(position, i)
+          .applyMatrix4(mesh.matrixWorld)
+          .toArray(),
       ) as [Vec3, Vec3, Vec3];
       const isFeature = (i: number) =>
-        features ? features.has(edgeKey(position.array, corners[i], corners[(i + 1) % 3])) : true;
+        features
+          ? features.has(
+              edgeKey(position.array, corners[i], corners[(i + 1) % 3]),
+            )
+          : true;
       const result = snapPoint({
         triangle,
         featureEdges: [isFeature(0), isFeature(1), isFeature(2)],
@@ -514,14 +634,44 @@ export function BimCanvas(props: BimCanvasProps) {
         tolerancePx: SNAP_TOLERANCE_PX,
         settings: current.snapSettings,
       });
-      return { hit, point: new THREE.Vector3(...result.point), kind: result.kind, edge: result.edge };
+      if (result.kind === "edge" && result.edge) {
+        const closest = new THREE.Vector3();
+        ray.ray.distanceSqToSegment(
+          new THREE.Vector3(...result.edge[0]),
+          new THREE.Vector3(...result.edge[1]),
+          undefined,
+          closest,
+        );
+        result.point = closest.toArray() as Vec3;
+      }
+      if (
+        activePlanes.some(
+          (plane) =>
+            plane.distanceToPoint(new THREE.Vector3(...result.point)) < 0,
+        )
+      ) {
+        return {
+          hit,
+          point: hit.point.clone(),
+          kind: "face" as SnapKind,
+          edge: undefined,
+        };
+      }
+      return {
+        hit,
+        point: new THREE.Vector3(...result.point),
+        kind: result.kind,
+        edge: result.edge,
+      };
     };
 
     const hideHover = () => {
       hoverGroup.visible = false;
       tooltip.hidden = true;
       readout.dataset.empty = "true";
-      readout.textContent = ui(localeRef.current).formats.hoverToReadCoordinates;
+      readout.textContent = ui(
+        localeRef.current,
+      ).formats.hoverToReadCoordinates;
       requestRender();
     };
     const showHover = (clientX: number, clientY: number) => {
@@ -538,11 +688,16 @@ export function BimCanvas(props: BimCanvasProps) {
       }
       hoverMarker.position.copy(result.point);
       hoverKind = result.kind;
-      (hoverMarker.material as THREE.MeshBasicMaterial).color.setHex(SNAP_COLORS[result.kind]);
+      (hoverMarker.material as THREE.MeshBasicMaterial).color.setHex(
+        SNAP_COLORS[result.kind],
+      );
       hoverEdge.visible = Boolean(result.edge);
       if (result.edge)
-        hoverEdge.geometry.setFromPoints(result.edge.map((e) => new THREE.Vector3(...e)));
-      const pending = current.measureMode === "distance" ? current.pendingPoint : null;
+        hoverEdge.geometry.setFromPoints(
+          result.edge.map((e) => new THREE.Vector3(...e)),
+        );
+      const pending =
+        current.measureMode === "distance" ? current.pendingPoint : null;
       rubberBand.visible = Boolean(pending);
       let text = snapLabels()[result.kind];
       if (pending) {
@@ -560,7 +715,8 @@ export function BimCanvas(props: BimCanvasProps) {
 
     // ---- Section box dragging ------------------------------------------
     let drag: { axis: Axis; side: Side; pointerId: number } | null = null;
-    const sectionActive = () => current.activeTool === "section" && clip.enabled;
+    const sectionActive = () =>
+      current.activeTool === "section" && clip.enabled;
     const handleAt = (clientX: number, clientY: number) => {
       if (!sectionActive()) return null;
       castFrom(clientX, clientY);
@@ -589,7 +745,8 @@ export function BimCanvas(props: BimCanvasProps) {
       if (drag && e.pointerId === drag.pointerId) {
         castFrom(e.clientX, e.clientY);
         const anchor = gizmo.handles.find(
-          (h) => h.userData.axis === drag!.axis && h.userData.side === drag!.side,
+          (h) =>
+            h.userData.axis === drag!.axis && h.userData.side === drag!.side,
         )!.position;
         const value = axisDragValue(
           ray.ray.origin.toArray() as Vec3,
@@ -604,7 +761,9 @@ export function BimCanvas(props: BimCanvasProps) {
             min: [b.min[0] - margin, b.min[1] - margin, b.min[2] - margin],
             max: [b.max[0] + margin, b.max[1] + margin, b.max[2] + margin],
           };
-          applyClip(moveFace(clip, drag.axis, drag.side, value, limits, span * 0.001));
+          applyClip(
+            moveFace(clip, drag.axis, drag.side, value, limits, span * 0.001),
+          );
           requestRender();
         }
         return;
@@ -626,6 +785,11 @@ export function BimCanvas(props: BimCanvasProps) {
         });
     };
     const pointerCancel = () => {
+      if (drag) {
+        drag = null;
+        controls.enabled = true;
+        current.onClipPlanesChange(clip);
+      }
       down.clear();
       gesture = false;
     };
@@ -645,16 +809,34 @@ export function BimCanvas(props: BimCanvasProps) {
       down.delete(e.pointerId);
       const multi = gesture;
       if (!down.size) gesture = false;
-      if (!start || multi || e.button !== 0 || Math.hypot(e.clientX - start.x, e.clientY - start.y) > CLICK_TOLERANCE_PX)
+      if (
+        !start ||
+        multi ||
+        e.button !== 0 ||
+        Math.hypot(e.clientX - start.x, e.clientY - start.y) >
+          CLICK_TOLERANCE_PX
+      )
         return;
       if (current.activeTool === "measure") {
         const result = pick(e.clientX, e.clientY, true);
         if (result)
-          current.onMeasurePoint({ x: result.point.x, y: result.point.y, z: result.point.z, snap: result.kind });
+          current.onMeasurePoint({
+            x: result.point.x,
+            y: result.point.y,
+            z: result.point.z,
+            snap: result.kind,
+            modelKey: (result.hit.object.userData.element as BimElementData).modelKey,
+            guid: (result.hit.object.userData.element as BimElementData).guid,
+            localPoint: result.hit.object.parent!.worldToLocal(result.point.clone()).toArray(),
+          });
         return;
       }
       const result = pick(e.clientX, e.clientY, false);
-      current.onSelectElement((result?.hit.object.userData.element as BimElementData | undefined) ?? null);
+      current.onSelectElement(
+        (result?.hit.object.userData.element as BimElementData | undefined) ??
+          null,
+        e.shiftKey || e.ctrlKey || e.metaKey,
+      );
     };
 
     // ---- Commands --------------------------------------------------------
@@ -666,22 +848,54 @@ export function BimCanvas(props: BimCanvasProps) {
       const box = new THREE.Box3();
       for (const mesh of meshes)
         if (mesh.visible && mesh.parent?.visible !== false)
-          box.union(mesh.geometry.boundingBox!.clone().applyMatrix4(mesh.matrixWorld));
+          box.union(
+            mesh.geometry.boundingBox!.clone().applyMatrix4(mesh.matrixWorld),
+          );
       return box;
     };
     const runCommands = (next: BimCanvasProps) => {
       if (lastView !== next.viewRequest.revision) {
-        const target = next.viewRequest.modelKey ? entries.get(next.viewRequest.modelKey) : undefined;
+        const target = next.viewRequest.modelKey
+          ? entries.get(next.viewRequest.modelKey)
+          : undefined;
         if (!target || target.ready) {
+          const selection = next.viewRequest.elementIds?.length
+            ? [...entries.values()].flatMap((entry) =>
+                next.viewRequest.elementIds!.flatMap((id) => {
+                  const mesh = entry.meshes.get(id);
+                  return mesh ? [mesh] : [];
+                }),
+              )
+            : [];
           const visible = worldBoxOf(
-            target ? target.meshes.values() : [...entries.values()].flatMap((e) => [...e.meshes.values()]),
+            selection.length
+              ? selection
+              : target
+                ? target.meshes.values()
+                : [...entries.values()].flatMap((e) => [...e.meshes.values()]),
           );
-          const fallback = new THREE.Box3(new THREE.Vector3(...next.sceneBounds.min), new THREE.Vector3(...next.sceneBounds.max));
+          const fallback = new THREE.Box3(
+            new THREE.Vector3(...next.sceneBounds.min),
+            new THREE.Vector3(...next.sceneBounds.max),
+          );
           controls.enableDamping = false;
           controls.update();
           controls.enableDamping = true;
-          controls.target.copy(fitCamera(camera, visible.isEmpty() ? fallback : visible, next.viewRequest.preset));
+          controls.target.copy(
+            fitCamera(
+              camera,
+              visible.isEmpty() ? fallback : visible,
+              next.viewRequest.preset,
+            ),
+          );
           camera.far = Math.max(camera.far, span * 20);
+          if (next.viewRequest.camera) {
+            const saved = next.viewRequest.camera;
+            camera.position.set(...saved.position);
+            camera.up.set(...saved.up);
+            camera.fov = saved.fov;
+            controls.target.set(...saved.target);
+          }
           camera.updateProjectionMatrix();
           controls.maxDistance = camera.far * 0.4;
           controls.update();
@@ -691,19 +905,33 @@ export function BimCanvas(props: BimCanvasProps) {
       if (next.activeClashPoint && next.activeClashPoint !== lastClash) {
         controls.target.set(...next.activeClashPoint);
         camera.up.set(0, 1, 0);
-        camera.position.copy(controls.target).add(new THREE.Vector3(span * 0.15, span * 0.1, span * 0.15));
+        camera.position
+          .copy(controls.target)
+          .add(new THREE.Vector3(span * 0.15, span * 0.1, span * 0.15));
         controls.update();
       }
       lastClash = next.activeClashPoint;
       if (lastSectionFit !== next.sectionFitRequest.revision) {
         lastSectionFit = next.sectionFitRequest.revision;
         let box: THREE.Box3;
-        if (next.sectionFitRequest.target === "selection" && next.selectedElementId) {
-          const mesh = [...entries.values()].map((e) => e.meshes.get(next.selectedElementId!)).find(Boolean);
+        if (
+          next.sectionFitRequest.target === "selection" &&
+          next.selectedElementId
+        ) {
+          const mesh = [...entries.values()]
+            .map((e) => e.meshes.get(next.selectedElementId!))
+            .find(Boolean);
           box = mesh ? worldBoxOf([mesh]) : new THREE.Box3();
-        } else box = new THREE.Box3(new THREE.Vector3(...next.sceneBounds.min), new THREE.Vector3(...next.sceneBounds.max));
+        } else
+          box = new THREE.Box3(
+            new THREE.Vector3(...next.sceneBounds.min),
+            new THREE.Vector3(...next.sceneBounds.max),
+          );
         if (!box.isEmpty()) {
-          const pad = Math.max(0.1, box.getSize(new THREE.Vector3()).length() * 0.05);
+          const pad = Math.max(
+            0.1,
+            box.getSize(new THREE.Vector3()).length() * 0.05,
+          );
           box.expandByScalar(pad);
           next.onClipPlanesChange(clipFromBox(box));
         }
@@ -765,7 +993,11 @@ export function BimCanvas(props: BimCanvasProps) {
     const initialize = () => {
       if (disposed) return;
       setError(false);
-      renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance", preserveDrawingBuffer: false });
+      renderer = new THREE.WebGLRenderer({
+        antialias: true,
+        powerPreference: "high-performance",
+        preserveDrawingBuffer: false,
+      });
       renderer.setPixelRatio(maxPixelRatio);
       renderer.localClippingEnabled = true;
       renderer.toneMapping = THREE.NoToneMapping;
@@ -846,7 +1078,11 @@ export function BimCanvas(props: BimCanvasProps) {
         className={`absolute inset-0 touch-none ${props.activeTool === "measure" ? "cursor-crosshair" : "cursor-grab active:cursor-grabbing"}`}
         aria-label={ui(locale).bimCanvas.t3DModelDragToOrbit}
       />
-      <div ref={labelsRef} className="pointer-events-none absolute inset-0 z-10" aria-hidden="true" />
+      <div
+        ref={labelsRef}
+        className="pointer-events-none absolute inset-0 z-10"
+        aria-hidden="true"
+      />
       <div
         ref={tooltipRef}
         hidden
@@ -860,16 +1096,24 @@ export function BimCanvas(props: BimCanvasProps) {
         className="pointer-events-none absolute bottom-2 left-1/2 z-20 max-w-[calc(100%-1rem)] -translate-x-1/2 whitespace-pre rounded-lg bg-slate-950/85 px-3 py-2 font-mono text-[11px] leading-5 text-slate-100 shadow-lg data-[empty=true]:text-slate-400"
       />
       {building > 0 && !error && (
-        <div role="status" className="pointer-events-none absolute right-3 top-3 z-20 rounded-lg bg-slate-950/85 px-3 py-2 text-xs">
+        <div
+          role="status"
+          className="pointer-events-none absolute right-3 top-3 z-20 rounded-lg bg-slate-950/85 px-3 py-2 text-xs"
+        >
           {ui(locale).bimCanvas.buildingModel}
         </div>
       )}
       {error && (
-        <div role="alert" className="absolute inset-0 z-30 flex flex-col items-center justify-center gap-3 bg-slate-950 p-5 text-center">
-          <p>
-            {ui(locale).bimCanvas.t3DRenderingIsUnavailableRetry}
-          </p>
-          <button type="button" onClick={() => setRetry((n) => n + 1)} className="rounded-lg border px-4 py-2">
+        <div
+          role="alert"
+          className="absolute inset-0 z-30 flex flex-col items-center justify-center gap-3 bg-slate-950 p-5 text-center"
+        >
+          <p>{ui(locale).bimCanvas.t3DRenderingIsUnavailableRetry}</p>
+          <button
+            type="button"
+            onClick={() => setRetry((n) => n + 1)}
+            className="rounded-lg border px-4 py-2"
+          >
             {ui(locale).bimCanvas.retry}
           </button>
         </div>
