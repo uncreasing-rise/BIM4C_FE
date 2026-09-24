@@ -1,4 +1,4 @@
-﻿import type { BimModelDefinition } from "./types";
+import type { BimModelDefinition } from "./types";
 
 export async function parseIfcFileToBimModel(
   file: File,

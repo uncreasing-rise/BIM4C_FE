@@ -358,9 +358,9 @@ export function ContentBlockEditor({
   return (
     <div className="space-y-4">
       {/* TOOLBAR ADD BLOCKS & BILINGUAL SYNC STATUS */}
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200/80 dark:border-border bg-slate-50/80 dark:bg-muted/30 p-3.5">
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 dark:border-border bg-slate-50/80 dark:bg-muted/30 p-3.5">
         <div className="flex flex-wrap items-center gap-2.5">
-          <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+          <span className="text-[13px] font-medium text-slate-700 dark:text-foreground">
             Thêm khối nội dung:
           </span>
           <span className="text-[11px] font-semibold text-foreground bg-background px-2 py-0.5 rounded-md border border-border">
@@ -398,7 +398,7 @@ export function ContentBlockEditor({
                 size="sm"
                 variant="outline"
                 onClick={() => addBlock(type)}
-                className="h-8 gap-1.5 px-2.5 text-xs font-medium bg-white dark:bg-card border-slate-200/80 dark:border-border shadow-2xs hover:bg-slate-100 dark:hover:bg-accent"
+                className="h-8 gap-1.5 px-2.5 text-xs font-medium bg-white dark:bg-card border-slate-200 dark:border-border shadow-2xs hover:bg-slate-100 dark:hover:bg-accent"
               >
                 <Plus className="size-3.5 text-primary" />
                 <Icon className="size-3.5 text-muted-foreground" />
@@ -411,7 +411,7 @@ export function ContentBlockEditor({
 
       {/* BLOCKS LIST */}
       {currentList.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-200 dark:border-border/60 py-10 px-4 text-center bg-slate-50/40 dark:bg-transparent">
+        <div className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-200 dark:border-border/60 py-10 px-4 text-center bg-slate-50/40 dark:bg-transparent">
           <FileText className="size-10 text-muted-foreground/40 mb-3" />
           <h4 className="text-sm font-bold text-foreground">Chưa có khối nội dung nào</h4>
           <p className="text-xs text-muted-foreground max-w-md mt-1 mb-4">
@@ -439,7 +439,7 @@ export function ContentBlockEditor({
             return (
               <div
                 key={block.id}
-                className="overflow-hidden rounded-xl border border-slate-200/80 dark:border-border bg-white dark:bg-card shadow-xs transition hover:border-slate-300 dark:hover:border-border/80"
+                className="overflow-hidden rounded-xl border border-slate-200 dark:border-border bg-white dark:bg-card shadow-xs transition hover:border-slate-300 dark:hover:border-border/80"
               >
                 {/* BLOCK HEADER */}
                 <div className="flex items-center justify-between border-b border-slate-100 dark:border-border/60 bg-slate-50/70 dark:bg-muted/30 px-4 py-2.5">
@@ -449,7 +449,7 @@ export function ContentBlockEditor({
                     </span>
                     <div className="flex items-center gap-1.5">
                       <Icon className="size-4 text-muted-foreground" />
-                      <span className="text-xs font-bold uppercase tracking-wider text-foreground">
+                      <span className="text-sm font-semibold text-slate-900 dark:text-foreground">
                         {config.label}
                       </span>
                     </div>
@@ -500,7 +500,7 @@ export function ContentBlockEditor({
                   {block.type === "rich-text" && (
                     <>
                       <div className="space-y-1.5">
-                        <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                        <label className="block text-[13px] font-medium text-slate-700 dark:text-foreground">
                           Tiêu đề đoạn (Tùy chọn)
                         </label>
                         <Input
@@ -509,11 +509,11 @@ export function ContentBlockEditor({
                             update(index, { ...block, heading: e.target.value })
                           }
                           placeholder="Ví dụ: Giới thiệu giải pháp BIM cho doanh nghiệp"
-                          className="bg-white dark:bg-card border-slate-200/80 dark:border-border text-sm"
+                          className="bg-white dark:bg-card border-slate-200 dark:border-border text-sm"
                         />
                       </div>
                       <div className="space-y-1.5">
-                        <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                        <label className="block text-[13px] font-medium text-slate-700 dark:text-foreground">
                           Nội dung đoạn văn
                         </label>
                         <Textarea
@@ -523,7 +523,7 @@ export function ContentBlockEditor({
                             update(index, { ...block, content: e.target.value })
                           }
                           placeholder="Nhập nội dung văn bản chi tiết ở đây..."
-                          className="bg-white dark:bg-card border-slate-200/80 dark:border-border text-sm leading-relaxed"
+                          className="bg-white dark:bg-card border-slate-200 dark:border-border text-sm leading-relaxed"
                         />
                       </div>
                     </>
@@ -554,7 +554,7 @@ export function ContentBlockEditor({
                       </div>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div className="space-y-1.5">
-                          <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                          <label className="block text-[13px] font-medium text-slate-700 dark:text-foreground">
                             Văn bản thay thế (Alt text cho SEO)
                           </label>
                           <Input
@@ -566,11 +566,11 @@ export function ContentBlockEditor({
                               })
                             }
                             placeholder="Mô tả hình ảnh..."
-                            className="bg-white dark:bg-card border-slate-200/80 dark:border-border text-sm"
+                            className="bg-white dark:bg-card border-slate-200 dark:border-border text-sm"
                           />
                         </div>
                         <div className="space-y-1.5">
-                          <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                          <label className="block text-[13px] font-medium text-slate-700 dark:text-foreground">
                             Chú thích dưới ảnh (Caption)
                           </label>
                           <Input
@@ -582,7 +582,7 @@ export function ContentBlockEditor({
                               })
                             }
                             placeholder="Chú thích hiển thị dưới hình..."
-                            className="bg-white dark:bg-card border-slate-200/80 dark:border-border text-sm"
+                            className="bg-white dark:bg-card border-slate-200 dark:border-border text-sm"
                           />
                         </div>
                       </div>
@@ -610,7 +610,7 @@ export function ContentBlockEditor({
                           {block.images.map((image, imageIndex) => (
                             <div
                               key={`${image.url}-${imageIndex}`}
-                              className="flex items-center justify-between gap-2 rounded-lg border border-slate-200/80 dark:border-border bg-slate-50/50 dark:bg-muted/20 p-2.5"
+                              className="flex items-center justify-between gap-2 rounded-lg border border-slate-200 dark:border-border bg-slate-50/50 dark:bg-muted/20 p-2.5"
                             >
                               <span className="min-w-0 flex-1 truncate text-xs font-medium text-foreground">
                                 {image.alt || image.url}
@@ -640,7 +640,7 @@ export function ContentBlockEditor({
                   {block.type === "quote" && (
                     <>
                       <div className="space-y-1.5">
-                        <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                        <label className="block text-[13px] font-medium text-slate-700 dark:text-foreground">
                           Nội dung trích dẫn
                         </label>
                         <Textarea
@@ -650,11 +650,11 @@ export function ContentBlockEditor({
                             update(index, { ...block, quote: e.target.value })
                           }
                           placeholder="Nhập câu danh ngôn, trích dẫn ý kiến chuyên gia..."
-                          className="bg-white dark:bg-card border-slate-200/80 dark:border-border text-sm italic"
+                          className="bg-white dark:bg-card border-slate-200 dark:border-border text-sm italic"
                         />
                       </div>
                       <div className="space-y-1.5">
-                        <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                        <label className="block text-[13px] font-medium text-slate-700 dark:text-foreground">
                           Tác giả / Nguồn phát biểu
                         </label>
                         <Input
@@ -663,7 +663,7 @@ export function ContentBlockEditor({
                             update(index, { ...block, author: e.target.value })
                           }
                           placeholder="Ví dụ: ThS. KTS Nguyễn Văn A - Trưởng phòng BIM"
-                          className="bg-white dark:bg-card border-slate-200/80 dark:border-border text-sm"
+                          className="bg-white dark:bg-card border-slate-200 dark:border-border text-sm"
                         />
                       </div>
                     </>
@@ -676,7 +676,7 @@ export function ContentBlockEditor({
                         <span>Danh sách mục / tính năng hiển thị chi tiết trong <strong>thân bài viết</strong>.</span>
                       </div>
                       <div className="space-y-1.5">
-                        <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                        <label className="block text-[13px] font-medium text-slate-700 dark:text-foreground">
                           Tiêu đề danh sách (Tùy chọn)
                         </label>
                         <Input
@@ -685,11 +685,11 @@ export function ContentBlockEditor({
                             update(index, { ...block, heading: e.target.value })
                           }
                           placeholder="Ví dụ: Các tính năng & phạm vi thực thi"
-                          className="bg-white dark:bg-card border-slate-200/80 dark:border-border text-sm"
+                          className="bg-white dark:bg-card border-slate-200 dark:border-border text-sm"
                         />
                       </div>
                       <div className="space-y-1.5">
-                        <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                        <label className="block text-[13px] font-medium text-slate-700 dark:text-foreground">
                           Danh sách mục (Mỗi mục trên một dòng riêng)
                         </label>
                         <Textarea
@@ -702,7 +702,7 @@ export function ContentBlockEditor({
                             })
                           }
                           placeholder="Mục 1&#10;Mục 2&#10;Mục 3"
-                          className="bg-white dark:bg-card border-slate-200/80 dark:border-border text-sm font-sans"
+                          className="bg-white dark:bg-card border-slate-200 dark:border-border text-sm font-sans"
                         />
                       </div>
                       <label className="inline-flex items-center gap-2 cursor-pointer select-none text-xs font-medium text-foreground">
@@ -723,7 +723,7 @@ export function ContentBlockEditor({
                   {block.type === "video" && (
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div className="space-y-1.5">
-                        <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                        <label className="block text-[13px] font-medium text-slate-700 dark:text-foreground">
                           Tiêu đề Video
                         </label>
                         <Input
@@ -732,11 +732,11 @@ export function ContentBlockEditor({
                             update(index, { ...block, title: e.target.value })
                           }
                           placeholder="Tiêu đề video giới thiệu..."
-                          className="bg-white dark:bg-card border-slate-200/80 dark:border-border text-sm"
+                          className="bg-white dark:bg-card border-slate-200 dark:border-border text-sm"
                         />
                       </div>
                       <div className="space-y-1.5">
-                        <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                        <label className="block text-[13px] font-medium text-slate-700 dark:text-foreground">
                           Đường dẫn URL Video (YouTube / MP4)
                         </label>
                         <Input
@@ -745,7 +745,7 @@ export function ContentBlockEditor({
                             update(index, { ...block, url: e.target.value })
                           }
                           placeholder="https://www.youtube.com/watch?v=..."
-                          className="bg-white dark:bg-card border-slate-200/80 dark:border-border text-sm"
+                          className="bg-white dark:bg-card border-slate-200 dark:border-border text-sm"
                         />
                       </div>
                     </div>

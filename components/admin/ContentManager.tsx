@@ -51,24 +51,8 @@ import {
   parseContentBlocks,
   type ContentBlock,
 } from "@/features/shared/schemas/content-block.schema";
-
-const statusLabels: Record<AdminContentStatus, string> = {
-  DRAFT: "Bản nháp",
-  PUBLISHED: "Đã xuất bản",
-  ARCHIVED: "Đã lưu trữ",
-  PLANNED: "Đã lên kế hoạch",
-  IN_PROGRESS: "Đang thi công",
-  COMPLETED: "Đã hoàn thành",
-};
-
-const statusColors: Record<AdminContentStatus, string> = {
-  DRAFT: "bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30",
-  PUBLISHED: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30",
-  ARCHIVED: "bg-slate-500/15 text-slate-600 dark:text-slate-400 border-slate-500/30",
-  PLANNED: "bg-blue-500/15 text-blue-600 dark:text-blue-400 border-blue-500/30",
-  IN_PROGRESS: "bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 border-indigo-500/30",
-  COMPLETED: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30",
-};
+import { StatusBadge, Tag, formatDateTime, missingLanguages, statusLabel } from "./admin-ui";
+import { useConfirm } from "./ConfirmDialog";
 
 function prepareEditorContent(value: AdminContent, contentType: AdminContentType): AdminContent {
   const sections = Array.isArray(value.sections) ? value.sections : [];
@@ -107,6 +91,7 @@ export function ContentManager({
 }: {
   contentType: AdminContentType;
 }) {
+  const { confirm, dialog } = useConfirm();
   const params = useSearchParams();
   const router = useRouter();
   const [adminLangTab, setAdminLangTab] = useState<"vi" | "en">("vi");
@@ -223,8 +208,16 @@ export function ContentManager({
     });
   }, [page, query, params, router, status]);
 
-  function closeEditor() {
-    if (dirty && !window.confirm("Có thay đổi chưa lưu. Bạn có muốn thoát khỏi trình soạn thảo?"))
+  async function closeEditor() {
+    if (
+      dirty &&
+      !(await confirm({
+        title: "Bỏ các thay đổi chưa lưu?",
+        description: "Những chỉnh sửa từ lần lưu gần nhất sẽ bị mất.",
+        confirmLabel: "Bỏ thay đổi",
+        cancelLabel: "Tiếp tục chỉnh sửa",
+      }))
+    )
       return;
     setEditor(null);
     setDirty(false);
@@ -365,7 +358,7 @@ export function ContentManager({
         slug,
         description,
         description_vi: editor.description_vi?.trim() || description,
-        image: editor.image || "/images/hero-1.webp",
+        image: editor.image || "/images/hero-skyline-bim.jpg",
         eyebrow: editor.eyebrow || editor.eyebrow_vi || "BIM4C Enterprise",
         highlights: Array.isArray(editor.highlights) ? editor.highlights : [],
         sections: Array.isArray(editor.sections) ? editor.sections : [],
@@ -404,7 +397,13 @@ export function ContentManager({
   }
 
   async function remove(id: string) {
-    if (!window.confirm("Bạn có chắc muốn xóa nội dung này?")) return;
+    if (
+      !(await confirm({
+        title: `Xóa ${contentType.toLowerCase()} này?`,
+        description: "Nội dung bị gỡ khỏi website và danh sách quản trị, không thể khôi phục từ giao diện quản trị.",
+      }))
+    )
+      return;
     const prevItems = [...items];
     setItems((prev) => prev.filter((x) => x.id !== id));
     setSaving(true);
@@ -431,7 +430,12 @@ export function ContentManager({
     const toastId = toast.loading("Đang thực hiện thao tác hàng loạt...");
     try {
       if (action === "delete") {
-        if (!window.confirm(`Xóa ${selected.length} nội dung đã chọn?`)) {
+        if (
+          !(await confirm({
+            title: `Xóa ${selected.length} mục đã chọn?`,
+            description: "Các nội dung này bị gỡ khỏi website và danh sách quản trị, không thể khôi phục từ giao diện quản trị.",
+          }))
+        ) {
           toast.dismiss(toastId);
           return;
         }
@@ -483,9 +487,10 @@ export function ContentManager({
     const previewUrl = editor.slug ? `${publicBase}/${editor.slug}` : "";
 
     return (
-      <div className="fullscreen-crud-editor relative -mx-4 -my-6 sm:-mx-6 sm:-my-8 lg:-mx-8 lg:-my-8 min-h-[calc(100vh-70px)] bg-slate-50/50 dark:bg-background text-foreground flex flex-col">
+      <div className="fullscreen-crud-editor relative -mx-4 -mb-6 sm:-mx-6 sm:-mb-8 lg:-mx-8 lg:-mb-8 min-h-[calc(100vh-56px)] bg-slate-50/50 dark:bg-background text-foreground flex flex-col">
+        {dialog}
         {/* Sticky Top Studio Action Bar */}
-        <header className="sticky top-[70px] z-40 flex items-center justify-between border-b border-slate-200/80 dark:border-border bg-white dark:bg-card px-4 py-3 shadow-xs md:px-8">
+        <header className="sticky top-14 z-20 flex items-center justify-between border-b border-slate-200 dark:border-border bg-white dark:bg-card px-4 py-3 shadow-xs md:px-8">
           <div className="flex items-center gap-3 min-w-0">
             <Button
               type="button"
@@ -499,9 +504,7 @@ export function ContentManager({
             </Button>
             <span className="text-border hidden sm:inline">|</span>
             <div className="flex items-center gap-2 truncate">
-              <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-[11px] font-semibold ${statusColors[editor.status]}`}>
-                {statusLabels[editor.status]}
-              </span>
+              <StatusBadge domain={contentType === "Dự án" ? "project" : "content"} value={editor.status} />
               <span className="text-sm font-bold text-foreground truncate max-w-[200px] sm:max-w-xs md:max-w-md">
                 {editor.title || (isEdit ? "Chỉnh sửa nội dung" : `Tạo ${contentType} mới`)}
               </span>
@@ -520,7 +523,7 @@ export function ContentManager({
               <Link
                 href={previewUrl}
                 target="_blank"
-                className="hidden xl:inline-flex items-center gap-1.5 rounded-xl border border-slate-200/80 dark:border-border bg-white dark:bg-background px-3 py-1.5 text-xs font-medium text-muted-foreground transition hover:bg-slate-100 dark:hover:bg-muted hover:text-foreground"
+                className="hidden xl:inline-flex items-center gap-1.5 rounded-xl border border-slate-200 dark:border-border bg-white dark:bg-background px-3 py-1.5 text-xs font-medium text-muted-foreground transition hover:bg-slate-100 dark:hover:bg-muted hover:text-foreground"
               >
                 <ExternalLink className="size-3.5 text-primary" />
                 <span>Xem trang live</span>
@@ -535,14 +538,14 @@ export function ContentManager({
               className="gap-1.5 text-xs font-semibold"
             >
               <Eye className="size-3.5 text-teal-500" />
-              <span className="hidden md:inline">Live Preview</span>
+              <span className="hidden md:inline">Xem trước</span>
             </Button>
 
             <Button
               type="button"
               disabled={saving}
               onClick={() => void save()}
-              className="gap-2 bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-400 hover:to-emerald-400 text-slate-950 font-bold text-xs shadow-md shadow-teal-500/20 px-4"
+              className="gap-1.5"
             >
               <Save className="size-3.5 text-slate-950" />
               <span>{saving ? "Đang lưu…" : isEdit ? "Cập nhật" : "Xuất bản"}</span>
@@ -558,7 +561,7 @@ export function ContentManager({
             <div className="lg:col-span-8 space-y-6">
               
               {/* Language Switcher Card */}
-              <div className="rounded-2xl border border-border bg-card p-4 sm:p-5 shadow-xs">
+              <div className="rounded-xl border border-border bg-card p-4 sm:p-5 shadow-xs">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
                   <div className="flex items-center gap-2">
                     <Globe className="size-4 text-primary" />
@@ -571,18 +574,14 @@ export function ContentManager({
                 <BilingualFormTabs
                   activeTab={adminLangTab}
                   onTabChange={setAdminLangTab}
-                  hasViTranslation={Boolean(
-                    editor.title_vi || editor.description_vi,
-                  )}
-                  hasEnTranslation={Boolean(
-                    editor.title || editor.description,
-                  )}
+                  hasViTranslation={!missingLanguages(editor).includes("VI")}
+                  hasEnTranslation={!missingLanguages(editor).includes("EN")}
                 />
 
               </div>
 
               {/* Core Content Details Card */}
-              <div className="rounded-2xl border border-border bg-card p-6 shadow-xs space-y-5">
+              <div className="rounded-xl border border-border bg-card p-6 shadow-xs space-y-5">
                 <div className="flex items-center gap-2 border-b border-border pb-3">
                   <FileText className="size-4 text-primary" />
                   <h3 className="text-base font-bold text-foreground">
@@ -593,7 +592,7 @@ export function ContentManager({
                 {adminLangTab === "en" ? (
                   <>
                     <div className="space-y-1.5">
-                      <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1">
+                      <label className="text-[13px] font-medium text-slate-700 dark:text-foreground flex items-center gap-1">
                         <span>Tiêu đề chính (English - Bắt buộc)</span>
                         <span className="text-destructive">*</span>
                       </label>
@@ -612,7 +611,7 @@ export function ContentManager({
                     </div>
 
                     <div className="space-y-1.5">
-                      <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1">
+                      <label className="text-[13px] font-medium text-slate-700 dark:text-foreground flex items-center gap-1">
                         <span>Đường dẫn (Slug URL)</span>
                         <span className="text-destructive">*</span>
                       </label>
@@ -630,7 +629,7 @@ export function ContentManager({
                     </div>
 
                     <div className="space-y-1.5">
-                      <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1">
+                      <label className="text-[13px] font-medium text-slate-700 dark:text-foreground flex items-center gap-1">
                         <span>Mô tả tóm tắt (English - Bắt buộc)</span>
                         <span className="text-destructive">*</span>
                       </label>
@@ -646,7 +645,7 @@ export function ContentManager({
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                       <div className="space-y-1.5">
                         <div className="flex items-center justify-between">
-                          <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                          <label className="text-[13px] font-medium text-slate-700 dark:text-foreground">
                             Nhãn nổi bật đầu thẻ (Eyebrow Tag)
                           </label>
                           <span className="text-[11px] text-muted-foreground/80">Tag hiển thị trên tiêu đề</span>
@@ -655,12 +654,12 @@ export function ContentManager({
                           placeholder="e.g. PRACTICAL BIM TRAINING"
                           value={editor.eyebrow}
                           onChange={(e) => update({ eyebrow: e.target.value })}
-                          className="w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+                          className="w-full rounded-md border border-slate-300 bg-white text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-teal-600 focus:ring-2 focus:ring-teal-600/20 dark:border-border dark:bg-background dark:text-foreground px-3 py-2"
                         />
                       </div>
                       <div className="space-y-1.5">
                         <div className="flex items-center justify-between">
-                          <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                          <label className="text-[13px] font-medium text-slate-700 dark:text-foreground">
                             Thông tin phụ (Meta / Date)
                           </label>
                           <span className="text-[11px] text-muted-foreground/80">Thời lượng / Ngày / Quy mô</span>
@@ -669,7 +668,7 @@ export function ContentManager({
                           placeholder="e.g. 8 weeks · Online hoặc 15.09.2026"
                           value={editor.meta ?? ""}
                           onChange={(e) => update({ meta: e.target.value })}
-                          className="w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+                          className="w-full rounded-md border border-slate-300 bg-white text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-teal-600 focus:ring-2 focus:ring-teal-600/20 dark:border-border dark:bg-background dark:text-foreground px-3 py-2"
                         />
                       </div>
                     </div>
@@ -677,7 +676,7 @@ export function ContentManager({
                 ) : (
                   <>
                     <div className="space-y-1.5">
-                      <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      <label className="text-[13px] font-medium text-slate-700 dark:text-foreground">
                         Tiêu đề Tiếng Việt
                       </label>
                       <input
@@ -696,7 +695,7 @@ export function ContentManager({
                     </div>
 
                     <div className="space-y-1.5">
-                      <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1">
+                      <label className="text-[13px] font-medium text-slate-700 dark:text-foreground flex items-center gap-1">
                         <span>Đường dẫn (Slug URL)</span>
                       </label>
                       <div className="flex items-center rounded-xl border border-border bg-background px-3 py-2 text-sm">
@@ -714,7 +713,7 @@ export function ContentManager({
 
 
                     <div className="space-y-1.5">
-                      <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      <label className="text-[13px] font-medium text-slate-700 dark:text-foreground">
                         Mô tả tóm tắt Tiếng Việt
                       </label>
                       <textarea
@@ -729,7 +728,7 @@ export function ContentManager({
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                       <div className="space-y-1.5">
                         <div className="flex items-center justify-between">
-                          <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                          <label className="text-[13px] font-medium text-slate-700 dark:text-foreground">
                             Nhãn nổi bật đầu thẻ (Eyebrow Tiếng Việt)
                           </label>
                           <span className="text-[11px] text-muted-foreground/80">Tag hiển thị trên tiêu đề</span>
@@ -738,12 +737,12 @@ export function ContentManager({
                           placeholder="Ví dụ: ĐÀO TẠO THỰC CHIẾN"
                           value={editor.eyebrow_vi ?? ""}
                           onChange={(e) => update({ eyebrow_vi: e.target.value })}
-                          className="w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+                          className="w-full rounded-md border border-slate-300 bg-white text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-teal-600 focus:ring-2 focus:ring-teal-600/20 dark:border-border dark:bg-background dark:text-foreground px-3 py-2"
                         />
                       </div>
                       <div className="space-y-1.5">
                         <div className="flex items-center justify-between">
-                          <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                          <label className="text-[13px] font-medium text-slate-700 dark:text-foreground">
                             Thông tin phụ (Meta Tiếng Việt)
                           </label>
                           <span className="text-[11px] text-muted-foreground/80">Thời lượng / Ngày / Quy mô</span>
@@ -752,7 +751,7 @@ export function ContentManager({
                           placeholder="Ví dụ: 8 tuần · Khai giảng 15/10"
                           value={editor.meta ?? ""}
                           onChange={(e) => update({ meta: e.target.value })}
-                          className="w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+                          className="w-full rounded-md border border-slate-300 bg-white text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-teal-600 focus:ring-2 focus:ring-teal-600/20 dark:border-border dark:bg-background dark:text-foreground px-3 py-2"
                         />
                       </div>
                     </div>
@@ -794,7 +793,7 @@ export function ContentManager({
               )}
 
               {/* STRUCTURED CONTENT BLOCKS EDITOR CARD */}
-              <div className="rounded-2xl border border-border bg-card p-6 shadow-xs space-y-4">
+              <div className="rounded-xl border border-border bg-card p-6 shadow-xs space-y-4">
                 <div className="flex items-center justify-between border-b border-border pb-3">
                   <div>
                     <h3 className="text-base font-bold text-foreground">Khối nội dung chi tiết (Content Blocks)</h3>
@@ -824,36 +823,37 @@ export function ContentManager({
             <div className="lg:col-span-4 space-y-6">
 
               {/* Publishing Control Card */}
-              <div className="rounded-2xl border border-border bg-card p-6 shadow-xs space-y-4">
+              <div className="rounded-xl border border-border bg-card p-6 shadow-xs space-y-4">
                 <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
                   <Save className="size-4 text-primary" />
                   <span>Trạng thái & Phân loại</span>
                 </h3>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Trạng thái xuất bản</label>
+                  <label className="text-[13px] font-medium text-slate-700 dark:text-foreground">Trạng thái xuất bản</label>
                   <select
                     value={editor.status}
                     onChange={(e) => update({ status: e.target.value as AdminContentStatus })}
-                    className="w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-foreground outline-none transition focus:border-primary"
+                    className="w-full rounded-md border border-slate-300 bg-white text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-teal-600 focus:ring-2 focus:ring-teal-600/20 dark:border-border dark:bg-background dark:text-foreground px-3 py-2"
                   >
-                    <option value="DRAFT">Bản nháp (Draft)</option>
-                    <option value={contentType === "Dự án" ? "PLANNED" : "PUBLISHED"}>
-                      {contentType === "Dự án" ? "Lên kế hoạch (Planned)" : "Đã xuất bản (Published)"}
-                    </option>
-                    {contentType === "Dự án" && <option value="IN_PROGRESS">Đang thi công (In Progress)</option>}
-                    {contentType === "Dự án" && <option value="COMPLETED">Đã hoàn thành (Completed)</option>}
-                    <option value="ARCHIVED">Đã lưu trữ (Archived)</option>
+                    {(contentType === "Dự án"
+                      ? (["DRAFT", "PROFILED", "PLANNED", "IN_PROGRESS", "COMPLETED", "ARCHIVED"] as const)
+                      : (["DRAFT", "PUBLISHED", "ARCHIVED"] as const)
+                    ).map((value) => (
+                      <option key={value} value={value}>
+                        {statusLabel(contentType === "Dự án" ? "project" : "content", value)}
+                      </option>
+                    ))}
                   </select>
                 </div>
 
                 {(contentType === "Dự án" || contentType === "Tin tức" || contentType === "Chuyên môn") && (
                   <div className="space-y-1.5">
-                    <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Danh mục</label>
+                    <label className="text-[13px] font-medium text-slate-700 dark:text-foreground">Danh mục</label>
                     <select
                       value={"categoryId" in editor ? (editor.categoryId ?? "") : ""}
                       onChange={(e) => update({ categoryId: e.target.value || null })}
-                      className="w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-foreground outline-none transition focus:border-primary"
+                      className="w-full rounded-md border border-slate-300 bg-white text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-teal-600 focus:ring-2 focus:ring-teal-600/20 dark:border-border dark:bg-background dark:text-foreground px-3 py-2"
                     >
                       <option value="">Chọn danh mục</option>
                       {categories.map((cat) => (
@@ -879,7 +879,7 @@ export function ContentManager({
               </div>
 
               {/* Featured Image Card */}
-              <div className="rounded-2xl border border-border bg-card p-6 shadow-xs space-y-4">
+              <div className="rounded-xl border border-border bg-card p-6 shadow-xs space-y-4">
                 <div className="flex items-center justify-between">
                   <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
                     <ImageIcon className="size-4 text-primary" />
@@ -947,11 +947,12 @@ export function ContentManager({
   // ==========================================
   return (
     <>
-      <section className="overflow-hidden rounded-2xl border border-slate-200/80 dark:border-border bg-white dark:bg-card shadow-xs">
+      {dialog}
+      <section className="overflow-hidden rounded-xl border border-slate-200 dark:border-border bg-white dark:bg-card shadow-xs">
         {/* Search & Filter Header Bar */}
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200/80 dark:border-border p-4 bg-slate-50/60 dark:bg-muted/20">
-          <div className="flex flex-1 flex-wrap items-center gap-3 min-w-[280px]">
-            <div className="relative flex-1 min-w-[220px]">
+        <div className="flex flex-col gap-2 border-b border-slate-200 p-3 dark:border-border sm:flex-row sm:items-center sm:p-4">
+          <div className="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row sm:items-center">
+            <div className="relative min-w-0 flex-1">
               <Search className="size-4 text-muted-foreground absolute left-3.5 top-1/2 -translate-y-1/2" />
               <input
                 value={query}
@@ -960,7 +961,8 @@ export function ContentManager({
                   setPage(1);
                 }}
                 placeholder={`Tìm kiếm ${contentType.toLowerCase()}...`}
-                className="w-full rounded-xl border border-slate-200 dark:border-border bg-white dark:bg-background pl-9 pr-4 py-2 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+                aria-label={`Tìm kiếm ${contentType.toLowerCase()}`}
+                className="h-9 w-full rounded-md border border-slate-300 bg-white pl-9 pr-3 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-teal-600 focus:ring-2 focus:ring-teal-600/20 dark:border-border dark:bg-background dark:text-foreground"
               />
             </div>
             <select
@@ -969,18 +971,19 @@ export function ContentManager({
                 setStatus(e.target.value);
                 setPage(1);
               }}
-              className="rounded-xl border border-slate-200 dark:border-border bg-white dark:bg-background px-3.5 py-2 text-sm text-foreground outline-none transition focus:border-primary"
+              aria-label="Lọc theo trạng thái"
+              className="h-9 rounded-md border border-slate-300 bg-white px-2.5 text-sm text-slate-700 shadow-sm outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-600/20 dark:border-border dark:bg-background dark:text-foreground"
             >
               <option value="">Tất cả trạng thái</option>
-              <option value="draft">Bản nháp</option>
-              <option value="published">Đã xuất bản</option>
-              <option value="archived">Đã lưu trữ</option>
+              <option value="draft">{statusLabel("content", "DRAFT")}</option>
+              <option value="published">{statusLabel("content", "PUBLISHED")}</option>
+              <option value="archived">{statusLabel("content", "ARCHIVED")}</option>
             </select>
           </div>
 
           <Button
             onClick={() => setEditor(createEmptyContent(contentType))}
-            className="gap-2 bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-400 hover:to-emerald-400 text-slate-950 font-bold text-xs shadow-md shadow-teal-500/20 px-4"
+            className="gap-1.5"
           >
             <Plus className="size-4" />
             <span>Tạo {contentType.toLowerCase()} mới</span>
@@ -1024,8 +1027,8 @@ export function ContentManager({
         <div className="w-full overflow-x-auto">
           <table className="min-w-full border-collapse">
             <thead>
-              <tr className="border-b border-slate-200/80 dark:border-border bg-slate-50/80 dark:bg-muted/40 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                <th className="w-12 px-4 py-3.5">
+              <tr className="border-b border-slate-200 bg-slate-50 text-left text-xs text-slate-500 dark:border-border dark:bg-muted/40 dark:text-muted-foreground">
+                <th className="w-12 px-4 py-2.5">
                   <input
                     type="checkbox"
                     aria-label="Chọn tất cả"
@@ -1036,11 +1039,11 @@ export function ContentManager({
                     className="size-4 rounded accent-primary cursor-pointer"
                   />
                 </th>
-                <th className="px-4 py-3.5">Nội dung</th>
-                <th className="px-4 py-3.5">Loại</th>
-                <th className="px-4 py-3.5">Trạng thái</th>
-                <th className="px-4 py-3.5">Cập nhật</th>
-                <th className="w-24 px-4 py-3.5 text-right">Thao tác</th>
+                <th className="whitespace-nowrap px-4 py-2.5 font-medium">Nội dung</th>
+                <th className="whitespace-nowrap px-4 py-2.5 font-medium">Loại</th>
+                <th className="whitespace-nowrap px-4 py-2.5 font-medium">Trạng thái</th>
+                <th className="whitespace-nowrap px-4 py-2.5 font-medium">Cập nhật</th>
+                <th className="w-24 whitespace-nowrap px-4 py-2.5 text-right font-medium">Thao tác</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border text-sm">
@@ -1093,11 +1096,11 @@ export function ContentManager({
                         </button>
                         <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
                           <span className="font-mono text-[11px] truncate max-w-xs">{item.slug}</span>
-                          {item.title_vi && (
-                            <span className="rounded bg-teal-500/10 px-1.5 py-0.2 text-[10px] font-semibold text-teal-600 dark:text-teal-400 border border-teal-500/20">
-                              VI
-                            </span>
-                          )}
+                          {missingLanguages(item).map((lang) => (
+                            <Tag key={lang} tone="warning" className="h-5 px-1.5 text-[11px]">
+                              Thiếu {lang}
+                            </Tag>
+                          ))}
                         </div>
                       </div>
                     </div>
@@ -1106,12 +1109,10 @@ export function ContentManager({
                     <span className="rounded-md bg-muted px-2.5 py-1 font-medium">{item.type}</span>
                   </td>
                   <td className="px-4 py-3.5 text-xs">
-                    <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-[11px] font-semibold ${statusColors[item.status]}`}>
-                      {statusLabels[item.status]}
-                    </span>
+                    <StatusBadge domain={contentType === "Dự án" ? "project" : "content"} value={item.status} />
                   </td>
                   <td className="px-4 py-3.5 text-xs text-muted-foreground">
-                    {new Date(item.updatedAt).toLocaleDateString("vi-VN")}
+                    {formatDateTime(item.updatedAt, false)}
                   </td>
                   <td className="px-4 py-3.5 text-right">
                     <div className="flex items-center justify-end gap-1.5">
@@ -1121,6 +1122,7 @@ export function ContentManager({
                         size="sm"
                         onClick={() => void openEditor(item)}
                         disabled={openingId === item.id}
+                        aria-label={`Sửa ${item.title}`}
                         className="h-8 px-2.5 text-xs font-semibold gap-1"
                       >
                         <span>Sửa</span>
@@ -1133,6 +1135,7 @@ export function ContentManager({
                         onClick={() => void remove(item.id)}
                         className="h-8 w-8 p-0 text-destructive hover:bg-destructive/10"
                         title="Xóa"
+                        aria-label={`Xóa ${item.title}`}
                       >
                         <Trash2 className="size-3.5" />
                       </Button>
@@ -1163,7 +1166,7 @@ export function ContentManager({
         </div>
 
         {/* Pagination Footer */}
-        <footer className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-200/80 dark:border-border p-4 text-xs text-muted-foreground bg-slate-50/60 dark:bg-muted/20">
+        <footer className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 dark:border-border p-4 text-xs text-muted-foreground bg-slate-50/60 dark:bg-muted/20">
           <span>
             Trang <b>{page}</b> / <b>{totalPages}</b>
           </span>

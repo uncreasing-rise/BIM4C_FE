@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { toLocalizedLabel } from "@/lib/utils/public-labels";
 import { useLanguage } from "@/lib/i18n/context";
 
+import { ui } from "@/lib/i18n/ui";
 type PageHeroProps = {
   eyebrow: string;
   title: string;
@@ -80,7 +81,7 @@ export function PageHero({
         {/* Synchronized Breadcrumb Navigation */}
         <nav
           className="mb-6 flex flex-wrap items-center gap-1.5 text-xs text-zinc-300"
-          aria-label={locale === "vi" ? "Đường dẫn trang" : "Breadcrumb"}
+          aria-label={ui(locale).pageHero.breadcrumb}
         >
           <Link
             href="/"

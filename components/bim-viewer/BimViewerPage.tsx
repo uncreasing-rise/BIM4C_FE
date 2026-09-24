@@ -3,201 +3,308 @@
 import { useLanguage } from "@/lib/i18n/context";
 import { ArrowLeft, Box, Layers, Upload } from "lucide-react";
 import { LocalizedLink as Link } from "@/components/shared/LocalizedLink";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
-import { BimCanvas } from "./BimCanvas";
+import { BimCanvas, type CanvasModel, type SectionFitRequest, type ViewRequest } from "./BimCanvas";
 import { BimControlsOverlay } from "./BimControlsOverlay";
-import { BimPropertyInspector } from "./BimPropertyInspector";
+import { BimModelsPanel } from "./BimModelsPanel";
+import { BimPropertyInspector, type ElementCoordinates } from "./BimPropertyInspector";
 import { BimToolbar } from "./BimToolbar";
 import { EMPTY_BIM_MODEL } from "./empty-model";
+import {
+  applyPlacement,
+  modelOrigin,
+  placedBounds,
+  resolvePlacement,
+  sceneToWorld,
+  unionBounds,
+  worldToMap,
+  type Vec3,
+} from "./federation";
 import type {
-  ActiveMeasurement,
   BimClipPlanes,
   BimDiscipline,
   BimElementData,
   BimModelDefinition,
   BimTool,
   BimViewPreset,
+  FederatedModel,
+  MeasureMode,
+  MeasurePoint,
+  Measurement,
+  SnapSettings,
 } from "./types";
 import { defaultClip, getModelBounds } from "./viewer-geometry";
 
+import { ui } from "@/lib/i18n/ui";
+const EMPTY_BOUNDS = getModelBounds(EMPTY_BIM_MODEL);
+const ALL_LAYERS: Record<BimDiscipline, boolean> = {
+  architecture: true,
+  structure: true,
+  mep: true,
+  clash: true,
+};
+
+/** Element ids are per file; prefix them so several files never collide. */
+function namespaced(key: string, model: BimModelDefinition): BimModelDefinition {
+  return {
+    ...model,
+    elements: model.elements.map((e) => ({ ...e, id: `${key}/${e.id}`, modelKey: key })),
+    clashes: model.clashes.map((c) => ({ ...c, id: `${key}/${c.id}` })),
+  };
+}
+
 export function BimViewerPage() {
   const { t, locale } = useLanguage();
-  const vi = locale === "vi";
   const v = t.bimViewerPage;
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const taskRef = useRef<AbortController | null>(null);
+  const keyCounter = useRef(0);
   const dragDepth = useRef(0);
-  const [selectedModelId, setSelectedModelId] = useState("empty");
-  const [customModel, setCustomModel] = useState<BimModelDefinition | null>(
-    null,
-  );
-  const model = customModel ?? EMPTY_BIM_MODEL;
-  const bounds = useMemo(() => getModelBounds(model), [model]);
+
+  const [models, setModels] = useState<FederatedModel[]>([]);
+  // Mirrors `models` for the async loader, which must know whether a file is the first.
+  const modelsRef = useRef<FederatedModel[]>([]);
+  // Fixed once the first model loads, so measurements stay valid as files come and go.
+  const [sceneOrigin, setSceneOrigin] = useState<Vec3>([0, 0, 0]);
   const [activeTool, setActiveTool] = useState<BimTool>("orbit");
-  const [selectedElement, setSelectedElement] = useState<BimElementData | null>(
-    null,
-  );
+  const [selectedElement, setSelectedElement] = useState<BimElementData | null>(null);
   const [inspector, setInspector] = useState(false);
-  const [preset, setPreset] = useState<BimViewPreset>("perspective");
-  const [viewRevision, setViewRevision] = useState(0);
+  const [viewRequest, setViewRequest] = useState<ViewRequest>({ revision: 0, preset: "perspective" });
+  const [sectionFit, setSectionFit] = useState<SectionFitRequest>({ revision: 0, target: "all" });
   const [snapshotRevision, setSnapshotRevision] = useState(0);
-  const [layers, setLayers] = useState<Record<BimDiscipline, boolean>>({
-    architecture: true,
-    structure: true,
-    mep: true,
-    clash: true,
-  });
-  const [clip, setClip] = useState<BimClipPlanes>(() =>
-    defaultClip(getModelBounds(EMPTY_BIM_MODEL)),
-  );
+  const [layers, setLayers] = useState(ALL_LAYERS);
+  const [clip, setClip] = useState<BimClipPlanes>(() => defaultClip(EMPTY_BOUNDS));
   const [explode, setExplode] = useState(0);
-  const [measurement, setMeasurement] = useState<ActiveMeasurement | null>(
-    null,
-  );
-  const [clashPoint, setClashPoint] = useState<[number, number, number] | null>(
-    null,
-  );
+  const [measureMode, setMeasureMode] = useState<MeasureMode>("distance");
+  const [snapSettings, setSnapSettings] = useState<SnapSettings>({ vertex: true, midpoint: true, edge: true });
+  const [measurements, setMeasurements] = useState<Measurement[]>([]);
+  const [pendingPoint, setPendingPoint] = useState<MeasurePoint | null>(null);
+  const [clashPoint, setClashPoint] = useState<[number, number, number] | null>(null);
   const [clashId, setClashId] = useState<string | null>(null);
   const [fullscreen, setFullscreen] = useState(false);
   const [dragging, setDragging] = useState(false);
-  const [loading, setLoading] = useState<{
-    name: string;
-    percent: number;
-  } | null>(null);
+  const [loading, setLoading] = useState<{ name: string; percent: number; index: number; total: number } | null>(null);
   const [stats, setStats] = useState({ bytes: 0, triangles: 0 });
+
+  const canvasModels = useMemo<CanvasModel[]>(
+    () =>
+      models.map((m) => ({
+        key: m.key,
+        model: m.model,
+        visible: m.visible,
+        placement: resolvePlacement(m, sceneOrigin),
+      })),
+    [models, sceneOrigin],
+  );
+  const sceneBounds = useMemo(
+    () =>
+      unionBounds(
+        canvasModels.map((m) => placedBounds(getModelBounds(m.model), m.placement)),
+      ) ?? EMPTY_BOUNDS,
+    [canvasModels],
+  );
+  const mapConversion = useMemo(
+    () => models.find((m) => m.model.mapConversion)?.model.mapConversion,
+    [models],
+  );
+  // While the section box is off it always spans every loaded model, so
+  // enabling it never hides a file that was added later.
+  const effectiveClip = useMemo(
+    () => (clip.enabled ? clip : { ...defaultClip(sceneBounds), enabled: false }),
+    [clip, sceneBounds],
+  );
+  const allClashes = useMemo(() => models.flatMap((m) => m.model.clashes), [models]);
+  const elementCount = models.reduce((n, m) => n + m.model.elements.length, 0);
+
   useEffect(() => {
-    const listener = () =>
-      setFullscreen(document.fullscreenElement === containerRef.current);
+    const listener = () => setFullscreen(document.fullscreenElement === containerRef.current);
     document.addEventListener("fullscreenchange", listener);
     return () => {
       taskRef.current?.abort();
       document.removeEventListener("fullscreenchange", listener);
     };
   }, []);
+
+  useEffect(() => {
+    if (activeTool !== "measure") return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setPendingPoint(null);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [activeTool]);
+
+  const requestView = useCallback((preset: BimViewPreset, modelKey?: string) => {
+    setViewRequest((r) => ({ revision: r.revision + 1, preset, modelKey }));
+    setClashPoint(null);
+    setClashId(null);
+  }, []);
+
   const cancelLoad = () => {
     taskRef.current?.abort();
     taskRef.current = null;
     setLoading(null);
   };
-  const chooseView = (view: BimViewPreset) => {
-    setPreset(view);
-    setViewRevision((n) => n + 1);
-    setClashPoint(null);
-    setClashId(null);
-  };
-  const resetModelState = (next: BimModelDefinition) => {
+
+  const resetScene = () => {
     setSelectedElement(null);
     setInspector(false);
-    setMeasurement(null);
+    setMeasurements([]);
+    setPendingPoint(null);
     setClashPoint(null);
     setClashId(null);
     setExplode(0);
-    setClip(defaultClip(getModelBounds(next)));
     setActiveTool("orbit");
-    chooseView("perspective");
     setStats({ bytes: 0, triangles: 0 });
   };
-  const load = async (input: File) => {
-    if (!input.name.toLowerCase().endsWith(".ifc")) {
-      toast.error(
-        vi ? "Vui lòng chọn tệp .ifc." : "Please select an .ifc file.",
-      );
-      return;
-    }
+
+  const loadFiles = async (files: File[]) => {
+    const ifc = files.filter((f) => f.name.toLowerCase().endsWith(".ifc"));
+    if (ifc.length < files.length)
+      toast.error(ui(locale).bimViewerPage.onlyIfcFilesAreAccepted);
+    if (!ifc.length) return;
     cancelLoad();
     const controller = new AbortController();
     taskRef.current = controller;
-    setLoading({
-      name: input.name,
-      percent: 0,
-    });
-    try {
-      const file = input;
-      const { parseIfcFileToBimModel } = await import("./ifc-loader");
-      controller.signal.throwIfAborted();
-      const parsed = await parseIfcFileToBimModel(
-        file,
-        (percent) => {
-          if (!controller.signal.aborted)
-            setLoading({ name: file.name, percent });
-        },
-        controller.signal,
-      );
-      if (controller.signal.aborted) return;
-      resetModelState(parsed);
-      setCustomModel(parsed);
-      setSelectedModelId("uploaded");
-      toast.success(
-        vi
-          ? `Đã tải ${parsed.elements.length} cấu kiện có hình học.`
-          : `Loaded ${parsed.elements.length} elements with geometry.`,
-      );
-    } catch (error) {
-      if (controller.signal.aborted) return;
-      const code = error instanceof Error ? error.message : "";
-      const messages: Record<string, [string, string]> = {
-        IFC_FILE_EMPTY: ["Tệp IFC rỗng.", "The IFC file is empty."],
-        IFC_NO_GEOMETRY: [
-          "Tệp không chứa hình học 3D được hỗ trợ. Không có khối thay thế nào được tạo.",
-          "This file contains no supported 3D geometry. No substitute shapes were created.",
-        ],
-        IFC_WORKER_FAILED: [
-          "Không thể khởi tạo bộ đọc IFC. Hãy tải lại trang và thử lại.",
-          "The IFC reader could not start. Reload the page and retry.",
-        ],
-      };
-      toast.error(
-        messages[code]?.[vi ? 0 : 1] ??
-          (vi
-            ? "Không đọc được IFC. Kiểm tra tệp, kết nối và thử lại."
-            : "Unable to read IFC. Check the file and connection, then retry."),
-        { duration: 7000 },
-      );
-    } finally {
-      if (taskRef.current === controller) {
-        taskRef.current = null;
-        setLoading(null);
+    const { parseIfcFileToBimModel } = await import("./ifc-loader");
+    // Sequential on purpose: each file gets its own WASM worker and heap.
+    for (const [index, file] of ifc.entries()) {
+      if (controller.signal.aborted) break;
+      setLoading({ name: file.name, percent: 0, index: index + 1, total: ifc.length });
+      try {
+        const parsed = await parseIfcFileToBimModel(
+          file,
+          (percent) => {
+            if (!controller.signal.aborted)
+              setLoading({ name: file.name, percent, index: index + 1, total: ifc.length });
+          },
+          controller.signal,
+        );
+        if (controller.signal.aborted) break;
+        const key = `m${++keyCounter.current}`;
+        const federated: FederatedModel = {
+          key,
+          model: namespaced(key, parsed),
+          visible: true,
+          alignment: "shared",
+          offset: { x: 0, y: 0, z: 0, rotationDeg: 0 },
+        };
+        if (!modelsRef.current.length) {
+          // First model: anchor the scene at its origin and frame it.
+          const origin = modelOrigin(parsed);
+          setSceneOrigin(origin);
+        }
+        modelsRef.current = [...modelsRef.current, federated];
+        setModels(modelsRef.current);
+        toast.success(
+          ui(locale).formats.modelAdded(file.name, parsed.elements.length),
+        );
+      } catch (error) {
+        if (controller.signal.aborted) break;
+        const code = error instanceof Error ? error.message : "";
+        toast.error(
+          `${file.name}: ${
+            ui(locale).formats.ifcErrors[code] ??
+            (ui(locale).bimViewerPage.unableToReadIFCCheck)
+          }`,
+          { duration: 7000 },
+        );
       }
+    }
+    if (taskRef.current === controller) {
+      taskRef.current = null;
+      setLoading(null);
+    }
+    // Frame everything once the batch is in, so newly added files are visible.
+    if (modelsRef.current.length) requestView("perspective");
+  };
+
+  const commitModels = (next: FederatedModel[]) => {
+    modelsRef.current = next;
+    setModels(next);
+  };
+  const updateModel = (key: string, patch: Partial<FederatedModel>) =>
+    commitModels(modelsRef.current.map((m) => (m.key === key ? { ...m, ...patch } : m)));
+
+  const removeModel = (key: string) => {
+    const next = modelsRef.current.filter((m) => m.key !== key);
+    commitModels(next);
+    if (!next.length) {
+      setSceneOrigin([0, 0, 0]);
+      setClip(defaultClip(EMPTY_BOUNDS));
+      resetScene();
+    }
+    if (selectedElement?.modelKey === key) {
+      setSelectedElement(null);
+      setInspector(false);
     }
   };
 
+  const onMeasurePoint = (point: MeasurePoint) => {
+    const id = `ms-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+    if (measureMode === "point") {
+      setMeasurements((list) => [...list, { id, mode: "point", points: [point] }]);
+      return;
+    }
+    if (!pendingPoint) {
+      setPendingPoint(point);
+      return;
+    }
+    setMeasurements((list) => [...list, { id, mode: "distance", points: [pendingPoint, point] }]);
+    setPendingPoint(null);
+  };
+
+  const selectedCoordinates = useMemo<ElementCoordinates | null>(() => {
+    if (!selectedElement) return null;
+    const owner = canvasModels.find((m) => m.key === selectedElement.modelKey);
+    if (!owner) return null;
+    const center = sceneToWorld(applyPlacement(selectedElement.position, owner.placement), sceneOrigin);
+    const half = selectedElement.size[1] / 2;
+    return {
+      modelName: owner.model.filename ?? owner.key,
+      center,
+      bottom: center[2] - half,
+      top: center[2] + half,
+      map: mapConversion ? worldToMap(center, mapConversion) : undefined,
+    };
+  }, [selectedElement, canvasModels, sceneOrigin, mapConversion]);
+
   const snapshot = (data: string | null) => {
     if (!data) {
-      toast.error(
-        vi ? "Không thể chụp ảnh 3D." : "Unable to capture the 3D view.",
-      );
+      toast.error(ui(locale).bimViewerPage.unableToCaptureThe3D);
       return;
     }
     const a = document.createElement("a");
     a.href = data;
     a.download = `BIM4C-${Date.now()}.png`;
     a.click();
-    toast.success(vi ? "Đã xuất ảnh 3D." : "3D image exported.");
+    toast.success(ui(locale).bimViewerPage.t3DImageExported);
   };
   const toggleFullscreen = async () => {
     try {
       if (document.fullscreenElement) await document.exitFullscreen();
-      else if (containerRef.current?.requestFullscreen)
-        await containerRef.current.requestFullscreen();
+      else if (containerRef.current?.requestFullscreen) await containerRef.current.requestFullscreen();
       else throw Error("unsupported");
     } catch {
-      toast.info(
-        vi
-          ? "Trình duyệt chưa hỗ trợ toàn màn hình tại đây."
-          : "Fullscreen is unavailable in this browser.",
-      );
+      toast.info(ui(locale).bimViewerPage.fullscreenIsUnavailableInThis);
     }
   };
-  const diagnostics = model.diagnostics;
-  const hasWarnings = diagnostics && Object.values(diagnostics).some(Boolean);
+
+  const diagnostics = models.reduce(
+    (sum, m) => ({
+      missingGeometry: sum.missingGeometry + (m.model.diagnostics?.missingGeometry ?? 0),
+      failedGeometry: sum.failedGeometry + (m.model.diagnostics?.failedGeometry ?? 0),
+      failedProperties: sum.failedProperties + (m.model.diagnostics?.failedProperties ?? 0),
+    }),
+    { missingGeometry: 0, failedGeometry: 0, failedProperties: 0 },
+  );
+  const hasWarnings = Object.values(diagnostics).some(Boolean);
   const smallScreen = () => window.innerWidth < 1024;
+
   return (
-    <div
-      ref={containerRef}
-      className="flex h-dvh min-h-0 w-full flex-col overflow-hidden bg-[#090d16] text-white"
-    >
+    <div ref={containerRef} className="flex h-dvh min-h-0 w-full flex-col overflow-hidden bg-[#090d16] text-white">
       <header className="flex min-h-14 shrink-0 items-center justify-between gap-2 border-b border-white/10 bg-slate-950 px-2 py-2 sm:px-4">
         <div className="flex min-w-0 flex-1 items-center gap-2">
           <Link
@@ -209,10 +316,7 @@ export function BimViewerPage() {
             <span className="hidden sm:inline">{t.common.back}</span>
           </Link>
           <Box className="hidden size-5 shrink-0 text-teal-300 sm:block" />
-          <h1
-            className="min-w-0 truncate text-xs font-bold sm:text-sm"
-            title={v.title}
-          >
+          <h1 className="min-w-0 truncate text-xs font-bold sm:text-sm" title={v.title}>
             {v.title}
           </h1>
         </div>
@@ -221,22 +325,23 @@ export function BimViewerPage() {
             ref={inputRef}
             type="file"
             accept=".ifc"
+            multiple
             className="hidden"
             onChange={(e) => {
-              const file = e.target.files?.[0];
+              const files = Array.from(e.target.files ?? []);
               e.target.value = "";
-              if (file) void load(file);
+              if (files.length) void loadFiles(files);
             }}
           />
           <button
             type="button"
             onClick={() => inputRef.current?.click()}
             aria-label={v.uploadIfc}
-            title={v.uploadIfc}
+            title={ui(locale).bimViewerPage.addOneOrMoreIFC}
             className="flex min-h-10 items-center gap-1 rounded-lg border border-teal-500/30 bg-teal-500/10 px-2 text-xs text-teal-300"
           >
             <Upload className="size-4" />
-            <span className="hidden sm:inline">{v.uploadIfc}</span>
+            <span className="hidden sm:inline">{models.length ? (ui(locale).bimViewerPage.addIFCFiles) : v.uploadIfc}</span>
           </button>
           <button
             type="button"
@@ -255,30 +360,19 @@ export function BimViewerPage() {
         </div>
       </header>
       {loading && (
-        <div
-          role="status"
-          className="flex shrink-0 items-center gap-3 bg-teal-950 px-3 py-2 text-xs"
-        >
+        <div role="status" className="flex shrink-0 items-center gap-3 bg-teal-950 px-3 py-2 text-xs">
           <span className="min-w-0 flex-1 truncate">
-            {vi ? "Đang đọc" : "Reading"}: {loading.name} ({loading.percent}%)
+            {ui(locale).bimViewerPage.reading}
+            {loading.total > 1 ? ` (${loading.index}/${loading.total})` : ""}: {loading.name} ({loading.percent}%)
           </span>
-          <button
-            type="button"
-            onClick={cancelLoad}
-            className="shrink-0 rounded border px-3 py-1"
-          >
-            {vi ? "Hủy" : "Cancel"}
+          <button type="button" onClick={cancelLoad} className="shrink-0 rounded border px-3 py-1">
+            {ui(locale).bimViewerPage.cancel}
           </button>
         </div>
       )}
       {hasWarnings && (
-        <div
-          role="status"
-          className="shrink-0 bg-amber-950 px-3 py-2 text-xs text-amber-100"
-        >
-          {vi
-            ? `Không có hình học: ${diagnostics.missingGeometry}; lỗi hình học: ${diagnostics.failedGeometry}; thuộc tính đọc chưa đầy đủ: ${diagnostics.failedProperties}.`
-            : `Without geometry: ${diagnostics.missingGeometry}; geometry errors: ${diagnostics.failedGeometry}; incomplete properties: ${diagnostics.failedProperties}.`}
+        <div role="status" className="shrink-0 bg-amber-950 px-3 py-2 text-xs text-amber-100">
+          {ui(locale).formats.diagnostics(diagnostics.missingGeometry, diagnostics.failedGeometry, diagnostics.failedProperties)}
         </div>
       )}
       <main
@@ -302,47 +396,47 @@ export function BimViewerPage() {
           e.preventDefault();
           dragDepth.current = 0;
           setDragging(false);
-          const file = e.dataTransfer.files[0];
-          if (file) void load(file);
+          const files = Array.from(e.dataTransfer.files);
+          if (files.length) void loadFiles(files);
         }}
       >
         <BimToolbar
           activeTool={activeTool}
           onSelectTool={(tool) => {
             setActiveTool(tool);
-            if (tool !== "measure") setMeasurement(null);
+            if (tool !== "measure") setPendingPoint(null);
             if (tool !== "orbit" && smallScreen()) setInspector(false);
           }}
-          activeViewPreset={preset}
-          onSelectViewPreset={chooseView}
-          selectedModelId={selectedModelId}
-          uploadedName={customModel?.filename}
+          activeViewPreset={viewRequest.preset}
+          onSelectViewPreset={(preset) => requestView(preset)}
+          modelCount={models.length}
           onResetView={() => {
-            chooseView("perspective");
+            requestView("perspective");
             setSelectedElement(null);
-            setMeasurement(null);
+            setPendingPoint(null);
           }}
           onTakeSnapshot={() => setSnapshotRevision((n) => n + 1)}
           isFullscreen={fullscreen}
           onToggleFullscreen={() => void toggleFullscreen()}
-          clashesCount={model.clashes.length}
+          clashesCount={allClashes.length}
         />
         <div className="relative flex min-h-0 flex-1">
-          {!customModel && (
-            <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none">
+          {!models.length && !loading && (
+            <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center">
               <button
                 type="button"
                 className="pointer-events-auto rounded-xl bg-teal-400 px-6 py-4 font-semibold text-slate-950"
                 onClick={() => inputRef.current?.click()}
               >
-                {vi
-                  ? "Chọn tệp IFC để xem mô hình"
-                  : "Choose an IFC file to view"}
+                {ui(locale).bimViewerPage.chooseOneOrMoreIFC}
               </button>
             </div>
           )}
           <BimCanvas
-            model={model}
+            models={canvasModels}
+            sceneBounds={sceneBounds}
+            sceneOrigin={sceneOrigin}
+            mapConversion={mapConversion}
             activeTool={activeTool}
             selectedElementId={selectedElement?.id ?? null}
             onSelectElement={(e) => {
@@ -353,51 +447,75 @@ export function BimViewerPage() {
               }
             }}
             visibleLayers={layers}
-            clipPlanes={clip}
+            clipPlanes={effectiveClip}
+            onClipPlanesChange={setClip}
+            sectionFitRequest={sectionFit}
             explodeFactor={explode}
             activeClashPoint={clashPoint}
-            activeViewPreset={preset}
-            viewRevision={viewRevision}
+            viewRequest={viewRequest}
             snapshotRevision={snapshotRevision}
             onSnapshot={snapshot}
             onStats={setStats}
-            activeMeasurement={measurement}
-            onMeasurementChange={setMeasurement}
+            measureMode={measureMode}
+            snapSettings={snapSettings}
+            measurements={measurements}
+            pendingPoint={pendingPoint}
+            onMeasurePoint={onMeasurePoint}
           />
+          {activeTool === "models" && (
+            <BimModelsPanel
+              models={models}
+              onClose={() => setActiveTool("orbit")}
+              onToggleVisible={(key) =>
+                updateModel(key, { visible: !models.find((m) => m.key === key)?.visible })
+              }
+              onRemove={removeModel}
+              onFocus={(key) => requestView(viewRequest.preset, key)}
+              onAlignment={(key, alignment) => updateModel(key, { alignment })}
+              onOffset={(key, offset) => updateModel(key, { offset })}
+              onAddFiles={() => inputRef.current?.click()}
+            />
+          )}
           <BimControlsOverlay
             activeTool={activeTool}
             onCloseTool={() => setActiveTool("orbit")}
-            clipPlanes={clip}
-            onChangeClipPlanes={(next) => {
-              setClip(next);
-              setMeasurement(null);
+            clipPlanes={effectiveClip}
+            onChangeClipPlanes={setClip}
+            onFitSection={(target) => setSectionFit((r) => ({ revision: r.revision + 1, target }))}
+            hasSelection={Boolean(selectedElement)}
+            bounds={sceneBounds}
+            sceneOrigin={sceneOrigin}
+            mapConversion={mapConversion}
+            measureMode={measureMode}
+            onMeasureMode={(mode) => {
+              setMeasureMode(mode);
+              setPendingPoint(null);
             }}
-            bounds={bounds}
-            measurement={measurement}
-            onClearMeasurement={() => setMeasurement(null)}
+            snapSettings={snapSettings}
+            onSnapSettings={setSnapSettings}
+            measurements={measurements}
+            pendingPoint={pendingPoint}
+            onRemoveMeasurement={(id) => setMeasurements((list) => list.filter((m) => m.id !== id))}
+            onClearMeasurements={() => {
+              setMeasurements([]);
+              setPendingPoint(null);
+            }}
             explodeFactor={explode}
             onChangeExplodeFactor={(n) => {
               setExplode(n);
-              setMeasurement(null);
               setClashPoint(null);
               setClashId(null);
             }}
             visibleLayers={layers}
             onToggleLayer={(layer) => {
-              setLayers((p) => ({ ...p, [layer]: !p[layer] }));
+              setLayers((prev) => ({ ...prev, [layer]: !prev[layer] }));
               setSelectedElement(null);
-              setMeasurement(null);
             }}
-            clashes={model.clashes}
+            clashes={allClashes}
             onFocusClash={(clash) => {
               setExplode(0);
-              setClip((p) => ({ ...p, enabled: false }));
-              setLayers({
-                architecture: true,
-                structure: true,
-                mep: true,
-                clash: true,
-              });
+              setClip((prev) => ({ ...prev, enabled: false }));
+              setLayers(ALL_LAYERS);
               setClashId(clash.id);
               setClashPoint([...clash.point]);
             }}
@@ -406,38 +524,32 @@ export function BimViewerPage() {
           <BimPropertyInspector
             key={selectedElement?.id ?? "empty"}
             element={selectedElement}
+            coordinates={selectedCoordinates}
             isOpen={inspector}
             onClose={() => setInspector(false)}
           />
           {dragging && (
             <div className="pointer-events-none absolute inset-2 z-50 grid place-items-center rounded-xl border-2 border-dashed border-teal-400 bg-slate-950/90 p-4 text-center">
-              {vi
-                ? "Thả tệp IFC để xem mô hình"
-                : "Drop an IFC file to view the model"}
+              {ui(locale).bimViewerPage.dropOneOrMoreIFC}
             </div>
           )}
         </div>
       </main>
       <footer className="flex shrink-0 flex-wrap items-center justify-between gap-x-3 gap-y-1 border-t border-white/10 px-3 py-2 text-[10px] text-slate-400">
         <span>
-          {model.elements.length} {v.performance.elements}
+          {elementCount} {v.performance.elements}
           <span className="hidden sm:inline">
             {" "}
-            · {stats.triangles.toLocaleString(locale)}{" "}
-            {vi ? "tam giác" : "triangles"} ·{" "}
-            {(stats.bytes / 1048576).toFixed(1)} MB{" "}
-            {vi ? "bộ đệm hình học" : "geometry buffers"}
+            · {stats.triangles.toLocaleString(locale)} {ui(locale).bimViewerPage.triangles} ·{" "}
+            {(stats.bytes / 1048576).toFixed(1)} MB {ui(locale).bimViewerPage.geometryBuffers}
           </span>
         </span>
-        <span
-          className="max-w-full truncate text-teal-300"
-          title={model.filename}
-        >
-          {model.source === "ifc"
-            ? `${model.schema} · ${model.filename}`
-            : vi
-              ? "Chưa tải mô hình IFC"
-              : "No IFC model loaded"}
+        <span className="max-w-full truncate text-teal-300">
+          {models.length
+            ? models.length === 1
+              ? `${models[0].model.schema} · ${models[0].model.filename}`
+              : ui(locale).formats.federatedModels(models.length)
+            : ui(locale).bimViewerPage.noIFCModelLoaded}
         </span>
       </footer>
     </div>

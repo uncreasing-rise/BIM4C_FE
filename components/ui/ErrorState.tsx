@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/lib/i18n/context";
 import { AlertTriangle, RotateCcw } from "lucide-react";
 
+import { ui } from "@/lib/i18n/ui";
 interface ErrorStateProps {
   title?: string;
   message?: string;
@@ -15,15 +16,10 @@ export function ErrorState({
   onRetry,
 }: ErrorStateProps) {
   const { locale } = useLanguage();
-  const isVi = locale === "vi";
 
-  const defaultTitle = isVi
-    ? "Không thể tải nội dung này"
-    : "We could not load this content";
-  const defaultMessage = isVi
-    ? "Đã có sự cố kết nối hoặc nội dung tạm thời không khả dụng. Vui lòng thử lại."
-    : "A connection issue occurred or this content is temporarily unavailable. Please try again.";
-  const retryLabel = isVi ? "Thử lại" : "Try again";
+  const defaultTitle = ui(locale).errorState.weCouldNotLoadThis;
+  const defaultMessage = ui(locale).errorState.aConnectionIssueOccurredOr;
+  const retryLabel = ui(locale).errorState.tryAgain;
 
   return (
     <div className="mx-auto max-w-lg rounded-2xl border border-destructive/20 bg-destructive/5 p-8 text-center shadow-xs">

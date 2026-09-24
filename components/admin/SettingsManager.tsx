@@ -31,6 +31,17 @@ export function SettingsManager() {
   const [msg, setMsg] = useState("");
   const [socialLinksJson, setSocialLinksJson] = useState("");
   const [socialLinksError, setSocialLinksError] = useState("");
+  // Serialized form state as last loaded/saved, to detect unsaved changes.
+  const [savedSnapshot, setSavedSnapshot] = useState("");
+  const snapshotOf = (value: Settings | null, links: string) => JSON.stringify([value, links]);
+  const dirty = Boolean(data) && snapshotOf(data, socialLinksJson) !== savedSnapshot;
+
+  useEffect(() => {
+    if (!dirty) return;
+    const warn = (event: BeforeUnloadEvent) => event.preventDefault();
+    window.addEventListener("beforeunload", warn);
+    return () => window.removeEventListener("beforeunload", warn);
+  }, [dirty]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -53,6 +64,7 @@ export function SettingsManager() {
         };
         setData(merged);
         setSocialLinksJson(JSON.stringify(merged.socialLinks, null, 2));
+        setSavedSnapshot(snapshotOf(merged, JSON.stringify(merged.socialLinks, null, 2)));
         setMsg("");
       } catch (error) {
         if (!controller.signal.aborted) {
@@ -122,8 +134,9 @@ export function SettingsManager() {
         method: "PATCH",
         body: JSON.stringify(payload),
       });
-      toast.success("Đã lưu cài đặt hệ thống thành công!", { id: toastId });
-      setMsg("Đã lưu cài đặt.");
+      toast.success("Đã lưu cài đặt.", { id: toastId });
+      setMsg("");
+      setSavedSnapshot(snapshotOf(data, socialLinksJson));
       await revalidateCmsCache();
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : "Không thể lưu cài đặt";
@@ -136,7 +149,7 @@ export function SettingsManager() {
 
   if (loading) {
     return (
-      <div className="rounded-2xl border border-slate-200/80 dark:border-border bg-white dark:bg-card p-12 text-center text-sm text-muted-foreground animate-pulse">
+      <div className="rounded-xl border border-slate-200 dark:border-border bg-white dark:bg-card p-12 text-center text-sm text-muted-foreground animate-pulse">
         Đang tải thông tin cấu hình hệ thống…
       </div>
     );
@@ -145,7 +158,7 @@ export function SettingsManager() {
   if (!data) {
     return (
       <div
-        className="rounded-2xl border border-destructive/35 bg-destructive/10 p-6 text-center text-sm text-destructive"
+        className="rounded-xl border border-destructive/35 bg-destructive/10 p-6 text-center text-sm text-destructive"
         role="alert"
       >
         {msg || "Không thể tải cài đặt hệ thống."}
@@ -155,10 +168,26 @@ export function SettingsManager() {
 
   return (
     <form className="space-y-6" onSubmit={save}>
+      <div className="sticky top-14 z-20 -mx-4 flex items-center justify-between gap-3 border-b border-slate-200 bg-slate-50/95 px-4 py-2.5 backdrop-blur sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
+        <p className="text-[13px] text-slate-600" aria-live="polite">
+          {dirty ? (
+            <span className="inline-flex items-center gap-1.5 font-medium text-amber-800">
+              <span className="size-1.5 rounded-full bg-amber-500" aria-hidden="true" />
+              Có thay đổi chưa lưu
+            </span>
+          ) : (
+            "Mọi thay đổi đã được lưu"
+          )}
+        </p>
+        <Button type="submit" size="sm" disabled={busy || !dirty} className="gap-1.5">
+          <Save className="size-4" />
+          {busy ? "Đang lưu…" : "Lưu cài đặt"}
+        </Button>
+      </div>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Card 1: Thông tin doanh nghiệp & Hồ sơ năng lực */}
-        <div className="rounded-2xl border border-slate-200/80 dark:border-border bg-white dark:bg-card p-6 shadow-xs flex flex-col gap-4">
-          <h3 className="text-base font-semibold text-foreground flex items-center gap-2 border-b border-slate-200/80 dark:border-border/80 pb-3">
+        <div className="rounded-xl border border-slate-200 dark:border-border bg-white dark:bg-card p-6 shadow-xs flex flex-col gap-4">
+          <h3 className="text-base font-semibold text-foreground flex items-center gap-2 border-b border-slate-200 dark:border-border/80 pb-3">
             <Building2 className="size-4 text-primary" /> Thông tin doanh nghiệp
           </h3>
           <div>
@@ -220,8 +249,8 @@ export function SettingsManager() {
         </div>
 
         {/* Card 2: Cấu hình SEO mặc định & Mạng xã hội */}
-        <div className="rounded-2xl border border-slate-200/80 dark:border-border bg-white dark:bg-card p-6 shadow-xs flex flex-col gap-4">
-          <h3 className="text-base font-semibold text-foreground flex items-center gap-2 border-b border-slate-200/80 dark:border-border/80 pb-3">
+        <div className="rounded-xl border border-slate-200 dark:border-border bg-white dark:bg-card p-6 shadow-xs flex flex-col gap-4">
+          <h3 className="text-base font-semibold text-foreground flex items-center gap-2 border-b border-slate-200 dark:border-border/80 pb-3">
             <Globe className="size-4 text-primary" /> SEO mặc định & Liên kết
           </h3>
           <div>
@@ -317,8 +346,8 @@ export function SettingsManager() {
       </div>
 
       {/* Card 3: Chỉ số năng lực & Thành tựu (Track Record Metrics) */}
-      <div className="rounded-2xl border border-slate-200/80 dark:border-border bg-white dark:bg-card p-6 shadow-xs flex flex-col gap-4">
-        <h3 className="text-base font-semibold text-foreground flex items-center gap-2 border-b border-slate-200/80 dark:border-border/80 pb-3">
+      <div className="rounded-xl border border-slate-200 dark:border-border bg-white dark:bg-card p-6 shadow-xs flex flex-col gap-4">
+        <h3 className="text-base font-semibold text-foreground flex items-center gap-2 border-b border-slate-200 dark:border-border/80 pb-3">
           <BarChart3 className="size-4 text-primary" /> Chỉ số Năng lực & Thành tựu (Track Record Metrics)
         </h3>
         <p className="text-xs text-muted-foreground">
@@ -371,16 +400,6 @@ export function SettingsManager() {
         </div>
       </div>
 
-      <div className="flex justify-end pt-2">
-        <Button
-          type="submit"
-          disabled={busy}
-          className="gap-2 px-8 py-2.5 font-semibold shadow-xs text-sm"
-        >
-          <Save className="size-4" />
-          <span>{busy ? "Đang lưu cấu hình…" : "Lưu cài đặt"}</span>
-        </Button>
-      </div>
     </form>
   );
 }

@@ -1,12 +1,11 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { ZodError } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { submitContactForm } from "../api/mutations";
-import { getZodFieldErrors } from "../utils/zod-errors";
+import { getZodFieldErrors, isValidationError } from "../utils/zod-errors";
 import { LocalizedLink as Link } from "@/components/shared/LocalizedLink";
 import { ROUTES } from "@/constants/routes";
 import { contactSchema } from "../schemas/contact.schema";
@@ -60,7 +59,7 @@ export function ConsultationForm({
       toast.success(result.message || t.consultation.successMessage);
     } catch (error) {
       setStatus("error");
-      if (error instanceof ZodError) {
+      if (isValidationError(error)) {
         setFieldErrors(getZodFieldErrors<ContactField>(error, locale));
         const field = error.issues[0]?.path[0];
         if (typeof field === "string") {

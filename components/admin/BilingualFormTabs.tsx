@@ -19,7 +19,7 @@ export function BilingualFormTabs({
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-3 bg-muted/20 px-3 py-2 rounded-xl mb-6">
       <div className="flex items-center gap-2">
-        <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground mr-1 flex items-center gap-1.5">
+        <span className="text-[13px] font-medium text-slate-700 dark:text-foreground mr-1 flex items-center gap-1.5">
           <Sparkles className="size-3.5 text-primary" />
           Ngôn ngữ biên tập:
         </span>
@@ -38,7 +38,7 @@ export function BilingualFormTabs({
           <span className="text-sm">🇻🇳</span>
           <span>Tiếng Việt</span>
           {hasViTranslation ? (
-            <span className="inline-flex items-center gap-0.5 rounded-full bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 px-1.5 py-0.5 text-[10px] font-extrabold">
+            <span className="inline-flex items-center gap-0.5 rounded-full bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 px-1.5 py-0.5 text-[10px] font-semibold">
               <Check className="size-3" /> Đã có
             </span>
           ) : (
@@ -62,8 +62,8 @@ export function BilingualFormTabs({
           <span className="text-sm">🇬🇧</span>
           <span>English</span>
           {hasEnTranslation ? (
-            <span className="inline-flex items-center gap-0.5 rounded-full bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 px-1.5 py-0.5 text-[10px] font-extrabold">
-              <Check className="size-3" /> Ready
+            <span className="inline-flex items-center gap-0.5 rounded-full bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 px-1.5 py-0.5 text-[10px] font-semibold">
+              <Check className="size-3" /> Đã có
             </span>
           ) : (
             <span className="rounded-full bg-amber-500/20 text-amber-700 dark:text-amber-300 px-1.5 py-0.5 text-[10px] font-bold">

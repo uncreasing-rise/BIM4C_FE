@@ -17,8 +17,10 @@ import { Input } from "@/components/ui/input";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { LoadingState } from "@/components/ui/LoadingState";
 import { toast } from "sonner";
+import { useConfirm } from "./ConfirmDialog";
 
 export function MediaLibrary() {
+  const { confirm, dialog } = useConfirm();
   const [items, setItems] = useState<AdminMedia[]>([]);
   const [selected, setSelected] = useState<AdminMedia | null>(null);
   const [search, setSearch] = useState("");
@@ -66,7 +68,7 @@ export function MediaLibrary() {
   async function upload(file?: File) {
     if (!file || busy) return;
     setBusy(true);
-    const toastId = toast.loading("Đang tải ảnh lên Supabase Storage...");
+    const toastId = toast.loading("Đang tải ảnh lên…");
     try {
       await adminMediaApi.upload(file, file.name.replace(/\.[^/.]+$/, ""));
       toast.success("Đã tải tệp lên thành công!", { id: toastId });
@@ -100,10 +102,16 @@ export function MediaLibrary() {
   }
 
   async function remove() {
-    if (!selected || busy || !window.confirm(`Xóa “${selected.filename}”?`))
+    if (!selected || busy) return;
+    if (
+      !(await confirm({
+        title: `Xóa tệp “${selected.filename}”?`,
+        description: "Tệp bị xóa vĩnh viễn khỏi kho lưu trữ. Nội dung đang dùng ảnh này sẽ hiển thị ảnh lỗi cho đến khi được thay ảnh khác.",
+      }))
+    )
       return;
     setBusy(true);
-    const toastId = toast.loading("Đang xóa tệp khỏi Supabase...");
+    const toastId = toast.loading("Đang xóa tệp…");
     try {
       await adminMediaApi.remove(selected.id);
       setSelected(null);
@@ -126,7 +134,8 @@ export function MediaLibrary() {
   };
 
   return (
-    <section className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+    <section className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
+      {dialog}
       {feedback && (
         <div className="mx-4 mt-3 flex justify-between rounded-lg bg-destructive/10 px-3.5 py-2.5 text-xs font-semibold text-destructive">
           {feedback}
@@ -171,8 +180,8 @@ export function MediaLibrary() {
       </div>
 
       {/* 2-Column: Grid & Detail Inspector */}
-      <div className="grid min-w-0 grid-cols-1 lg:grid-cols-[1fr_340px]">
-        <div className="grid min-w-0 grid-cols-2 gap-4 p-4 sm:p-6 md:grid-cols-3 xl:grid-cols-4">
+      <div className={`grid min-w-0 grid-cols-1 ${selected ? "lg:grid-cols-[1fr_340px]" : ""}`}>
+        <div className="grid min-w-0 grid-cols-[repeat(auto-fill,minmax(150px,1fr))] content-start gap-4 p-4 sm:p-6">
           {loading && (
             <div className="col-span-full">
               <LoadingState label="Đang tải thư viện media…" />
@@ -216,7 +225,7 @@ export function MediaLibrary() {
           {!loading && !feedback && !items.length && (
             <div className="col-span-full py-16 text-center text-sm text-muted-foreground">
               <ImageIcon className="mx-auto size-8 text-muted-foreground/50 mb-2" />
-              Chưa có tệp nào trong thư viện media. Hãy nhấn &quot;Tải ảnh mới&quot; để đưa ảnh lên Supabase.
+              Chưa có tệp nào trong thư viện media. Hãy nhấn &quot;Tải ảnh mới&quot; để thêm ảnh.
             </div>
           )}
         </div>
@@ -256,7 +265,7 @@ export function MediaLibrary() {
                 onClick={() => copyUrl(selected.url)}
               >
                 {copied ? <Check className="size-3.5 text-emerald-500" /> : <Copy className="size-3.5" />}
-                {copied ? "Đã sao chép URL!" : "Sao chép URL Supabase"}
+                {copied ? "Đã sao chép URL!" : "Sao chép URL"}
               </Button>
             </div>
 
@@ -308,7 +317,7 @@ export function MediaLibrary() {
               className="w-full gap-1.5 font-semibold"
               onClick={() => void remove()}
             >
-              <Trash2 className="size-4" /> Xóa khỏi Supabase
+              <Trash2 className="size-4" /> Xóa tệp
             </Button>
           </aside>
         )}

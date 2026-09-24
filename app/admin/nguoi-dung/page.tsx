@@ -4,7 +4,7 @@ export default function Page() {
   return (
     <AdminShell
       title="Người dùng"
-      description="Quản lý tài khoản, vai trò và trạng thái."
+      description="Tài khoản quản trị, vai trò và trạng thái truy cập."
     >
       <UsersManager />
     </AdminShell>

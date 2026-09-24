@@ -141,16 +141,9 @@ export interface Dictionary {
       companyName: string;
       internationalName: string;
       shortName: string;
-      taxId: string;
-      businessCode: string;
-      taxStatus: string;
-      taxAddress: string;
       headquarters: string;
-      branchOffice: string;
       legalRepresentative: string;
       certificationsTitle: string;
-      isoCert: string;
-      buildingSmartCert: string;
       autodeskCert: string;
     };
   };
@@ -194,7 +187,6 @@ export interface Dictionary {
     teamMembers: {
       name: string;
       role: string;
-      cert: string;
       spec: string;
       image?: string;
     }[];
@@ -304,25 +296,6 @@ export interface Dictionary {
     responseTime: string;
     officesTitle: string;
     danangHq: { title: string; address: string; phone: string; note: string };
-    hanoiHq: { title: string; address: string; phone: string };
-    hcmcBranch: { title: string; address: string; phone: string };
-    taxInfo: {
-      label: string;
-      code: string;
-      status: string;
-      representative: string;
-      taxAddress: string;
-    };
-    vatBilling: {
-      title: string;
-      desc: string;
-      company: string;
-      taxId: string;
-      taxAddress: string;
-      bankName: string;
-      accountNumber: string;
-      accountHolder: string;
-    };
     mapSection: {
       eyebrow: string;
       title: string;
@@ -330,7 +303,6 @@ export interface Dictionary {
       directionsBtn: string;
       copyAddressBtn: string;
       workingHours: string;
-      distanceAirport: string;
     };
   };
   detailPage: {
@@ -427,6 +399,7 @@ export interface Dictionary {
     uploadIfcNotice: string;
     tools: {
       orbit: string;
+      models: string;
       measure: string;
       section: string;
       explode: string;

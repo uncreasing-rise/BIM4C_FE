@@ -6,6 +6,7 @@ import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useLanguage } from "@/lib/i18n/context";
 
+import { ui } from "@/lib/i18n/ui";
 if (typeof window !== "undefined") gsap.registerPlugin(ScrollTrigger);
 
 const presentationRoutes = new Set([
@@ -45,7 +46,7 @@ export function SlideScrollSystem() {
       const label =
         scene.querySelector("h1, h2")?.textContent?.trim() ||
         scene.getAttribute("aria-label") ||
-        `${locale === "vi" ? "Phần" : "Chapter"} ${index + 1}`;
+        `${ui(locale).slideScrollSystem.chapter} ${index + 1}`;
       return { id: scene.id, label };
     });
 
@@ -89,7 +90,7 @@ export function SlideScrollSystem() {
   return (
     <nav
       className="chapter-navigation hidden lg:flex"
-      aria-label={locale === "vi" ? "Các phần của trang" : "Page chapters"}
+      aria-label={ui(locale).slideScrollSystem.pageChapters}
       data-visible={inView}
     >
       <span className="chapter-position" aria-hidden="true">

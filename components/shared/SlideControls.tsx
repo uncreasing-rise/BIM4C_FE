@@ -3,6 +3,7 @@
 import { ArrowLeft, ArrowRight, Pause, Play } from "lucide-react";
 import { useLanguage } from "@/lib/i18n/context";
 
+import { ui } from "@/lib/i18n/ui";
 export function SlideControls({
   active,
   count,
@@ -19,7 +20,6 @@ export function SlideControls({
   onToggle: () => void;
 }) {
   const { locale } = useLanguage();
-  const vi = locale === "vi";
   if (count < 2) return null;
   return (
     <div className="slide-controls">
@@ -35,12 +35,8 @@ export function SlideControls({
             onClick={onToggle}
             aria-label={
               playing
-                ? vi
-                  ? "Dừng tự chuyển slide"
-                  : "Pause slideshow"
-                : vi
-                  ? "Bật tự chuyển slide"
-                  : "Play slideshow"
+                ? ui(locale).slideControls.pauseSlideshow
+                : ui(locale).slideControls.playSlideshow
             }
           >
             {playing ? (
@@ -54,7 +50,7 @@ export function SlideControls({
           type="button"
           className="slide-arrow"
           onClick={() => onSelect(active - 1)}
-          aria-label={vi ? "Slide trước" : "Previous slide"}
+          aria-label={ui(locale).slideControls.previousSlide}
         >
           <ArrowLeft className="size-4" />
         </button>
@@ -62,7 +58,7 @@ export function SlideControls({
           type="button"
           className="slide-arrow"
           onClick={() => onSelect(active + 1)}
-          aria-label={vi ? "Slide tiếp theo" : "Next slide"}
+          aria-label={ui(locale).slideControls.nextSlide}
         >
           <ArrowRight className="size-4" />
         </button>

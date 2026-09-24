@@ -16,7 +16,7 @@ export const DEFAULT_SITE_SETTINGS: SiteSettingsData = {
   },
   defaultSeoTitle: "BIM4C - Tiên phong Chuyển đổi số Xây dựng",
   defaultSeoDescription: "Giải pháp BIM, Chuyển đổi số Xây dựng & Tư vấn 3D-7D toàn diện.",
-  defaultOgImage: "/images/hero-1.webp",
+  defaultOgImage: "/images/hero-skyline-bim.jpg",
 };
 
 interface SettingsResponse {

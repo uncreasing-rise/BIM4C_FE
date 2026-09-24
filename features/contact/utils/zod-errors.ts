@@ -1,5 +1,21 @@
-import { ZodError } from "zod";
 import type { Locale } from "@/lib/i18n/config";
+
+/**
+ * Structural shape of a zod validation error. Matching on shape (rather than
+ * `instanceof ZodError`) works for both the classic and `zod/mini` APIs, whose
+ * error classes differ.
+ */
+export interface ValidationIssues {
+  issues: ReadonlyArray<{ path: ReadonlyArray<PropertyKey>; message: string }>;
+}
+
+export function isValidationError(error: unknown): error is ValidationIssues {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    Array.isArray((error as { issues?: unknown }).issues)
+  );
+}
 
 const enToViZodMessages: Record<string, string> = {
   "Please enter your full name.": "Vui lòng nhập họ và tên của bạn.",
@@ -12,7 +28,7 @@ const enToViZodMessages: Record<string, string> = {
 };
 
 export function getZodFieldErrors<FieldName extends string>(
-  error: ZodError,
+  error: ValidationIssues,
   locale: Locale = "en",
 ): Partial<Record<FieldName, string>> {
   const errors: Partial<Record<FieldName, string>> = {};

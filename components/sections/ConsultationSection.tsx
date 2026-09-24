@@ -9,6 +9,7 @@ import type { Dictionary } from "@/lib/i18n/types";
 import { ArrowUpRight, CheckCircle2, Clock3, Mail, Phone } from "lucide-react";
 import { useState } from "react";
 
+import { ui } from "@/lib/i18n/ui";
 function OfficesAndVatCards({ t }: { t: Dictionary; locale: string }) {
   return (
     <div className="mt-8 border-t border-white/10 pt-6 space-y-3 text-sm">
@@ -47,7 +48,7 @@ export function ConsultationSection() {
             href="#consultation-form"
             className="mt-7 inline-flex min-h-12 items-center gap-3 rounded-full bg-primary px-5 text-sm font-semibold text-white shadow-[0_12px_30px_rgba(8,126,125,.28)] transition hover:-translate-y-0.5 hover:bg-primary-hover"
           >
-            {locale === "vi" ? "Trao đổi dự án" : "Discuss a project"}
+            {ui(locale).consultationSection.discussAProject}
             <ArrowUpRight className="size-4" />
           </a>
 
@@ -68,7 +69,7 @@ export function ConsultationSection() {
 
           <div className="mt-4 flex items-center gap-3">
             <span className="text-xs font-semibold text-white/50 uppercase tracking-wider">
-              {locale === "vi" ? "Mạng xã hội:" : "Socials:"}
+              {ui(locale).consultationSection.socials}
             </span>
             <SocialLinks variant="icons" />
           </div>
@@ -98,7 +99,7 @@ export function ConsultationSection() {
           className="rounded-[2rem] border border-white/12 bg-white/[.07] p-5 shadow-2xl shadow-black/20 backdrop-blur-xl sm:p-8 lg:p-10"
         >
           <div className="mb-6 border-b border-white/10 pb-6">
-            <div className="grid grid-cols-2 rounded-xl border border-white/10 bg-black/10 p-1" role="tablist" aria-label={locale === "vi" ? "Phương thức liên hệ" : "Contact method"}>
+            <div className="grid grid-cols-2 rounded-xl border border-white/10 bg-black/10 p-1" role="tablist" aria-label={ui(locale).consultationSection.contactMethod}>
               <button
                 type="button"
                 role="tab"
@@ -106,7 +107,7 @@ export function ConsultationSection() {
                 onClick={() => setMode("inbox")}
                 className={`rounded-lg px-4 py-3 text-sm font-semibold transition ${!isAppointment ? "bg-primary text-white shadow-sm" : "text-white/65 hover:bg-white/10 hover:text-white"}`}
               >
-                {locale === "vi" ? "Gửi yêu cầu" : "Send an enquiry"}
+                {ui(locale).consultationSection.sendAnEnquiry}
               </button>
               <button
                 type="button"
@@ -115,7 +116,7 @@ export function ConsultationSection() {
                 onClick={() => setMode("appointment")}
                 className={`rounded-lg px-4 py-3 text-sm font-semibold transition ${isAppointment ? "bg-primary text-white shadow-sm" : "text-white/65 hover:bg-white/10 hover:text-white"}`}
               >
-                {locale === "vi" ? "Đặt lịch tư vấn" : "Book an appointment"}
+                {ui(locale).consultationSection.bookAnAppointment}
               </button>
             </div>
           </div>
@@ -123,12 +124,12 @@ export function ConsultationSection() {
             <div>
               <p className="text-xl font-semibold">
                 {isAppointment
-                  ? locale === "vi" ? "Đặt lịch tư vấn" : "Book a consultation"
+                  ? ui(locale).consultationSection.bookAConsultation
                   : t.contactPage.enquiryTitle}
               </p>
               <p className="mt-2 text-sm text-white/65">
                 {isAppointment
-                  ? locale === "vi" ? "Chọn một khung giờ còn trống phù hợp với bạn." : "Choose an available time that works for you."
+                  ? ui(locale).consultationSection.chooseAnAvailableTimeThat
                   : t.contactPage.enquiryDesc}
               </p>
             </div>

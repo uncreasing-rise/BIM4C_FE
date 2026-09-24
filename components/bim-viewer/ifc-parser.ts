@@ -27,6 +27,58 @@ const refs = (v: unknown): number[] =>
     .map((x) => Number(value(x)))
     .filter(Number.isFinite);
 
+const SI_PREFIX: Record<string, number> = {
+  KILO: 1e3,
+  HECTO: 1e2,
+  DECA: 1e1,
+  DECI: 1e-1,
+  CENTI: 1e-2,
+  MILLI: 1e-3,
+  MICRO: 1e-6,
+};
+
+/** Metres per unit for an IfcSIUnit or IfcConversionBasedUnit length unit. */
+function metresPerUnit(read: (id: number) => Line, unitId: number, depth = 0): number {
+  if (!unitId || depth > 4) return 1;
+  const unit = read(unitId);
+  if (unit.ConversionFactor) {
+    const measure = read(refs(unit.ConversionFactor)[0]);
+    const factor = Number(value(measure.ValueComponent));
+    const base = metresPerUnit(read, refs(measure.UnitComponent)[0], depth + 1);
+    return Number.isFinite(factor) && factor > 0 ? factor * base : 1;
+  }
+  return SI_PREFIX[string(unit.Prefix)] ?? 1;
+}
+
+/** IFC4 IfcMapConversion (georeferencing), converted to metres. */
+function readMapConversion(
+  read: (id: number) => Line,
+  ids: (type: number) => number[],
+  projectLengthScale: number,
+): BimModelDefinition["mapConversion"] {
+  const id = ids(IFC.IFCMAPCONVERSION)[0];
+  if (id === undefined) return undefined;
+  const conversion = read(id);
+  const crs = read(refs(conversion.TargetCRS)[0]);
+  const mapUnit = refs(crs.MapUnit)[0];
+  const scaleToMetres = mapUnit ? metresPerUnit(read, mapUnit) : projectLengthScale;
+  const number = (v: unknown, fallback: number) => {
+    const n = Number(value(v));
+    return v == null || !Number.isFinite(n) ? fallback : n;
+  };
+  return {
+    eastings: number(conversion.Eastings, 0) * scaleToMetres,
+    northings: number(conversion.Northings, 0) * scaleToMetres,
+    orthogonalHeight: number(conversion.OrthogonalHeight, 0) * scaleToMetres,
+    rotation: Math.atan2(
+      number(conversion.XAxisOrdinate, 0),
+      number(conversion.XAxisAbscissa, 1),
+    ),
+    scale: number(conversion.Scale, 1),
+    ...(crs.Name ? { crsName: string(crs.Name) } : {}),
+  };
+}
+
 /** Runs in a dedicated worker. No model data leaves the browser. */
 export function parseIfcData(
   api: IFC.IfcAPI,
@@ -113,9 +165,13 @@ export function parseIfcData(
       return string(u.UnitType);
     };
     const defaultUnits = new Map<string, string>();
+    let lengthUnitScale = 1;
     for (const id of ids(IFC.IFCUNITASSIGNMENT))
-      for (const uid of refs(read(id).Units))
-        defaultUnits.set(string(read(uid).UnitType), unitLabel(uid));
+      for (const uid of refs(read(id).Units)) {
+        const unitType = string(read(uid).UnitType);
+        defaultUnits.set(unitType, unitLabel(uid));
+        if (unitType === "LENGTHUNIT") lengthUnitScale = metresPerUnit(read, uid);
+      }
     const formatValue = (v: unknown): string | number => {
       if (v == null) return "—";
       if (Array.isArray(v)) return v.map((x) => formatValue(x)).join(", ");
@@ -403,6 +459,22 @@ export function parseIfcData(
     });
     diagnostics.missingGeometry = candidates.size;
     if (!elements.length) throw new Error("IFC_NO_GEOMETRY");
+    // COORDINATE_TO_ORIGIN moved the geometry; remember by how much so several
+    // files with shared coordinates can be placed back where they belong.
+    const coordinationMatrix = api.GetCoordinationMatrix(modelID);
+    const coordination: BimModelDefinition["coordination"] = {
+      translation: [
+        coordinationMatrix[12] ?? 0,
+        coordinationMatrix[13] ?? 0,
+        coordinationMatrix[14] ?? 0,
+      ],
+    };
+    let mapConversion: BimModelDefinition["mapConversion"];
+    try {
+      mapConversion = readMapConversion(read, ids, lengthUnitScale);
+    } catch {
+      mapConversion = undefined;
+    }
     const bounds = new Box3();
     for (const e of elements) {
       const center = new Vector3(...e.position),
@@ -424,6 +496,8 @@ export function parseIfcData(
       elements,
       clashes: [],
       bounds: { min: bounds.min.toArray(), max: bounds.max.toArray() },
+      coordination,
+      ...(mapConversion ? { mapConversion } : {}),
       defaultCamera: {
         position: target
           .clone()

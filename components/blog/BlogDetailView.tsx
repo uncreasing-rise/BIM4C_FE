@@ -27,6 +27,7 @@ import { legacyBlocks } from "@/lib/utils/legacy-blocks";
 import { ROUTES } from "@/constants/routes";
 import { toast } from "sonner";
 
+import { ui } from "@/lib/i18n/ui";
 interface BlogDetailViewProps {
   entry: ContentEntry;
   related?: ContentEntry[];
@@ -63,9 +64,7 @@ export function BlogDetailView({
     if (typeof window !== "undefined") {
       navigator.clipboard.writeText(window.location.href);
       toast.success(
-        isVi
-          ? "Đã sao chép liên kết bài viết vào bộ nhớ tạm!"
-          : "Article link copied to clipboard!",
+        ui(locale).blogDetailView.articleLinkCopiedToClipboard,
       );
     }
   };
@@ -105,7 +104,7 @@ export function BlogDetailView({
               {formattedDate && (
                 <div className="flex items-center gap-1.5">
                   <Calendar className="size-3.5 text-primary" />
-                  <span>{isVi ? "Xuất bản:" : "Published:"}</span>
+                  <span>{ui(locale).blogDetailView.published}</span>
                   <time dateTime={entry.publishedAt} className="font-medium text-foreground">
                     {formattedDate}
                   </time>
@@ -124,10 +123,10 @@ export function BlogDetailView({
                 type="button"
                 onClick={handleShare}
                 className="inline-flex items-center gap-1 rounded-md bg-muted px-2.5 py-1 text-xs font-medium text-foreground hover:bg-muted/80 transition-colors"
-                aria-label={isVi ? "Chia sẻ bài viết" : "Share article"}
+                aria-label={ui(locale).blogDetailView.shareArticle}
               >
                 <Share2 className="size-3" />
-                <span>{isVi ? "Chia sẻ" : "Share"}</span>
+                <span>{ui(locale).blogDetailView.share}</span>
               </button>
             </div>
           </div>
@@ -163,12 +162,10 @@ export function BlogDetailView({
               {/* Author & Editorial note */}
               <div className="rounded-2xl border bg-card p-5 shadow-2xs text-xs text-muted-foreground leading-relaxed">
                 <p className="font-semibold text-foreground mb-1">
-                  {isVi ? "Về ban biên tập BIM4C" : "About BIM4C Editorial"}
+                  {ui(locale).blogDetailView.aboutBIM4CEditorial}
                 </p>
                 <p>
-                  {isVi
-                    ? "Các bài viết chuyên môn được biên soạn bởi các chuyên gia và kỹ sư BIM của BIM4C nhằm chia sẻ kiến thức chuyển đổi số trong xây dựng."
-                    : "Technical insights and case analysis authored by BIM4C specialists to advance digital construction practices."}
+                  {ui(locale).blogDetailView.technicalInsightsAndCaseAnalysis}
                 </p>
               </div>
             </aside>
@@ -177,13 +174,13 @@ export function BlogDetailView({
 
         {/* Related Articles Section */}
         {related.length > 0 && (
-          <section className="site-container mt-16 border-t pt-12" aria-label="Related articles">
+          <section className="site-container mt-16 border-t pt-12" aria-label={ui(locale).blogDetailView.relatedArticles}>
             <div>
               <header className="mb-8 flex items-center justify-between">
                 <div>
                   <p className="eyebrow">{t.detailPage.keepExploring}</p>
                   <h2 className="text-2xl font-bold tracking-tight sm:text-3xl text-foreground">
-                    {isVi ? "Bài viết cùng chủ đề" : "Related articles"}
+                    {ui(locale).blogDetailView.relatedArticles2}
                   </h2>
                 </div>
                 <Button asChild variant="outline">

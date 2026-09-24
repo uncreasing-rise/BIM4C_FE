@@ -4,8 +4,8 @@ import { FormEvent, useCallback, useEffect, useState } from "react";
 import { UserPlus, Search, AlertCircle, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import { StatusBadge, statusLabel, table } from "./admin-ui";
 
 import { adminRequest } from "@/features/admin/api/http-client";
 
@@ -114,8 +114,8 @@ export function UsersManager() {
   }
 
   return (
-    <section className="overflow-hidden rounded-2xl border border-slate-200/80 dark:border-border bg-white dark:bg-card shadow-xs">
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 border-b border-slate-200/80 dark:border-border p-4 bg-slate-50/60 dark:bg-muted/20">
+    <section className="overflow-hidden rounded-xl border border-slate-200 dark:border-border bg-white dark:bg-card shadow-xs">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 border-b border-slate-200 dark:border-border p-4 bg-slate-50/60 dark:bg-muted/20">
         <div className="relative flex-1 max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
           <Input
@@ -135,7 +135,7 @@ export function UsersManager() {
       </div>
 
       {show && (
-        <div className="m-4 rounded-2xl border border-primary/20 bg-primary/5 p-5">
+        <div className="m-4 rounded-xl border border-primary/20 bg-primary/5 p-5">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
               <UserPlus className="size-4 text-primary" /> Thêm quản trị viên mới
@@ -170,9 +170,9 @@ export function UsersManager() {
                 name="role"
                 className="w-full h-10 rounded-lg border border-slate-200 dark:border-border bg-white dark:bg-background px-3 text-sm text-foreground focus:outline-hidden focus:ring-2 focus:ring-primary"
               >
-                <option value="EDITOR">EDITOR (Biên tập viên nội dung)</option>
-                <option value="ADMIN">ADMIN (Quản trị viên hệ thống)</option>
-                <option value="SUPER_ADMIN">SUPER_ADMIN (Quản trị tối cao)</option>
+                <option value="EDITOR">{statusLabel("role", "EDITOR")} — sửa nội dung, xử lý liên hệ</option>
+                <option value="ADMIN">{statusLabel("role", "ADMIN")} — toàn quyền, trừ phân quyền cấp cao</option>
+                <option value="SUPER_ADMIN">{statusLabel("role", "SUPER_ADMIN")} — toàn quyền hệ thống</option>
               </select>
             </div>
             <div className="md:col-span-2 flex justify-end gap-2 pt-2">
@@ -193,20 +193,20 @@ export function UsersManager() {
       )}
 
       <div className="w-full overflow-x-auto">
-        <table className="w-full text-left text-sm">
-          <thead className="border-b border-slate-200/80 dark:border-border bg-slate-50/80 dark:bg-muted/40 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        <table className={table.table}>
+          <thead className={table.head}>
             <tr>
-              <th className="px-5 py-3.5">Người dùng</th>
-              <th className="px-5 py-3.5">Vai trò</th>
-              <th className="px-5 py-3.5">Trạng thái</th>
-              <th className="px-5 py-3.5 text-right">Thao tác</th>
+              <th className={table.th}>Người dùng</th>
+              <th className={table.th}>Vai trò</th>
+              <th className={table.th}>Trạng thái</th>
+              <th className={`${table.th} text-right`}>Thao tác</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-200/60 dark:divide-border/60">
             {loading ? (
               Array.from({ length: 3 }).map((_, i) => (
                 <tr key={i} className="animate-pulse">
-                  <td className="px-5 py-4">
+                  <td className={table.td}>
                     <div className="flex items-center gap-2.5">
                       <div className="size-8 rounded-full bg-muted" />
                       <div className="space-y-1">
@@ -215,13 +215,13 @@ export function UsersManager() {
                       </div>
                     </div>
                   </td>
-                  <td className="px-5 py-4">
+                  <td className={table.td}>
                     <div className="h-5 w-20 bg-muted rounded" />
                   </td>
-                  <td className="px-5 py-4">
+                  <td className={table.td}>
                     <div className="h-5 w-24 bg-muted rounded-full" />
                   </td>
-                  <td className="px-5 py-4 text-right">
+                  <td className={`${table.td} text-right`}>
                     <div className="h-8 w-20 bg-muted rounded ml-auto" />
                   </td>
                 </tr>
@@ -234,8 +234,8 @@ export function UsersManager() {
               </tr>
             ) : (
               items.map((u) => (
-                <tr key={u.id} className="hover:bg-slate-50/70 dark:hover:bg-muted/20 transition-colors">
-                  <td className="px-5 py-4">
+                <tr key={u.id} className={table.row}>
+                  <td className={table.td}>
                     <div className="flex items-center gap-2.5">
                       <div className="size-8 rounded-full bg-primary/10 text-primary font-bold flex items-center justify-center text-xs">
                         {(u.name || "A").charAt(0).toUpperCase()}
@@ -246,30 +246,20 @@ export function UsersManager() {
                       </div>
                     </div>
                   </td>
-                  <td className="px-5 py-4">
+                  <td className={table.td}>
                     <div className="flex flex-wrap gap-1">
                       {(u.roles || []).map((x, idx) => {
                         const roleName = typeof x === "string" ? x : x.role;
                         return (
-                          <Badge key={`${roleName}-${idx}`} variant="outline" className="font-mono text-xs">
-                            {roleName}
-                          </Badge>
+                          <StatusBadge key={`${roleName}-${idx}`} domain="role" value={roleName} />
                         );
                       })}
                     </div>
                   </td>
-                  <td className="px-5 py-4">
-                    {u.status === "ACTIVE" ? (
-                      <Badge variant="outline" className="border-teal-500/30 text-teal-600 dark:text-teal-400 bg-teal-500/10">
-                        Đang hoạt động
-                      </Badge>
-                    ) : (
-                      <Badge variant="secondary" className="text-muted-foreground">
-                        Đã vô hiệu hóa
-                      </Badge>
-                    )}
+                  <td className={table.td}>
+                    <StatusBadge domain="user" value={u.status} />
                   </td>
-                  <td className="px-5 py-4 text-right">
+                  <td className={`${table.td} text-right`}>
                     <Button
                       variant={u.status === "ACTIVE" ? "outline" : "default"}
                       size="sm"

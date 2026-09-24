@@ -22,6 +22,7 @@ import { ArrowLeft, ArrowRight, Award, Clock, ShieldCheck } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
+import { ui } from "@/lib/i18n/ui";
 interface ProjectDetailViewProps {
   entry: Project;
   related?: ContentEntry[];
@@ -161,9 +162,7 @@ export function ProjectDetailView({
               </CardHeader>
               <CardContent className="p-6">
                 <p className="mb-6 text-sm font-medium text-slate-200 leading-relaxed">
-                  {locale === "vi"
-                    ? "Đăng ký nhận tư vấn và báo giá chi tiết cho dự án của bạn từ đội ngũ kỹ sư BIM4C."
-                    : "Request tailored consultation and delivery proposal for your project from BIM4C engineers."}
+                  {ui(locale).projectDetailView.requestTailoredConsultationAndDelivery}
                 </p>
 
                 <ConsultationForm
@@ -219,12 +218,10 @@ export function ProjectDetailView({
         {entry.gallery && entry.gallery.length > 0 && (
           <section
             className="site-container mt-16"
-            aria-label="Project gallery"
+            aria-label={ui(locale).projectDetailView.projectGallery}
           >
             <h2 className="text-xl font-bold mb-6 text-foreground">
-              {locale === "vi"
-                ? "Hình ảnh & Mô hình dự án"
-                : "Project Gallery & 3D Deliverables"}
+              {ui(locale).projectDetailView.projectGallery3DDeliverables}
             </h2>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {entry.gallery.map((image, index) => (
@@ -259,16 +256,14 @@ export function ProjectDetailView({
         {related.length > 0 && (
           <section
             className="site-container mt-16 border-t pt-12"
-            aria-label="Related projects"
+            aria-label={ui(locale).projectDetailView.relatedProjects}
           >
             <div>
               <header className="mb-8 flex items-center justify-between">
                 <div>
                   <p className="eyebrow">{t.detailPage.keepExploring}</p>
                   <h2 className="text-2xl font-bold tracking-tight sm:text-3xl text-foreground">
-                    {locale === "vi"
-                      ? "Dự án tiêu biểu khác"
-                      : "Related projects"}
+                    {ui(locale).projectDetailView.relatedProjects2}
                   </h2>
                 </div>
                 <Button asChild variant="outline">

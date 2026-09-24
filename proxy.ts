@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { DEFAULT_LOCALE, LOCALE_COOKIE_NAME, SUPPORTED_LOCALES, type Locale } from "@/lib/i18n/config";
+import { LOCALE_COOKIE_NAME, SUPPORTED_LOCALES, negotiateLocale, type Locale } from "@/lib/i18n/config";
 import { LOCALE_HEADER } from "@/lib/i18n/request";
 
 const PUBLIC_PREFIXES = [
@@ -9,6 +9,8 @@ const PUBLIC_PREFIXES = [
   "du-an",
   "khoa-hoc",
   "blog",
+  "tin-tuc",
+  "chuyen-mon",
   "phap-ly",
   "lien-he",
   "bim-viewer",
@@ -19,10 +21,17 @@ function isPublicPath(pathname: string) {
   return PUBLIC_PREFIXES.includes(first);
 }
 
+/** The admin UI is Vietnamese-only; render it with lang="vi" regardless of the visitor's site locale. */
+function adminResponse(request: NextRequest) {
+  const headers = new Headers(request.headers);
+  headers.set(LOCALE_HEADER, "vi");
+  return NextResponse.next({ request: { headers } });
+}
+
 export function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
-  if (pathname === "/admin/login") return NextResponse.next();
+  if (pathname === "/admin" || pathname.startsWith("/admin/")) return adminResponse(request);
 
   const segments = pathname.replace(/^\//, "").split("/");
   const requestedLocale = segments[0] as Locale;
@@ -42,19 +51,23 @@ export function proxy(request: NextRequest) {
   }
 
   if (isPublicPath(pathname) && !pathname.startsWith("/api")) {
+    // A remembered choice wins; otherwise follow the browser's language.
     const cookieLocale = request.cookies.get(LOCALE_COOKIE_NAME)?.value as Locale | undefined;
-    const locale = cookieLocale && SUPPORTED_LOCALES.includes(cookieLocale)
-      ? cookieLocale
-      : DEFAULT_LOCALE;
+    const locale =
+      cookieLocale && SUPPORTED_LOCALES.includes(cookieLocale)
+        ? cookieLocale
+        : negotiateLocale(request.headers.get("accept-language"));
     const redirectUrl = request.nextUrl.clone();
     redirectUrl.pathname = `/${locale}${pathname === "/" ? "" : pathname}`;
-    return NextResponse.redirect(redirectUrl, 308);
+    // Temporary: the target depends on the visitor, so it must never be cached
+    // as a permanent redirect by browsers or CDNs.
+    const response = NextResponse.redirect(redirectUrl, 307);
+    response.headers.set("Vary", "Accept-Language, Cookie");
+    return response;
   }
 
-  if (!pathname.startsWith("/admin")) return NextResponse.next();
-
   // Admin authentication is verified client-side through /auth/me using the
-  // bearer token kept in sessionStorage. Middleware cannot read sessionStorage.
+  // bearer token kept in sessionStorage; a proxy cannot read sessionStorage.
   return NextResponse.next();
 }
 export const config = { matcher: ["/:path*"] };

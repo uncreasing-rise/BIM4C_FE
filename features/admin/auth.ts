@@ -73,7 +73,8 @@ export function clearAdminCache() {
 }
 
 export function can(user: AdminIdentity | null, permission: string): boolean {
-  if (!user) return true;
+  // Fail closed: an unknown identity is granted nothing.
+  if (!user) return false;
   const roles = user.roles || [];
   if (roles.includes("SUPER_ADMIN") || roles.includes("ADMIN")) return true;
   const permissions = user.permissions || [];

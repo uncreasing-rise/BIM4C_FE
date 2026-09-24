@@ -7,6 +7,7 @@ import { localePrefix } from "@/lib/i18n/path";
 import { usePathname, useRouter } from "next/navigation";
 import { Globe, Check } from "lucide-react";
 
+import { ui } from "@/lib/i18n/ui";
 interface LanguageSwitcherProps {
   variant?: "pill" | "select" | "compact";
   className?: string;
@@ -32,7 +33,7 @@ export function LanguageSwitcher({
     return (
       <div
         role="group"
-        aria-label={locale === "vi" ? "Chọn ngôn ngữ" : "Language selection"}
+        aria-label={ui(locale).languageSwitcher.languageSelection}
         className={cn(
           "language-switcher inline-flex items-center gap-0.5 rounded-full p-1 transition-all duration-200",
           isOverHero
@@ -89,7 +90,7 @@ export function LanguageSwitcher({
   return (
     <div
       role="group"
-      aria-label={locale === "vi" ? "Chọn ngôn ngữ" : "Language selection"}
+      aria-label={ui(locale).languageSwitcher.languageSelection}
       className={cn(
         "language-switcher grid grid-cols-2 gap-2 rounded-xl border border-slate-200 bg-slate-50/90 p-1.5",
         className,

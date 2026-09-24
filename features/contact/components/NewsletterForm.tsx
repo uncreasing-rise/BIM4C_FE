@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useId, useRef, useState, type FormEvent } from "react";
-import { z } from "zod";
 import { LocalizedLink as Link } from "@/components/shared/LocalizedLink";
 import { ApiError } from "@/lib/api/errors";
 import { Button } from "@/components/ui/button";
@@ -11,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { ROUTES } from "@/constants/routes";
 import { useLanguage } from "@/lib/i18n/context";
 import { subscribeNewsletter } from "../api/mutations";
-import { getZodFieldErrors } from "../utils/zod-errors";
+import { getZodFieldErrors, isValidationError } from "../utils/zod-errors";
 
 import { toast } from "sonner";
 
@@ -61,7 +60,7 @@ export function NewsletterForm() {
       setConsent(false);
     } catch (error) {
       setStatus("error");
-      if (error instanceof z.ZodError) {
+      if (isValidationError(error)) {
         setFieldErrors(getZodFieldErrors<NewsletterField>(error, locale));
         const field = error.issues[0]?.path[0];
         if (field === "email")

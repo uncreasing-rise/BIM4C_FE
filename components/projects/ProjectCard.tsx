@@ -10,13 +10,13 @@ import { useLanguage } from "@/lib/i18n/context";
 import { localizeContent } from "@/lib/i18n/localize";
 import { resolveCoverImage } from "@/lib/content/cover-images";
 
+import { ui } from "@/lib/i18n/ui";
 export function ProjectCard({
   project: rawProject,
 }: {
   project: Project;
 }) {
   const { locale } = useLanguage();
-  const isVi = locale === "vi";
   const project = localizeContent(rawProject, locale);
 
   return (
@@ -115,9 +115,9 @@ export function ProjectCard({
           <Link
             href={ROUTES.projectDetail(project.slug)}
             className="inline-flex items-center gap-1.5 rounded-xl bg-primary/10 px-3.5 py-2 text-xs font-bold text-primary group-hover:bg-primary group-hover:text-white transition-all shadow-xs group-hover:shadow-md group-hover:shadow-teal-900/20"
-            aria-label={`${isVi ? "Khám phá dự án" : "Explore project"} ${project.title}`}
+            aria-label={`${ui(locale).projectCard.exploreProject} ${project.title}`}
           >
-            <span>{isVi ? "Khám phá" : "Explore"}</span>
+            <span>{ui(locale).projectCard.explore}</span>
             <ArrowUpRight className="size-3.5 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
           </Link>
         </div>

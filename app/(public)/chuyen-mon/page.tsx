@@ -102,7 +102,7 @@ export default async function TechnicalKnowledgePage({
         eyebrow="BIM4C TECHNICAL INSIGHTS & RESEARCH"
         title={content.title}
         description={content.description}
-        image="/images/profile/bim-3d.webp"
+        image="/images/news-digital-twin.webp"
       />
       <BlogExplorer
         posts={postsPage.items}

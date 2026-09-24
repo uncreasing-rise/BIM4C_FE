@@ -12,7 +12,7 @@ interface ServiceFieldsProps {
 
 export function ServiceFields({ content, adminLangTab, onChange }: ServiceFieldsProps) {
   return (
-    <div className="rounded-2xl border border-border bg-card p-6 shadow-xs space-y-5">
+    <div className="rounded-xl border border-border bg-card p-6 shadow-xs space-y-5">
       <div className="flex items-center gap-2 border-b border-border pb-3">
         <Sparkles className="size-4 text-primary" />
         <h3 className="text-base font-bold text-foreground">

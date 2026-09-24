@@ -24,8 +24,10 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 
 import { adminRequest } from "@/features/admin/api/http-client";
+import { useConfirm } from "./ConfirmDialog";
 
 export function HomepageManager() {
+  const { confirm, dialog } = useConfirm();
   const [items, setItems] = useState<StrategicPartner[]>([]);
   const [editing, setEditing] = useState<StrategicPartner | null>(null);
   const [loading, setLoading] = useState(true);
@@ -96,9 +98,12 @@ export function HomepageManager() {
   };
 
   const remove = async (item: StrategicPartner) => {
+    if (!item.id) return;
     if (
-      !item.id ||
-      !window.confirm(`Xóa đối tác “${item.name}”?`)
+      !(await confirm({
+        title: `Xóa đối tác “${item.name}”?`,
+        description: "Logo đối tác sẽ bị gỡ khỏi trang chủ ngay sau khi làm mới bộ nhớ đệm.",
+      }))
     )
       return;
     const prevItems = [...items];
@@ -172,7 +177,8 @@ export function HomepageManager() {
   };
 
   return (
-    <section className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm space-y-6 p-6">
+    <section className="overflow-hidden rounded-xl border border-border bg-card shadow-sm space-y-6 p-6">
+      {dialog}
       {/* Header & Add Button */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 border-b border-border pb-5">
         <div className="flex items-center gap-3">
@@ -203,7 +209,7 @@ export function HomepageManager() {
           Đang tải danh sách đối tác…
         </div>
       ) : items.length === 0 ? (
-        <div className="p-12 text-center text-sm text-muted-foreground border border-dashed rounded-2xl">
+        <div className="p-12 text-center text-sm text-muted-foreground border border-dashed rounded-xl">
           Chưa có đối tác nào. Nhấn &quot;Thêm đối tác mới&quot; ở trên để bắt đầu.
         </div>
       ) : (
@@ -212,7 +218,7 @@ export function HomepageManager() {
           {items.map((item, index) => (
             <div
               key={item.id}
-              className="group flex flex-col justify-between rounded-2xl border border-border bg-card p-5 shadow-xs transition hover:border-primary/40 hover:shadow-md space-y-4"
+              className="group flex flex-col justify-between rounded-xl border border-border bg-card p-5 shadow-xs transition hover:border-primary/40 hover:shadow-md space-y-4"
             >
               <div className="flex items-center justify-between">
                 <span className="font-mono text-xs text-muted-foreground font-bold">
@@ -321,10 +327,10 @@ export function HomepageManager() {
       {/* Partner Edit Modal */}
       {editing && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-150">
-          <div className="relative w-full max-w-lg rounded-3xl border border-border bg-card shadow-2xl p-6 sm:p-8 space-y-5 animate-in zoom-in-95 duration-150">
+          <div className="relative w-full max-w-lg rounded-xl border border-border bg-card shadow-2xl p-6 sm:p-8 space-y-5 animate-in zoom-in-95 duration-150">
             <div className="flex items-center justify-between border-b border-border pb-4">
               <div>
-                <span className="text-[10px] font-bold font-mono uppercase text-primary">
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-primary">
                   {editing.id ? "CHỈNH SỬA" : "THÊM MỚI"}
                 </span>
                 <h3 className="text-lg font-bold text-foreground">
@@ -344,7 +350,7 @@ export function HomepageManager() {
             {/* Form Fields */}
             <div className="space-y-4">
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                <label className="text-[13px] font-medium text-slate-700 dark:text-foreground">
                   Tên đối tác / Thương hiệu *
                 </label>
                 <Input
@@ -357,7 +363,7 @@ export function HomepageManager() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                <label className="text-[13px] font-medium text-slate-700 dark:text-foreground">
                   Website liên kết
                 </label>
                 <Input
@@ -371,7 +377,7 @@ export function HomepageManager() {
 
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  <label className="text-[13px] font-medium text-slate-700 dark:text-foreground">
                     Logo đối tác *
                   </label>
                   <MediaPicker

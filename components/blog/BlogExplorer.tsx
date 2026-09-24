@@ -20,6 +20,7 @@ import { resolveCoverImage } from "@/lib/content/cover-images";
 
 import type { PostCategoryItem } from "@/features/blog/api/queries";
 
+import { ui } from "@/lib/i18n/ui";
 const BLOG_BASE_CATEGORIES = [
   "Khảo sát & Scan-to-BIM",
   "Quy trình & Tiêu chuẩn",
@@ -138,7 +139,7 @@ export function BlogExplorer({
                   className="absolute inset-0 z-20 rounded-3xl focus:outline-none"
                   href={detailHref(visible[0].slug)}
                   aria-label={
-                    (locale === "vi" ? "Xem bài viết: " : "View article: ") +
+                    (ui(locale).blogExplorer.viewArticle) +
                     visible[0].title
                   }
                 />
@@ -162,7 +163,7 @@ export function BlogExplorer({
                       {toLocalizedLabel(visible[0].eyebrow, locale)}
                     </span>
                     <span className="rounded-full bg-black/60 backdrop-blur-md px-2.5 py-1 text-[11px] font-medium text-white border border-white/10">
-                      {locale === "vi" ? "5 phút đọc" : "5 min read"}
+                      {ui(locale).blogExplorer.t5MinRead}
                     </span>
                   </div>
                 </div>
@@ -183,7 +184,7 @@ export function BlogExplorer({
                       {t.blogPage.readMore} →
                     </span>
                     <span className="text-xs text-muted-foreground font-medium">
-                      {visible[0].authorName || (locale === "vi" ? "Chuyên gia BIM4C" : "BIM4C Specialist")}
+                      {visible[0].authorName || (ui(locale).blogExplorer.bIM4CSpecialist)}
                     </span>
                   </div>
                 </div>
@@ -202,7 +203,7 @@ export function BlogExplorer({
                     className="absolute inset-0 z-20 rounded-2xl focus:outline-none"
                     href={detailHref(item.slug)}
                     aria-label={
-                      (locale === "vi" ? "Xem bài viết: " : "View article: ") +
+                      (ui(locale).blogExplorer.viewArticle) +
                       item.title
                     }
                   />
@@ -242,7 +243,7 @@ export function BlogExplorer({
                     <div className="mt-3 flex items-center justify-between text-xs font-semibold text-primary">
                       <span>{t.blogPage.readMore}</span>
                       <span className="text-[11px] text-muted-foreground font-normal">
-                        {item.authorName || (locale === "vi" ? "Chuyên gia BIM4C" : "BIM4C Specialist")}
+                        {item.authorName || (ui(locale).blogExplorer.bIM4CSpecialist)}
                       </span>
                     </div>
                   </div>

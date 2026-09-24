@@ -28,6 +28,7 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 
+import { ui } from "@/lib/i18n/ui";
 interface ServiceDetailViewProps {
   entry: ContentEntry;
   related?: ContentEntry[];
@@ -100,9 +101,7 @@ export function ServiceDetailView({
             blocks={blocks}
             cta={{
               label:
-                locale === "vi"
-                  ? "Yêu cầu tư vấn dịch vụ"
-                  : "Enquire for this service",
+                ui(locale).serviceDetailView.enquireForThisService,
               href: "#service-enquiry",
             }}
           />
@@ -117,34 +116,26 @@ export function ServiceDetailView({
                 <div className="flex items-center gap-2 text-primary font-bold text-sm uppercase tracking-wider mb-4">
                   <Layers className="size-5" />
                   <span>
-                    {locale === "vi"
-                      ? "Quy chuẩn thực thi dịch vụ"
-                      : "Service Delivery Framework"}
+                    {ui(locale).serviceDetailView.serviceDeliveryFramework}
                   </span>
                 </div>
                 <ul className="space-y-3 text-sm text-muted-foreground">
                   <li className="flex items-start gap-2.5">
                     <CheckCircle2 className="size-4 text-teal-600 dark:text-teal-400 shrink-0 mt-0.5" />
                     <span>
-                      {locale === "vi"
-                        ? "Quản trị quy trình thông tin và môi trường CDE."
-                        : "Information management and CDE coordination."}
+                      {ui(locale).serviceDetailView.informationManagementAndCDECoordination}
                     </span>
                   </li>
                   <li className="flex items-start gap-2.5">
                     <CheckCircle2 className="size-4 text-teal-600 dark:text-teal-400 shrink-0 mt-0.5" />
                     <span>
-                      {locale === "vi"
-                        ? "Hỗ trợ định dạng mở OpenBIM (IFC, BCF) tương thích đa nền tảng phần mềm."
-                        : "OpenBIM (IFC, BCF) compliance ensuring frictionless cross-platform interoperability."}
+                      {ui(locale).serviceDetailView.openBIMIFCBCFComplianceEnsuring}
                     </span>
                   </li>
                   <li className="flex items-start gap-2.5">
                     <CheckCircle2 className="size-4 text-teal-600 dark:text-teal-400 shrink-0 mt-0.5" />
                     <span>
-                      {locale === "vi"
-                        ? "Cam kết bảo mật dữ liệu công trình theo thỏa thuận NDA pháp lý chặt chẽ."
-                        : "Full legal NDA compliance safeguarding intellectual property and proprietary data."}
+                      {ui(locale).serviceDetailView.fullLegalNDAComplianceSafeguarding}
                     </span>
                   </li>
                 </ul>
@@ -172,9 +163,7 @@ export function ServiceDetailView({
               </CardHeader>
               <CardContent className="p-6">
                 <p className="mb-6 text-sm font-medium text-slate-200 leading-relaxed">
-                  {locale === "vi"
-                    ? "Nhận tư vấn giải pháp, phạm vi công việc và báo giá chi tiết từ các chuyên gia BIM4C."
-                    : "Receive expert consultation, detailed scope of work and quotation tailored to your needs."}
+                  {ui(locale).serviceDetailView.receiveExpertConsultationDetailedScope}
                 </p>
 
                 <ConsultationForm
@@ -229,16 +218,14 @@ export function ServiceDetailView({
         {related.length > 0 && (
           <section
             className="site-container mt-16 border-t pt-12"
-            aria-label="Related services"
+            aria-label={ui(locale).serviceDetailView.relatedServices}
           >
             <div>
               <header className="mb-8 flex items-center justify-between">
                 <div>
                   <p className="eyebrow">{t.detailPage.keepExploring}</p>
                   <h2 className="text-2xl font-bold tracking-tight sm:text-3xl text-foreground">
-                    {locale === "vi"
-                      ? "Giải pháp BIM liên quan"
-                      : "Related services"}
+                    {ui(locale).serviceDetailView.relatedServices2}
                   </h2>
                 </div>
                 <Button asChild variant="outline">

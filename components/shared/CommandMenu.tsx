@@ -19,6 +19,7 @@ import {
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 
+import { ui } from "@/lib/i18n/ui";
 interface CommandItem {
   id: string;
   category:
@@ -44,7 +45,6 @@ interface CommandMenuProps {
 export function CommandMenu({ isOpen, onClose }: CommandMenuProps) {
   const router = useRouter();
   const { locale } = useLanguage();
-  const isVi = locale === "vi";
   const [query, setQuery] = useState("");
   const [selectedIndex, setSelectedIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -57,12 +57,8 @@ export function CommandMenu({ isOpen, onClose }: CommandMenuProps) {
       {
         id: "nav-bim-viewer",
         category: "navigation",
-        title: isVi
-          ? "3D OpenBIM Viewer (Mô hình trực quan)"
-          : "3D OpenBIM Viewer (Interactive Model)",
-        subtitle: isVi
-          ? "Kiểm tra IFC, BCF và phân tích không gian"
-          : "Inspect IFC, BCF & spatial coordination",
+        title: ui(locale).commandMenu.t3DOpenBIMViewerInteractiveModel,
+        subtitle: ui(locale).commandMenu.inspectIFCBCFSpatialCoordination,
         icon: Boxes,
         keywords: [
           "bim",
@@ -82,10 +78,8 @@ export function CommandMenu({ isOpen, onClose }: CommandMenuProps) {
       {
         id: "nav-projects",
         category: "navigation",
-        title: isVi ? "Tất cả Dự án Thực chiến" : "All Projects & Case Studies",
-        subtitle: isVi
-          ? "Khám phá danh mục dự án cao ốc, hạ tầng của BIM4C"
-          : "Explore high-rise and infrastructure portfolio",
+        title: ui(locale).commandMenu.allProjectsCaseStudies,
+        subtitle: ui(locale).commandMenu.exploreHighRiseAndInfrastructure,
         icon: FolderGit2,
         keywords: ["du an", "projects", "case study", "portfolio"],
         action: () => {
@@ -96,12 +90,8 @@ export function CommandMenu({ isOpen, onClose }: CommandMenuProps) {
       {
         id: "nav-services",
         category: "navigation",
-        title: isVi
-          ? "Dịch vụ & Giải pháp Tư vấn BIM"
-          : "BIM Consulting & Solutions",
-        subtitle: isVi
-          ? "Chiến lược ISO 19650, CDE, Phối hợp MEP & 5D"
-          : "ISO 19650 Strategy, CDE, MEP & 5D Cost",
+        title: ui(locale).commandMenu.bIMConsultingSolutions,
+        subtitle: ui(locale).commandMenu.iSO19650StrategyCDEMEP,
         icon: Building2,
         keywords: [
           "dich vu",
@@ -119,12 +109,8 @@ export function CommandMenu({ isOpen, onClose }: CommandMenuProps) {
       {
         id: "nav-courses",
         category: "navigation",
-        title: isVi
-          ? "BIM4C Academy (Đào tạo Kỹ sư)"
-          : "BIM4C Academy (Professional Training)",
-        subtitle: isVi
-          ? "Chương trình đào tạo Revit, Navisworks, OpenBIM thực chiến"
-          : "Practical Revit, Navisworks & OpenBIM curriculum",
+        title: ui(locale).commandMenu.bIM4CAcademyProfessionalTraining,
+        subtitle: ui(locale).commandMenu.practicalRevitNavisworksOpenBIMCurriculum,
         icon: GraduationCap,
         keywords: [
           "khoa hoc",
@@ -142,12 +128,8 @@ export function CommandMenu({ isOpen, onClose }: CommandMenuProps) {
       {
         id: "nav-blog",
         category: "navigation",
-        title: isVi
-          ? "Góc nhìn & Bài viết Kỹ thuật"
-          : "Insights & Technical Journal",
-        subtitle: isVi
-          ? "Kinh nghiệm thực tế từ các công trình và chuyển đổi số"
-          : "Field-tested AEC digital methods and lessons",
+        title: ui(locale).commandMenu.insightsTechnicalJournal,
+        subtitle: ui(locale).commandMenu.fieldTestedAECDigitalMethods,
         icon: FileText,
         keywords: ["blog", "bai viet", "tin tuc", "insights", "chuyen doi so"],
         action: () => {
@@ -158,12 +140,8 @@ export function CommandMenu({ isOpen, onClose }: CommandMenuProps) {
       {
         id: "nav-about",
         category: "navigation",
-        title: isVi
-          ? "Về BIM4C (Ban Lãnh đạo & Năng lực)"
-          : "About BIM4C (Leadership & Capability)",
-        subtitle: isVi
-          ? "Đội ngũ chuyên gia và năng lực thực chiến"
-          : "Executive team & engineering capability",
+        title: ui(locale).commandMenu.aboutBIM4CLeadershipCapability,
+        subtitle: ui(locale).commandMenu.executiveTeamEngineeringCapability,
         icon: ShieldCheck,
         keywords: [
           "gioi thieu",
@@ -180,12 +158,8 @@ export function CommandMenu({ isOpen, onClose }: CommandMenuProps) {
       {
         id: "act-call-hotline",
         category: "action",
-        title: isVi
-          ? "Hotline Kỹ thuật: +84 93 2468 099"
-          : "Technical Hotline: +84 93 2468 099",
-        subtitle: isVi
-          ? "Hỗ trợ dự án và tư vấn phạm vi"
-          : "Direct project scoping & support",
+        title: ui(locale).commandMenu.technicalHotline84932468,
+        subtitle: ui(locale).commandMenu.directProjectScopingSupport,
         icon: Phone,
         keywords: ["hotline", "dien thoai", "phone", "call", "lien he"],
         action: () => {
@@ -197,9 +171,7 @@ export function CommandMenu({ isOpen, onClose }: CommandMenuProps) {
         id: "act-email-contact",
         category: "action",
         title: `Email: ${CONTACT_EMAIL}`,
-        subtitle: isVi
-          ? "Gửi yêu cầu báo giá và tài liệu dự án"
-          : "Send RFP and project requirements",
+        subtitle: ui(locale).commandMenu.sendRFPAndProjectRequirements,
         icon: Mail,
         keywords: ["email", "thu dien tu", "mail", "Bim4c.lab@gmail.com"],
         action: () => {
@@ -210,12 +182,8 @@ export function CommandMenu({ isOpen, onClose }: CommandMenuProps) {
       {
         id: "act-danang-hq",
         category: "legal",
-        title: isVi
-          ? "Trụ sở chính: 20 Bắc Sơn, Đà Nẵng"
-          : "HQ: 20 Bac Son, Da Nang",
-        subtitle: isVi
-          ? "Địa chỉ kê khai thuế: 20 Bắc Sơn, P. An Khê, TP Đà Nẵng"
-          : "Tax address: An Khe Ward, Da Nang City",
+        title: ui(locale).commandMenu.hQ20BacSonDa,
+        subtitle: ui(locale).commandMenu.taxAddressAnKheWard,
         icon: MapPin,
         keywords: ["tru so", "da nang", "dia chi", "headquarters", "bac son"],
         action: () => {
@@ -224,7 +192,7 @@ export function CommandMenu({ isOpen, onClose }: CommandMenuProps) {
         },
       },
     ],
-    [isVi, router, onClose],
+    [locale, router, onClose],
   );
 
   const filteredItems = useMemo(() => {
@@ -334,9 +302,7 @@ export function CommandMenu({ isOpen, onClose }: CommandMenuProps) {
         role="dialog"
         aria-modal="true"
         aria-label={
-          isVi
-            ? "Menu tìm kiếm và điều hướng nhanh"
-            : "Quick Search & Navigation Menu"
+          ui(locale).commandMenu.quickSearchNavigationMenu
         }
         className="relative w-full max-w-2xl overflow-hidden rounded-2xl border border-white/20 bg-brand-ink/95 shadow-2xl backdrop-blur-2xl text-white"
         onClick={(e) => e.stopPropagation()}
@@ -353,17 +319,15 @@ export function CommandMenu({ isOpen, onClose }: CommandMenuProps) {
               setSelectedIndex(0);
             }}
             placeholder={
-              isVi
-                ? "Tìm kiếm nhanh dự án, dịch vụ, khóa học, bài viết, MST..."
-                : "Search projects, services, courses, articles, tax ID..."
+              ui(locale).commandMenu.searchProjectsServicesCoursesArticles
             }
-            aria-label={isVi ? "Ô tìm kiếm nhanh" : "Quick search input"}
+            aria-label={ui(locale).commandMenu.quickSearchInput}
             className="flex-1 bg-transparent text-sm text-white placeholder-zinc-400 focus:outline-none"
           />
           <button
             type="button"
             onClick={onClose}
-            aria-label={isVi ? "Đóng tìm kiếm" : "Close search"}
+            aria-label={ui(locale).commandMenu.closeSearch}
             className="rounded-lg p-1 text-zinc-400 hover:bg-white/10 hover:text-white transition-colors"
           >
             <X className="size-4" />
@@ -375,14 +339,10 @@ export function CommandMenu({ isOpen, onClose }: CommandMenuProps) {
           {filteredItems.length === 0 ? (
             <div className="py-12 text-center text-sm text-zinc-400">
               <p>
-                {isVi
-                  ? "Không tìm thấy kết quả phù hợp."
-                  : "No matching commands found."}
+                {ui(locale).commandMenu.noMatchingCommandsFound}
               </p>
               <p className="mt-1 text-xs text-zinc-500">
-                {isVi
-                  ? "Thử tìm 'BIM', 'Đà Nẵng', hoặc 'Dự án'"
-                  : "Try searching 'BIM', 'Projects', or 'Contact'"}
+                {ui(locale).commandMenu.trySearchingBIMProjectsOr}
               </p>
             </div>
           ) : (
@@ -438,19 +398,19 @@ export function CommandMenu({ isOpen, onClose }: CommandMenuProps) {
               <kbd className="rounded border border-white/20 bg-white/10 px-1.5 py-0.5 text-[10px] font-mono text-zinc-300">
                 ↑↓
               </kbd>
-              <span>{isVi ? "Di chuyển" : "Navigate"}</span>
+              <span>{ui(locale).commandMenu.navigate}</span>
             </span>
             <span className="flex items-center gap-1">
               <kbd className="rounded border border-white/20 bg-white/10 px-1.5 py-0.5 text-[10px] font-mono text-zinc-300">
                 ↵
               </kbd>
-              <span>{isVi ? "Chọn" : "Execute"}</span>
+              <span>{ui(locale).commandMenu.execute}</span>
             </span>
             <span className="flex items-center gap-1">
               <kbd className="rounded border border-white/20 bg-white/10 px-1.5 py-0.5 text-[10px] font-mono text-zinc-300">
                 ESC
               </kbd>
-              <span>{isVi ? "Đóng" : "Close"}</span>
+              <span>{ui(locale).commandMenu.close}</span>
             </span>
           </div>
           <span className="font-mono text-teal-300/80 text-[10px]">

@@ -7,22 +7,23 @@ import { SectionWheelSnap } from "@/components/motion/SectionWheelSnap";
 import { ScrollProgress } from "@/components/motion/ScrollProgress";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { organizationSchema, websiteSchema } from "@/lib/seo/structured-data";
+import { getRequestLocale } from "@/lib/i18n/request";
 
 import { BackToTop } from "@/components/shared/BackToTop";
 import { FloatingContactWidget } from "@/components/shared/FloatingContactWidget";
 
-export default function PublicLayout({
+export default async function PublicLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  const locale = await getRequestLocale();
   return (
     <div className="public-site">
       <ScrollProgress />
       <a
         href="#main-content"
         className="fixed left-4 top-4 z-[100] -translate-y-24 rounded-xl bg-white px-5 py-3 font-semibold text-foreground shadow-lg focus:translate-y-0"
-        aria-label="Chuyển đến nội dung chính / Skip to main content"
       >
-        Chuyển đến nội dung chính
+        {locale === "vi" ? "Chuyển đến nội dung chính" : "Skip to main content"}
       </a>
 
       <JsonLd data={[organizationSchema(), websiteSchema()]} />

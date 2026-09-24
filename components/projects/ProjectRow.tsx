@@ -17,6 +17,7 @@ import {
 import Image from "next/image";
 import { LocalizedLink as Link } from "@/components/shared/LocalizedLink";
 
+import { ui } from "@/lib/i18n/ui";
 export function ProjectRow({
   project: rawProject,
   number,
@@ -27,7 +28,6 @@ export function ProjectRow({
   dark?: boolean;
 }) {
   const { t, locale } = useLanguage();
-  const isVi = locale === "vi";
   const project = localizeContent(rawProject, locale);
 
   return (
@@ -218,7 +218,7 @@ export function ProjectRow({
               )}
             >
               <CheckCircle2 className="size-3 text-emerald-600 dark:text-emerald-400" />
-              {isVi ? "Tiêu chuẩn" : "Standard"}
+              {ui(locale).projectRow.standard}
             </span>
             <p
               className={cn(

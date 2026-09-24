@@ -1,7 +1,21 @@
 import { env } from "@/lib/config/env";
-import { getAdminAccessToken } from "@/features/admin/auth";
+import {
+  clearAdminAccessToken,
+  clearAdminCache,
+  getAdminAccessToken,
+} from "@/features/admin/auth";
 
 const DEFAULT_TIMEOUT_MS = 15_000;
+
+/** Drops the stale credentials and sends the admin back to the login page. */
+function handleExpiredSession(): void {
+  clearAdminAccessToken();
+  clearAdminCache();
+  if (typeof window === "undefined") return;
+  const { pathname, search } = window.location;
+  if (pathname.startsWith("/admin/login")) return;
+  window.location.replace(`/admin/login?next=${encodeURIComponent(pathname + search)}`);
+}
 
 export interface AdminRequestInit extends RequestInit {
   timeoutMs?: number;
@@ -39,6 +53,8 @@ export async function adminRequest<T>(
       cache: "no-store",
       signal,
     });
+
+    if (response.status === 401) handleExpiredSession();
 
     if (!response.ok) {
       const body = (await response.json().catch(() => null)) as {

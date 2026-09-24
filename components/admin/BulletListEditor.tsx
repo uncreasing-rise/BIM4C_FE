@@ -81,7 +81,7 @@ export function BulletListEditor({
     <div className="space-y-2 pt-2">
       <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-2">
-          <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+          <label className="text-[13px] font-medium text-slate-700 dark:text-foreground flex items-center gap-1.5">
             <CheckCircle2 className="size-3.5 text-primary" />
             <span>{label}</span>
           </label>
@@ -139,7 +139,7 @@ export function BulletListEditor({
                   handleKeyDown(e, idx);
                 }
               }}
-              className="flex-1 rounded-xl border border-border bg-background px-3.5 py-2 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+              className="flex-1 rounded-md border border-slate-300 bg-white text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-teal-600 focus:ring-2 focus:ring-teal-600/20 dark:border-border dark:bg-background dark:text-foreground px-3 py-2"
             />
             {items.length > 1 && (
               <Button

@@ -4,6 +4,7 @@ import { useLanguage } from "@/lib/i18n/context";
 import { MessageCircle, Phone, X } from "lucide-react";
 import { useState } from "react";
 
+import { ui } from "@/lib/i18n/ui";
 const HOTLINE_NUMBER = "+84932468099";
 const HOTLINE_DISPLAY = "093 2468 099";
 
@@ -14,7 +15,7 @@ export function FloatingContactWidget() {
   return (
     <aside
       aria-label={
-        locale === "vi" ? "Kênh liên hệ nhanh" : "Quick contact channels"
+        ui(locale).floatingContactWidget.quickContactChannels
       }
       className="fixed bottom-5 left-5 z-40 flex flex-col items-start gap-2.5 select-none"
     >
@@ -26,9 +27,7 @@ export function FloatingContactWidget() {
             href={`tel:${HOTLINE_NUMBER}`}
             className="group flex items-center gap-2.5 rounded-full border border-emerald-500/30 bg-slate-900/90 py-2 pl-2.5 pr-4 text-xs font-semibold text-white shadow-xl backdrop-blur-md transition-all hover:bg-emerald-600 hover:scale-105 active:scale-95"
             title={
-              locale === "vi"
-                ? "Gọi Hotline tư vấn"
-                : "Call consultation hotline"
+              ui(locale).floatingContactWidget.callConsultationHotline
             }
           >
             <span className="flex size-7 items-center justify-center rounded-full bg-emerald-500 text-slate-950 shadow-xs">
@@ -54,12 +53,8 @@ export function FloatingContactWidget() {
           onClick={() => setIsOpen(!isOpen)}
           aria-label={
             isOpen
-              ? locale === "vi"
-                ? "Đóng menu liên hệ"
-                : "Close contact menu"
-              : locale === "vi"
-                ? "Mở menu liên hệ"
-                : "Open contact menu"
+              ? ui(locale).floatingContactWidget.closeContactMenu
+              : ui(locale).floatingContactWidget.openContactMenu
           }
           className="flex size-9 items-center justify-center rounded-full border border-white/20 bg-slate-900/80 text-slate-300 shadow-md backdrop-blur-sm transition-all hover:bg-slate-800 hover:text-white"
         >

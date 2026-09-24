@@ -14,6 +14,7 @@ import { localePrefix } from "@/lib/i18n/path";
 import { LanguageSwitcher } from "@/components/shared/LanguageSwitcher";
 import { LocalizedLink as Link } from "@/components/shared/LocalizedLink";
 
+import { ui } from "@/lib/i18n/ui";
 const text = (item: { vi: string; en: string }, locale: string) => (locale === "vi" ? item.vi : item.en);
 
 export function Header() {
@@ -24,7 +25,6 @@ export function Header() {
   const [openMenu, setOpenMenu] = useState<"about" | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [mobileAboutOpen, setMobileAboutOpen] = useState(false);
-  const isVi = locale === "vi";
 
   const active = (href: string) => {
     const locHref = localePrefix(locale, href);
@@ -112,24 +112,24 @@ export function Header() {
                 "order-first size-10 shrink-0 lg:hidden",
                 overHero ? "text-white hover:bg-white/10" : "text-slate-900 hover:bg-muted"
               )}
-              aria-label={isVi ? "Mở menu điều hướng" : "Open navigation menu"}
+              aria-label={ui(locale).header.openNavigationMenu}
             >
               <Menu className="size-5" />
             </Button>
           </SheetTrigger>
           <SheetContent side="left" showCloseButton={false} className="flex w-[min(90vw,24rem)] flex-col overflow-hidden p-0">
             <div className="flex items-center justify-between border-b px-5 py-4">
-              <SheetTitle>{isVi ? "Điều hướng BIM4C" : "BIM4C navigation"}</SheetTitle>
+              <SheetTitle>{ui(locale).header.bIM4CNavigation}</SheetTitle>
               <button
                 type="button"
                 onClick={closeMobile}
                 className="grid size-10 place-items-center rounded-lg hover:bg-muted"
-                aria-label={isVi ? "Đóng menu" : "Close menu"}
+                aria-label={ui(locale).header.closeMenu}
               >
                 <X className="size-5" />
               </button>
             </div>
-            <nav className="min-h-0 flex-1 overflow-y-auto px-4 py-5" aria-label={isVi ? "Điều hướng chính" : "Main navigation"}>
+            <nav className="min-h-0 flex-1 overflow-y-auto px-4 py-5" aria-label={ui(locale).header.mainNavigation}>
               <div className="grid gap-1">
                 <button
                   type="button"
@@ -137,7 +137,7 @@ export function Header() {
                   className="flex min-h-12 items-center justify-between rounded-lg px-3 text-left text-base font-semibold hover:bg-muted"
                   aria-expanded={mobileAboutOpen}
                 >
-                  {isVi ? "Giới thiệu" : "About"}
+                  {ui(locale).header.about}
                   <ChevronDown className={cn("size-4 transition-transform", mobileAboutOpen && "rotate-180")} />
                 </button>
                 {mobileAboutOpen && (
@@ -162,7 +162,7 @@ export function Header() {
                     active(ROUTES.services) && "text-primary"
                   )}
                 >
-                  {isVi ? "Dịch vụ" : "Services"}
+                  {ui(locale).header.services}
                 </Link>
                 <Link
                   href={ROUTES.projects}
@@ -172,7 +172,7 @@ export function Header() {
                     active(ROUTES.projects) && "text-primary"
                   )}
                 >
-                  {isVi ? "Dự án" : "Projects"}
+                  {ui(locale).header.projects}
                 </Link>
                 <Link
                   href={ROUTES.courses}
@@ -182,7 +182,7 @@ export function Header() {
                     active(ROUTES.courses) && "text-primary"
                   )}
                 >
-                  {isVi ? "Đào tạo" : "Training"}
+                  {ui(locale).header.training}
                 </Link>
                 <Link
                   href={ROUTES.technical}
@@ -192,7 +192,7 @@ export function Header() {
                     active(ROUTES.technical) && "text-primary"
                   )}
                 >
-                  {isVi ? "Chuyên môn BIM" : "Technical Hub"}
+                  {ui(locale).header.technicalHub}
                 </Link>
                 <Link
                   href={ROUTES.news}
@@ -202,14 +202,14 @@ export function Header() {
                     active(ROUTES.news) && "text-primary"
                   )}
                 >
-                  {isVi ? "Tin tức" : "News & Events"}
+                  {ui(locale).header.newsEvents}
                 </Link>
                 <Link
                   href={ROUTES.contact}
                   onClick={closeMobile}
                   className="mt-3 flex min-h-12 items-center justify-center rounded-lg bg-primary px-4 text-base font-bold text-white hover:bg-primary-hover"
                 >
-                  {isVi ? "Liên hệ tư vấn" : "Contact us"} →
+                  {ui(locale).header.contactUs} →
                 </Link>
               </div>
               <Link
@@ -246,7 +246,7 @@ export function Header() {
           </span>
         </Link>
 
-        <nav className="desktop-navigation ml-auto hidden items-center gap-1 lg:flex" aria-label={isVi ? "Điều hướng chính" : "Main navigation"}>
+        <nav className="desktop-navigation ml-auto hidden items-center gap-1 lg:flex" aria-label={ui(locale).header.mainNavigation}>
           <div className="relative" onMouseEnter={() => setOpenMenu("about")} onMouseLeave={() => setOpenMenu(null)}>
             <button
               type="button"
@@ -255,7 +255,7 @@ export function Header() {
               aria-expanded={openMenu === "about"}
               aria-haspopup="true"
             >
-              {isVi ? "Giới thiệu" : "About"}
+              {ui(locale).header.about}
               <ChevronDown className="size-3.5" />
             </button>
             {openMenu === "about" && (
@@ -276,19 +276,19 @@ export function Header() {
             )}
           </div>
           <Link href={ROUTES.services} className={navClass(ROUTES.services)}>
-            {isVi ? "Dịch vụ" : "Services"}
+            {ui(locale).header.services}
           </Link>
           <Link href={ROUTES.projects} className={navClass(ROUTES.projects)}>
-            {isVi ? "Dự án" : "Projects"}
+            {ui(locale).header.projects}
           </Link>
           <Link href={ROUTES.courses} className={navClass(ROUTES.courses)}>
-            {isVi ? "Đào tạo" : "Training"}
+            {ui(locale).header.training}
           </Link>
           <Link href={ROUTES.technical} className={navClass(ROUTES.technical)}>
-            {isVi ? "Chuyên môn BIM" : "Technical"}
+            {ui(locale).header.technical}
           </Link>
           <Link href={ROUTES.news} className={navClass(ROUTES.news)}>
-            {isVi ? "Tin tức" : "News"}
+            {ui(locale).header.news}
           </Link>
           <Link href={ROUTES.bimViewer} className={cn(navClass(ROUTES.bimViewer), "border border-current/20")}>
             <Box className="size-4" />
@@ -305,7 +305,7 @@ export function Header() {
             )}
           >
             <Link href={ROUTES.contact}>
-              {isVi ? "Liên hệ tư vấn" : "Contact us"}
+              {ui(locale).header.contactUs}
               <span aria-hidden="true" className="ml-1">
                 →
               </span>

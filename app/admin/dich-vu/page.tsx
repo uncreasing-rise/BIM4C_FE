@@ -7,8 +7,8 @@ export const metadata = { title: "Dịch vụ | BIM4C Admin" };
 export default function Page() {
   return (
     <AdminShell
-      title="Dịch vụ & Giải pháp"
-      description="Quản lý danh mục dịch vụ tư vấn BIM, chuyển giao công nghệ và giải pháp kỹ thuật số."
+      title="Dịch vụ"
+      description="Các dịch vụ tư vấn BIM, chuyển giao công nghệ và giải pháp số."
     >
       <Suspense fallback={<div className="p-12 text-center text-xs text-muted-foreground">Đang tải danh sách dịch vụ...</div>}>
         <ContentManager contentType="Dịch vụ" />

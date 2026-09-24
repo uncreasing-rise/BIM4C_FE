@@ -72,7 +72,7 @@ export function ProjectFields({ content, adminLangTab, onChange }: ProjectFields
   }
 
   return (
-    <div className="rounded-2xl border border-border bg-card p-6 shadow-xs space-y-5">
+    <div className="rounded-xl border border-border bg-card p-6 shadow-xs space-y-5">
       <div className="flex items-center gap-2 border-b border-border pb-3">
         <Layers className="size-4 text-primary" />
         <h3 className="text-base font-bold text-foreground">Thông số kỹ thuật công trình (Project Details)</h3>
@@ -80,46 +80,46 @@ export function ProjectFields({ content, adminLangTab, onChange }: ProjectFields
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <div className="space-y-1.5">
-          <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Địa điểm</label>
+          <label className="text-[13px] font-medium text-slate-700 dark:text-foreground">Địa điểm</label>
           <input
             placeholder="TP. Hồ Chí Minh / Hà Nội"
             value={adminLangTab === "en" ? content.location ?? "" : content.location_vi ?? ""}
             onChange={(e) => onChange(adminLangTab === "en" ? { location: e.target.value } : { location_vi: e.target.value })}
-            className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground outline-none transition focus:border-primary"
+            className="w-full rounded-md border border-slate-300 bg-white text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-teal-600 focus:ring-2 focus:ring-teal-600/20 dark:border-border dark:bg-background dark:text-foreground px-3 py-2"
           />
         </div>
         <div className="space-y-1.5">
-          <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Năm thực hiện</label>
+          <label className="text-[13px] font-medium text-slate-700 dark:text-foreground">Năm thực hiện</label>
           <input
             type="number"
             placeholder="2026"
             value={content.year ?? ""}
             onChange={(e) => onChange({ year: e.target.value ? Number(e.target.value) : null })}
-            className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground outline-none transition focus:border-primary"
+            className="w-full rounded-md border border-slate-300 bg-white text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-teal-600 focus:ring-2 focus:ring-teal-600/20 dark:border-border dark:bg-background dark:text-foreground px-3 py-2"
           />
         </div>
         <div className="space-y-1.5">
-          <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Chủ đầu tư</label>
+          <label className="text-[13px] font-medium text-slate-700 dark:text-foreground">Chủ đầu tư</label>
           <input
             placeholder="Tên tập đoàn / Chủ đầu tư"
             value={adminLangTab === "en" ? content.investor ?? "" : content.investor_vi ?? ""}
             onChange={(e) => onChange(adminLangTab === "en" ? { investor: e.target.value } : { investor_vi: e.target.value })}
-            className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground outline-none transition focus:border-primary"
+            className="w-full rounded-md border border-slate-300 bg-white text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-teal-600 focus:ring-2 focus:ring-teal-600/20 dark:border-border dark:bg-background dark:text-foreground px-3 py-2"
           />
         </div>
         <div className="space-y-1.5">
-          <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Gói thầu / Dịch vụ</label>
+          <label className="text-[13px] font-medium text-slate-700 dark:text-foreground">Gói thầu / Dịch vụ</label>
           <input
             placeholder="Mô hình BIM LOD 400"
             value={adminLangTab === "en" ? content.contractPackage ?? "" : content.contractPackage_vi ?? ""}
             onChange={(e) => onChange(adminLangTab === "en" ? { contractPackage: e.target.value } : { contractPackage_vi: e.target.value })}
-            className="w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-foreground outline-none transition focus:border-primary"
+            className="w-full rounded-md border border-slate-300 bg-white text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-teal-600 focus:ring-2 focus:ring-teal-600/20 dark:border-border dark:bg-background dark:text-foreground px-3 py-2"
           />
         </div>
       </div>
 
       <div className="space-y-1.5">
-        <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Quy mô công trình</label>
+        <label className="text-[13px] font-medium text-slate-700 dark:text-foreground">Quy mô công trình</label>
         <textarea
           rows={2}
           placeholder="Diện tích sàn, số tầng, tổng vốn đầu tư..."

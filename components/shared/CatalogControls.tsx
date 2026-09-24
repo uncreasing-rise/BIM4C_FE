@@ -14,8 +14,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/lib/i18n/context";
 import { scrollToElementTop } from "@/lib/utils/scroll";
 
+import { ui } from "@/lib/i18n/ui";
 export function CatalogCategories({
   ariaLabel,
   items,
@@ -151,6 +153,7 @@ export function CatalogSearch({
   value: string;
   onChange: (value: string) => void;
 }) {
+  const { locale } = useLanguage();
   return (
     <div className="relative min-w-0 w-full md:flex-1">
       <span className="sr-only">{label}</span>
@@ -167,7 +170,7 @@ export function CatalogSearch({
           type="button"
           onClick={() => onChange("")}
           className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-          aria-label="Clear search"
+          aria-label={ui(locale).catalogControls.clearSearch}
         >
           <X className="size-4" />
         </button>
@@ -230,6 +233,7 @@ export function CatalogPagination({
   pages: number;
   pathname: string;
 }) {
+  const { locale } = useLanguage();
   const searchParams = useSearchParams();
   if (pages <= 1) return null;
 
@@ -264,7 +268,7 @@ export function CatalogPagination({
           variant="ghost"
           size="icon"
           className="size-9 rounded-full hover:bg-muted text-foreground aria-disabled:pointer-events-none aria-disabled:opacity-30"
-          aria-label={page === 1 ? "Already on the first page" : "Previous page"}
+          aria-label={page === 1 ? (ui(locale).catalogControls.alreadyOnTheFirstPage) : ui(locale).catalogControls.previousPage}
         >
           <Link
             aria-disabled={page === 1}
@@ -298,7 +302,7 @@ export function CatalogPagination({
                   ? "bg-primary text-white shadow-md shadow-teal-900/30 ring-2 ring-primary/20"
                   : "text-foreground hover:bg-muted",
               )}
-              aria-label={`Page ${number}`}
+              aria-label={ui(locale).formats.page(number)}
               aria-current={page === number ? "page" : undefined}
             >
               <Link
@@ -318,7 +322,7 @@ export function CatalogPagination({
           variant="ghost"
           size="icon"
           className="size-9 rounded-full hover:bg-muted text-foreground aria-disabled:pointer-events-none aria-disabled:opacity-30"
-          aria-label={page === pages ? "Already on the last page" : "Next page"}
+          aria-label={page === pages ? (ui(locale).catalogControls.alreadyOnTheLastPage) : ui(locale).catalogControls.nextPage}
         >
           <Link
             aria-disabled={page === pages}

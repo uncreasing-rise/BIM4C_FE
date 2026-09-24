@@ -7,6 +7,7 @@ import { getSafeVideoUrl } from "@/lib/utils/safe-url";
 import { useLanguage } from "@/lib/i18n/context";
 import type { ContentBlock } from "@/features/shared/schemas/content-block.schema";
 
+import { ui } from "@/lib/i18n/ui";
 export function ContentBlockRenderer({ blocks }: { blocks: ContentBlock[] }) {
   const { locale } = useLanguage();
   return (
@@ -59,7 +60,7 @@ export function ContentBlockRenderer({ blocks }: { blocks: ContentBlock[] }) {
             return (
               <section
                 className="grid gap-4 sm:grid-cols-2"
-                aria-label="Image gallery"
+                aria-label={ui(locale).contentBlockRenderer.imageGallery}
                 key={block.id}
               >
                 {block.images.map((image, index) => (
@@ -136,7 +137,7 @@ export function ContentBlockRenderer({ blocks }: { blocks: ContentBlock[] }) {
                 )}
                 <Button asChild variant="outline">
                   <a href={safeUrl} target="_blank" rel="noopener noreferrer">
-                    {locale === "vi" ? "Xem video" : "Watch video"} <ExternalLink />
+                    {ui(locale).contentBlockRenderer.watchVideo} <ExternalLink />
                   </a>
                 </Button>
               </section>

@@ -1,7 +1,8 @@
-﻿"use client";
+"use client";
 import { useLanguage } from "@/lib/i18n/context";
 import {
   AlertTriangle,
+  Boxes,
   Camera,
   Layers,
   Maximize2,
@@ -13,13 +14,13 @@ import {
   Sparkles,
 } from "lucide-react";
 import type { BimTool, BimViewPreset } from "./types";
+import { ui } from "@/lib/i18n/ui";
 interface Props {
   activeTool: BimTool;
   onSelectTool: (tool: BimTool) => void;
   activeViewPreset: BimViewPreset;
   onSelectViewPreset: (view: BimViewPreset) => void;
-  selectedModelId: string;
-  uploadedName?: string;
+  modelCount: number;
   onResetView: () => void;
   onTakeSnapshot: () => void;
   isFullscreen: boolean;
@@ -31,6 +32,7 @@ export function BimToolbar(p: Props) {
   const v = t.bimViewerPage;
   const tools = [
     { id: "orbit", icon: MousePointer },
+    { id: "models", icon: Boxes },
     { id: "measure", icon: Ruler },
     { id: "section", icon: Scissors },
     { id: "explode", icon: Sparkles },
@@ -41,24 +43,16 @@ export function BimToolbar(p: Props) {
   return (
     <div
       className="z-20 flex shrink-0 flex-col gap-2 border-b border-white/10 bg-slate-950/95 p-2 lg:flex-row lg:items-center lg:justify-between"
-      aria-label={locale === "vi" ? "Công cụ mô hình" : "Model controls"}
+      aria-label={ui(locale).bimToolbar.modelControls}
     >
       <div className="flex min-w-0 flex-wrap items-center gap-2">
+        <span className="min-h-10 min-w-0 flex-1 content-center truncate rounded-lg border border-white/15 bg-slate-900 px-2 text-xs lg:max-w-64">
+          {p.modelCount
+            ? ui(locale).formats.modelsInScene(p.modelCount)
+            : ui(locale).bimToolbar.noIFCLoaded}
+        </span>
         <select
-          aria-label={v.selectModel}
-          value={p.selectedModelId}
-          disabled
-          className="min-h-10 min-w-0 flex-1 rounded-lg border border-white/15 bg-slate-900 px-2 text-xs lg:max-w-64"
-        >
-          {p.uploadedName && <option value="uploaded">{p.uploadedName}</option>}
-          {!p.uploadedName && (
-            <option value="empty">
-              {locale === "vi" ? "Ch?a t?i IFC" : "No IFC loaded"}
-            </option>
-          )}
-        </select>
-        <select
-          aria-label={locale === "vi" ? "Góc nhìn" : "View preset"}
+          aria-label={ui(locale).bimToolbar.viewPreset}
           value={p.activeViewPreset}
           onChange={(e) =>
             p.onSelectViewPreset(e.target.value as BimViewPreset)
@@ -87,6 +81,11 @@ export function BimToolbar(p: Props) {
             >
               <Icon className="size-4" />
               <span className="hidden xl:inline">{v.tools[id]}</span>
+              {id === "models" && p.modelCount > 0 && (
+                <span className="absolute right-0 top-0 rounded bg-teal-600 px-1 text-[9px] text-white">
+                  {p.modelCount}
+                </span>
+              )}
               {id === "clashes" && p.clashesCount > 0 && (
                 <span className="absolute right-0 top-0 rounded bg-red-600 px-1 text-[9px] text-white">
                   {p.clashesCount}

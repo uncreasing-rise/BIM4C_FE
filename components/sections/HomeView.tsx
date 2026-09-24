@@ -19,6 +19,7 @@ import type { Project } from "@/features/projects/types/project";
 import type { StrategicPartner } from "@/features/homepage/types";
 import type { SiteSettingsData } from "@/features/settings/types";
 
+import { ui } from "@/lib/i18n/ui";
 interface HomeViewProps {
   rawProjects: Project[];
   rawServices: ContentEntry[];
@@ -85,26 +86,22 @@ export function HomeView({
                   <span className="relative inline-flex size-2 rounded-full bg-teal-500" />
                 </span>
                 <span>
-                  {isVi
-                    ? "Công nghệ số hóa công trình BIM"
-                    : "BIM Construction Technology"}
+                  {ui(locale).homeView.bIMConstructionTechnology}
                 </span>
               </div>
 
               {/* Headline */}
               <h1 className="text-4xl font-extrabold tracking-[-0.04em] sm:text-5xl lg:text-[3.6rem] leading-[1.08] text-white">
-                {isVi ? "Kết nối dữ liệu." : "Connected data."}
+                {ui(locale).homeView.connectedData}
                 <br />
                 <span className="bg-gradient-to-r from-teal-300 via-teal-200 to-emerald-400 bg-clip-text text-transparent">
-                  {isVi ? "Kiến tạo công trình." : "Better buildings."}
+                  {ui(locale).homeView.betterBuildings}
                 </span>
               </h1>
 
               {/* Subtitle */}
               <p className="mt-5 max-w-xl text-base leading-relaxed text-slate-300 sm:text-lg">
-                {isVi
-                  ? "Tư vấn chiến lược BIM, điều phối mô hình đa bộ môn và quản lý dữ liệu số CDE — đồng hành tin cậy từ thiết kế, thi công đến vận hành."
-                  : "BIM consulting, multidisciplinary model coordination and CDE information governance — from concept through operations."}
+                {ui(locale).homeView.bIMConsultingMultidisciplinaryModelCoordination}
               </p>
 
               {/* Action Buttons */}
@@ -126,7 +123,7 @@ export function HomeView({
                   className="rounded-xl border-white/20 bg-white/[0.05] text-white hover:bg-white/10 hover:text-white backdrop-blur-md transition-all hover:scale-[1.02]"
                 >
                   <Link href={ROUTES.bimViewer}>
-                    {isVi ? "Trải nghiệm BIM 3D" : "Explore BIM in 3D"}
+                    {ui(locale).homeView.exploreBIMIn3D}
                   </Link>
                 </Button>
               </div>
@@ -159,9 +156,7 @@ export function HomeView({
       >
         {!services.length && (
           <p className="site-container py-4 text-sm text-muted-foreground">
-            {isVi
-              ? "Nội dung đang được cập nhật. Vui lòng liên hệ BIM4C."
-              : "Content is being updated. Please contact BIM4C."}
+            {ui(locale).homeView.contentIsBeingUpdatedPlease}
           </p>
         )}
         <div className="site-container">
@@ -171,29 +166,17 @@ export function HomeView({
           >
             <div>
               <p className="eyebrow">
-                {isVi ? "Năng lực chuyên môn" : "Our expertise"}
+                {ui(locale).homeView.ourExpertise}
               </p>
               <h2 className="section-title">
-                {isVi ? (
-                  <>
-                    Giải pháp phù hợp.
-                    <br />
-                    Mọi giai đoạn dự án.
-                  </>
-                ) : (
-                  <>
-                    The right support.
-                    <br />
-                    At every project stage.
-                  </>
-                )}
+                {ui(locale).formats.expertiseTitle[0]}
+                <br />
+                {ui(locale).formats.expertiseTitle[1]}
               </h2>
             </div>
             <div className="max-w-md">
               <p className="text-sm leading-7 text-muted-foreground">
-                {isVi
-                  ? "Xây dựng chiến lược BIM, kết nối đa bộ môn và trang bị cho đội ngũ nguồn dữ liệu số hữu ích."
-                  : "Define your BIM strategy, connect your disciplines and equip your team with information they can use."}
+                {ui(locale).homeView.defineYourBIMStrategyConnect}
               </p>
               <Link
                 href={ROUTES.services}
@@ -284,9 +267,7 @@ export function HomeView({
       >
         {!projects.length && (
           <p className="site-container py-4 text-sm text-muted-foreground">
-            {isVi
-              ? "Nội dung đang được cập nhật. Vui lòng liên hệ BIM4C."
-              : "Content is being updated. Please contact BIM4C."}
+            {ui(locale).homeView.contentIsBeingUpdatedPlease}
           </p>
         )}
         <div className="site-container relative">
@@ -296,19 +277,17 @@ export function HomeView({
           >
             <div>
               <p className="eyebrow text-teal-300">
-                {isVi ? "Kinh nghiệm thực chiến" : "Selected experience"}
+                {ui(locale).homeView.selectedExperience}
               </p>
               <h2 className="section-title text-white">
-                {isVi
-                  ? "Dự án thực tế. Năng lực kết nối."
-                  : "Real projects. Connected expertise."}
+                {ui(locale).homeView.realProjectsConnectedExpertise}
               </h2>
             </div>
             <Link
               href={ROUTES.projects}
               className="inline-flex min-h-11 shrink-0 items-center gap-2 text-sm font-semibold text-teal-300 hover:text-teal-200"
             >
-              {isVi ? "Tất cả dự án" : "All projects"}{" "}
+              {ui(locale).homeView.allProjects}{" "}
               <ArrowUpRight className="size-4" />
             </Link>
           </header>
@@ -323,9 +302,7 @@ export function HomeView({
       <section data-home-section="academy" className="py-16 lg:py-20">
         {!courses.length && (
           <p className="site-container py-4 text-sm text-muted-foreground">
-            {isVi
-              ? "Nội dung đang được cập nhật. Vui lòng liên hệ BIM4C."
-              : "Content is being updated. Please contact BIM4C."}
+            {ui(locale).homeView.contentIsBeingUpdatedPlease}
           </p>
         )}
         <div className="site-container">
@@ -344,23 +321,17 @@ export function HomeView({
               <div className="absolute inset-0 bg-gradient-to-t from-brand-ink/95 via-brand-ink/40 to-transparent" />
 
               <p className="absolute bottom-6 left-6 right-6 text-sm font-medium text-white/90">
-                {isVi
-                  ? "Đào tạo và chuyển giao công nghệ BIM cho doanh nghiệp và sinh viên."
-                  : "BIM training and technology transfer for businesses and students."}
+                {ui(locale).homeView.bIMTrainingAndTechnologyTransfer}
               </p>
             </div>
             <div className="p-6 sm:p-10 flex flex-col justify-between">
               <div>
                 <p className="eyebrow">BIM4C ACADEMY</p>
                 <h2 className="section-title">
-                  {isVi
-                    ? "Nâng cao năng lực chuyên môn đội ngũ."
-                    : "Build your team’s next BIM capability."}
+                  {ui(locale).homeView.buildYourTeamSNext}
                 </h2>
                 <p className="mt-3 text-sm leading-7 text-muted-foreground">
-                  {isVi
-                    ? "Chương trình thực chiến cho Kỹ sư Mô hình (Modeler), Điều phối viên (Coordinator) và Giám đốc BIM (Manager) với case study thực tế."
-                    : "Practical programmes for Modelers, Coordinators and BIM Managers with guided hands-on exercises."}
+                  {ui(locale).homeView.practicalProgrammesForModelersCoordinators}
                 </p>
                 <div className="mt-6 divide-y divide-border/60 border-y border-border/60">
                   {courses.slice(0, 3).map((course) => (
@@ -389,9 +360,7 @@ export function HomeView({
                 href={ROUTES.courses}
                 className="mt-6 inline-flex min-h-11 items-center gap-2 text-sm font-bold text-primary hover:underline underline-offset-4"
               >
-                {isVi
-                  ? "Khám phá tất cả chương trình đào tạo"
-                  : "Browse all programmes"}{" "}
+                {ui(locale).homeView.browseAllProgrammes}{" "}
                 <ArrowRight className="size-4" />
               </Link>
             </div>
@@ -404,9 +373,7 @@ export function HomeView({
       <section data-home-section="news" className="py-16 lg:py-24">
         {!posts.length && (
           <p className="site-container py-4 text-sm text-muted-foreground">
-            {isVi
-              ? "Nội dung đang được cập nhật. Vui lòng liên hệ BIM4C."
-              : "Content is being updated. Please contact BIM4C."}
+            {ui(locale).homeView.contentIsBeingUpdatedPlease}
           </p>
         )}
         <div className="site-container">
@@ -416,21 +383,17 @@ export function HomeView({
           >
             <div>
               <p className="eyebrow">
-                {isVi
-                  ? "Góc nhìn & Bài viết chuyên môn"
-                  : "Engineering Insights"}
+                {ui(locale).homeView.engineeringInsights}
               </p>
               <h2 className="section-title">
-                {isVi
-                  ? "Xu hướng công nghệ & Giải pháp thực chiến."
-                  : "Latest ideas for digital project delivery."}
+                {ui(locale).homeView.latestIdeasForDigitalProject}
               </h2>
             </div>
             <Link
               href={ROUTES.blog}
               className="inline-flex min-h-11 items-center gap-2 text-sm font-bold text-primary hover:underline underline-offset-4"
             >
-              {isVi ? "Xem tất cả bài viết" : "Browse all insights"}{" "}
+              {ui(locale).homeView.browseAllInsights}{" "}
               <ArrowUpRight className="size-4" />
             </Link>
           </header>
@@ -500,19 +463,13 @@ export function HomeView({
             <div className="relative z-10">
               <div className="inline-flex items-center gap-2 rounded-full bg-teal-500/15 border border-teal-500/30 px-3.5 py-1 text-xs font-bold uppercase tracking-wider text-teal-300 mb-4">
                 <span className="size-2 rounded-full bg-teal-400 animate-pulse" />
-                {isVi
-                  ? "Bắt đầu từ câu hỏi đúng"
-                  : "Start with the right question"}
+                {ui(locale).homeView.startWithTheRightQuestion}
               </div>
               <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold leading-[1.15] tracking-tight text-white max-w-2xl">
-                {isVi
-                  ? "Cùng làm rõ bước tiếp theo cho dự án của bạn."
-                  : "Make the next step clear for your project."}
+                {ui(locale).homeView.makeTheNextStepClear}
               </h2>
               <p className="mt-4 max-w-xl text-base sm:text-lg leading-relaxed text-slate-300">
-                {isVi
-                  ? "Chia sẻ bối cảnh, mục tiêu hoặc vấn đề đang cần giải quyết. Đội ngũ chuyên gia BIM4C sẽ cùng bạn xác định phạm vi phù hợp nhất."
-                  : "Share the context, goal or issue you are working through. We will help define the right scope together."}
+                {ui(locale).homeView.shareTheContextGoalOr}
               </p>
             </div>
 
@@ -535,7 +492,7 @@ export function HomeView({
               </a>
 
               <p className="text-xs text-slate-400">
-                {isVi ? "Liên hệ đội ngũ BIM4C" : "Contact the BIM4C team"}
+                {ui(locale).homeView.contactTheBIM4CTeam}
               </p>
             </div>
           </div>

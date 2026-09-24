@@ -120,6 +120,12 @@
   * {
     @apply border-border outline-ring/50;
   }
+  /* Long unbroken strings (URLs, codes, CMS typos) must wrap instead of
+     widening the whole page. `anywhere` also lowers min-content width, so it
+     works inside flex and grid items. Zero specificity: easy to override. */
+  :where(h1, h2, h3, h4, h5, h6, p, li, dd, dt, blockquote, figcaption, label) {
+    overflow-wrap: anywhere;
+  }
   html {
     @apply font-sans;
     scroll-padding-top: 6rem;

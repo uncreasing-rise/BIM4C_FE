@@ -76,7 +76,7 @@ export function CourseFields({ content, adminLangTab, onChange }: CourseFieldsPr
   }
 
   return (
-    <div className="rounded-2xl border border-border bg-card p-6 shadow-xs space-y-5">
+    <div className="rounded-xl border border-border bg-card p-6 shadow-xs space-y-5">
       <div className="flex items-center gap-2 border-b border-border pb-3">
         <GraduationCap className="size-4 text-primary" />
         <h3 className="text-base font-bold text-foreground">Thông số khóa học & Giáo trình</h3>
@@ -118,47 +118,47 @@ export function CourseFields({ content, adminLangTab, onChange }: CourseFieldsPr
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <div className="space-y-1.5">
-          <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          <label className="text-[13px] font-medium text-slate-700 dark:text-foreground">
             {adminLangTab === "en" ? "Duration" : "Thời lượng khóa học"}
           </label>
           <input
             placeholder={adminLangTab === "en" ? "12 sessions (36 hours)" : "12 buổi (36 giờ)"}
             value={adminLangTab === "en" ? content.duration ?? "" : content.duration_vi ?? ""}
             onChange={(e) => onChange(adminLangTab === "en" ? { duration: e.target.value } : { duration_vi: e.target.value })}
-            className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground outline-none transition focus:border-primary"
+            className="w-full rounded-md border border-slate-300 bg-white text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-teal-600 focus:ring-2 focus:ring-teal-600/20 dark:border-border dark:bg-background dark:text-foreground px-3 py-2"
           />
         </div>
         <div className="space-y-1.5">
-          <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          <label className="text-[13px] font-medium text-slate-700 dark:text-foreground">
             {adminLangTab === "en" ? "Level" : "Cấp độ / Phân loại"}
           </label>
           <input
             placeholder={adminLangTab === "en" ? "Beginner / Advanced" : "Cơ bản / Nâng cao / Chuyên sâu"}
             value={adminLangTab === "en" ? content.level ?? "" : content.level_vi ?? ""}
             onChange={(e) => onChange(adminLangTab === "en" ? { level: e.target.value } : { level_vi: e.target.value })}
-            className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground outline-none transition focus:border-primary"
+            className="w-full rounded-md border border-slate-300 bg-white text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-teal-600 focus:ring-2 focus:ring-teal-600/20 dark:border-border dark:bg-background dark:text-foreground px-3 py-2"
           />
         </div>
         <div className="space-y-1.5">
-          <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          <label className="text-[13px] font-medium text-slate-700 dark:text-foreground">
             {adminLangTab === "en" ? "Tuition Fee" : "Học phí"}
           </label>
           <input
             placeholder={adminLangTab === "en" ? "Contact / 4,500,000 VND" : "Liên hệ / 4.500.000 đ"}
             value={adminLangTab === "en" ? content.price ?? "" : content.price_vi ?? ""}
             onChange={(e) => onChange(adminLangTab === "en" ? { price: e.target.value } : { price_vi: e.target.value })}
-            className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground outline-none transition focus:border-primary"
+            className="w-full rounded-md border border-slate-300 bg-white text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-teal-600 focus:ring-2 focus:ring-teal-600/20 dark:border-border dark:bg-background dark:text-foreground px-3 py-2"
           />
         </div>
         <div className="space-y-1.5">
-          <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          <label className="text-[13px] font-medium text-slate-700 dark:text-foreground">
             {adminLangTab === "en" ? "Lead Instructor" : "Giảng viên phụ trách"}
           </label>
           <input
             placeholder={adminLangTab === "en" ? "Senior BIM Specialist" : "Chuyên gia BIM Quốc tế"}
             value={adminLangTab === "en" ? content.instructor ?? "" : content.instructor_vi ?? ""}
             onChange={(e) => onChange(adminLangTab === "en" ? { instructor: e.target.value } : { instructor_vi: e.target.value })}
-            className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground outline-none transition focus:border-primary"
+            className="w-full rounded-md border border-slate-300 bg-white text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-teal-600 focus:ring-2 focus:ring-teal-600/20 dark:border-border dark:bg-background dark:text-foreground px-3 py-2"
           />
         </div>
       </div>

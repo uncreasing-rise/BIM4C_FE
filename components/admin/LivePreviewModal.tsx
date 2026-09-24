@@ -189,12 +189,12 @@ export function LivePreviewModal({
       {/* Top Studio Control Bar */}
       <header className="flex w-full max-w-7xl items-center justify-between border-b border-white/10 pb-3 text-white shrink-0">
         <div className="flex items-center gap-3 min-w-0">
-          <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-teal-500/30 to-emerald-500/20 text-teal-300 border border-teal-500/40 shadow-inner">
+          <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-teal-500/15 text-teal-300 border border-teal-500/40 shadow-inner">
             <Eye className="size-4.5" />
           </div>
           <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <span className="text-[10px] font-mono font-black uppercase tracking-wider text-teal-300 bg-teal-500/20 px-2 py-0.5 rounded-full border border-teal-500/30 flex items-center gap-1">
+              <span className="text-[10px] font-mono font-semibold uppercase tracking-wider text-teal-300 bg-teal-500/20 px-2 py-0.5 rounded-full border border-teal-500/30 flex items-center gap-1">
                 <Sparkles className="size-3 text-teal-300 animate-pulse" />
                 LIVE PREVIEW STUDIO
               </span>
@@ -258,7 +258,7 @@ export function LivePreviewModal({
               onClick={() => setPreviewLang("vi")}
               className={`rounded-lg px-3 py-1.5 text-xs font-bold transition-all ${
                 previewLang === "vi"
-                  ? "bg-gradient-to-r from-teal-500 to-emerald-400 text-slate-950 shadow-sm"
+                  ? "bg-teal-500 text-slate-950 shadow-sm"
                   : "text-slate-300 hover:text-white"
               }`}
             >
@@ -269,7 +269,7 @@ export function LivePreviewModal({
               onClick={() => setPreviewLang("en")}
               className={`rounded-lg px-3 py-1.5 text-xs font-bold transition-all ${
                 previewLang === "en"
-                  ? "bg-gradient-to-r from-teal-500 to-emerald-400 text-slate-950 shadow-sm"
+                  ? "bg-teal-500 text-slate-950 shadow-sm"
                   : "text-slate-300 hover:text-white"
               }`}
             >
@@ -295,7 +295,7 @@ export function LivePreviewModal({
         
         {/* Device Wrapper */}
         {device === "desktop" && (
-          <div className="w-full max-w-6xl h-[84vh] flex flex-col rounded-2xl border border-white/20 bg-slate-900 shadow-2xl overflow-hidden transition-all duration-300">
+          <div className="w-full max-w-6xl h-[84vh] flex flex-col rounded-xl border border-white/20 bg-slate-900 shadow-2xl overflow-hidden transition-all duration-300">
             {/* Browser Top Navigation Bar */}
             <div className="h-10 bg-slate-900 border-b border-white/10 px-4 flex items-center gap-3 shrink-0 select-none">
               <div className="flex items-center gap-1.5">

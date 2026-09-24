@@ -9,49 +9,41 @@ import {
   ShieldCheck,
 } from "lucide-react";
 
+import { ui } from "@/lib/i18n/ui";
 export function DeliveryProcess() {
   const { t, locale } = useLanguage();
-  const isVi = locale === "vi";
 
   const steps = [
     {
       icon: ClipboardList,
       phase: "01",
-      title: isVi ? "Xác định & Lập BEP" : "Define & BEP Setup",
-      text: isVi
-        ? "Thống nhất phạm vi, yêu cầu thông tin EIR, ma trận LOD và phân định trách nhiệm CDE."
-        : "Agree scope, EIR information requirements, LOD matrix and CDE responsibilities.",
-      output: isVi ? "BIM Execution Plan (BEP)" : "BIM Execution Plan",
+      title: ui(locale).deliveryProcess.defineBEPSetup,
+      text: ui(locale).deliveryProcess.agreeScopeEIRInformationRequirements,
+      output: ui(locale).deliveryProcess.bIMExecutionPlan,
       tag: "ISO 19650-1",
     },
     {
       icon: Network,
       phase: "02",
-      title: isVi ? "Mô hình & Kết nối" : "Modeling & Integration",
-      text: isVi
-        ? "Đưa các bộ môn Kiến trúc, Kết cấu, MEP và tài liệu vào quy trình làm việc phối hợp chung."
-        : "Bring Architecture, Structure, MEP models and specs into a unified federated CDE workflow.",
-      output: isVi ? "Mô hình phối hợp đa bộ môn" : "Federated Model",
+      title: ui(locale).deliveryProcess.modelingIntegration,
+      text: ui(locale).deliveryProcess.bringArchitectureStructureMEPModels,
+      output: ui(locale).deliveryProcess.federatedModel,
       tag: "OpenBIM IFC4",
     },
     {
       icon: ScanLine,
       phase: "03",
-      title: isVi ? "Xử lý xung đột (Clash)" : "Clash Resolution",
-      text: isVi
-        ? "Kiểm soát chất lượng tự động, phát hiện và điều phối xử lý xung đột."
-        : "Automated clash detection, issue matrix tracking and multi-discipline coordination sign-off.",
-      output: isVi ? "Báo cáo phối hợp mô hình" : "Model coordination report",
+      title: ui(locale).deliveryProcess.clashResolution,
+      text: ui(locale).deliveryProcess.automatedClashDetectionIssueMatrix,
+      output: ui(locale).deliveryProcess.modelCoordinationReport,
       tag: "BCF / Navisworks",
     },
     {
       icon: FolderCheck,
       phase: "04",
-      title: isVi ? "Bàn giao & Vận hành" : "Digital Handover",
-      text: isVi
-        ? "Kiểm tra sản phẩm bàn giao, trích xuất khối lượng QTO và chuẩn bị dữ liệu COBie cho Digital Twin."
-        : "Verify outputs, extract accurate QTO quantities and assemble COBie data for Digital Twin/FM.",
-      output: isVi ? "Dữ liệu COBie & As-Built" : "COBie & As-Built Twin",
+      title: ui(locale).deliveryProcess.digitalHandover,
+      text: ui(locale).deliveryProcess.verifyOutputsExtractAccurateQTO,
+      output: ui(locale).deliveryProcess.cOBieAsBuiltTwin,
       tag: "COBie / 7D FM",
     },
   ];
@@ -79,9 +71,7 @@ export function DeliveryProcess() {
           aria-hidden="true"
         />
         <p className="mb-4 text-xs text-muted-foreground sm:hidden">
-          {isVi
-            ? "Vuốt để khám phá 4 bước →"
-            : "Swipe to explore the 4 steps →"}
+          {ui(locale).deliveryProcess.swipeToExploreThe4}
         </p>
         <div className="delivery-steps">
           {steps.map(({ icon: Icon, phase, title, text, output, tag }) => (
@@ -112,7 +102,7 @@ export function DeliveryProcess() {
               {/* Deliverable Box */}
               <div className="mt-6 rounded-xl border border-border bg-card/80 p-3.5 shadow-xs">
                 <span className="block text-xs font-semibold text-muted-foreground">
-                  {isVi ? "Sản phẩm đầu ra:" : "Key deliverable:"}
+                  {ui(locale).deliveryProcess.keyDeliverable}
                 </span>
                 <p className="mt-1 text-xs font-bold text-foreground flex items-center gap-1.5">
                   <ShieldCheck className="size-4 text-primary shrink-0" />

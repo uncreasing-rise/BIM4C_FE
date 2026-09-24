@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
+import { ui } from "@/lib/i18n/ui";
 const MAP_EMBED_URL =
   "https://maps.google.com/maps?q=20+Bac+Son+Da+Nang&output=embed";
 
@@ -23,7 +24,6 @@ const HEADQUARTERS_ADDRESS = "20 Bắc Sơn, Đà Nẵng, Việt Nam";
 
 export function OfficeLocationMap() {
   const { t, locale } = useLanguage();
-  const isVi = locale === "vi";
 
   return (
     <section
@@ -46,9 +46,7 @@ export function OfficeLocationMap() {
               onClick={() => {
                 navigator.clipboard.writeText(HEADQUARTERS_ADDRESS);
                 toast.success(
-                  isVi
-                    ? "Đã sao chép địa chỉ: 20 Bắc Sơn, Đà Nẵng, Việt Nam"
-                    : "Headquarters address copied to clipboard",
+                  ui(locale).officeLocationMap.headquartersAddressCopiedToClipboard,
                 );
               }}
               className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2.5 text-xs font-semibold text-foreground shadow-2xs hover:bg-muted transition-colors"
@@ -90,9 +88,7 @@ export function OfficeLocationMap() {
               loading="lazy"
               referrerPolicy="strict-origin-when-cross-origin"
               title={
-                isVi
-                  ? "Bản đồ vị trí Trụ sở chính BIM4C Đà Nẵng"
-                  : "BIM4C Da Nang Headquarters Map"
+                ui(locale).officeLocationMap.bIM4CDaNangHeadquartersMap
               }
               className="w-full h-full grayscale-[10%] contrast-[105%]"
             />
@@ -104,9 +100,7 @@ export function OfficeLocationMap() {
                   <div className="flex items-center gap-2">
                     <span className="size-2 rounded-full bg-emerald-400 animate-pulse" />
                     <span className="text-xs font-bold uppercase tracking-wider text-teal-300">
-                      {isVi
-                        ? "Trụ sở Chính Doanh Nghiệp"
-                        : "Corporate Headquarters"}
+                      {ui(locale).officeLocationMap.corporateHeadquarters}
                     </span>
                   </div>
                   <span className="rounded bg-teal-500/20 px-2 py-0.5 font-mono text-[10px] font-bold text-teal-300 border border-teal-500/30">
@@ -115,9 +109,7 @@ export function OfficeLocationMap() {
                 </div>
 
                 <p className="mt-2.5 text-sm font-bold leading-snug text-white">
-                  {isVi
-                    ? "CÔNG TY CỔ PHẦN XÂY DỰNG CÔNG NGHỆ BIM4C"
-                    : "BIM4C TECHNOLOGY & CONSTRUCTION JOINT STOCK COMPANY"}
+                  {ui(locale).officeLocationMap.bIM4CTECHNOLOGYCONSTRUCTIONJOINTSTOCK}
                 </p>
 
                 <p className="mt-1 flex items-start gap-2 text-xs text-slate-300 leading-relaxed">
@@ -139,7 +131,7 @@ export function OfficeLocationMap() {
                     rel="noopener noreferrer"
                     className="flex items-center gap-1 text-teal-300 hover:text-white transition-colors font-medium"
                   >
-                    <span>{isVi ? "Mở Google Maps" : "Open Maps"}</span>
+                    <span>{ui(locale).officeLocationMap.openMaps}</span>
                     <ExternalLink className="size-3" />
                   </a>
                 </div>
@@ -154,20 +146,14 @@ export function OfficeLocationMap() {
             <div>
               <p className="text-xs font-semibold uppercase tracking-wider text-primary flex items-center gap-1.5">
                 <Share2 className="size-3.5" />
-                {isVi
-                  ? "Mạng xã hội & Kênh kết nối"
-                  : "Social Media & Networks"}
+                {ui(locale).officeLocationMap.socialMediaNetworks}
               </p>
               <h3 className="text-xl font-bold text-foreground mt-1">
-                {isVi
-                  ? "Kết nối với BIM4C trên các nền tảng"
-                  : "Connect with BIM4C across platforms"}
+                {ui(locale).officeLocationMap.connectWithBIM4CAcrossPlatforms}
               </h3>
             </div>
             <p className="text-xs text-muted-foreground max-w-sm">
-              {isVi
-                ? "Theo dõi chúng tôi để cập nhật bài viết chuyên môn, video kỹ thuật BIM và các sự kiện ngành mới nhất."
-                : "Follow us to stay updated with professional insights, BIM tutorials, and industry events."}
+              {ui(locale).officeLocationMap.followUsToStayUpdated}
             </p>
           </div>
 

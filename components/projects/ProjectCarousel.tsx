@@ -8,10 +8,10 @@ import { useSlideshow } from "@/components/motion/hooks/use-slideshow";
 import { useLanguage } from "@/lib/i18n/context";
 import { cn } from "@/lib/utils";
 
+import { ui } from "@/lib/i18n/ui";
 export function ProjectCarousel({ projects }: { projects: Project[] }) {
   const slider = useSlideshow(projects.length, 6000);
   const { locale } = useLanguage();
-  const vi = locale === "vi";
 
   useEffect(() => {
     if (!slider.reduced && !slider.playing) slider.toggle();
@@ -24,7 +24,7 @@ export function ProjectCarousel({ projects }: { projects: Project[] }) {
       className="project-showcase relative"
       role="region"
       aria-roledescription="carousel"
-      aria-label={vi ? "Dự án tiêu biểu" : "Selected projects"}
+      aria-label={ui(locale).projectCarousel.selectedProjects}
       {...slider.handlers}
     >
       {/* Main Slide Stage */}
@@ -104,7 +104,7 @@ export function ProjectCarousel({ projects }: { projects: Project[] }) {
               type="button"
               onClick={() => slider.select(slider.active - 1)}
               className="grid size-10 place-items-center rounded-xl border border-white/15 bg-white/[0.05] text-white hover:bg-teal-500 hover:text-slate-950 hover:border-teal-400 transition-all duration-200 shadow-md"
-              aria-label={vi ? "Dự án trước" : "Previous project"}
+              aria-label={ui(locale).projectCarousel.previousProject}
             >
               <ChevronLeft className="size-5" />
             </button>
@@ -114,7 +114,7 @@ export function ProjectCarousel({ projects }: { projects: Project[] }) {
               type="button"
               onClick={() => slider.select(slider.active + 1)}
               className="grid size-10 place-items-center rounded-xl border border-white/15 bg-white/[0.05] text-white hover:bg-teal-500 hover:text-slate-950 hover:border-teal-400 transition-all duration-200 shadow-md"
-              aria-label={vi ? "Dự án tiếp theo" : "Next project"}
+              aria-label={ui(locale).projectCarousel.nextProject}
             >
               <ChevronRight className="size-5" />
             </button>

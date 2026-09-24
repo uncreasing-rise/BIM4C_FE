@@ -30,6 +30,7 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 
+import { ui } from "@/lib/i18n/ui";
 interface CourseCurriculumItem {
   id?: string;
   title: string;
@@ -62,7 +63,6 @@ export function CourseDetailView({
   const entry = localizeContent(rawEntry, locale) as CourseDetailEntry;
   const related = localizeContentList(rawRelated, locale);
 
-  const isVi = locale === "vi";
   const detailPath = `${backHref}/${entry.slug}`;
   const breadcrumbItems = [
     { name: t.navigation.home, path: "/" },
@@ -73,19 +73,17 @@ export function CourseDetailView({
   const legacyDurationVal =
     entry.duration ||
     entry.eyebrow.split("·")[1]?.trim() ||
-    (isVi ? "8 tuần" : "8 weeks");
+    (ui(locale).courseDetailView.t8Weeks);
   const legacyLevelVal =
     entry.level ||
     entry.eyebrow.split("·")[0]?.trim() ||
-    (isVi ? "Chuyên sâu" : "Advanced");
+    (ui(locale).courseDetailView.advanced);
   const legacyPriceVal =
     entry.price ||
-    (isVi ? "Liên hệ ưu đãi khóa học" : "Contact for corporate/cohort pricing");
+    (ui(locale).courseDetailView.contactForCorporateCohortPricing);
   const legacyInstructorVal =
     entry.instructor ||
-    (isVi
-      ? "BIM Manager & Giảng viên BIM4C"
-      : "BIM Manager & Senior Specialist");
+    (ui(locale).courseDetailView.bIMManagerSeniorSpecialist);
 
   const legacyCourseFacts = [
     {
@@ -98,12 +96,12 @@ export function CourseDetailView({
     },
     { label: t.detailPage.fields.price, value: legacyPriceVal },
     {
-      label: isVi ? "Hình thức học" : "Format",
-      value: isVi ? "Online tương tác / Lab" : "Live Interactive / Lab",
+      label: ui(locale).courseDetailView.format,
+      value: ui(locale).courseDetailView.liveInteractiveLab,
     },
     {
-      label: isVi ? "Lịch khai giảng" : "Schedule",
-      value: isVi ? "Định kỳ hàng tháng" : "Monthly Intakes",
+      label: ui(locale).courseDetailView.schedule,
+      value: ui(locale).courseDetailView.monthlyIntakes,
     },
     { label: t.detailPage.fields.instructor, value: legacyInstructorVal },
   ];
@@ -189,7 +187,7 @@ export function CourseDetailView({
           <TableOfContents
             blocks={blocks}
             cta={{
-              label: isVi ? "Đăng ký khóa học" : "Register for course",
+              label: ui(locale).courseDetailView.registerForCourse,
               href: "#course-registration",
             }}
           />
@@ -205,7 +203,7 @@ export function CourseDetailView({
                   <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
                     <GraduationCap className="size-5 text-primary" />
                     <span>
-                      {isVi ? "Chuẩn đầu ra khóa học" : "Key Learning Outcomes"}
+                      {ui(locale).courseDetailView.keyLearningOutcomes}
                     </span>
                   </h3>
                   <ul className="mt-5 grid gap-3 sm:grid-cols-2">
@@ -224,7 +222,7 @@ export function CourseDetailView({
 
               {/* Curriculum Modules */}
               {entry.curriculum && entry.curriculum.length > 0 && (
-                <section className="mt-12" aria-label="Course curriculum">
+                <section className="mt-12" aria-label={ui(locale).courseDetailView.courseCurriculum}>
                   <h2 className="text-2xl font-bold tracking-tight text-foreground mb-6">
                     {t.detailPage.curriculumTitle}
                   </h2>
@@ -328,12 +326,10 @@ export function CourseDetailView({
                     <GraduationCap className="size-4 text-teal-400 shrink-0 mt-0.5" />
                     <div>
                       <span className="font-semibold text-white/95">
-                        {isVi ? "Nội dung đào tạo:" : "Training content:"}{" "}
+                        {ui(locale).courseDetailView.trainingContent}{" "}
                       </span>
                       <span>
-                        {isVi
-                          ? "Học trên dự án thực tế, tài liệu song ngữ chuyên ngành."
-                          : "Hands-on projects with bilingual technical standards."}
+                        {ui(locale).courseDetailView.handsOnProjectsWithBilingual}
                       </span>
                     </div>
                   </div>
@@ -341,14 +337,10 @@ export function CourseDetailView({
                     <Users className="size-4 text-teal-400 shrink-0 mt-0.5" />
                     <div>
                       <span className="font-semibold text-white/95">
-                        {isVi
-                          ? "Chuyên gia trực tiếp giảng dạy:"
-                          : "Instructor Mentorship:"}{" "}
+                        {ui(locale).courseDetailView.instructorMentorship}{" "}
                       </span>
                       <span>
-                        {isVi
-                          ? "BIM Manager có kinh nghiệm thực chiến trên các dự án quy mô lớn."
-                          : "Seasoned BIM Managers leading real mega projects."}
+                        {ui(locale).courseDetailView.seasonedBIMManagersLeadingReal}
                       </span>
                     </div>
                   </div>
@@ -356,14 +348,10 @@ export function CourseDetailView({
                     <Award className="size-4 text-teal-400 shrink-0 mt-0.5" />
                     <div>
                       <span className="font-semibold text-white/95">
-                        {isVi
-                          ? "Chứng chỉ hoàn thành BIM4C:"
-                          : "BIM4C Certificate:"}{" "}
+                        {ui(locale).courseDetailView.bIM4CCertificate}{" "}
                       </span>
                       <span>
-                        {isVi
-                          ? "Chứng nhận kỹ năng có mã QR xác thực hồ sơ năng lực."
-                          : "Verified credential with QR authentication."}
+                        {ui(locale).courseDetailView.verifiedCredentialWithQRAuthentication}
                       </span>
                     </div>
                   </div>
@@ -371,14 +359,10 @@ export function CourseDetailView({
                     <HelpCircle className="size-4 text-teal-400 shrink-0 mt-0.5" />
                     <div>
                       <span className="font-semibold text-white/95">
-                        {isVi
-                          ? "Hỗ trợ sau khóa học:"
-                          : "Post-course Support:"}{" "}
+                        {ui(locale).courseDetailView.postCourseSupport}{" "}
                       </span>
                       <span>
-                        {isVi
-                          ? "Hỗ trợ giải đáp thắc mắc và kết nối cơ hội việc làm BIM."
-                          : "Community support and industry job connections."}
+                        {ui(locale).courseDetailView.communitySupportAndIndustryJob}
                       </span>
                     </div>
                   </div>
@@ -392,14 +376,14 @@ export function CourseDetailView({
         {related.length > 0 && (
           <section
             className="site-container mt-16 border-t pt-12"
-            aria-label="Related courses"
+            aria-label={ui(locale).courseDetailView.relatedCourses}
           >
             <div>
               <header className="mb-8 flex items-center justify-between">
                 <div>
                   <p className="eyebrow">{t.detailPage.keepExploring}</p>
                   <h2 className="text-2xl font-bold tracking-tight sm:text-3xl text-foreground">
-                    {isVi ? "Khóa học liên quan" : "Related programmes"}
+                    {ui(locale).courseDetailView.relatedProgrammes}
                   </h2>
                 </div>
                 <Button asChild variant="outline">

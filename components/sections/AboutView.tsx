@@ -28,6 +28,7 @@ import { LocalizedLink as Link } from "@/components/shared/LocalizedLink";
 import type { SiteSettingsData } from "@/features/settings/types";
 import { Download } from "lucide-react";
 
+import { ui } from "@/lib/i18n/ui";
 export function AboutView({
   partners = [],
   rawSettings,
@@ -148,9 +149,7 @@ export function AboutView({
                 <Image
                   src="/images/news-digital-twin.webp"
                   alt={
-                    locale === "vi"
-                      ? "Minh họa công nghệ BIM"
-                      : "BIM technology illustration"
+                    ui(locale).aboutView.bIMTechnologyIllustration
                   }
                   fill
                   sizes="(max-width: 1024px) 100vw, 50vw"
@@ -162,9 +161,7 @@ export function AboutView({
                     <ShieldCheck className="size-4" /> BIM 3D–7D
                   </div>
                   <p className="text-base font-bold text-white/95">
-                    {locale === "vi"
-                      ? "Hệ thống dữ liệu CDE và mô hình thông tin chuẩn xác cho dự án xây dựng hiện đại"
-                      : "Standardized CDE data environment and accurate information models for modern construction"}
+                    {ui(locale).aboutView.standardizedCDEDataEnvironmentAnd}
                   </p>
                 </div>
               </div>
@@ -390,7 +387,7 @@ export function AboutView({
                   className="gap-2 inline-flex items-center"
                 >
                   <Download className="size-4 text-primary" />
-                  <span>{isVi ? "Tải Hồ sơ năng lực (PDF)" : "Download Brochure (PDF)"}</span>
+                  <span>{ui(locale).aboutView.downloadBrochurePDF}</span>
                 </a>
               </Button>
             )}

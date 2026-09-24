@@ -8,6 +8,7 @@ import Image from "next/image";
 import { LocalizedLink as Link } from "@/components/shared/LocalizedLink";
 import { SocialLinks } from "@/components/shared/SocialLinks";
 
+import { ui } from "@/lib/i18n/ui";
 export function Footer() {
   const { t, locale } = useLanguage();
   const navigation = [
@@ -69,7 +70,7 @@ export function Footer() {
             </a>
             <div className="pt-2">
               <span className="text-[11px] font-medium tracking-wider uppercase text-slate-400 block mb-2.5">
-                {locale === "vi" ? "Kết nối mạng xã hội" : "Connect with us"}
+                {ui(locale).footer.connectWithUs}
               </span>
               <SocialLinks variant="icons" />
             </div>
@@ -82,7 +83,7 @@ export function Footer() {
           <nav
             className="mt-5 grid gap-1"
             aria-label={
-              locale === "vi" ? "Điều hướng cuối trang" : "Footer navigation"
+              ui(locale).footer.footerNavigation
             }
           >
             {navigation.map((item) => (

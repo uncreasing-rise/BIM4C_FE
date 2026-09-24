@@ -6,9 +6,9 @@ import { ROUTES } from "@/constants/routes";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/lib/i18n/context";
 
+import { ui } from "@/lib/i18n/ui";
 export function NotFoundView() {
   const { locale } = useLanguage();
-  const isVi = locale === "vi";
 
   return (
     <main className="relative isolate min-h-[85vh] flex items-center justify-center overflow-hidden bg-brand-ink text-white py-24">
@@ -36,19 +36,15 @@ export function NotFoundView() {
         </div>
 
         <p className="font-mono text-xs font-bold uppercase tracking-[0.25em] text-teal-300">
-          {isVi ? "404 · LỖI / KHÔNG TÌM THẤY TRANG" : "404 · ERROR / PAGE NOT FOUND"}
+          {ui(locale).notFoundView.t404ERRORPAGENOTFOUND}
         </p>
 
         <h1 className="mt-4 text-balance text-3xl font-extrabold tracking-tight sm:text-5xl text-white">
-          {isVi
-            ? "Trang không tồn tại hoặc đã được di chuyển."
-            : "This page does not exist or has been moved."}
+          {ui(locale).notFoundView.thisPageDoesNotExist}
         </h1>
 
         <p className="mt-4 text-sm leading-relaxed text-slate-300 sm:text-base">
-          {isVi
-            ? "Địa chỉ liên kết bạn vừa truy cập không khả dụng. Hãy quay về trang chủ hoặc khám phá các giải pháp công nghệ BIM của chúng tôi."
-            : "The link you accessed is no longer available. Please return to the homepage or explore our enterprise BIM technology solutions."}
+          {ui(locale).notFoundView.theLinkYouAccessedIs}
         </p>
 
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
@@ -59,7 +55,7 @@ export function NotFoundView() {
           >
             <Link href={ROUTES.home}>
               <Home className="size-4 mr-2" />
-              {isVi ? "Về trang chủ" : "Return to Homepage"}
+              {ui(locale).notFoundView.returnToHomepage}
             </Link>
           </Button>
 
@@ -71,7 +67,7 @@ export function NotFoundView() {
           >
             <Link href={ROUTES.services}>
               <Compass className="size-4 mr-2 text-teal-300" />
-              {isVi ? "Giải pháp & Dịch vụ" : "Solutions & Services"}
+              {ui(locale).notFoundView.solutionsServices}
             </Link>
           </Button>
 
@@ -83,7 +79,7 @@ export function NotFoundView() {
           >
             <Link href={ROUTES.contact}>
               <Phone className="size-4 mr-2 text-teal-300" />
-              {isVi ? "Liên hệ hỗ trợ" : "Contact Support"}
+              {ui(locale).notFoundView.contactSupport}
             </Link>
           </Button>
         </div>

@@ -1,22 +1,35 @@
-﻿"use client";
+"use client";
 import React, { useState } from "react";
 import { X, Info } from "lucide-react";
 import { useLanguage } from "@/lib/i18n/context";
+import { formatLength } from "./federation";
 import type { BimElementData } from "./types";
+
+import { ui } from "@/lib/i18n/ui";
+/** Selected element position in IFC world coordinates (metres). */
+export interface ElementCoordinates {
+  modelName: string;
+  center: [number, number, number];
+  bottom: number;
+  top: number;
+  map?: [number, number, number];
+}
+
 export function BimPropertyInspector({
   element: e,
+  coordinates,
   isOpen,
   onClose,
 }: {
   element: BimElementData | null;
+  coordinates?: ElementCoordinates | null;
   isOpen: boolean;
   onClose: () => void;
 }) {
   const { t, locale } = useLanguage();
-  const vi = locale === "vi";
   const v = t.bimViewerPage.properties;
   const [tab, setTab] = useState<"psets" | "tree">("psets");
-  const unknown = vi ? "Chưa có dữ liệu" : "Not provided";
+  const unknown = ui(locale).bimPropertyInspector.notProvided;
   if (!isOpen) return null;
   return (
     <aside
@@ -30,7 +43,7 @@ export function BimPropertyInspector({
         <h2 className="font-bold">{v.title}</h2>
         <button
           type="button"
-          aria-label={vi ? "Đóng thuộc tính" : "Close properties"}
+          aria-label={ui(locale).bimPropertyInspector.closeProperties}
           onClick={onClose}
           className="grid size-9 shrink-0 place-items-center rounded-lg hover:bg-white/10"
         >
@@ -47,16 +60,47 @@ export function BimPropertyInspector({
               {v.storey}: {e.storey || unknown}
             </p>
             <p>
-              {vi ? "Vật liệu" : "Material"}: {e.material || unknown}
+              {ui(locale).bimPropertyInspector.material}: {e.material || unknown}
             </p>
             {e.source !== "ifc" && (
               <p className="text-amber-200">
-                {vi
-                  ? "Thuộc tính minh họa, không trích xuất từ IFC."
-                  : "Illustrative properties, not extracted from IFC."}
+                {ui(locale).bimPropertyInspector.illustrativePropertiesNotExtractedFrom}
               </p>
             )}
           </div>
+          {coordinates && (
+            <div className="mt-3 rounded-lg border border-teal-500/30 bg-teal-500/5 p-3">
+              <h4 className="mb-2 font-semibold">
+                {ui(locale).bimPropertyInspector.coordinatesIFCM}
+              </h4>
+              <p className="mb-2 truncate text-[10px] text-slate-400" title={coordinates.modelName}>
+                {ui(locale).bimPropertyInspector.model}: {coordinates.modelName}
+              </p>
+              <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5 font-mono text-[11px]">
+                {(["X", "Y", "Z"] as const).map((axis, i) => (
+                  <React.Fragment key={axis}>
+                    <dt className="text-slate-400">{ui(locale).formats.centreAxis(axis)}</dt>
+                    <dd className="text-right">{formatLength(coordinates.center[i], locale)}</dd>
+                  </React.Fragment>
+                ))}
+                <dt className="text-slate-400">{ui(locale).bimPropertyInspector.bottomElevation}</dt>
+                <dd className="text-right">{formatLength(coordinates.bottom, locale)}</dd>
+                <dt className="text-slate-400">{ui(locale).bimPropertyInspector.topElevation}</dt>
+                <dd className="text-right">{formatLength(coordinates.top, locale)}</dd>
+                {coordinates.map && (
+                  <>
+                    <dt className="text-slate-400">E · N · H</dt>
+                    <dd className="text-right">
+                      {coordinates.map.map((n) => formatLength(n, locale)).join(" · ")}
+                    </dd>
+                  </>
+                )}
+              </dl>
+              <p className="mt-2 text-[10px] text-slate-500">
+                {ui(locale).bimPropertyInspector.centreAndElevationsComeFrom}
+              </p>
+            </div>
+          )}
           <div className="my-3 flex gap-2" role="group" aria-label={v.title}>
             {(["psets", "tree"] as const).map((id) => (
               <button
@@ -76,21 +120,17 @@ export function BimPropertyInspector({
                 <div className="rounded-lg border border-white/10 p-3">
                   <h4 className="mb-2 font-semibold">
                     {e.dimensionsSource === "bounds"
-                      ? vi
-                        ? "Kích thước hộp bao theo trục (ước lượng)"
-                        : "Axis-aligned bounding dimensions (estimate)"
-                      : vi
-                        ? "Kích thước minh họa"
-                        : "Sample dimensions"}
+                      ? ui(locale).bimPropertyInspector.axisAlignedBoundingDimensionsEstimate
+                      : ui(locale).bimPropertyInspector.sampleDimensions}
                   </h4>
                   <dl className="grid grid-cols-2 gap-2">
                     {(
                       [
-                        ["length", vi ? "Dài X" : "Length X", "m"],
-                        ["width", vi ? "Rộng Z" : "Width Z", "m"],
-                        ["height", vi ? "Cao Y" : "Height Y", "m"],
-                        ["area", vi ? "Diện tích" : "Area", "m²"],
-                        ["volume", vi ? "Thể tích" : "Volume", "m³"],
+                        ["length", ui(locale).bimPropertyInspector.alongX, "m"],
+                        ["width", ui(locale).bimPropertyInspector.alongY, "m"],
+                        ["height", ui(locale).bimPropertyInspector.heightZ, "m"],
+                        ["area", ui(locale).bimPropertyInspector.area, "m²"],
+                        ["volume", ui(locale).bimPropertyInspector.volume, "m³"],
                       ] as const
                     ).map(([key, label, unit]) =>
                       e.dimensions?.[key] !== undefined ? (
@@ -108,9 +148,7 @@ export function BimPropertyInspector({
                   </dl>
                   {e.dimensionsSource === "bounds" && (
                     <p className="mt-2 text-[10px] text-slate-400">
-                      {vi
-                        ? "Không dùng hộp bao để tính khối lượng. Quantity gốc, nếu có, nằm trong bộ thuộc tính bên dưới."
-                        : "Bounding dimensions are not quantities. Source quantities, when available, are listed below with their units."}
+                      {ui(locale).bimPropertyInspector.boundingDimensionsAreNotQuantities}
                     </p>
                   )}
                 </div>
@@ -155,9 +193,7 @@ export function BimPropertyInspector({
                 ))
               ) : (
                 <li className="text-slate-400">
-                  {vi
-                    ? "Chưa có cây không gian từ tệp IFC."
-                    : "No IFC spatial hierarchy is available."}
+                  {ui(locale).bimPropertyInspector.noIFCSpatialHierarchyIs}
                 </li>
               )}
               <li className="rounded-lg border border-teal-500/40 bg-teal-500/10 p-2">

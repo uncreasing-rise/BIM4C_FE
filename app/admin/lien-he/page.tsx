@@ -4,7 +4,7 @@ export default function Page() {
   return (
     <AdminShell
       title="Liên hệ"
-      description="Quản lý yêu cầu liên hệ từ website."
+      description="Yêu cầu tư vấn gửi từ form liên hệ trên website."
     >
       <RecordsManager kind="contacts" />
     </AdminShell>

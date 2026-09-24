@@ -26,25 +26,6 @@ function setLocaleCookie(locale: Locale) {
   document.cookie = `${LOCALE_COOKIE_NAME}=${locale}; path=/; max-age=${maxAge}; SameSite=Lax`;
 }
 
-function getStoredLocale(fallback: Locale): Locale {
-  if (typeof window === "undefined") return fallback;
-  try {
-    // 1. Check cookie
-    const cookies = document.cookie.split("; ");
-    const localeCookie = cookies.find((c) => c.startsWith(`${LOCALE_COOKIE_NAME}=`));
-    if (localeCookie) {
-      const val = localeCookie.split("=")[1] as Locale;
-      if (SUPPORTED_LOCALES.includes(val)) return val;
-    }
-    // 2. Check localStorage
-    const stored = localStorage.getItem("bim4c_locale") as Locale;
-    if (stored && SUPPORTED_LOCALES.includes(stored)) return stored;
-  } catch {
-    // ignore
-  }
-  return fallback;
-}
-
 export function LanguageProvider({
   children,
   initialLocale = DEFAULT_LOCALE,
@@ -52,17 +33,17 @@ export function LanguageProvider({
   children: React.ReactNode;
   initialLocale?: Locale;
 }) {
+  // The server resolves the locale for every route (the /vi or /en URL prefix,
+  // or Vietnamese for /admin), so it is authoritative. Re-reading a cookie on
+  // the client used to flip the admin UI (and <html lang>) to English after a
+  // visitor had browsed the English site.
   const [locale, setLocaleState] = useState<Locale>(initialLocale);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      const savedLocale = getStoredLocale(initialLocale);
-      if (savedLocale !== locale) {
-        setLocaleState(savedLocale);
-      }
-    }, 0);
-    return () => clearTimeout(timer);
-  }, [initialLocale, locale]);
+  const [syncedInitial, setSyncedInitial] = useState(initialLocale);
+  if (initialLocale !== syncedInitial) {
+    // Client navigation to a route rendered in another locale.
+    setSyncedInitial(initialLocale);
+    setLocaleState(initialLocale);
+  }
 
   const setLocale = useCallback((newLocale: Locale) => {
     if (!SUPPORTED_LOCALES.includes(newLocale)) return;

@@ -7,9 +7,9 @@ import { LocalizedLink as Link } from "@/components/shared/LocalizedLink";
 import { ROUTES } from "@/constants/routes";
 import { useLanguage } from "@/lib/i18n/context";
 
+import { ui } from "@/lib/i18n/ui";
 export function BimHero3DCanvas() {
   const { locale } = useLanguage();
-  const isVi = locale === "vi";
 
   const containerRef = useRef<HTMLDivElement | null>(null);
 
@@ -266,7 +266,7 @@ export function BimHero3DCanvas() {
           className="pointer-events-auto inline-flex items-center gap-1.5 rounded-xl border border-teal-500/30 bg-teal-500/15 px-3 py-1 text-xs font-bold text-teal-300 hover:bg-teal-500/25 transition-colors backdrop-blur-md shadow-sm"
         >
           <Maximize2 className="size-3.5" />
-          <span className="hidden sm:inline">{isVi ? "Xem BIM Đầy đủ" : "Full BIM Viewer"}</span>
+          <span className="hidden sm:inline">{ui(locale).bimHero3DCanvas.fullBIMViewer}</span>
         </Link>
       </div>
 
@@ -275,7 +275,7 @@ export function BimHero3DCanvas() {
         <div className="flex items-center gap-2 rounded-lg border border-white/10 bg-slate-950/60 px-2.5 py-1 backdrop-blur-md">
           <Layers className="size-3.5 text-teal-400" />
           <span className="text-[11px] font-medium text-slate-300">
-            {isVi ? "Mô hình 3D đa bộ môn (Tự động xoay)" : "Multidisciplinary 3D Model (Auto-Orbit)"}
+            {ui(locale).bimHero3DCanvas.multidisciplinary3DModelAutoOrbit}
           </span>
         </div>
       </div>

@@ -31,7 +31,11 @@ const nextConfig: NextConfig = {
   // Keep metadata blocking so redirects/notFound raised during metadata generation
   // preserve their HTTP semantics for crawlers as well as browsers.
   htmlLimitedBots: /.*/,
-  allowedDevOrigins: ["192.168.1.12"],
+  // Comma-separated LAN hosts allowed to load the dev server (e.g. phone testing).
+  allowedDevOrigins: (process.env.DEV_ALLOWED_ORIGINS ?? "")
+    .split(",")
+    .map((value) => value.trim())
+    .filter(Boolean),
   images: {
     remotePatterns: mediaPatterns(),
     formats: ["image/avif", "image/webp"],
@@ -47,6 +51,18 @@ const nextConfig: NextConfig = {
         value: "camera=(), microphone=(), geolocation=()",
       },
       { key: "X-Frame-Options", value: "DENY" },
+      // Browsers ignore HSTS over plain HTTP, so this is harmless in development.
+      {
+        key: "Strict-Transport-Security",
+        value: "max-age=63072000; includeSubDomains",
+      },
+      // Structural directives only: they cannot break inline Next.js scripts,
+      // the WASM IFC viewer or embedded maps. Tighten script-src with nonces
+      // once it can be verified against a staging deployment.
+      {
+        key: "Content-Security-Policy",
+        value: "base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'",
+      },
     ];
     return [
       { source: "/(.*)", headers: securityHeaders },

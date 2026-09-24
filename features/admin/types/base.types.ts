@@ -11,6 +11,7 @@ export type AdminContentStatus =
   | "DRAFT"
   | "PUBLISHED"
   | "ARCHIVED"
+  | "PROFILED"
   | "PLANNED"
   | "IN_PROGRESS"
   | "COMPLETED";

@@ -4,7 +4,7 @@ export default function Page() {
   return (
     <AdminShell
       title="Cài đặt"
-      description="Thông tin doanh nghiệp và SEO mặc định."
+      description="Thông tin doanh nghiệp, SEO mặc định và chỉ số hiển thị trên website."
     >
       <SettingsManager />
     </AdminShell>

@@ -28,6 +28,8 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { exportToCsv } from "@/lib/utils/export-csv";
 import { toast } from "sonner";
+import { formatDateTime, statusLabel, table } from "./admin-ui";
+import { useConfirm } from "./ConfirmDialog";
 
 function renderMessageContent(
   rawMessage?: string,
@@ -104,6 +106,7 @@ function renderMessageContent(
 }
 
 export function RecordsManager({ kind }: { kind: RecordKind }) {
+  const { confirm, dialog } = useConfirm();
   const isNewsletter = kind === "newsletter/subscriptions";
   const isCourse = kind === "course-registrations";
 
@@ -203,7 +206,12 @@ export function RecordsManager({ kind }: { kind: RecordKind }) {
   }
 
   async function remove(item: AdminRecord) {
-    if (!confirm(`Xác nhận xóa bản ghi từ “${item.name ?? item.email}”?`))
+    if (
+      !(await confirm({
+        title: `Xóa bản ghi của “${item.name ?? item.email}”?`,
+        description: "Bản ghi và thông tin liên hệ của khách bị xóa vĩnh viễn. Hãy xuất CSV trước nếu cần lưu trữ.",
+      }))
+    )
       return;
     const prevItems = [...items];
     // Optimistic UI update
@@ -293,52 +301,54 @@ export function RecordsManager({ kind }: { kind: RecordKind }) {
           format?: (row: Record<string, unknown>) => string;
         }[],
       );
-      toast.success("📥 Đã xuất file Excel/CSV thành công!");
+      toast.success("Đã xuất file CSV.");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Không thể xuất file");
     }
   }
 
   return (
-    <section className="overflow-hidden rounded-2xl border border-border bg-card shadow-xs">
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 border-b border-border/80 p-4 bg-muted/20">
+    <section className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
+      {dialog}
+      <div className="flex flex-col items-stretch justify-between gap-2 border-b border-slate-200 p-3 sm:flex-row sm:items-center sm:p-4">
         <div className="relative flex-1 max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder={searchPlaceholder}
-            className="pl-9 h-10 bg-background"
+            className="h-9 bg-white pl-9 text-sm"
           />
         </div>
         <div className="flex items-center gap-2.5">
           <select
             value={status}
             onChange={(e) => setStatus(e.target.value)}
-            className="h-10 rounded-lg border border-input bg-background px-3 text-sm text-foreground focus:outline-hidden focus:ring-2 focus:ring-primary"
+            aria-label="Lọc theo trạng thái"
+            className="h-9 rounded-md border border-slate-300 bg-white px-2.5 text-sm text-slate-700 shadow-sm focus:outline-hidden focus:ring-2 focus:ring-teal-600/20"
           >
             <option value="">Tất cả trạng thái</option>
             {isNewsletter ? (
               <>
-                <option value="active">Đang hoạt động</option>
-                <option value="unsubscribed">Đã hủy</option>
+                <option value="active">{statusLabel("newsletter", "ACTIVE")}</option>
+                <option value="unsubscribed">{statusLabel("newsletter", "UNSUBSCRIBED")}</option>
               </>
             ) : (
               <>
-                <option value="new">Mới</option>
-                <option value="in_progress">Đang xử lý</option>
-                <option value="resolved">Đã giải quyết</option>
-                <option value="spam">Spam</option>
+                <option value="new">{statusLabel("submission", "NEW")}</option>
+                <option value="in_progress">{statusLabel("submission", "IN_PROGRESS")}</option>
+                <option value="resolved">{statusLabel("submission", "RESOLVED")}</option>
+                <option value="spam">{statusLabel("submission", "SPAM")}</option>
               </>
             )}
           </select>
           <Button
             variant="outline"
             onClick={handleExportCsv}
-            className="gap-1.5 h-10 font-semibold shadow-xs"
+            className="h-9 gap-1.5"
           >
-            <Download className="size-4 text-primary" />
-            <span>Xuất Excel</span>
+            <Download className="size-4" />
+            <span>Xuất CSV</span>
           </Button>
         </div>
       </div>
@@ -351,43 +361,43 @@ export function RecordsManager({ kind }: { kind: RecordKind }) {
       )}
 
       <div className="w-full overflow-x-auto">
-        <table className="w-full text-left text-sm">
-          <thead className="border-b border-border/80 bg-muted/40 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        <table className={table.table}>
+          <thead className={table.head}>
             <tr>
-              <th className="px-5 py-3.5">Người gửi</th>
-              <th className="px-5 py-3.5">Thông tin liên hệ</th>
-              <th className="px-5 py-3.5">{contentHeader}</th>
-              <th className="px-5 py-3.5">Trạng thái</th>
-              <th className="px-5 py-3.5">Thời gian</th>
-              <th className="px-5 py-3.5">Chấp thuận điều khoản</th>
-              <th className="px-5 py-3.5 text-right">Thao tác</th>
+              <th className={table.th}>Người gửi</th>
+              <th className={table.th}>Liên hệ</th>
+              <th className={table.th}>{contentHeader}</th>
+              <th className={table.th}>Trạng thái</th>
+              <th className={table.th}>Thời gian</th>
+              <th className={table.th}>Đồng ý điều khoản</th>
+              <th className={`${table.th} text-right`}>Thao tác</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-border/60">
+          <tbody>
             {loading ? (
               Array.from({ length: 4 }).map((_, i) => (
                 <tr key={i} className="animate-pulse">
-                  <td className="px-5 py-4">
+                  <td className={table.td}>
                     <div className="h-4 w-32 bg-muted rounded mb-1.5" />
                     <div className="h-3 w-20 bg-muted/60 rounded" />
                   </td>
-                  <td className="px-5 py-4">
+                  <td className={table.td}>
                     <div className="h-3.5 w-40 bg-muted rounded mb-1" />
                     <div className="h-3 w-24 bg-muted/60 rounded" />
                   </td>
-                  <td className="px-5 py-4">
+                  <td className={table.td}>
                     <div className="h-3.5 w-48 bg-muted rounded" />
                   </td>
-                  <td className="px-5 py-4">
+                  <td className={table.td}>
                     <div className="h-7 w-28 bg-muted rounded" />
                   </td>
-                  <td className="px-5 py-4">
+                  <td className={table.td}>
                     <div className="h-3.5 w-24 bg-muted rounded" />
                   </td>
-                  <td className="px-5 py-4">
+                  <td className={table.td}>
                     <div className="h-5 w-16 bg-muted rounded-full" />
                   </td>
-                  <td className="px-5 py-4 text-right">
+                  <td className={`${table.td} text-right`}>
                     <div className="h-8 w-8 bg-muted rounded ml-auto" />
                   </td>
                 </tr>
@@ -403,12 +413,9 @@ export function RecordsManager({ kind }: { kind: RecordKind }) {
               </tr>
             ) : (
               items.map((item) => (
-                <tr
-                  key={item.id}
-                  className="hover:bg-muted/20 transition-colors"
-                >
-                  <td className="px-5 py-4">
-                    <div className="font-semibold text-foreground">
+                <tr key={item.id} className={table.row}>
+                  <td className={table.td}>
+                    <div className="whitespace-nowrap font-medium text-slate-900">
                       {item.name || item.email}
                     </div>
                     {item.company && (
@@ -418,7 +425,7 @@ export function RecordsManager({ kind }: { kind: RecordKind }) {
                       </div>
                     )}
                   </td>
-                  <td className="px-5 py-4">
+                  <td className={table.td}>
                     <div className="flex items-center gap-1.5 text-xs text-foreground">
                       <Mail className="size-3 text-primary shrink-0" />
                       <a
@@ -440,7 +447,7 @@ export function RecordsManager({ kind }: { kind: RecordKind }) {
                       </div>
                     )}
                   </td>
-                  <td className="px-5 py-4 max-w-md">
+                  <td className={`${table.td} max-w-md`}>
                     {renderMessageContent(
                       item.message,
                       isCourse,
@@ -448,7 +455,7 @@ export function RecordsManager({ kind }: { kind: RecordKind }) {
                       isNewsletter,
                     )}
                   </td>
-                  <td className="px-5 py-4">
+                  <td className={table.td}>
                     <select
                       disabled={busy}
                       value={
@@ -459,44 +466,42 @@ export function RecordsManager({ kind }: { kind: RecordKind }) {
                           : item.status?.toLowerCase()
                       }
                       onChange={(e) => void update(item, e.target.value)}
-                      className="h-8 rounded-md border border-input bg-background px-2 text-xs font-medium text-foreground focus:outline-hidden"
+                      aria-label={`Trạng thái của ${item.name ?? item.email}`}
+                      className="h-8 rounded-md border border-slate-300 bg-white px-2 text-xs font-medium text-slate-700 focus:outline-hidden focus:ring-2 focus:ring-teal-600/20"
                     >
                       {isNewsletter ? (
                         <>
-                          <option value="active">Đang hoạt động</option>
-                          <option value="unsubscribed">Đã hủy</option>
+                          <option value="active">{statusLabel("newsletter", "ACTIVE")}</option>
+                          <option value="unsubscribed">{statusLabel("newsletter", "UNSUBSCRIBED")}</option>
                         </>
                       ) : (
                         <>
-                          <option value="new">Mới</option>
-                          <option value="in_progress">Đang xử lý</option>
-                          <option value="resolved">Đã giải quyết</option>
-                          <option value="spam">Spam</option>
+                          <option value="new">{statusLabel("submission", "NEW")}</option>
+                          <option value="in_progress">{statusLabel("submission", "IN_PROGRESS")}</option>
+                          <option value="resolved">{statusLabel("submission", "RESOLVED")}</option>
+                          <option value="spam">{statusLabel("submission", "SPAM")}</option>
                         </>
                       )}
                     </select>
                   </td>
-                  <td className="px-5 py-4 whitespace-nowrap text-xs text-muted-foreground">
-                    {new Intl.DateTimeFormat("vi-VN", {
-                      dateStyle: "medium",
-                      timeStyle: "short",
-                    }).format(new Date(item.createdAt))}
+                  <td className={`${table.td} whitespace-nowrap text-xs text-slate-500`}>
+                    {formatDateTime(item.createdAt)}
                   </td>
-                  <td className="px-5 py-4 whitespace-nowrap">
+                  <td className={`${table.td} whitespace-nowrap`}>
                     {(item.consentGiven ?? item.consent) === true ? (
                       <Badge
                         variant="outline"
                         className="gap-1 border-teal-500/30 text-teal-600 dark:text-teal-400 bg-teal-500/10"
                       >
-                        <CheckCircle2 className="size-3" /> Đã đồng ý
+                        <CheckCircle2 className="size-3" /> Có
                       </Badge>
                     ) : (
                       <Badge variant="secondary" className="text-xs">
-                        Không có
+                        Chưa ghi nhận
                       </Badge>
                     )}
                   </td>
-                  <td className="px-5 py-4 text-right">
+                  <td className={`${table.td} text-right`}>
                     <div className="flex items-center justify-end gap-1">
                       <Button
                         variant="ghost"
@@ -528,7 +533,7 @@ export function RecordsManager({ kind }: { kind: RecordKind }) {
         </table>
       </div>
 
-      <footer className="flex items-center justify-between border-t border-border/80 px-5 py-3.5 text-xs text-muted-foreground bg-muted/20">
+      <footer className="flex items-center justify-between border-t border-slate-200 px-4 py-3 text-xs text-slate-500">
         <Button
           variant="outline"
           size="sm"
@@ -563,14 +568,14 @@ export function RecordsManager({ kind }: { kind: RecordKind }) {
       {/* Detail Modal */}
       {activeDetail && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150">
-          <div className="relative w-full max-w-lg rounded-3xl border border-border bg-card shadow-2xl p-6 sm:p-8 space-y-5 animate-in zoom-in-95 duration-150 max-h-[90vh] overflow-y-auto">
+          <div className="relative w-full max-w-lg rounded-xl border border-border bg-card shadow-2xl p-6 sm:p-8 space-y-5 animate-in zoom-in-95 duration-150 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between border-b border-border pb-4">
               <div className="flex items-center gap-2.5">
                 <div className="grid size-9 place-items-center rounded-xl bg-primary/10 text-primary">
                   <MessageSquare className="size-4" />
                 </div>
                 <div>
-                  <span className="text-[10px] font-bold font-mono uppercase text-primary">
+                  <span className="text-[10px] font-semibold uppercase tracking-wider text-primary">
                     CHI TIẾT YÊU CẦU
                   </span>
                   <h3 className="text-base font-bold text-foreground">
@@ -589,7 +594,7 @@ export function RecordsManager({ kind }: { kind: RecordKind }) {
             </div>
 
             <div className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 rounded-2xl bg-muted/40 p-4 border border-border/70 text-xs">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 rounded-xl bg-muted/40 p-4 border border-border/70 text-xs">
                 <div>
                   <span className="text-muted-foreground block text-[11px] font-medium">
                     Họ và tên
@@ -659,10 +664,10 @@ export function RecordsManager({ kind }: { kind: RecordKind }) {
               </div>
 
               <div className="space-y-2">
-                <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                <label className="text-[13px] font-medium text-slate-700 dark:text-foreground flex items-center gap-1.5">
                   <MessageSquare className="size-3.5 text-primary" /> {contentHeader}
                 </label>
-                <div className="rounded-2xl border border-border bg-background p-4 text-xs leading-relaxed text-foreground whitespace-pre-wrap break-words max-h-60 overflow-y-auto">
+                <div className="rounded-xl border border-border bg-background p-4 text-xs leading-relaxed text-foreground whitespace-pre-wrap break-words max-h-60 overflow-y-auto">
                   {activeDetail.message || "Không có nội dung tin nhắn bổ sung."}
                 </div>
               </div>

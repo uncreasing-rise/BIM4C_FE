@@ -21,6 +21,33 @@ export function MotionSystem() {
     const root = document.getElementById("main-content") ?? document.body;
     if (!root) return;
 
+    // GSAP writes inline styles. Touching page content before React has
+    // hydrated it causes a hydration mismatch, so wait for the page view to
+    // signal readiness (usePublicMotion). Views without the hook get a
+    // fallback once hydration has certainly finished.
+    let stop: (() => void) | undefined;
+    const start = () => {
+      if (stop) return;
+      stop = animate(root);
+    };
+    const onReady = (event: Event) => {
+      if ((event as CustomEvent<string>).detail === pathname) start();
+    };
+    if (root.dataset.motionReady === pathname) start();
+    document.addEventListener("bim4c:content-ready", onReady);
+    const fallback = setTimeout(start, 1500);
+    return () => {
+      clearTimeout(fallback);
+      document.removeEventListener("bim4c:content-ready", onReady);
+      stop?.();
+    };
+  }, [pathname]);
+
+  return null;
+}
+
+function animate(root: HTMLElement): () => void {
+  {
     const ctx = gsap.context(() => {
       // 1. HERO ENTRANCE (Smooth polish without blocking LCP/FCP)
       const hero = root.querySelector<HTMLElement>("[data-motion='hero'], .page-hero");
@@ -232,8 +259,6 @@ export function MotionSystem() {
       window.removeEventListener("resize", onResize);
       if (ctx) ctx.revert();
     };
-  }, [pathname]);
-
-  return null;
+  }
 }
 

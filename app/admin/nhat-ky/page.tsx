@@ -3,8 +3,8 @@ import { AuditLogManager } from "@/components/admin/AuditLogManager";
 export default function Page() {
   return (
     <AdminShell
-      title="Nhật ký kiểm toán"
-      description="Lịch sử thao tác quan trọng, chỉ đọc."
+      title="Nhật ký hoạt động"
+      description="Lịch sử thao tác của quản trị viên. Chỉ đọc, không thể chỉnh sửa."
     >
       <AuditLogManager />
     </AdminShell>

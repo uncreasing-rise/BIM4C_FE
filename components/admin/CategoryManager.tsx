@@ -9,6 +9,7 @@ import { Folder, FolderPlus, Edit2, Trash2, Plus, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { useConfirm } from "./ConfirmDialog";
 
 export function CategoryManager({
   type,
@@ -17,6 +18,7 @@ export function CategoryManager({
   type: AdminContentType;
   onChange: () => void;
 }) {
+  const { confirm, dialog } = useConfirm();
   const [items, setItems] = useState<AdminCategory[]>([]);
   const [loading, setLoading] = useState(true);
   const [name, setName] = useState("");
@@ -71,7 +73,13 @@ export function CategoryManager({
   }
 
   async function remove(id: string, catName: string) {
-    if (!confirm(`Bạn có chắc muốn xóa danh mục “${catName}”?`)) return;
+    if (
+      !(await confirm({
+        title: `Xóa danh mục “${catName}”?`,
+        description: "Chỉ xóa được khi không còn nội dung nào thuộc danh mục này. Thao tác không thể hoàn tác.",
+      }))
+    )
+      return;
     setBusy(true);
     const toastId = toast.loading("Đang xóa danh mục...");
     try {
@@ -88,8 +96,9 @@ export function CategoryManager({
   }
 
   return (
-    <section className="rounded-2xl border border-slate-200/80 dark:border-border bg-white dark:bg-card p-6 shadow-xs space-y-5">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200/80 dark:border-border pb-4">
+    <section className="rounded-xl border border-slate-200 dark:border-border bg-white dark:bg-card p-6 shadow-xs space-y-5">
+      {dialog}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 dark:border-border pb-4">
         <div className="flex items-center gap-2">
           <Folder className="size-5 text-primary" />
           <h3 className="text-base font-bold text-foreground">
@@ -155,7 +164,7 @@ export function CategoryManager({
           Array.from({ length: 3 }).map((_, i) => (
             <div
               key={i}
-              className="flex items-center justify-between gap-3 rounded-xl border border-slate-200/80 dark:border-border p-3.5 bg-slate-50/70 dark:bg-muted/30 animate-pulse"
+              className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 dark:border-border p-3.5 bg-slate-50/70 dark:bg-muted/30 animate-pulse"
             >
               <div className="space-y-1.5 flex-1">
                 <div className="h-4 w-28 bg-muted rounded" />
@@ -173,7 +182,7 @@ export function CategoryManager({
             className={`group flex items-center justify-between gap-3 rounded-xl border p-3.5 transition-all ${
               editing?.id === item.id
                 ? "border-primary bg-primary/5 ring-2 ring-primary/20"
-                : "border-slate-200/80 dark:border-border bg-slate-50/70 dark:bg-muted/30 hover:border-primary/40 hover:bg-slate-100/80 dark:hover:bg-muted/50"
+                : "border-slate-200 dark:border-border bg-slate-50/70 dark:bg-muted/30 hover:border-primary/40 hover:bg-slate-100/80 dark:hover:bg-muted/50"
             }`}
           >
             <div className="min-w-0 flex-1">

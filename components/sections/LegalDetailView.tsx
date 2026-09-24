@@ -9,6 +9,7 @@ import { getLegalDocument } from "@/constants/legal-content";
 import { ROUTES } from "@/constants/routes";
 import { useLanguage } from "@/lib/i18n/context";
 
+import { ui } from "@/lib/i18n/ui";
 export function LegalDetailView({ slug }: { slug: string }) {
   usePublicMotion();
   const { t, locale } = useLanguage();
@@ -31,7 +32,7 @@ export function LegalDetailView({ slug }: { slug: string }) {
         <div className="site-container grid grid-cols-1 items-start gap-10 lg:grid-cols-[280px_minmax(0,1fr)] lg:gap-16">
           <aside className="border-t-4 border-primary bg-muted/60 rounded-xl p-6 lg:sticky lg:top-[110px]">
             <p className="text-xs font-semibold uppercase tracking-wider text-primary">
-              {locale === "vi" ? "CẬP NHẬT LẦN CUỐI" : "LAST UPDATED"}
+              {ui(locale).legalDetailView.lASTUPDATED}
             </p>
             <strong className="mt-1 block text-sm text-foreground">
               {document.updatedAt}
@@ -93,7 +94,7 @@ export function LegalDetailView({ slug }: { slug: string }) {
             className="text-xs font-semibold uppercase text-primary"
             href={ROUTES.legal}
           >
-            ← {locale === "vi" ? "Tất cả thông tin pháp lý" : "All legal information"}
+            ← {ui(locale).legalDetailView.allLegalInformation}
           </Link>
         </div>
       </article>
