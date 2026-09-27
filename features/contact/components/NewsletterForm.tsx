@@ -45,7 +45,7 @@ export function NewsletterForm() {
     try {
       const consent = formData.get("consent") === "on";
       const result = await subscribeNewsletter(
-        { email: String(formData.get("email") ?? ""), consent },
+        { email: String(formData.get("email") ?? ""), consent, locale },
         abortController.current.signal,
       );
       setStatus("success");

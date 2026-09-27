@@ -12,7 +12,7 @@ const BimHero3DCanvas = dynamic(
     loading: () => (
       <div
         aria-hidden="true"
-        className="relative h-[380px] sm:h-[440px] lg:h-[480px] w-full overflow-hidden rounded-3xl border border-white/15 bg-slate-950/80 shadow-2xl backdrop-blur-2xl"
+        className="relative h-[380px] sm:h-[440px] lg:h-[480px] w-full"
       />
     ),
   },

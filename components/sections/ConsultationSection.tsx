@@ -7,9 +7,15 @@ import { AppointmentBooking } from "@/features/contact/components/AppointmentBoo
 import { useLanguage } from "@/lib/i18n/context";
 import type { Dictionary } from "@/lib/i18n/types";
 import { ArrowUpRight, CheckCircle2, Clock3, Mail, Phone } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 
 import { ui } from "@/lib/i18n/ui";
+const subscribeHash = (notify: () => void) => {
+  window.addEventListener("hashchange", notify);
+  return () => window.removeEventListener("hashchange", notify);
+};
+const readHash = () => window.location.hash;
+const serverHash = () => "";
 function OfficesAndVatCards({ t }: { t: Dictionary; locale: string }) {
   return (
     <div className="mt-8 border-t border-white/10 pt-6 space-y-3 text-sm">
@@ -24,8 +30,14 @@ function OfficesAndVatCards({ t }: { t: Dictionary; locale: string }) {
 
 export function ConsultationSection() {
   const { t, locale } = useLanguage();
-  const [mode, setMode] = useState<"inbox" | "appointment">("inbox");
-  const isAppointment = mode === "appointment";
+  const [mode, setMode] = useState<"inbox" | "appointment" | null>(null);
+  const hash = useSyncExternalStore(subscribeHash, readHash, serverHash);
+  const isAppointment =
+    mode === null ? hash === "#dat-lich" : mode === "appointment";
+  useEffect(() => {
+    if (hash === "#dat-lich" && isAppointment)
+      document.getElementById("dat-lich")?.scrollIntoView({ block: "start" });
+  }, [hash, isAppointment]);
 
   return (
     <section
@@ -99,7 +111,11 @@ export function ConsultationSection() {
           className="rounded-[2rem] border border-white/12 bg-white/[.07] p-5 shadow-2xl shadow-black/20 backdrop-blur-xl sm:p-8 lg:p-10"
         >
           <div className="mb-6 border-b border-white/10 pb-6">
-            <div className="grid grid-cols-2 rounded-xl border border-white/10 bg-black/10 p-1" role="tablist" aria-label={ui(locale).consultationSection.contactMethod}>
+            <div
+              className="grid grid-cols-2 rounded-xl border border-white/10 bg-black/10 p-1"
+              role="tablist"
+              aria-label={ui(locale).consultationSection.contactMethod}
+            >
               <button
                 type="button"
                 role="tab"
@@ -129,7 +145,7 @@ export function ConsultationSection() {
               </p>
               <p className="mt-2 text-sm text-white/65">
                 {isAppointment
-                  ? ui(locale).consultationSection.chooseAnAvailableTimeThat
+                  ? ui(locale).consultationSection.bookAConsultationDesc
                   : t.contactPage.enquiryDesc}
               </p>
             </div>

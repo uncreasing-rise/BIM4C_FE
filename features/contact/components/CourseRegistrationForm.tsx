@@ -9,6 +9,8 @@ import { LocalizedLink as Link } from "@/components/shared/LocalizedLink";
 import { ROUTES } from "@/constants/routes";
 import { useLanguage } from "@/lib/i18n/context";
 import { toast } from "sonner";
+import { SubmissionReceipt } from "./SubmissionReceipt";
+import type { MutationResult } from "../types/mutations";
 
 type CourseField = "name" | "phone" | "email" | "consent";
 
@@ -24,12 +26,17 @@ export function CourseRegistrationForm({
     "idle" | "sending" | "success" | "error"
   >("idle");
   const [message, setMessage] = useState("");
+  const [receipt, setReceipt] = useState<{
+    email: string;
+    notification?: MutationResult["notification"];
+  }>({ email: "" });
   const [fieldErrors, setFieldErrors] = useState<
     Partial<Record<CourseField, string>>
   >({});
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (status === "sending") return;
     const form = event.currentTarget;
     const data = new FormData(form);
     setStatus("sending");
@@ -37,6 +44,7 @@ export function CourseRegistrationForm({
     setFieldErrors({});
     try {
       const result = await registerCourse({
+        locale,
         courseId,
         name: String(data.get("name") ?? ""),
         email: String(data.get("email") ?? ""),
@@ -44,6 +52,10 @@ export function CourseRegistrationForm({
         consent: data.get("consent") === "on",
       });
       form.reset();
+      setReceipt({
+        email: String(data.get("email") ?? ""),
+        notification: result.notification,
+      });
       setStatus("success");
       setMessage(result.message || t.forms.thankYouDesc);
       toast.success(result.message || t.forms.thankYouTitle);
@@ -69,6 +81,28 @@ export function CourseRegistrationForm({
   }
 
   const labelClass = "grid gap-2";
+  if (status === "success")
+    return (
+      <SubmissionReceipt
+        title={
+          locale === "vi"
+            ? "Cùng xây dựng lộ trình học của bạn"
+            : "Let’s plan your learning journey"
+        }
+        description={courseTitle}
+        email={receipt.email}
+        notification={receipt.notification}
+        next={
+          locale === "vi"
+            ? "Đội ngũ đào tạo sẽ trao đổi với bạn về mục tiêu, lịch học và học phí. Yêu cầu này chưa phải xác nhận ghi danh."
+            : "Our training team will discuss your goals, schedule and fees. This enquiry is not an enrolment confirmation."
+        }
+        onReset={() => {
+          setStatus("idle");
+          setMessage("");
+        }}
+      />
+    );
   const inputClass =
     "h-12 w-full min-w-0 rounded-xl border border-slate-700 bg-slate-900/90 px-4 text-base text-white shadow-inner outline-none transition placeholder:text-slate-400 hover:border-slate-500 focus-visible:border-teal-400 focus-visible:ring-2 focus-visible:ring-teal-400/40";
 
@@ -83,7 +117,9 @@ export function CourseRegistrationForm({
         <h3 className="text-xl font-bold text-white">
           {t.detailPage.enquireProgramme}
         </h3>
-        <p className="text-sm font-semibold text-teal-300 mt-1">{courseTitle}</p>
+        <p className="text-sm font-semibold text-teal-300 mt-1">
+          {courseTitle}
+        </p>
       </div>
 
       <label className={labelClass} htmlFor="course-registration-name">
@@ -211,9 +247,7 @@ export function CourseRegistrationForm({
         className="min-h-12 w-full rounded-xl bg-teal-400 hover:bg-teal-300 text-slate-950 font-bold shadow-lg shadow-teal-500/25 transition-all"
         disabled={status === "sending"}
       >
-        {status === "sending"
-          ? t.forms.submitting
-          : t.forms.submitRegistration}
+        {status === "sending" ? t.forms.submitting : t.forms.submitRegistration}
         <span>→</span>
       </Button>
       <small className="text-xs leading-5 text-slate-300 font-medium">
@@ -221,7 +255,7 @@ export function CourseRegistrationForm({
       </small>
       {message && (
         <p
-          className={`m-0 px-[11px] py-[9px] text-xs rounded-lg ${status === "success" ? "bg-emerald-300/15 text-emerald-300" : "bg-rose-500/15 text-rose-300"}`}
+          className="m-0 px-[11px] py-[9px] text-xs rounded-lg bg-rose-500/15 text-rose-300"
           role={status === "error" ? "alert" : "status"}
         >
           {message}

@@ -223,6 +223,8 @@ export const uiVi: UiStrings = {
     sendAnEnquiry: "Gửi yêu cầu",
     bookAnAppointment: "Đặt lịch tư vấn",
     bookAConsultation: "Đặt lịch tư vấn",
+    bookAConsultationDesc:
+      "Đề xuất thời gian phù hợp với bạn. Chúng tôi sẽ xác nhận qua email.",
     chooseAnAvailableTimeThat: "Chọn một khung giờ còn trống phù hợp với bạn.",
   },
   deliveryProcess: {

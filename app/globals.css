@@ -1790,3 +1790,14 @@ html.lenis body {
     padding-inline: 1.35rem;
   }
 }
+
+/* Homepage: every section fills at least one screen, content centred vertically. */
+[data-home-section] {
+  display: flex;
+  min-height: 100svh;
+  flex-direction: column;
+  justify-content: center;
+}
+[data-home-section] > * {
+  width: 100%;
+}

@@ -9,7 +9,8 @@ import { getZodFieldErrors, isValidationError } from "../utils/zod-errors";
 import { LocalizedLink as Link } from "@/components/shared/LocalizedLink";
 import { ROUTES } from "@/constants/routes";
 import { contactSchema } from "../schemas/contact.schema";
-import { CheckCircle2 } from "lucide-react";
+import { SubmissionReceipt } from "./SubmissionReceipt";
+import type { MutationResult } from "../types/mutations";
 import { toast } from "sonner";
 import { useLanguage } from "@/lib/i18n/context";
 
@@ -28,6 +29,10 @@ export function ConsultationForm({
     "idle" | "sending" | "success" | "error"
   >("idle");
   const [message, setMessage] = useState("");
+  const [receipt, setReceipt] = useState<{
+    email: string;
+    notification?: MutationResult["notification"];
+  }>({ email: "" });
   const [fieldErrors, setFieldErrors] = useState<
     Partial<Record<ContactField, string>>
   >({});
@@ -51,9 +56,11 @@ export function ConsultationForm({
       });
       const result = await submitContactForm({
         ...input,
+        locale,
         message: `${subject ? `${subject}\n\n` : ""}${input.message}`,
       });
       form.reset();
+      setReceipt({ email: input.email, notification: result.notification });
       setStatus("success");
       setMessage(result.message || t.forms.thankYouDesc);
       toast.success(result.message || t.consultation.successMessage);
@@ -79,42 +86,25 @@ export function ConsultationForm({
   }
 
   const labelClass = "grid gap-2";
-  const captionClass = "text-xs font-bold uppercase tracking-wider text-slate-200";
+  const captionClass =
+    "text-xs font-bold uppercase tracking-wider text-slate-200";
   const inputClass =
     "h-12 w-full min-w-0 rounded-xl border border-slate-700 bg-slate-900/90 px-4 text-base text-white shadow-inner outline-none transition placeholder:text-slate-400 hover:border-slate-500 focus-visible:border-teal-400 focus-visible:ring-2 focus-visible:ring-teal-400/40";
 
-  if (status === "success") {
+  if (status === "success")
     return (
-      <div
-        className="rounded-xl border border-teal-400/30 bg-teal-950/40 p-6"
-        role="status"
-        aria-live="polite"
-      >
-        <CheckCircle2
-          className="mb-4 size-9 text-teal-300"
-          aria-hidden="true"
-        />
-        <h3 className="text-xl font-bold text-white">
-          {t.forms.thankYouTitle}
-        </h3>
-        <p className="mt-3 text-sm leading-7 text-slate-200">{message}</p>
-        <p className="mt-3 text-sm leading-7 text-slate-300">
-          {t.forms.thankYouDesc}
-        </p>
-        <Button
-          type="button"
-          variant="outline"
-          className="mt-5 border-teal-400/40 bg-teal-950/60 text-teal-200 hover:bg-teal-900/80 hover:text-white"
-          onClick={() => {
-            setStatus("idle");
-            setMessage("");
-          }}
-        >
-          {t.forms.sendAnother}
-        </Button>
-      </div>
+      <SubmissionReceipt
+        title={t.forms.thankYouTitle}
+        description={message}
+        email={receipt.email}
+        notification={receipt.notification}
+        next={t.forms.thankYouDesc}
+        onReset={() => {
+          setStatus("idle");
+          setMessage("");
+        }}
+      />
     );
-  }
 
   return (
     <form

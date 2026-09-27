@@ -23,7 +23,9 @@ function parseMutationResult(
     if (res.success === false) {
       throw new ApiError(
         400,
-        typeof res.message === "string" ? res.message : "Request was not successful",
+        typeof res.message === "string"
+          ? res.message
+          : "Request was not successful",
         "MUTATION_FAILED",
       );
     }
@@ -31,7 +33,15 @@ function parseMutationResult(
       typeof res.message === "string" && res.message.trim()
         ? res.message
         : fallbackMessage;
-    return { success: true, message };
+    const delivery = res.notification as MutationResult["notification"];
+    return {
+      success: true,
+      message,
+      notification:
+        delivery && ["sent", "failed", "skipped"].includes(delivery.customer)
+          ? delivery
+          : undefined,
+    };
   }
 
   throw new ApiError(
@@ -49,10 +59,15 @@ export async function submitContactForm(
   return parseMutationResult(
     await apiClient.post<unknown>(
       API_ENDPOINTS.contact.submit,
-      { ...payload, privacyPolicyVersion: PRIVACY_POLICY_VERSION },
+      {
+        ...payload,
+        locale: input.locale ?? "vi",
+        privacyPolicyVersion: PRIVACY_POLICY_VERSION,
+      },
       {
         signal,
         cache: "no-store",
+        timeoutMs: 30000,
       },
     ),
     "Thank you. Your enquiry has been received. Our team will usually reply within one business day.",
@@ -67,8 +82,12 @@ export async function registerCourse(
   return parseMutationResult(
     await apiClient.post<unknown>(
       API_ENDPOINTS.courseRegistrations.create,
-      { ...payload, privacyPolicyVersion: PRIVACY_POLICY_VERSION },
-      { signal, cache: "no-store" },
+      {
+        ...payload,
+        locale: input.locale ?? "vi",
+        privacyPolicyVersion: PRIVACY_POLICY_VERSION,
+      },
+      { signal, cache: "no-store", timeoutMs: 30000 },
     ),
     "Thank you. We have received your programme enquiry and will contact you with the next steps.",
   );
@@ -82,10 +101,15 @@ export async function subscribeNewsletter(
   return parseMutationResult(
     await apiClient.post<unknown>(
       API_ENDPOINTS.newsletter.subscribe,
-      { ...payload, privacyPolicyVersion: PRIVACY_POLICY_VERSION },
+      {
+        ...payload,
+        locale: input.locale ?? "vi",
+        privacyPolicyVersion: PRIVACY_POLICY_VERSION,
+      },
       {
         signal,
         cache: "no-store",
+        timeoutMs: 30000,
       },
     ),
     "You are subscribed to BIM4C insights. Thank you for joining us.",

@@ -223,6 +223,8 @@ export const uiEn = {
     sendAnEnquiry: "Send an enquiry",
     bookAnAppointment: "Book an appointment",
     bookAConsultation: "Book a consultation",
+    bookAConsultationDesc:
+      "Suggest a time that works for you. We will confirm by email.",
     chooseAnAvailableTimeThat: "Choose an available time that works for you.",
   },
   deliveryProcess: {
