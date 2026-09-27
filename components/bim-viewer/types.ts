@@ -82,6 +82,14 @@ export interface BimClashItem {
   elementB: string;
   point: [number, number, number];
   status: "open" | "resolved" | "in_review";
+  /** Local checks: which test found it and between which files and types. */
+  kind?: "hard" | "clearance";
+  /** Clearance tests: gap between the two elements (m), 0 when they touch. */
+  distance?: number;
+  modelA?: string;
+  modelB?: string;
+  typeA?: string;
+  typeB?: string;
 }
 
 export interface BimModelDefinition {

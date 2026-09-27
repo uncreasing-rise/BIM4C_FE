@@ -82,6 +82,7 @@ export const sessionSchema = z
       })
       .optional(),
     explode: z.number().finite().min(0).max(2).optional(),
+    clashStatus: z.record(z.string().max(512), z.enum(["open", "in_review", "resolved"])).optional(),
     searchSets: z
       .array(
         z.object({

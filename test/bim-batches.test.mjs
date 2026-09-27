@@ -88,6 +88,42 @@ test("clash check confirms real mesh intersections and drops box-only overlaps",
   assert.deepEqual(verified.map((c) => c.elementB === "duct-hit" || c.elementA === "duct-hit"), [true]);
 });
 
+test("a clash test between two files only pairs A with B, filtered by type", async () => {
+  const typed = (type, e) => ({ ...e, ifcType: type });
+  const beam = typed("IfcBeam", meshElement("beam", "structure", [0, 0, 0], [[4, 0.5, 0.5, 0]]));
+  const column = typed("IfcColumn", meshElement("column", "structure", [0.5, 0, 0], [[0.4, 3, 0.4, 0]]));
+  const duct = typed("IfcDuctSegment", meshElement("duct", "mep", [0.5, 0, 0], [[0.3, 0.3, 3, 0]]));
+  const pipe = typed("IfcPipeSegment", meshElement("pipe", "mep", [-1, 0, 0], [[0.1, 0.1, 3, 0]]));
+  // A third file overlapping everything must be left out.
+  const other = typed("IfcSlab", meshElement("slab", "architecture", [0, 0, 0], [[6, 0.2, 6, 0]]));
+  const models = [placed("s", [beam, column]), placed("m", [duct, pipe]), placed("x", [other])];
+  const all = await clash.detectClashes(models, { a: { modelKey: "m" }, b: { modelKey: "s" } });
+  assert.deepEqual(all.map((c) => [c.elementA, c.elementB]).sort(), [["duct", "beam"], ["duct", "column"], ["pipe", "beam"]].sort());
+  assert.ok(all.every((c) => c.modelA === "m" && c.modelB === "s" && c.kind === "hard"), "A side first");
+  const ductsOnly = await clash.detectClashes(models, {
+    a: { modelKey: "m", types: ["IfcDuctSegment"] },
+    b: { modelKey: "s", types: ["IfcBeam"] },
+  });
+  assert.deepEqual(ductsOnly.map((c) => [c.typeA, c.typeB]), [["IfcDuctSegment", "IfcBeam"]]);
+});
+
+test("clearance finds near misses by their real gap; same-discipline pairs are opt-in", async () => {
+  const wall = meshElement("wall", "architecture", [0, 0, 0], [[1, 1, 1, 0]]);
+  const near = meshElement("near", "mep", [1.03, 0, 0], [[1, 1, 1, 0]]); // 30 mm gap
+  const models = [placed("a", [wall]), placed("b", [near])];
+  const sets = { a: { modelKey: "a" }, b: { modelKey: "b" } };
+  assert.equal((await clash.detectClashes(models, sets)).length, 0, "no hard clash");
+  const within = await clash.detectClashes(models, { ...sets, rules: { kind: "clearance", clearance: 0.05 } });
+  assert.equal(within.length, 1);
+  assert.ok(Math.abs(within[0].distance - 0.03) < 1e-4, `gap ${within[0].distance}`);
+  assert.equal(within[0].kind, "clearance");
+  assert.equal((await clash.detectClashes(models, { ...sets, rules: { kind: "clearance", clearance: 0.02 } })).length, 0);
+  const twin = meshElement("twin", "architecture", [0.5, 0, 0], [[1, 1, 1, 0]]);
+  const same = [placed("a", [wall]), placed("b", [twin])];
+  assert.equal((await clash.detectClashes(same, sets)).length, 0, "same discipline skipped by default");
+  assert.equal((await clash.detectClashes(same, { ...sets, rules: { ignoreSameDiscipline: false } })).length, 1);
+});
+
 test("clash candidates stay fast on large models and results are ranked", async () => {
   const elements = [];
   for (let i = 0; i < 20000; i++)
@@ -166,4 +202,11 @@ test("hiding, selecting and exploding one element only touches its own instances
   b.applySlotState(slots.get("b"), true, false, new THREE.Vector3());
   bRed.batch.getColorAt(bRed.instance, color);
   assert.equal(color.getHex(), 0xff0000);
+});
+
+test("clash review statuses are kept in the session and validated", () => {
+  const { sessionSchema } = load("components/bim-viewer/session-schema");
+  const ok = sessionSchema.safeParse({ clashStatus: { "local-m1/ifc-1-m2/ifc-9": "resolved" } });
+  assert.ok(ok.success);
+  assert.ok(!sessionSchema.safeParse({ clashStatus: { x: "done" } }).success, "unknown status");
 });

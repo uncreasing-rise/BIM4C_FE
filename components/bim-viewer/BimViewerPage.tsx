@@ -33,7 +33,8 @@ import {
   type ElementCoordinates,
 } from "./BimPropertyInspector";
 import { BimToolbar } from "./BimToolbar";
-import { detectClashes } from "./clash-detection";
+import { DEFAULT_CLASH_RULES, detectClashes } from "./clash-detection";
+import { BimClashPanel, type ClashTest } from "./BimClashPanel";
 import { timeSlicer } from "./yield";
 import { EMPTY_BIM_MODEL } from "./empty-model";
 import { sessionSchema } from "./session-schema";
@@ -189,6 +190,13 @@ export function BimViewerPage() {
   const [sectionFacePick, setSectionFacePick] = useState(false);
   const [clashId, setClashId] = useState<string | null>(null);
   const [localClashes, setLocalClashes] = useState<BimClashItem[]>([]);
+  // Clash detective: the test set-up, review status per clash (kept in the
+  // session) and the red/green colouring while a clash is isolated.
+  const [clashTest, setClashTest] = useState<ClashTest | null>(null);
+  const [clashRunning, setClashRunning] = useState(false);
+  const [clashStatus, setClashStatus] = useState<Record<string, BimClashItem["status"]>>({});
+  const [clashColors, setClashColors] = useState<Map<string, string> | null>(null);
+  const [clashSection, setClashSection] = useState(false);
   const [savedViews, setSavedViews] = useState<BimSavedView[]>([]);
   const [issues, setIssues] = useState<BimLocalIssue[]>([]);
   const [fullscreen, setFullscreen] = useState(false);
@@ -212,6 +220,7 @@ export function BimViewerPage() {
     if (session.layers) setLayers({ ...ALL_LAYERS, ...session.layers });
     if (typeof session.explode === "number") setExplode(session.explode);
     if (Array.isArray(session.searchSets)) setSearchSets(session.searchSets);
+    if (session.clashStatus) setClashStatus(session.clashStatus);
   }, []);
 
   // Element ids are "m<n>/ifc-<expressID>", which repeat across files. A
@@ -254,12 +263,13 @@ export function BimViewerPage() {
           layers,
           explode,
           searchSets,
+          clashStatus,
         }),
       );
     } catch {
       /* Storage quota/privacy settings must not crash the viewer. */
     }
-  }, [explode, hiddenElements, issues, layers, measurements, savedViews, searchSets, sessionKey, sessionSignature]);
+  }, [clashStatus, explode, hiddenElements, issues, layers, measurements, savedViews, searchSets, sessionKey, sessionSignature]);
 
   const canvasModels = useMemo<CanvasModel[]>(
     () =>
@@ -292,8 +302,26 @@ export function BimViewerPage() {
     [clip, sceneBounds],
   );
   const allClashes = useMemo(
-    () => [...models.flatMap((m) => m.model.clashes), ...localClashes],
-    [localClashes, models],
+    () =>
+      [...models.flatMap((m) => m.model.clashes), ...localClashes].map((c) =>
+        clashStatus[c.id] ? { ...c, status: clashStatus[c.id] } : c,
+      ),
+    [clashStatus, localClashes, models],
+  );
+  // A test naming files that are no longer open falls back to the first two.
+  const activeClashTest = useMemo<ClashTest | null>(() => {
+    if (!models.length) return null;
+    const keys = new Set(models.map((m) => m.key));
+    if (clashTest && keys.has(clashTest.a.modelKey) && keys.has(clashTest.b.modelKey)) return clashTest;
+    return {
+      a: { modelKey: models[0].key },
+      b: { modelKey: (models[1] ?? models[0]).key },
+      rules: DEFAULT_CLASH_RULES,
+    };
+  }, [clashTest, models]);
+  const clashModels = useMemo(
+    () => models.map((m) => ({ key: m.key, name: m.model.filename ?? m.key, elements: m.model.elements })),
+    [models],
   );
   const elementCount = models.reduce((n, m) => n + m.model.elements.length, 0);
 
@@ -329,16 +357,19 @@ export function BimViewerPage() {
 
   const clashTaskRef = useRef<{ cancelled: boolean } | null>(null);
   const runLocalClashCheck = useCallback(async () => {
-    if (clashTaskRef.current) return;
+    if (clashTaskRef.current || !activeClashTest) return;
     const task = { cancelled: false };
     clashTaskRef.current = task;
     const s = ui(locale).bimClash;
     const toastId = toast.loading(s.checking(0, 0));
     const slice = timeSlicer();
     let lastToast = 0;
+    setClashRunning(true);
     try {
       const clashes = await detectClashes(canvasModels, {
-        describe: ({ volume, verified }) => s.description(volume, verified),
+        ...activeClashTest,
+        describe: ({ volume, verified, kind, distance }) =>
+          kind === "clearance" ? s.clearanceDescription(Math.round(distance * 1000)) : s.description(volume, verified),
         // Mesh checks run on the main thread in slices so the view stays live.
         shouldYield: async () => {
           await slice();
@@ -356,9 +387,15 @@ export function BimViewerPage() {
       setActiveTool("clashes");
       toast.success(ui(locale).bimViewerPage.localClashes(clashes.length), { id: toastId });
     } finally {
-      if (clashTaskRef.current === task) clashTaskRef.current = null;
+      if (clashTaskRef.current === task) {
+        clashTaskRef.current = null;
+        setClashRunning(false);
+      }
     }
-  }, [canvasModels, locale]);
+  }, [activeClashTest, canvasModels, locale]);
+  const cancelClashCheck = () => {
+    if (clashTaskRef.current) clashTaskRef.current.cancelled = true;
+  };
   // A new file set makes a running check meaningless.
   useEffect(() => () => {
     if (clashTaskRef.current) clashTaskRef.current.cancelled = true;
@@ -480,6 +517,37 @@ export function BimViewerPage() {
     [requestView],
   );
   const goHome = useCallback(() => requestView("perspective"), [requestView]);
+  /**
+   * Clash review as in Navisworks: only the two elements stay solid (A red,
+   * B green), everything else is ghosted, and the view frames the pair.
+   */
+  const focusClash = useCallback(
+    (clash: BimClashItem) => {
+      const ids = [clash.elementA, clash.elementB].filter((id) => elementById.has(id));
+      setExplode(0);
+      setLayers(ALL_LAYERS);
+      if (!ids.length) {
+        // A clash from the model file whose elements are not loaded: fly to its point.
+        setClashId(clash.id);
+        setClashPoint([...clash.point]);
+        return;
+      }
+      // Framing resets the active clash, so it goes first.
+      focusIds(ids);
+      setClashId(clash.id);
+      isolateIds(ids);
+      setClashColors(new Map([[clash.elementA, "#ef4444"], [clash.elementB, "#22c55e"]]));
+      if (clashSection) setSectionFit((f) => ({ revision: f.revision + 1, target: "ids", ids }));
+      else setClip((prev) => ({ ...prev, enabled: false }));
+    },
+    [clashSection, elementById, focusIds, isolateIds],
+  );
+  const exitClashView = () => {
+    setIsolated(null);
+    setClashColors(null);
+    setClashId(null);
+    if (clashSection) setClip((prev) => ({ ...prev, enabled: false }));
+  };
   const selectedIdList = useMemo(() => [...selectedElementIds], [selectedElementIds]);
 
   const runContextAction = (action: ContextAction) => {
@@ -551,6 +619,7 @@ export function BimViewerPage() {
 
   // ---- Version comparison: colours, ghosts and hidden duplicates -----------
   const colorOverrides = useMemo(() => {
+    if (clashColors && activeTool === "clashes") return clashColors;
     if (!comparison) return null;
     const map = new Map<string, string>();
     for (const id of comparison.diff.added) map.set(id, DIFF_COLORS.added);
@@ -558,7 +627,7 @@ export function BimViewerPage() {
     for (const id of comparison.diff.geometry) map.set(id, DIFF_COLORS.geometry);
     for (const id of comparison.diff.properties) map.set(id, DIFF_COLORS.properties);
     return map;
-  }, [comparison]);
+  }, [activeTool, clashColors, comparison]);
   const runComparison = (oldKey: string, newKey: string) => {
     const older = canvasModels.find((m) => m.key === oldKey);
     const newer = canvasModels.find((m) => m.key === newKey);
@@ -1394,16 +1463,26 @@ export function BimViewerPage() {
               setSelectedElement(null);
               setSelectedElementIds(new Set());
             }}
-            clashes={allClashes}
-            onFocusClash={(clash) => {
-              setExplode(0);
-              setClip((prev) => ({ ...prev, enabled: false }));
-              setLayers(ALL_LAYERS);
-              setClashId(clash.id);
-              setClashPoint([...clash.point]);
-            }}
-            activeClashId={clashId}
-            onRunClashCheck={() => void runLocalClashCheck()}
+            clashPanel={
+              activeClashTest ? (
+                <BimClashPanel
+                  models={clashModels}
+                  test={activeClashTest}
+                  onTestChange={setClashTest}
+                  clashes={allClashes}
+                  activeClashId={clashId}
+                  running={clashRunning}
+                  onRun={() => void runLocalClashCheck()}
+                  onCancel={cancelClashCheck}
+                  onFocus={focusClash}
+                  onStatus={(id, status) => setClashStatus((all) => ({ ...all, [id]: status }))}
+                  sectionAround={clashSection}
+                  onSectionAround={setClashSection}
+                  inClashView={Boolean(clashColors && clashId)}
+                  onExit={exitClashView}
+                />
+              ) : null
+            }
             savedViews={savedViews}
             currentViewPreset={viewRequest.preset}
             selectedElementIds={selectedElementIds}

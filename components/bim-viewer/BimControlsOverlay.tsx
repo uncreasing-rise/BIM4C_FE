@@ -24,7 +24,6 @@ import {
 } from "./federation";
 import type {
   BimBounds,
-  BimClashItem,
   BimClipPlanes,
   BimDiscipline,
   BimMapConversion,
@@ -64,10 +63,8 @@ interface Props {
   onChangeExplodeFactor: (value: number) => void;
   visibleLayers: Record<BimDiscipline, boolean>;
   onToggleLayer: (layer: BimDiscipline) => void;
-  clashes: BimClashItem[];
-  onFocusClash: (clash: BimClashItem) => void;
-  activeClashId: string | null;
-  onRunClashCheck: () => void;
+  /** The clash detective (BimClashPanel), rendered in this panel's frame. */
+  clashPanel: React.ReactNode;
   savedViews: BimSavedView[];
   currentViewPreset: BimViewPreset;
   selectedElementIds: ReadonlySet<string>;
@@ -666,28 +663,19 @@ export function BimControlsOverlay(p: Props) {
 
       {p.activeTool === "clashes" && (
         <div className="space-y-3">
-          <button type="button" className={button} onClick={p.onRunClashCheck}>
-            {p.clashes.length
-              ? "Re-run local clash check"
-              : "Run local clash check"}
-          </button>
-          <p className="leading-relaxed text-amber-200">
-            {p.clashes.length
-              ? ui(locale).bimControlsOverlay.clashesLoaded(p.clashes.length)
-              : ui(locale).bimControlsOverlay.noClashResultsAreAvailable}
-          </p>
+          {p.clashPanel}
           <div className="space-y-2 rounded-lg border border-white/10 p-2">
-            <p className="font-semibold text-teal-200">Local issue note</p>
+            <p className="font-semibold text-teal-200">{ui(locale).bimClash.issues.title}</p>
             <input
               value={issueTitle}
               onChange={(e) => setIssueTitle(e.target.value)}
-              placeholder="Issue title"
+              placeholder={ui(locale).bimClash.issues.titlePlaceholder}
               className="min-h-9 w-full rounded border border-white/15 bg-slate-900 px-2"
             />
             <textarea
               value={issueDescription}
               onChange={(e) => setIssueDescription(e.target.value)}
-              placeholder="Describe the coordination issue"
+              placeholder={ui(locale).bimClash.issues.descriptionPlaceholder}
               rows={2}
               className="w-full rounded border border-white/15 bg-slate-900 px-2 py-1"
             />
@@ -701,7 +689,7 @@ export function BimControlsOverlay(p: Props) {
                 setIssueDescription("");
               }}
             >
-              Add local issue to selected element
+              {ui(locale).bimClash.issues.add}
             </button>
           </div>
           {p.issues.map((issue) => (
@@ -717,37 +705,19 @@ export function BimControlsOverlay(p: Props) {
                 >
                   <span className="block font-semibold">{issue.title}</span>
                   <span className="block text-[10px] text-slate-400">
-                    {issue.status} · {issue.description || "No description"}
+                    {issue.status} · {issue.description || ui(locale).bimClash.issues.noDescription}
                   </span>
                 </button>
                 <button
                   type="button"
                   className="text-red-300"
                   onClick={() => p.onDeleteIssue(issue.id)}
-                  aria-label={`Delete ${issue.title}`}
+                  aria-label={`${ui(locale).bimClash.issues.remove}: ${issue.title}`}
                 >
                   ×
                 </button>
               </div>
             </div>
-          ))}
-          {p.clashes.map((clash) => (
-            <button
-              key={clash.id}
-              type="button"
-              aria-pressed={p.activeClashId === clash.id}
-              onClick={() => p.onFocusClash(clash)}
-              className={`block w-full space-y-2 rounded-lg border p-3 text-left ${p.activeClashId === clash.id ? "border-teal-400 bg-teal-500/15" : "border-white/15 hover:bg-white/5"}`}
-            >
-              <span className="block text-[10px] text-amber-200">
-                {v.clashes.severity[clash.severity]} · {clash.id}
-              </span>
-              <span className="block font-semibold">{clash.title}</span>
-              <span className="block text-slate-400">{clash.description}</span>
-              <span className="block text-teal-300">
-                {v.clashes.focusClash} →
-              </span>
-            </button>
           ))}
         </div>
       )}

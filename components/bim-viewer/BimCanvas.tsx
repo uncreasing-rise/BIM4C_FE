@@ -111,7 +111,9 @@ export interface CanvasContextMenu {
 
 export interface SectionFitRequest {
   revision: number;
-  target: "selection" | "all";
+  target: "selection" | "all" | "ids";
+  /** For "ids": the elements to box. */
+  ids?: string[];
 }
 
 export interface BimCanvasProps {
@@ -1701,7 +1703,11 @@ export function BimCanvas(props: BimCanvasProps) {
       if (lastSectionFit !== next.sectionFitRequest.revision) {
         lastSectionFit = next.sectionFitRequest.revision;
         let box: THREE.Box3;
-        if (
+        if (next.sectionFitRequest.target === "ids" && next.sectionFitRequest.ids?.length) {
+          const wanted = new Set(next.sectionFitRequest.ids);
+          const meshes = [...entries.values()].flatMap((e) => [...e.meshes.values()].filter((m) => wanted.has(m.userData.id as string)));
+          box = worldBoxOf(meshes);
+        } else if (
           next.sectionFitRequest.target === "selection" &&
           next.selectedElementId
         ) {

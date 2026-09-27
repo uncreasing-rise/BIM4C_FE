@@ -21,13 +21,44 @@ interface Entry {
   bounds: Bounds;
 }
 
-export interface ClashOptions {
+/** One side of a clash test: a loaded file, optionally only some IFC types. */
+export interface ClashSet {
+  modelKey: string;
+  /** IFC types to test; empty or absent means every element of the file. */
+  types?: string[];
+}
+
+export interface ClashRules {
+  /** "hard": the elements occupy the same space. "clearance": closer than `clearance`. */
+  kind: "hard" | "clearance";
+  /** Hard: overlap (m) required on every axis, so touching elements pass. */
+  tolerance: number;
+  /** Clearance: smallest allowed gap (m). */
+  clearance: number;
+  /** Skip pairs from the same discipline (a wall against a wall). */
+  ignoreSameDiscipline: boolean;
+}
+
+export const DEFAULT_CLASH_RULES: ClashRules = {
+  kind: "hard",
+  tolerance: 0.01,
+  clearance: 0.05,
+  ignoreSameDiscipline: true,
+};
+
+export interface CandidateOptions {
+  a?: ClashSet;
+  b?: ClashSet;
+  rules?: Partial<ClashRules>;
+}
+
+export interface ClashOptions extends CandidateOptions {
   /** Overlap (m) required on every axis; filters elements that merely touch. */
   tolerance?: number;
   maxResults?: number;
   /** Confirm candidates against the triangle meshes (default true). */
   verifyMeshes?: boolean;
-  describe?: (clash: { volume: number; verified: boolean }) => string;
+  describe?: (clash: { volume: number; verified: boolean; kind: "hard" | "clearance"; distance: number }) => string;
   /** Awaited between candidates; return true to cancel. */
   shouldYield?: () => Promise<boolean>;
   onProgress?: (done: number, total: number) => void;
@@ -60,7 +91,7 @@ function overlap(a: Bounds, b: Bounds, tolerance: number) {
   ];
   if (size.some((value) => value <= tolerance)) return null;
   return {
-    volume: size[0] * size[1] * size[2],
+    volume: Math.max(0, size[0]) * Math.max(0, size[1]) * Math.max(0, size[2]),
     point: [
       (Math.max(a.min[0], b.min[0]) + Math.min(a.max[0], b.max[0])) / 2,
       (Math.max(a.min[1], b.min[1]) + Math.min(a.max[1], b.max[1])) / 2,
@@ -74,26 +105,48 @@ function overlap(a: Bounds, b: Bounds, tolerance: number) {
  * elements whose x-ranges overlap. Near-linear for building-shaped data,
  * instead of testing every pair.
  */
-export function clashCandidates(models: PlacedModel[], tolerance = 0.01) {
-  const entries: Entry[] = models.flatMap((owner) =>
-    owner.model.elements.map((element) => ({
-      owner,
-      element,
-      bounds: boundsOf(element, owner.placement),
-    })),
-  );
+const inSet = (set: ClashSet | undefined, entry: Entry) =>
+  !set ||
+  (entry.owner.key === set.modelKey && (!set.types?.length || set.types.includes(entry.element.ifcType)));
+
+/** Full rules from options (the old top-level `tolerance` still counts). */
+export function clashRules(options: CandidateOptions & { tolerance?: number } = {}): ClashRules {
+  return { ...DEFAULT_CLASH_RULES, ...(options.tolerance !== undefined ? { tolerance: options.tolerance } : {}), ...options.rules };
+}
+
+/**
+ * Candidate pairs by sweep-and-prune along x: sort once, then only compare
+ * elements whose x-ranges overlap. Near-linear for building-shaped data,
+ * instead of testing every pair. With sets A and B only A×B pairs are
+ * returned, the A element first; without them every pair is.
+ */
+export function clashCandidates(models: PlacedModel[], options: number | (CandidateOptions & { tolerance?: number }) = {}) {
+  const opts = typeof options === "number" ? { tolerance: options } : options;
+  const rules = clashRules(opts);
+  // Clearance: boxes up to `clearance` apart are candidates too.
+  const threshold = rules.kind === "clearance" ? -rules.clearance : rules.tolerance;
+  const entries: (Entry & { inA: boolean; inB: boolean })[] = [];
+  for (const owner of models)
+    for (const element of owner.model.elements) {
+      const entry = { owner, element, bounds: boundsOf(element, owner.placement) };
+      const inA = inSet(opts.a, entry);
+      const inB = inSet(opts.b, entry);
+      if (inA || inB) entries.push({ ...entry, inA, inB });
+    }
   entries.sort((a, b) => a.bounds.min[0] - b.bounds.min[0]);
   const pairs: { a: Entry; b: Entry; volume: number; point: [number, number, number] }[] = [];
   for (let i = 0; i < entries.length; i++) {
-    const a = entries[i];
+    const x = entries[i];
     for (let j = i + 1; j < entries.length; j++) {
-      const b = entries[j];
-      if (b.bounds.min[0] >= a.bounds.max[0] - tolerance) break;
+      const y = entries[j];
+      if (y.bounds.min[0] >= x.bounds.max[0] - threshold) break;
+      const forward = x.inA && y.inB;
+      if (!forward && !(x.inB && y.inA)) continue;
       // Coordination checks look for conflicts between disciplines, in the
       // same file (MEP through a beam) or across federated files.
-      if (a.element.discipline === b.element.discipline) continue;
-      const hit = overlap(a.bounds, b.bounds, tolerance);
-      if (hit) pairs.push({ a, b, ...hit });
+      if (rules.ignoreSameDiscipline && x.element.discipline === y.element.discipline) continue;
+      const hit = overlap(x.bounds, y.bounds, threshold);
+      if (hit) pairs.push(forward ? { a: x, b: y, ...hit } : { a: y, b: x, ...hit });
     }
   }
   return pairs;
@@ -194,8 +247,40 @@ export function meshesIntersect(a: Entry, b: Entry): boolean {
   );
 }
 
-const defaultDescribe = ({ volume, verified }: { volume: number; verified: boolean }) =>
-  `${verified ? "Mesh-verified" : "Bounding-box"} overlap (${volume.toFixed(3)} m³). Review before acting.`;
+/**
+ * Smallest gap between the two elements' surfaces (0 when they intersect),
+ * or null when it is larger than `max`. Without triangles: the box gap.
+ */
+export function meshGap(a: Entry, b: Entry, max: number): number | null {
+  if (meshesIntersect(a, b)) return 0;
+  const ga = meshOf(a.element);
+  const gb = meshOf(b.element);
+  if (!ga || !gb) {
+    let gap = 0;
+    for (let i = 0; i < 3; i++) {
+      const d = Math.max(a.bounds.min[i] - b.bounds.max[i], b.bounds.min[i] - a.bounds.max[i], 0);
+      gap += d * d;
+    }
+    gap = Math.sqrt(gap);
+    return gap <= max ? gap : null;
+  }
+  const worldA = worldOf(a.element, a.owner.placement);
+  const bToA = worldA.clone().invert().multiply(worldOf(b.element, b.owner.placement));
+  const hit = () => ({ point: new THREE.Vector3(), distance: Infinity, faceIndex: 0 });
+  const found = ga.bvh.closestPointToGeometry(gb.geometry, bToA, hit(), hit(), 0, max);
+  return found && found.distance <= max ? found.distance : null;
+}
+
+const defaultDescribe = ({ volume, verified, kind, distance }: { volume: number; verified: boolean; kind: "hard" | "clearance"; distance: number }) =>
+  kind === "clearance"
+    ? `Clearance ${(distance * 1000).toFixed(0)} mm. Review before acting.`
+    : `${verified ? "Mesh-verified" : "Bounding-box"} overlap (${volume.toFixed(3)} m³). Review before acting.`;
+
+/** Clearance severity: the closer, the worse; touching is high. */
+function gapSeverity(distance: number, clearance: number): BimClashItem["severity"] {
+  const ratio = distance / Math.max(clearance, 1e-9);
+  return ratio < 0.25 ? "high" : ratio < 0.6 ? "medium" : "low";
+}
 
 /** Fast browser-side coordination pass, ranked most severe first. */
 export async function detectClashes(
@@ -203,24 +288,34 @@ export async function detectClashes(
   options: ClashOptions = {},
 ): Promise<BimClashItem[]> {
   const {
-    tolerance = 0.01,
     maxResults = 500,
     verifyMeshes = true,
     describe = defaultDescribe,
     shouldYield = async () => false,
     onProgress,
   } = options;
-  const candidates = clashCandidates(models, tolerance);
+  const rules = clashRules(options);
+  const candidates = clashCandidates(models, options);
   const clashes: { clash: BimClashItem; volume: number }[] = [];
   for (let i = 0; i < candidates.length; i++) {
     const { a, b, volume, point } = candidates[i];
     const verified = verifyMeshes && Boolean(a.element.geometryData && b.element.geometryData);
-    if (!verifyMeshes || meshesIntersect(a, b)) {
-      clashes.push({ volume, clash: {
+    const clearance = rules.kind === "clearance";
+    const gap = clearance ? (verifyMeshes ? meshGap(a, b, rules.clearance) : 0) : 0;
+    const found = clearance ? gap !== null : !verifyMeshes || meshesIntersect(a, b);
+    if (found) {
+      const distance = gap ?? 0;
+      clashes.push({ volume: clearance ? -distance : volume, clash: {
         id: `local-${a.element.id}-${b.element.id}`,
         title: `${a.element.name || a.element.ifcType} × ${b.element.name || b.element.ifcType}`,
-        description: describe({ volume, verified }),
-        severity: severity(volume, a.element, b.element),
+        description: describe({ volume, verified, kind: rules.kind, distance }),
+        severity: clearance ? gapSeverity(distance, rules.clearance) : severity(volume, a.element, b.element),
+        kind: rules.kind,
+        ...(clearance ? { distance } : {}),
+        modelA: a.owner.key,
+        modelB: b.owner.key,
+        typeA: a.element.ifcType,
+        typeB: b.element.ifcType,
         disciplineA: a.element.discipline,
         elementA: a.element.id,
         disciplineB: b.element.discipline,
@@ -249,7 +344,7 @@ export function detectAabbClashes(models: PlacedModel[], tolerance = 0.01): BimC
     clash: {
       id: `local-${a.element.id}-${b.element.id}`,
       title: `${a.element.name || a.element.ifcType} × ${b.element.name || b.element.ifcType}`,
-      description: defaultDescribe({ volume, verified: false }),
+      description: defaultDescribe({ volume, verified: false, kind: "hard", distance: 0 }),
       severity: severity(volume, a.element, b.element),
       disciplineA: a.element.discipline,
       elementA: a.element.id,
