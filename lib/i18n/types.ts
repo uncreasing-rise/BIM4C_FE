@@ -316,6 +316,12 @@ export interface Dictionary {
       clashes: string;
       reset: string;
       fullscreen: string;
+      display: string;
+      compare: string;
+      walk: string;
+      markup: string;
+      quantities: string;
+      levels: string;
       snapshot: string;
     };
     views: {

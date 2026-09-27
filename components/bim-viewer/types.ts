@@ -10,7 +10,13 @@ export type BimTool =
   | "explode"
   | "layers"
   | "clashes"
-  | "views";
+  | "views"
+  | "display"
+  | "compare"
+  | "walk"
+  | "markup"
+  | "quantities"
+  | "levels";
 
 export type BimViewPreset =
   "perspective" | "top" | "front" | "right" | "isometric";
@@ -114,6 +120,13 @@ export interface BimClipPlanes {
   minY: number;
   minZ: number;
   enabled: boolean;
+  /**
+   * Single section plane on this scene axis (0 = x/east, 1 = y/elevation,
+   * 2 = z/south) instead of a box. The plane is the box's max face on that
+   * axis, or its min face when `flip` keeps the other side.
+   */
+  planeAxis?: 0 | 1 | 2;
+  flip?: boolean;
 }
 
 export interface MeasurementPoint {
@@ -191,6 +204,10 @@ export interface BimSavedView {
   camera?: { position: [number, number, number]; target: [number, number, number]; up: [number, number, number]; fov: number };
   clip?: BimClipPlanes;
   hiddenElements?: string[];
+  /** Elements shown solid while everything else is ghosted. */
+  isolatedElements?: string[];
+  /** Markup drawn over this viewpoint (see markup.ts). */
+  markup?: import("./markup").MarkupShape[];
   layers?: Record<BimDiscipline, boolean>;
   explode?: number;
   id: string;

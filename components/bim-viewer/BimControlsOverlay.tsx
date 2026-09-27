@@ -1,9 +1,10 @@
 "use client";
 import { triangleMetrics } from "./measurement-math";
 import React from "react";
-import { Crosshair, Download, RotateCcw, Scan, Trash2, X } from "lucide-react";
+import { ArrowLeftRight, Crosshair, Download, RotateCcw, Scan, Trash2, X } from "lucide-react";
 import { useLanguage } from "@/lib/i18n/context";
 import { defaultClip } from "./viewer-geometry";
+import { HANDLE_KEYS, planeClip, type Axis } from "./section-box";
 import {
   distanceSummary,
   formatLength,
@@ -119,7 +120,7 @@ export function BimControlsOverlay(p: Props) {
   const [issueTitle, setIssueTitle] = React.useState("");
   const [issueDescription, setIssueDescription] = React.useState("");
   const v = t.bimViewerPage;
-  if (p.activeTool === "orbit" || p.activeTool === "models") return null;
+  if (p.activeTool === "orbit" || p.activeTool === "models" || p.activeTool === "display" || p.activeTool === "compare" || p.activeTool === "walk" || p.activeTool === "markup" || p.activeTool === "quantities" || p.activeTool === "levels") return null;
   const fmt = (n: number) => formatLength(n, locale);
   const title =
     p.activeTool === "section"
@@ -209,25 +210,89 @@ export function BimControlsOverlay(p: Props) {
         </button>
       </div>
 
-      {p.activeTool === "section" && (
+      {p.activeTool === "section" && (() => {
+        const s = ui(locale).bimSection;
+        const clip = p.clipPlanes;
+        const mode = !clip.enabled ? "off" : clip.planeAxis === undefined ? "box" : clip.planeAxis;
+        // Scene axis → the IFC-named slider axis (scene y is elevation Z, scene z is -Y).
+        const axisOf = (a: Axis) => sectionAxes(p.sceneOrigin, p.bounds)[a === 0 ? 0 : a === 1 ? 2 : 1];
+        const modes: { id: "off" | "box" | Axis; label: string }[] = [
+          { id: "off", label: s.off },
+          { id: "box", label: s.box },
+          { id: 1, label: s.planeZ },
+          { id: 0, label: s.planeX },
+          { id: 2, label: s.planeY },
+        ];
+        const single = typeof mode === "number" ? mode : null;
+        return (
         <div className="space-y-3">
-          <label className="flex min-h-10 items-center justify-between">
-            {ui(locale).bimControlsOverlay.enableSectionBox}
-            <input
-              type="checkbox"
-              checked={p.clipPlanes.enabled}
-              onChange={(e) =>
-                p.onChangeClipPlanes({
-                  ...p.clipPlanes,
-                  enabled: e.target.checked,
-                })
-              }
-              className="size-4 accent-teal-400"
-            />
-          </label>
+          <div className="grid grid-cols-2 gap-1" role="radiogroup" aria-label={s.mode}>
+            {modes.map((m) => (
+              <button
+                key={String(m.id)}
+                type="button"
+                role="radio"
+                aria-checked={mode === m.id}
+                onClick={() =>
+                  p.onChangeClipPlanes(
+                    m.id === "off"
+                      ? { ...clip, enabled: false }
+                      : m.id === "box"
+                        ? { ...defaultClip(p.bounds), enabled: true }
+                        : planeClip(p.bounds, m.id),
+                  )
+                }
+                className={`min-h-9 rounded-lg border px-2 text-left ${m.id === "off" ? "col-span-2" : ""} ${mode === m.id ? "border-teal-400 bg-teal-500/15 text-teal-200" : "border-white/10 hover:bg-white/5"}`}
+              >
+                {m.label}
+              </button>
+            ))}
+          </div>
           <p className="leading-relaxed text-slate-400">
-            {ui(locale).bimControlsOverlay.dragTheRoundHandlesOn}
+            {single === null ? s.boxHelp : s.planeHelp}
           </p>
+          {single !== null && (() => {
+            const axis = axisOf(single);
+            const key = HANDLE_KEYS[single][clip.flip ? "min" : "max"];
+            const [min, max] = axis.range;
+            const value = axis.toWorld(Number(clip[key]));
+            return (
+              <div className="space-y-2 rounded-lg border border-white/10 p-2">
+                <label className="block">
+                  <span className="flex justify-between">
+                    <span>{s.position} ({axis.id}, m)</span>
+                    <output className="font-mono">{fmt(value)}</output>
+                  </span>
+                  <input
+                    type="range"
+                    aria-label={`${s.position} ${axis.id}`}
+                    min={min}
+                    max={max}
+                    step={Math.max(0.001, (max - min) / 400)}
+                    value={Math.min(max, Math.max(min, value))}
+                    onChange={(e) =>
+                      p.onChangeClipPlanes({ ...clip, [key]: axis.toScene(Number(e.target.value)) })
+                    }
+                    className="min-h-8 w-full accent-teal-400"
+                  />
+                </label>
+                <button
+                  type="button"
+                  className={button}
+                  onClick={() => {
+                    // Keep the cut where it is and show the other side.
+                    const keys = HANDLE_KEYS[single];
+                    const at = Number(clip[clip.flip ? keys.min : keys.max]);
+                    const base = planeClip(p.bounds, single, !clip.flip);
+                    p.onChangeClipPlanes({ ...base, [clip.flip ? keys.max : keys.min]: at });
+                  }}
+                >
+                  <ArrowLeftRight className="size-4" />
+                  {s.flip}
+                </button>
+              </div>
+            );
+          })()}
           <div className="grid grid-cols-2 gap-2">
             <button
               type="button"
@@ -247,7 +312,7 @@ export function BimControlsOverlay(p: Props) {
               {ui(locale).bimControlsOverlay.wholeModel}
             </button>
           </div>
-          {sectionAxes(p.sceneOrigin, p.bounds).map((axis) => {
+          {single === null && sectionAxes(p.sceneOrigin, p.bounds).map((axis) => {
             const [min, max] = axis.range;
             const step = Math.max(0.001, (max - min) / 400);
             const lower = axis.toWorld(p.clipPlanes[axis.lowerKey]);
@@ -309,7 +374,8 @@ export function BimControlsOverlay(p: Props) {
             {v.sections.resetClipping}
           </button>
         </div>
-      )}
+        );
+      })()}
 
       {p.activeTool === "measure" && (
         <div className="space-y-3">

@@ -7,10 +7,25 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import {
   BimCanvas,
+  type CanvasContextMenu,
   type CanvasModel,
   type SectionFitRequest,
   type ViewRequest,
 } from "./BimCanvas";
+import { BimContextMenu, type ContextAction } from "./BimContextMenu";
+import { BimShortcutsDialog } from "./BimShortcutsDialog";
+import { BimVisibilityBar } from "./BimVisibilityBar";
+import { BimDisplayPanel } from "./BimDisplayPanel";
+import { BimLevelsPanel } from "./BimLevelsPanel";
+import { BimQuantitiesPanel } from "./BimQuantitiesPanel";
+import { BimMarkupLayer } from "./BimMarkupLayer";
+import { BimComparePanel, type ComparisonState } from "./BimComparePanel";
+import { compareModels, DIFF_COLORS } from "./compare";
+import { elementMatches, type SearchSet } from "./search-sets";
+import { markupSvg, type MarkupShape } from "./markup";
+import { computeLevels, planCutHeight, type BimLevel } from "./levels";
+import { planeClip } from "./section-box";
+import { DEFAULT_DISPLAY, type DisplaySettings } from "./render-pipeline";
 import { BimControlsOverlay } from "./BimControlsOverlay";
 import { BimModelsPanel } from "./BimModelsPanel";
 import {
@@ -18,9 +33,11 @@ import {
   type ElementCoordinates,
 } from "./BimPropertyInspector";
 import { BimToolbar } from "./BimToolbar";
-import { detectAabbClashes } from "./clash-detection";
+import { detectClashes } from "./clash-detection";
+import { timeSlicer } from "./yield";
 import { EMPTY_BIM_MODEL } from "./empty-model";
 import { sessionSchema } from "./session-schema";
+import type { z } from "zod";
 import {
   applyPlacement,
   modelOrigin,
@@ -58,6 +75,8 @@ const ALL_LAYERS: Record<BimDiscipline, boolean> = {
   clash: true,
 };
 const SESSION_KEY = "bim4c.viewer.session.v1";
+// v2: the default went back to the original look; older saved choices reset.
+const DISPLAY_KEY = "bim4c.viewer.display.v2";
 
 /** Element ids are per file; prefix them so several files never collide. */
 function namespaced(
@@ -82,7 +101,8 @@ export function BimViewerPage() {
   const cameraRef = useRef<BimSavedView["camera"]>(undefined);
   const inputRef = useRef<HTMLInputElement>(null);
   const sessionInputRef = useRef<HTMLInputElement>(null);
-  const sessionReadyRef = useRef(false);
+  /** Signature of the file set whose saved session has been applied. */
+  const sessionReadyRef = useRef<string | null>(null);
   const taskRef = useRef<AbortController | null>(null);
   const keyCounter = useRef(0);
   const dragDepth = useRef(0);
@@ -102,6 +122,42 @@ export function BimViewerPage() {
   const [hiddenElements, setHiddenElements] = useState<Set<string>>(
     () => new Set(),
   );
+  const [isolated, setIsolated] = useState<Set<string> | null>(null);
+  const [contextMenu, setContextMenu] = useState<CanvasContextMenu | null>(null);
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
+  const [activeLevelId, setActiveLevelId] = useState<string | null>(null);
+  // Shapes shown when the markup tool opens (from a saved viewpoint).
+  const [markupShapes, setMarkupShapes] = useState<MarkupShape[]>([]);
+  const snapshotWaiter = useRef<((data: string | null) => void) | null>(null);
+  const [comparison, setComparison] = useState<ComparisonState | null>(null);
+  const [searchSets, setSearchSets] = useState<SearchSet[]>([]);
+  // A viewer preference, not part of a model session.
+  const [display, setDisplay] = useState<DisplaySettings>(DEFAULT_DISPLAY);
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      try {
+        const saved = JSON.parse(localStorage.getItem(DISPLAY_KEY) ?? "null");
+        if (saved && typeof saved === "object")
+          setDisplay((current) => {
+            const next = { ...current };
+            for (const key of Object.keys(DEFAULT_DISPLAY) as (keyof DisplaySettings)[])
+              if (typeof saved[key] === typeof DEFAULT_DISPLAY[key]) (next as Record<string, unknown>)[key] = saved[key];
+            return next;
+          });
+      } catch {
+        /* Storage unavailable: defaults are fine. */
+      }
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, []);
+  const changeDisplay = (next: DisplaySettings) => {
+    setDisplay(next);
+    try {
+      localStorage.setItem(DISPLAY_KEY, JSON.stringify(next));
+    } catch {
+      /* Storage unavailable: keep it for this visit only. */
+    }
+  };
   const [inspector, setInspector] = useState(false);
   const [viewRequest, setViewRequest] = useState<ViewRequest>({
     revision: 0,
@@ -145,36 +201,50 @@ export function BimViewerPage() {
   const [stats, setStats] = useState({ bytes: 0, triangles: 0 });
   const demoLoadedRef = useRef(false);
 
+  const applySession = useCallback((session: z.infer<typeof sessionSchema>) => {
+    if (Array.isArray(session.hiddenElements))
+      setHiddenElements(new Set(session.hiddenElements));
+    if (Array.isArray(session.measurements))
+      setMeasurements(session.measurements);
+    if (Array.isArray(session.savedViews)) setSavedViews(session.savedViews);
+    if (Array.isArray(session.issues)) setIssues(session.issues);
+    if (session.layers) setLayers({ ...ALL_LAYERS, ...session.layers });
+    if (typeof session.explode === "number") setExplode(session.explode);
+    if (Array.isArray(session.searchSets)) setSearchSets(session.searchSets);
+  }, []);
+
+  // Element ids are "m<n>/ifc-<expressID>", which repeat across files. A
+  // session therefore belongs to the exact set of files it was made with.
+  const sessionSignature = models
+    .map((m) => `${m.model.filename ?? m.key}:${m.model.elementsCount}`)
+    .join("|");
+  const sessionKey = `${SESSION_KEY}:${sessionSignature}`;
   useEffect(() => {
+    if (!sessionSignature) {
+      sessionReadyRef.current = null;
+      return;
+    }
+    if (sessionReadyRef.current === sessionSignature) return;
     const timer = window.setTimeout(() => {
       try {
-        const raw = localStorage.getItem(SESSION_KEY);
-        if (raw) {
-          const session = sessionSchema.parse(JSON.parse(raw));
-          if (Array.isArray(session.hiddenElements))
-            setHiddenElements(new Set(session.hiddenElements));
-          if (Array.isArray(session.measurements))
-            setMeasurements(session.measurements);
-          if (Array.isArray(session.savedViews))
-            setSavedViews(session.savedViews);
-          if (Array.isArray(session.issues)) setIssues(session.issues);
-          if (session.layers) setLayers({ ...ALL_LAYERS, ...session.layers });
-          if (typeof session.explode === "number") setExplode(session.explode);
-        }
+        // Sessions from before per-file keys cannot be matched to a file.
+        localStorage.removeItem(SESSION_KEY);
+        const raw = localStorage.getItem(sessionKey);
+        if (raw) applySession(sessionSchema.parse(JSON.parse(raw)));
       } catch {
         // Storage may be disabled; keep the viewer usable in memory.
       } finally {
-        sessionReadyRef.current = true;
+        sessionReadyRef.current = sessionSignature;
       }
     }, 0);
     return () => window.clearTimeout(timer);
-  }, []);
+  }, [applySession, sessionKey, sessionSignature]);
 
   useEffect(() => {
-    if (!sessionReadyRef.current) return;
+    if (!sessionSignature || sessionReadyRef.current !== sessionSignature) return;
     try {
       localStorage.setItem(
-        SESSION_KEY,
+        sessionKey,
         JSON.stringify({
           hiddenElements: [...hiddenElements],
           measurements,
@@ -182,12 +252,13 @@ export function BimViewerPage() {
           issues,
           layers,
           explode,
+          searchSets,
         }),
       );
     } catch {
       /* Storage quota/privacy settings must not crash the viewer. */
     }
-  }, [explode, hiddenElements, issues, layers, measurements, savedViews]);
+  }, [explode, hiddenElements, issues, layers, measurements, savedViews, searchSets, sessionKey, sessionSignature]);
 
   const canvasModels = useMemo<CanvasModel[]>(
     () =>
@@ -235,22 +306,19 @@ export function BimViewerPage() {
     };
   }, []);
 
-  useEffect(() => {
-    if (activeTool !== "measure") return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setPendingPoint(null);
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [activeTool]);
-
   const requestView = useCallback(
-    (preset: BimViewPreset, modelKey?: string, elementIds?: string[]) => {
+    (
+      preset: BimViewPreset,
+      modelKey?: string,
+      elementIds?: string[],
+      keepDirection = false,
+    ) => {
       setViewRequest((r) => ({
         revision: r.revision + 1,
         preset,
         modelKey,
         elementIds,
+        keepDirection,
       }));
       setClashPoint(null);
       setClashId(null);
@@ -258,19 +326,45 @@ export function BimViewerPage() {
     [],
   );
 
-  const runLocalClashCheck = useCallback(() => {
-    const clashes = detectAabbClashes(canvasModels);
-    setLocalClashes(clashes);
-    setActiveTool("clashes");
-    toast.success(
-      clashes.length
-        ? `${clashes.length} local clash candidates found.`
-        : "No local clash candidates found.",
-    );
+  const clashTaskRef = useRef<{ cancelled: boolean } | null>(null);
+  const runLocalClashCheck = useCallback(async () => {
+    if (clashTaskRef.current) return;
+    const task = { cancelled: false };
+    clashTaskRef.current = task;
+    const s = ui(locale).bimClash;
+    const toastId = toast.loading(s.checking(0, 0));
+    const slice = timeSlicer();
+    let lastToast = 0;
+    try {
+      const clashes = await detectClashes(canvasModels, {
+        describe: ({ volume, verified }) => s.description(volume, verified),
+        // Mesh checks run on the main thread in slices so the view stays live.
+        shouldYield: async () => {
+          await slice();
+          return task.cancelled;
+        },
+        onProgress: (done, total) => {
+          if (performance.now() - lastToast > 150 || done === total) {
+            lastToast = performance.now();
+            toast.loading(s.checking(done, total), { id: toastId });
+          }
+        },
+      });
+      if (task.cancelled) return toast.dismiss(toastId);
+      setLocalClashes(clashes);
+      setActiveTool("clashes");
+      toast.success(ui(locale).bimViewerPage.localClashes(clashes.length), { id: toastId });
+    } finally {
+      if (clashTaskRef.current === task) clashTaskRef.current = null;
+    }
+  }, [canvasModels, locale]);
+  // A new file set makes a running check meaningless.
+  useEffect(() => () => {
+    if (clashTaskRef.current) clashTaskRef.current.cancelled = true;
   }, [canvasModels]);
 
   const saveView = useCallback(
-    (name: string) => {
+    (name: string, markup?: MarkupShape[]) => {
       setSavedViews((views) => [
         ...views,
         {
@@ -282,12 +376,14 @@ export function BimViewerPage() {
           camera: cameraRef.current,
           clip: { ...effectiveClip },
           hiddenElements: [...hiddenElements],
+          ...(isolated ? { isolatedElements: [...isolated] } : {}),
           layers: { ...layers },
           explode,
+          ...(markup?.length ? { markup } : {}),
         },
       ]);
     },
-    [selectedElementIds, viewRequest.modelKey, viewRequest.preset, effectiveClip, hiddenElements, layers, explode],
+    [selectedElementIds, viewRequest.modelKey, viewRequest.preset, effectiveClip, hiddenElements, isolated, layers, explode],
   );
 
   const applySavedView = useCallback(
@@ -297,9 +393,11 @@ export function BimViewerPage() {
       setSelectedElementIds(new Set(selected.map((element) => element.id)));
       setSelectedElement(selected[0] ?? null);
       setPendingPoint(null);
-      setActiveTool("orbit");
+      setMarkupShapes(view.markup ?? []);
+      setActiveTool(view.markup?.length ? "markup" : "orbit");
       if (view.clip) setClip(view.clip);
       if (view.hiddenElements) setHiddenElements(new Set(view.hiddenElements));
+      setIsolated(view.isolatedElements?.length ? new Set(view.isolatedElements) : null);
       if (view.layers) setLayers(view.layers);
       if (view.explode !== undefined) setExplode(view.explode);
       setViewRequest((current) => ({ revision: current.revision + 1, preset: view.preset, modelKey: view.modelKey, elementIds: view.elementIds, camera: view.camera }));
@@ -327,6 +425,176 @@ export function BimViewerPage() {
     [clashId, selectedElement, selectedElementIds],
   );
 
+  const allElements = useMemo(
+    () => models.flatMap((m) => m.model.elements),
+    [models],
+  );
+  const elementById = useMemo(
+    () => new Map(allElements.map((e) => [e.id, e])),
+    [allElements],
+  );
+  const selectIds = useCallback(
+    (ids: string[], primaryId?: string) => {
+      setSelectedElementIds(new Set(ids));
+      const primary = elementById.get(primaryId ?? ids[0]) ?? null;
+      setSelectedElement(primary);
+      if (!primary) setInspector(false);
+    },
+    [elementById],
+  );
+  const clearSelection = useCallback(() => {
+    setSelectedElement(null);
+    setSelectedElementIds(new Set());
+  }, []);
+  const isolateIds = useCallback((ids: string[]) => {
+    if (!ids.length) return;
+    setIsolated(new Set(ids));
+    // Isolating something hidden should show it.
+    setHiddenElements((hidden) => {
+      const next = new Set(hidden);
+      for (const id of ids) next.delete(id);
+      return next;
+    });
+  }, []);
+  const hideIds = useCallback(
+    (ids: string[]) => {
+      if (!ids.length) return;
+      setHiddenElements((hidden) => new Set([...hidden, ...ids]));
+      setIsolated((current) => {
+        if (!current) return current;
+        const kept = [...current].filter((id) => !ids.includes(id));
+        return kept.length ? new Set(kept) : null;
+      });
+      clearSelection();
+    },
+    [clearSelection],
+  );
+  const showAll = useCallback(() => {
+    setHiddenElements(new Set());
+    setIsolated(null);
+  }, []);
+  /** Frame the selection (or everything) without changing the view direction. */
+  const focusIds = useCallback(
+    (ids: string[]) => requestView("perspective", undefined, ids.length ? ids : undefined, true),
+    [requestView],
+  );
+  const goHome = useCallback(() => requestView("perspective"), [requestView]);
+  const selectedIdList = useMemo(() => [...selectedElementIds], [selectedElementIds]);
+
+  const runContextAction = (action: ContextAction) => {
+    const anchor = contextMenu?.element ?? selectedElement;
+    const visible = allElements.filter((e) => !hiddenElements.has(e.id));
+    switch (action) {
+      case "isolate":
+        return isolateIds(selectedIdList);
+      case "hide":
+        return hideIds(selectedIdList);
+      case "focus":
+        return focusIds(selectedIdList);
+      case "selectSameType":
+        if (anchor)
+          selectIds(visible.filter((e) => e.ifcType === anchor.ifcType).map((e) => e.id), anchor.id);
+        return;
+      case "selectSameStorey":
+        if (anchor)
+          selectIds(
+            visible
+              .filter((e) => e.modelKey === anchor.modelKey && e.storey === anchor.storey)
+              .map((e) => e.id),
+            anchor.id,
+          );
+        return;
+      case "showAll":
+        return showAll();
+      case "fitAll":
+        return focusIds([]);
+      case "clearSelection":
+        return clearSelection();
+      case "properties":
+        return setInspector(true);
+    }
+  };
+
+  // Autodesk-style shortcuts. Typing in fields, menus and dialogs is left alone.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.defaultPrevented || e.ctrlKey || e.metaKey || e.altKey) return;
+      const target = e.target instanceof Element ? e.target : null;
+      if (target?.closest("input, textarea, select, [contenteditable=true], [role=menu], dialog")) return;
+      if (target && !containerRef.current?.contains(target) && target !== document.body) return;
+      if (activeTool === "markup") return;
+      if (activeTool === "walk") {
+        if (e.key === "Escape") setActiveTool("orbit");
+        return;
+      }
+      const key = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+      if (key === "Escape") {
+        // Panels close themselves on Escape; only the scene reacts here.
+        if (target?.closest("aside, section")) return;
+        if (pendingPoints.length) setPendingPoints([]);
+        else clearSelection();
+      } else if (key === "f") focusIds(selectedIdList);
+      else if (key === "i") isolateIds(selectedIdList);
+      else if (key === "h") hideIds(selectedIdList);
+      else if (key === "u") showAll();
+      else if (key === "Home") goHome();
+      else if (key === "?") setShortcutsOpen(true);
+      else return;
+      e.preventDefault();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [activeTool, clearSelection, focusIds, goHome, hideIds, isolateIds, pendingPoints.length, selectedIdList, showAll]);
+
+  const levels = useMemo(() => computeLevels(canvasModels), [canvasModels]);
+
+  // ---- Version comparison: colours, ghosts and hidden duplicates -----------
+  const colorOverrides = useMemo(() => {
+    if (!comparison) return null;
+    const map = new Map<string, string>();
+    for (const id of comparison.diff.added) map.set(id, DIFF_COLORS.added);
+    for (const id of comparison.diff.removed) map.set(id, DIFF_COLORS.removed);
+    for (const id of comparison.diff.geometry) map.set(id, DIFF_COLORS.geometry);
+    for (const id of comparison.diff.properties) map.set(id, DIFF_COLORS.properties);
+    return map;
+  }, [comparison]);
+  const runComparison = (oldKey: string, newKey: string) => {
+    const older = canvasModels.find((m) => m.key === oldKey);
+    const newer = canvasModels.find((m) => m.key === newKey);
+    if (!older || !newer) return;
+    // Old positions → world → new model frame, so a moved file is not "all changed".
+    const c = Math.cos(newer.placement.rotationY);
+    const sn = Math.sin(newer.placement.rotationY);
+    const toNew = (p: Vec3): Vec3 => {
+      const [wx, wy, wz] = applyPlacement(p, older.placement);
+      const [dx, dy, dz] = [wx - newer.placement.position[0], wy - newer.placement.position[1], wz - newer.placement.position[2]];
+      return [dx * c - dz * sn, dy, dx * sn + dz * c];
+    };
+    const diff = compareModels(older.model.elements, newer.model.elements, toNew);
+    setComparison({ oldKey, newKey, diff });
+    // The old file overlaps the new one: only its removed elements stay visible.
+    setHiddenElements(new Set(diff.matchedOld));
+    const changed = [...diff.added, ...diff.removed, ...diff.geometry, ...diff.properties];
+    setIsolated(changed.length ? new Set(changed) : null);
+    toast.success(ui(locale).bimCompare.done(changed.length));
+  };
+  const exitComparison = () => {
+    setComparison(null);
+    setHiddenElements(new Set());
+    setIsolated(null);
+  };
+  const showPlan = (level: BimLevel) => {
+    const lift = canvasModels.find((m) => m.key === level.modelKey)?.placement.position[1] ?? 0;
+    setClip({ ...planeClip(sceneBounds, 1), y: planCutHeight(level, elementById, lift) });
+    setExplode(0);
+    setActiveLevelId(level.id);
+    requestView("top", undefined, level.ids);
+  };
+  const clearPlan = () => {
+    setClip((current) => ({ ...current, enabled: false }));
+    setActiveLevelId(null);
+  };
+
   const cancelLoad = () => {
     taskRef.current?.abort();
     taskRef.current = null;
@@ -337,6 +605,8 @@ export function BimViewerPage() {
     setSelectedElement(null);
     setSelectedElementIds(new Set());
     setHiddenElements(new Set());
+    setIsolated(null);
+    setContextMenu(null);
     setInspector(false);
     setMeasurements([]);
     setPendingPoint(null);
@@ -500,9 +770,15 @@ export function BimViewerPage() {
   const removeModel = (key: string) => {
     setSelectedElementIds((ids) => new Set([...ids].filter((id) => !id.startsWith(`${key}/`))));
     setHiddenElements((ids) => new Set([...ids].filter((id) => !id.startsWith(`${key}/`))));
+    setIsolated((ids) => {
+      if (!ids) return ids;
+      const kept = [...ids].filter((id) => !id.startsWith(`${key}/`));
+      return kept.length ? new Set(kept) : null;
+    });
     setMeasurements((list) => list.filter((measurement) => !measurement.points.some((point) => point.modelKey === key)));
     setPendingPoint(null);
     setLocalClashes([]);
+    setComparison((c) => (c && (c.oldKey === key || c.newKey === key) ? null : c));
     const next = modelsRef.current.filter((m) => m.key !== key);
     commitModels(next);
     if (!next.length) {
@@ -561,6 +837,13 @@ export function BimViewerPage() {
   }, [selectedElement, canvasModels, sceneOrigin, mapConversion]);
 
   const snapshot = (data: string | null) => {
+    // A pending capture (markup export) takes the image instead of downloading it.
+    if (snapshotWaiter.current) {
+      const resolve = snapshotWaiter.current;
+      snapshotWaiter.current = null;
+      resolve(data);
+      return;
+    }
     if (!data) {
       toast.error(ui(locale).bimViewerPage.unableToCaptureThe3D);
       return;
@@ -570,6 +853,43 @@ export function BimViewerPage() {
     a.download = `BIM4C-${Date.now()}.png`;
     a.click();
     toast.success(ui(locale).bimViewerPage.t3DImageExported);
+  };
+  const captureView = () =>
+    new Promise<string | null>((resolve) => {
+      snapshotWaiter.current = resolve;
+      setSnapshotRevision((n) => n + 1);
+    });
+  /** 3D image + markup vectors, at the image's full (hi-DPI) resolution. */
+  const exportMarkup = async (shapes: MarkupShape[], width: number, height: number) => {
+    const s = ui(locale).bimMarkup;
+    const data = await captureView();
+    if (!data) return toast.error(ui(locale).bimViewerPage.unableToCaptureThe3D);
+    const load = (src: string) =>
+      new Promise<HTMLImageElement>((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = reject;
+        img.src = src;
+      });
+    try {
+      const base = await load(data);
+      const overlay = await load(
+        `data:image/svg+xml;charset=utf-8,${encodeURIComponent(markupSvg(shapes, width, height, base.width, base.height))}`,
+      );
+      const canvas = document.createElement("canvas");
+      canvas.width = base.width;
+      canvas.height = base.height;
+      const ctx = canvas.getContext("2d")!;
+      ctx.drawImage(base, 0, 0);
+      ctx.drawImage(overlay, 0, 0);
+      const a = document.createElement("a");
+      a.href = canvas.toDataURL("image/png");
+      a.download = `BIM4C-markup-${new Date().toISOString().slice(0, 19).replaceAll(":", "-")}.png`;
+      a.click();
+      toast.success(s.exported);
+    } catch {
+      toast.error(ui(locale).bimViewerPage.unableToCaptureThe3D);
+    }
   };
   const exportSession = () => {
     const data = {
@@ -581,6 +901,7 @@ export function BimViewerPage() {
       issues,
       layers,
       explode,
+      searchSets,
     };
     const url = URL.createObjectURL(
       new Blob([JSON.stringify(data, null, 2)], { type: "application/json" }),
@@ -594,18 +915,10 @@ export function BimViewerPage() {
   const importSession = async (file: File) => {
     try {
       if (file.size > 10 * 1024 * 1024) throw new Error("Session too large");
-      const session = sessionSchema.parse(JSON.parse(await file.text()));
-      if (Array.isArray(session.hiddenElements))
-        setHiddenElements(new Set(session.hiddenElements));
-      if (Array.isArray(session.measurements))
-        setMeasurements(session.measurements);
-      if (Array.isArray(session.savedViews)) setSavedViews(session.savedViews);
-      if (Array.isArray(session.issues)) setIssues(session.issues);
-      if (session.layers) setLayers({ ...ALL_LAYERS, ...session.layers });
-      if (typeof session.explode === "number") setExplode(session.explode);
-      toast.success("Viewer session imported locally.");
+      applySession(sessionSchema.parse(JSON.parse(await file.text())));
+      toast.success(ui(locale).bimViewerPage.sessionImported);
     } catch {
-      toast.error("Invalid BIM4C session JSON.");
+      toast.error(ui(locale).bimViewerPage.sessionInvalid);
     }
   };
   const toggleFullscreen = async () => {
@@ -697,8 +1010,8 @@ export function BimViewerPage() {
           <button
             type="button"
             onClick={exportSession}
-            aria-label="Export local viewer session"
-            title="Export local viewer session"
+            aria-label={ui(locale).bimViewerPage.exportSession}
+            title={ui(locale).bimViewerPage.exportSession}
             className="grid min-h-10 min-w-10 place-items-center rounded-lg border border-white/15 px-2 text-xs hover:bg-white/10"
           >
             <Download className="size-4" />
@@ -706,8 +1019,8 @@ export function BimViewerPage() {
           <button
             type="button"
             onClick={() => sessionInputRef.current?.click()}
-            aria-label="Import local viewer session"
-            title="Import local viewer session"
+            aria-label={ui(locale).bimViewerPage.importSession}
+            title={ui(locale).bimViewerPage.importSession}
             className="grid min-h-10 min-w-10 place-items-center rounded-lg border border-white/15 px-2 text-xs hover:bg-white/10"
           >
             <Upload className="size-4" />
@@ -793,7 +1106,6 @@ export function BimViewerPage() {
             if (tool !== "measure") setPendingPoint(null);
             if (tool !== "orbit" && smallScreen()) setInspector(false);
           }}
-          activeViewPreset={viewRequest.preset}
           onSelectViewPreset={(preset) => requestView(preset)}
           modelCount={models.length}
           onResetView={() => {
@@ -803,6 +1115,7 @@ export function BimViewerPage() {
             setPendingPoint(null);
           }}
           onTakeSnapshot={() => setSnapshotRevision((n) => n + 1)}
+          onShowShortcuts={() => setShortcutsOpen(true)}
           isFullscreen={fullscreen}
           onToggleFullscreen={() => void toggleFullscreen()}
           clashesCount={allClashes.length}
@@ -829,6 +1142,28 @@ export function BimViewerPage() {
             selectedElementId={selectedElement?.id ?? null}
             selectedElementIds={selectedElementIds}
             hiddenElementIds={hiddenElements}
+            isolatedElementIds={isolated}
+            colorOverrides={colorOverrides}
+            onDoubleClick={(element) => {
+              if (!element) return focusIds([]);
+              selectIds([element.id]);
+              setInspector(true);
+              focusIds([element.id]);
+            }}
+            onContextMenu={(menu) => {
+              // Right-clicking outside the selection acts on what was clicked.
+              if (menu.element && !selectedElementIds.has(menu.element.id))
+                selectIds([menu.element.id]);
+              setContextMenu(menu);
+            }}
+            onHome={goHome}
+            onSelectMany={(ids, append) => {
+              const next = append ? [...new Set([...selectedElementIds, ...ids])] : ids;
+              selectIds(next, ids[0]);
+              if (next.length) setInspector(true);
+            }}
+            rightPanelOpen={inspector}
+            display={display}
             onSelectElement={(e, append) => {
               if (!e) {
                 setSelectedElement(null);
@@ -872,6 +1207,91 @@ export function BimViewerPage() {
             onMeasurePoint={onMeasurePoint}
             pendingPoints={pendingPoints}
           />
+          <BimVisibilityBar
+            isolatedCount={isolated?.size ?? 0}
+            hiddenCount={hiddenElements.size}
+            onExitIsolation={() => setIsolated(null)}
+            onShowAll={showAll}
+          />
+          {contextMenu && (
+            <BimContextMenu
+              x={contextMenu.x}
+              y={contextMenu.y}
+              element={contextMenu.element}
+              selectionCount={contextMenu.element ? Math.max(1, selectedElementIds.size) : selectedElementIds.size}
+              canShowAll={Boolean(isolated || hiddenElements.size)}
+              onAction={runContextAction}
+              onClose={() => setContextMenu(null)}
+            />
+          )}
+          <BimShortcutsDialog open={shortcutsOpen} onClose={() => setShortcutsOpen(false)} />
+          {activeTool === "compare" && (
+            <BimComparePanel
+              models={models}
+              comparison={comparison}
+              onCompare={runComparison}
+              onExit={exitComparison}
+              onSelect={(ids) => {
+                selectIds(ids);
+                setInspector(ids.length > 0);
+                focusIds(ids);
+              }}
+              onClose={() => setActiveTool("orbit")}
+            />
+          )}
+          {activeTool === "markup" && (
+            <BimMarkupLayer
+              initialShapes={markupShapes}
+              onSave={(shapes, name) => {
+                saveView(name, shapes);
+                toast.success(ui(locale).bimMarkup.saved);
+              }}
+              onExport={(shapes, width, height) => void exportMarkup(shapes, width, height)}
+              onClose={() => {
+                setMarkupShapes([]);
+                setActiveTool("orbit");
+              }}
+            />
+          )}
+          {activeTool === "quantities" && (
+            <BimQuantitiesPanel
+              elements={allElements}
+              hiddenIds={hiddenElements}
+              selectedIds={selectedElementIds}
+              onSelect={(ids) => {
+                selectIds(ids);
+                setInspector(ids.length > 0);
+              }}
+              onClose={() => setActiveTool("orbit")}
+            />
+          )}
+          {activeTool === "levels" && (
+            <BimLevelsPanel
+              levels={levels}
+              // A plan stays "active" only while its horizontal cut is on.
+              activeLevelId={clip.enabled && clip.planeAxis === 1 ? activeLevelId : null}
+              elevationOffset={sceneOrigin[1]}
+              multipleModels={models.length > 1}
+              onPlan={showPlan}
+              onIsolate={(level) => {
+                isolateIds(level.ids);
+                focusIds(level.ids);
+              }}
+              onSelect={(level) => {
+                selectIds(level.ids);
+                setInspector(true);
+              }}
+              onClearPlan={clearPlan}
+              onClose={() => setActiveTool("orbit")}
+            />
+          )}
+          {activeTool === "display" && (
+            <BimDisplayPanel
+              settings={display}
+              onChange={changeDisplay}
+              onClose={() => setActiveTool("orbit")}
+            />
+          )}
           {activeTool === "models" && (
             <BimModelsPanel
               models={models}
@@ -882,17 +1302,50 @@ export function BimViewerPage() {
                 })
               }
               onRemove={removeModel}
-              onFocus={(key) => requestView(viewRequest.preset, key)}
+              onFocus={(key) => requestView("perspective", key, undefined, true)}
               onAlignment={(key, alignment) => updateModel(key, { alignment })}
               onOffset={(key, offset) => updateModel(key, { offset })}
               onAddFiles={() => inputRef.current?.click()}
               selectedElementId={selectedElement?.id ?? null}
               onSelectElement={(element) => {
-                setSelectedElement(element);
-                setSelectedElementIds(new Set([element.id]));
+                selectIds([element.id]);
                 setInspector(true);
-                setActiveTool("orbit");
-                requestView("perspective", element.modelKey, [element.id]);
+                if (smallScreen()) setActiveTool("orbit");
+                focusIds([element.id]);
+              }}
+              hiddenElementIds={hiddenElements}
+              onSelectMany={(ids) => {
+                selectIds(ids);
+                setInspector(ids.length > 0);
+              }}
+              onSetHidden={(ids, hidden) => {
+                if (hidden) hideIds(ids);
+                else
+                  setHiddenElements((current) => {
+                    const next = new Set(current);
+                    for (const id of ids) next.delete(id);
+                    return next;
+                  });
+              }}
+              onIsolate={isolateIds}
+              searchSets={searchSets}
+              onSaveSearchSet={(set) =>
+                setSearchSets((list) => [
+                  ...list,
+                  // Next free number: ids stay unique after deletions.
+                  { ...set, id: `set-${list.reduce((n, x) => Math.max(n, Number(x.id.split("-")[1]) || 0), 0) + 1}` },
+                ])
+              }
+              onDeleteSearchSet={(id) => setSearchSets((list) => list.filter((set) => set.id !== id))}
+              onApplySearchSet={(set) => {
+                const ids = models.flatMap((m) =>
+                  m.model.elements
+                    .filter((e) => elementMatches(e, m.model.filename, set, locale))
+                    .map((e) => e.id),
+                );
+                selectIds(ids);
+                setInspector(ids.length > 0);
+                toast.success(ui(locale).bimSearchSets.applied(ids.length, set.name));
               }}
             />
           )}
@@ -945,7 +1398,7 @@ export function BimViewerPage() {
               setClashPoint([...clash.point]);
             }}
             activeClashId={clashId}
-            onRunClashCheck={runLocalClashCheck}
+            onRunClashCheck={() => void runLocalClashCheck()}
             savedViews={savedViews}
             currentViewPreset={viewRequest.preset}
             selectedElementIds={selectedElementIds}
@@ -979,28 +1432,11 @@ export function BimViewerPage() {
             coordinates={selectedCoordinates}
             isOpen={inspector}
             onClose={() => setInspector(false)}
-            onFitSelection={() =>
-              requestView("perspective", undefined, [...selectedElementIds])
-            }
-            onHide={() => {
-              if (!selectedElement) return;
-              setHiddenElements(
-                (current) => new Set([...current, ...selectedElementIds]),
-              );
-              setSelectedElement(null);
-              setSelectedElementIds(new Set());
-            }}
-            onIsolate={() => {
-              if (!selectedElement) return;
-              const ids = new Set(
-                models.flatMap((model) =>
-                  model.model.elements.map((element) => element.id),
-                ),
-              );
-              for (const id of selectedElementIds) ids.delete(id);
-              setHiddenElements(ids);
-            }}
-            onResetVisibility={() => setHiddenElements(new Set())}
+            selectionCount={selectedElementIds.size}
+            onFitSelection={() => focusIds(selectedIdList)}
+            onHide={() => hideIds(selectedIdList)}
+            onIsolate={() => isolateIds(selectedIdList)}
+            onResetVisibility={showAll}
           />
           {dragging && (
             <div className="pointer-events-none absolute inset-2 z-50 grid place-items-center rounded-xl border-2 border-dashed border-teal-400 bg-slate-950/90 p-4 text-center">

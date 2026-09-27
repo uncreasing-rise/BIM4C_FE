@@ -5,6 +5,8 @@ import { fileURLToPath } from "node:url";
 import { createRequire } from "node:module";
 import test from "node:test";
 import ts from "typescript";
+import * as THREE from "three";
+import * as BVH from "three-mesh-bvh";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const require = createRequire(import.meta.url);
@@ -115,7 +117,11 @@ function load(path) {
       ? load(name.slice(2))
       : name.startsWith(".")
         ? load(resolve(dirname(filename), name))
-        : require(name);
+        : name === "three"
+          ? THREE
+          : name === "three-mesh-bvh"
+            ? BVH
+            : require(name);
   new Function("require", "module", "exports", source)(
     localRequire,
     cjsModule,
@@ -153,9 +159,10 @@ test("viewer loads the public IFC demo and exposes selection workflow", () => {
   assert.match(page, /selectedElementIds/);
   assert.match(canvas, /selectedElementIds\.has/);
   assert.match(canvas, /elementIds\?\.length/);
-  assert.match(panel, /Filter by discipline/);
-  assert.match(panel, /Filter by storey/);
-  assert.match(panel, /Spatial model tree/);
+  // The filters are translated through the dictionary (ui.bimTree).
+  assert.match(panel, /bimTree\.filterDiscipline/);
+  assert.match(panel, /bimTree\.filterStorey/);
+  assert.match(panel, /bimTree\.spatialTree/);
 });
 
 test("local clash detection reports only cross-discipline AABB overlaps", () => {

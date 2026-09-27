@@ -5,6 +5,12 @@ import {
   Bookmark,
   Boxes,
   Camera,
+  Keyboard,
+  GitCompareArrows,
+  Footprints,
+  PenLine,
+  Calculator,
+  Building2,
   Layers,
   Maximize2,
   Minimize2,
@@ -12,6 +18,7 @@ import {
   RotateCcw,
   Ruler,
   Scissors,
+  SlidersHorizontal,
   Sparkles,
 } from "lucide-react";
 import type { BimTool, BimViewPreset } from "./types";
@@ -19,11 +26,11 @@ import { ui } from "@/lib/i18n/ui";
 interface Props {
   activeTool: BimTool;
   onSelectTool: (tool: BimTool) => void;
-  activeViewPreset: BimViewPreset;
   onSelectViewPreset: (view: BimViewPreset) => void;
   modelCount: number;
   onResetView: () => void;
   onTakeSnapshot: () => void;
+  onShowShortcuts: () => void;
   isFullscreen: boolean;
   onToggleFullscreen: () => void;
   clashesCount: number;
@@ -34,12 +41,18 @@ export function BimToolbar(p: Props) {
   const tools = [
     { id: "orbit", icon: MousePointer },
     { id: "models", icon: Boxes },
+    { id: "walk", icon: Footprints },
+    { id: "levels", icon: Building2 },
     { id: "measure", icon: Ruler },
     { id: "section", icon: Scissors },
     { id: "explode", icon: Sparkles },
     { id: "layers", icon: Layers },
+    { id: "compare", icon: GitCompareArrows },
     { id: "clashes", icon: AlertTriangle },
+    { id: "quantities", icon: Calculator },
+    { id: "markup", icon: PenLine },
     { id: "views", icon: Bookmark },
+    { id: "display", icon: SlidersHorizontal },
   ] as const;
   const views = ["perspective", "top", "front", "right", "isometric"] as const;
   return (
@@ -55,12 +68,16 @@ export function BimToolbar(p: Props) {
         </span>
         <select
           aria-label={ui(locale).bimToolbar.viewPreset}
-          value={p.activeViewPreset}
-          onChange={(e) =>
-            p.onSelectViewPreset(e.target.value as BimViewPreset)
-          }
+          value=""
+          onChange={(e) => {
+            if (e.target.value)
+              p.onSelectViewPreset(e.target.value as BimViewPreset);
+          }}
           className="min-h-10 min-w-0 max-w-[45%] rounded-lg border border-white/15 bg-slate-900 px-2 text-xs"
         >
+          <option value="" disabled>
+            {ui(locale).bimToolbar.viewPreset}
+          </option>
           {views.map((view) => (
             <option key={view} value={view}>
               {v.views[view]}
@@ -76,14 +93,14 @@ export function BimToolbar(p: Props) {
               type="button"
               data-tool={id}
               onClick={() => p.onSelectTool(id)}
-              title={id === "views" ? "Saved viewpoints" : v.tools[id]}
-              aria-label={id === "views" ? "Saved viewpoints" : v.tools[id]}
+              title={id === "views" ? ui(locale).bimToolbar.savedViews : v.tools[id]}
+              aria-label={id === "views" ? ui(locale).bimToolbar.savedViews : v.tools[id]}
               aria-pressed={p.activeTool === id}
               className={`relative flex min-h-10 min-w-10 items-center justify-center gap-1 rounded-lg px-2 text-xs ${p.activeTool === id ? "bg-teal-400 text-slate-950" : "text-slate-300 hover:bg-white/10"}`}
             >
               <Icon className="size-4" />
               <span className="hidden xl:inline">
-                {id === "views" ? "Views" : v.tools[id]}
+                {id === "views" ? ui(locale).bimToolbar.views : v.tools[id]}
               </span>
               {id === "models" && p.modelCount > 0 && (
                 <span className="absolute right-0 top-0 rounded bg-teal-600 px-1 text-[9px] text-white">
@@ -108,6 +125,15 @@ export function BimToolbar(p: Props) {
             className="grid min-h-10 min-w-10 place-items-center rounded-lg hover:bg-white/10"
           >
             <RotateCcw className="size-4" />
+          </button>
+          <button
+            type="button"
+            onClick={p.onShowShortcuts}
+            aria-label={ui(locale).bimShortcuts.open}
+            title={`${ui(locale).bimShortcuts.open} (?)`}
+            className="grid min-h-10 min-w-10 place-items-center rounded-lg hover:bg-white/10"
+          >
+            <Keyboard className="size-4" />
           </button>
           <button
             type="button"

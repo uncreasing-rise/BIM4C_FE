@@ -37,8 +37,22 @@ export const sessionSchema = z
           modelKey: id.optional(),
           elementIds: ids,
           camera: z.object({ position: vector, target: vector, up: vector.refine((v) => Math.hypot(...v) > 0), fov: z.number().min(1).max(179) }).optional(),
-          clip: z.object({ x: z.number().finite(), y: z.number().finite(), z: z.number().finite(), minX: z.number().finite(), minY: z.number().finite(), minZ: z.number().finite(), enabled: z.boolean() }).refine((b) => b.x >= b.minX && b.y >= b.minY && b.z >= b.minZ).optional(),
+          clip: z.object({ x: z.number().finite(), y: z.number().finite(), z: z.number().finite(), minX: z.number().finite(), minY: z.number().finite(), minZ: z.number().finite(), enabled: z.boolean(), planeAxis: z.union([z.literal(0), z.literal(1), z.literal(2)]).optional(), flip: z.boolean().optional() }).refine((b) => b.x >= b.minX && b.y >= b.minY && b.z >= b.minZ).optional(),
           hiddenElements: ids.optional(),
+          isolatedElements: ids.optional(),
+          markup: z
+            .array(
+              z.object({
+                id,
+                kind: z.enum(["pen", "arrow", "rect", "ellipse", "text"]),
+                color: z.string().regex(/^#[0-9a-f]{3,8}$/i),
+                width: z.number().min(1).max(20),
+                points: z.array(z.tuple([z.number().finite(), z.number().finite()])).min(1).max(5000),
+                text: z.string().max(500).optional(),
+              }),
+            )
+            .max(500)
+            .optional(),
           layers: z.object({ architecture: z.boolean(), structure: z.boolean(), mep: z.boolean(), clash: z.boolean() }).optional(),
           explode: z.number().min(0).max(2).optional(),
         }),
@@ -68,6 +82,18 @@ export const sessionSchema = z
       })
       .optional(),
     explode: z.number().finite().min(0).max(2).optional(),
+    searchSets: z
+      .array(
+        z.object({
+          id,
+          name: z.string().max(256),
+          query: z.string().max(512),
+          discipline: z.string().max(32),
+          storey: z.string().max(512),
+        }),
+      )
+      .max(500)
+      .optional(),
   })
   .refine(
     (value) => Object.keys(value).some((key) => key !== "version"),

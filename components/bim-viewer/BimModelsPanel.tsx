@@ -14,6 +14,8 @@ import type { FederatedModel, ModelAlignment } from "./types";
 import { ui } from "@/lib/i18n/ui";
 import { buildSpatialTree } from "./spatial-tree";
 import { BimSpatialTree } from "./BimSpatialTree";
+import { elementMatches, hasCriteria, type SearchSet } from "./search-sets";
+import { Bookmark, Plus } from "lucide-react";
 /** Beyond this, two "shared coordinate" models are probably not in the same system. */
 const FAR_APART_METRES = 5_000;
 
@@ -30,6 +32,14 @@ interface Props {
   onSelectElement: (
     element: FederatedModel["model"]["elements"][number],
   ) => void;
+  hiddenElementIds: ReadonlySet<string>;
+  onSelectMany: (ids: string[]) => void;
+  onSetHidden: (ids: string[], hidden: boolean) => void;
+  onIsolate: (ids: string[]) => void;
+  searchSets: SearchSet[];
+  onSaveSearchSet: (set: Omit<SearchSet, "id">) => void;
+  onApplySearchSet: (set: SearchSet) => void;
+  onDeleteSearchSet: (id: string) => void;
 }
 
 export function BimModelsPanel(p: Props) {
@@ -38,6 +48,8 @@ export function BimModelsPanel(p: Props) {
   const [discipline, setDiscipline] = useState("all");
   const [storey, setStorey] = useState("all");
   const [resultLimit, setResultLimit] = useState(100);
+  const [setName, setSetName] = useState<string | null>(null);
+  const criteria = { query, discipline, storey };
   const fmt = (n: number) => formatLength(n, locale);
   const primary = p.models[0];
   const primaryOrigin = primary ? modelOrigin(primary.model) : null;
@@ -54,31 +66,15 @@ export function BimModelsPanel(p: Props) {
       ].sort(),
     [p.models],
   );
-  const results = useMemo(() => {
-    const q = query.trim().toLocaleLowerCase(locale);
-    return p.models
-      .flatMap((m) =>
-        m.model.elements.map((element) => ({ model: m, element })),
-      )
-      .filter(
-        ({ model, element }) =>
-          (discipline === "all" || element.discipline === discipline) &&
-          (storey === "all" || element.storey === storey) &&
-          [
-            model.model.filename,
-            element.name,
-            element.ifcType,
-            element.storey,
-            element.guid,
-            element.material,
-            ...element.psets.flatMap((pset) => [pset.name, ...pset.properties.map((property) => `${property.name} ${property.value}`)]),
-          ]
-            .filter(Boolean)
-            .some(
-              (value) => !q || value!.toLocaleLowerCase(locale).includes(q),
-            ),
-      );
-  }, [discipline, locale, p.models, query, storey]);
+  const results = useMemo(
+    () =>
+      p.models
+        .flatMap((m) => m.model.elements.map((element) => ({ model: m, element })))
+        .filter(({ model, element }) =>
+          elementMatches(element, model.model.filename, { query, discipline, storey }, locale),
+        ),
+    [discipline, locale, p.models, query, storey],
+  );
   const tree = useMemo(() => buildSpatialTree(results), [results]);
   return (
     <section
@@ -109,8 +105,8 @@ export function BimModelsPanel(p: Props) {
         <input
           value={query}
           onChange={(e) => { setQuery(e.target.value); setResultLimit(100); }}
-          placeholder="Search element, type, storey..."
-          aria-label="Search model elements"
+          placeholder={ui(locale).bimTree.searchPlaceholder}
+          aria-label={ui(locale).bimTree.searchLabel}
           className="min-w-0 flex-1 bg-transparent text-xs outline-none placeholder:text-slate-500"
         />
       </label>
@@ -118,21 +114,21 @@ export function BimModelsPanel(p: Props) {
         <select
           value={discipline}
           onChange={(e) => { setDiscipline(e.target.value); setResultLimit(100); }}
-          aria-label="Filter by discipline"
+          aria-label={ui(locale).bimTree.filterDiscipline}
           className="min-h-9 rounded border border-white/15 bg-slate-900 px-2 text-xs"
         >
-          <option value="all">All disciplines</option>
-          <option value="architecture">Architecture</option>
-          <option value="structure">Structure</option>
-          <option value="mep">MEP</option>
+          <option value="all">{ui(locale).bimTree.allDisciplines}</option>
+          <option value="architecture">{ui(locale).bimTree.architecture}</option>
+          <option value="structure">{ui(locale).bimTree.structure}</option>
+          <option value="mep">{ui(locale).bimTree.mep}</option>
         </select>
         <select
           value={storey}
           onChange={(e) => { setStorey(e.target.value); setResultLimit(100); }}
-          aria-label="Filter by storey"
+          aria-label={ui(locale).bimTree.filterStorey}
           className="min-h-9 min-w-0 rounded border border-white/15 bg-slate-900 px-2 text-xs"
         >
-          <option value="all">All storeys</option>
+          <option value="all">{ui(locale).bimTree.allStoreys}</option>
           {storeys.map((value) => (
             <option key={value} value={value}>
               {value}
@@ -140,18 +136,89 @@ export function BimModelsPanel(p: Props) {
           ))}
         </select>
       </div>
-      <details className="mb-3 rounded-lg border border-white/10">
+      <details open className="mb-3 rounded-lg border border-white/10">
         <summary className="cursor-pointer px-3 py-2 text-teal-200">
-          Spatial model tree
+          {ui(locale).bimTree.spatialTree}
         </summary>
-        <div className="max-h-64 space-y-1 overflow-y-auto p-1">
-          {tree.map((node) => <BimSpatialTree key={node.id} node={node} selectedId={p.selectedElementId} onSelect={p.onSelectElement} />)}
+        <div className="max-h-80 space-y-0.5 overflow-y-auto p-1">
+          {tree.map((node) => (
+            <BimSpatialTree
+              key={node.id}
+              node={node}
+              depth={0}
+              selectedId={p.selectedElementId}
+              onSelect={p.onSelectElement}
+              hidden={p.hiddenElementIds}
+              onSelectMany={p.onSelectMany}
+              onSetHidden={p.onSetHidden}
+              onIsolate={p.onIsolate}
+            />
+          ))}
         </div>
       </details>
+      <div className="mb-3 rounded-lg border border-white/10 p-2">
+        <div className="mb-1 flex items-center justify-between gap-2">
+          <span className="flex items-center gap-1.5 font-semibold text-teal-200">
+            <Bookmark className="size-3.5" /> {ui(locale).bimSearchSets.title}
+          </span>
+          {hasCriteria(criteria) && setName === null && (
+            <button
+              type="button"
+              onClick={() => setSetName(query.trim() || ui(locale).bimSearchSets.defaultName)}
+              className="flex items-center gap-1 rounded-md px-2 py-1 text-teal-200 hover:bg-white/10"
+            >
+              <Plus className="size-3.5" /> {ui(locale).bimSearchSets.save}
+            </button>
+          )}
+        </div>
+        {setName !== null && (
+          <form
+            className="mb-1 flex gap-1"
+            onSubmit={(e) => {
+              e.preventDefault();
+              p.onSaveSearchSet({ ...criteria, name: setName.trim() || ui(locale).bimSearchSets.defaultName });
+              setSetName(null);
+            }}
+          >
+            <input
+              autoFocus
+              value={setName}
+              onChange={(e) => setSetName(e.target.value)}
+              onKeyDown={(e) => e.key === "Escape" && (e.stopPropagation(), setSetName(null))}
+              aria-label={ui(locale).bimSearchSets.name}
+              className="min-h-8 min-w-0 flex-1 rounded-md border border-white/20 bg-slate-900 px-2 outline-none focus:border-teal-400"
+            />
+            <button type="submit" className="rounded-md bg-teal-400 px-2 font-semibold text-slate-950">
+              {ui(locale).bimSearchSets.save}
+            </button>
+          </form>
+        )}
+        {p.searchSets.length ? (
+          <ul className="space-y-0.5">
+            {p.searchSets.map((set) => (
+              <li key={set.id} className="group flex items-center gap-1 rounded-md hover:bg-white/5">
+                <button type="button" onClick={() => p.onApplySearchSet(set)} className="min-w-0 flex-1 truncate px-2 py-1.5 text-left" title={ui(locale).bimSearchSets.apply}>
+                  {set.name}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => p.onDeleteSearchSet(set.id)}
+                  aria-label={`${ui(locale).bimSearchSets.remove} ${set.name}`}
+                  className="grid size-7 place-items-center rounded text-slate-500 opacity-0 hover:text-red-300 group-hover:opacity-100 focus-visible:opacity-100"
+                >
+                  <X className="size-3.5" />
+                </button>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-[11px] text-slate-500">{ui(locale).bimSearchSets.empty}</p>
+        )}
+      </div>
       {(query || discipline !== "all" || storey !== "all") && (
         <div className="mb-3 max-h-64 space-y-1 overflow-y-auto rounded-lg border border-white/10 p-1">
           {!results.length && (
-            <p className="p-2 text-slate-400">No matching elements.</p>
+            <p className="p-2 text-slate-400">{ui(locale).bimTree.noMatches}</p>
           )}
           {results.slice(0, resultLimit)
             .map(({ model, element }) => (

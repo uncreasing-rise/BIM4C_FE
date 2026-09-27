@@ -8,9 +8,34 @@ import {
   createElementMesh,
   disposeObject,
   explodedPosition,
-  fitCamera,
   visibleHit,
 } from "./viewer-geometry";
+import {
+  PRESET_DIRECTIONS,
+  clipRange,
+  cubeCssMatrix,
+  easeInOutCubic,
+  framePose,
+  interpolatePose,
+  pivotOnViewLine,
+  safeViewDirection,
+  turnDirection,
+  type CubeTurn,
+  type OrbitPose,
+} from "./camera-motion";
+import { BimViewCube } from "./BimViewCube";
+import { timeSlicer } from "./yield";
+import { boxMode, boxPicked, rectFrom } from "./box-select";
+import {
+  ENVIRONMENTS,
+  ViewerPipeline,
+  type DisplaySettings,
+} from "./render-pipeline";
+import {
+  applySlotState,
+  buildElementBatches,
+  type ElementBatches,
+} from "./render-batches";
 import {
   distanceSummary,
   formatLength,
@@ -21,10 +46,12 @@ import {
 import { buildFeatureEdges, edgeKey, snapPoint } from "./snapping";
 import { triangleMetrics } from "./measurement-math";
 import {
+  activeFaces,
   axisDragValue,
   clipFromBox,
   createSectionBoxGizmo,
   moveFace,
+  planeIndex,
   type Axis,
   type Side,
 } from "./section-box";
@@ -62,6 +89,15 @@ export interface ViewRequest {
   modelKey?: string;
   /** Fit to an explicit element selection instead of the whole scene. */
   elementIds?: string[];
+  /** Keep the current viewing direction and only reframe (focus / zoom to). */
+  keepDirection?: boolean;
+}
+
+export interface CanvasContextMenu {
+  /** Pointer position relative to the canvas. */
+  x: number;
+  y: number;
+  element: BimElementData | null;
 }
 
 export interface SectionFitRequest {
@@ -79,7 +115,19 @@ export interface BimCanvasProps {
   selectedElementId: string | null;
   selectedElementIds: ReadonlySet<string>;
   hiddenElementIds: Set<string>;
+  /** When set, every other element is drawn as a ghost and cannot be picked. */
+  isolatedElementIds: ReadonlySet<string> | null;
+  /** Per-element colours that replace the model's (version comparison). */
+  colorOverrides: ReadonlyMap<string, string> | null;
   onSelectElement: (element: BimElementData | null, append?: boolean) => void;
+  onDoubleClick: (element: BimElementData | null) => void;
+  /** Rectangle selection result; `append` adds to the current selection. */
+  onSelectMany: (ids: string[], append: boolean) => void;
+  onContextMenu: (menu: CanvasContextMenu) => void;
+  onHome: () => void;
+  /** A right-hand panel is open; the ViewCube moves out from under it. */
+  rightPanelOpen?: boolean;
+  display: DisplaySettings;
   visibleLayers: Record<BimDiscipline, boolean>;
   clipPlanes: BimClipPlanes;
   onClipPlanesChange: (clip: BimClipPlanes) => void;
@@ -107,14 +155,22 @@ const SNAP_COLORS: Record<SnapKind, number> = {
 const SNAP_TOLERANCE_PX = 12;
 const NO_PLANES: THREE.Plane[] = [];
 const CLICK_TOLERANCE_PX = 6;
+const FLIGHT_MS = 480;
 
 interface ModelEntry {
   source: CanvasModel;
   group: THREE.Group;
   markers: THREE.Group;
+  /** Per-element meshes: always used for picking, drawn only when isolated. */
   meshes: Map<string, THREE.Mesh>;
+  /** What the GPU draws; null until built (the meshes draw meanwhile). */
+  batches: ElementBatches | null;
   ready: boolean;
 }
+
+// Layer 0 is drawn by the camera; layer 1 is pick-only.
+const DRAWN_AND_PICKABLE = 0b11;
+const PICK_ONLY = 0b10;
 
 export function BimCanvas(props: BimCanvasProps) {
   const { locale } = useLanguage();
@@ -122,9 +178,14 @@ export function BimCanvas(props: BimCanvasProps) {
   const labelsRef = useRef<HTMLDivElement>(null);
   const readoutRef = useRef<HTMLDivElement>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
-  const engineRef = useRef<{ update: (props: BimCanvasProps) => void } | null>(
-    null,
-  );
+  const boxRef = useRef<HTMLDivElement>(null);
+  const walkSpeedRef = useRef<HTMLSpanElement>(null);
+  const cubeRef = useRef<HTMLDivElement>(null);
+  const engineRef = useRef<{
+    update: (props: BimCanvasProps) => void;
+    flyToDirection: (direction: [number, number, number]) => void;
+    turn: (turn: CubeTurn) => void;
+  } | null>(null);
   const latestRef = useRef(props);
   const localeRef = useRef(locale);
   const [error, setError] = useState(false);
@@ -148,7 +209,6 @@ export function BimCanvas(props: BimCanvasProps) {
     let current = latestRef.current;
 
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color("#e1e8f0");
     const federation = new THREE.Group();
     const measurementGroup = new THREE.Group();
     const hoverGroup = new THREE.Group();
@@ -158,12 +218,56 @@ export function BimCanvas(props: BimCanvasProps) {
     const materials = new Map<string, THREE.MeshStandardMaterial>();
     const primitiveGeometries = new Map<string, THREE.BufferGeometry>();
     const highlights = new Map<THREE.Material, THREE.MeshStandardMaterial>();
+    const batchMaterials = new Map<number, THREE.MeshStandardMaterial>();
+    const batchMaterial = (_color: string, opacity: number) => {
+      if (!batchMaterials.has(opacity))
+        batchMaterials.set(
+          opacity,
+          new THREE.MeshStandardMaterial({
+            color: 0xffffff,
+            opacity,
+            transparent: opacity < 1,
+            side: THREE.DoubleSide,
+            roughness: 0.86,
+            metalness: 0.02,
+            clippingPlanes: activePlanes,
+          }),
+        );
+      return batchMaterials.get(opacity)!;
+    };
+    // Batches drawn as context while something is isolated (tinted by the
+    // instance colour, no depth writes so the isolated elements show through).
+    const ghostBatch = new THREE.MeshBasicMaterial({
+      color: 0xcbd5e1,
+      transparent: true,
+      opacity: 0.14,
+      depthWrite: false,
+    });
+    // Isolation keeps the rest of the model as faint context, never pickable.
+    const ghost = new THREE.MeshBasicMaterial({
+      color: 0x94a3b8,
+      transparent: true,
+      opacity: 0.16,
+      depthWrite: false,
+    });
     const featureEdges = new WeakMap<THREE.BufferGeometry, Set<string>>();
     const camera = new THREE.PerspectiveCamera(45, 1, 0.01, 1000);
+    // The room environment (see ViewerPipeline) provides soft fill light;
+    // a sky/ground hemisphere and a key light give the model form.
     const ambient = new THREE.AmbientLight(0xffffff, 0.48);
     const hemisphere = new THREE.HemisphereLight(0xffffff, 0x64748b, 0.28);
     const sun = new THREE.DirectionalLight(0xffffff, 0.82);
     scene.add(ambient, hemisphere, sun);
+    /** Classic keeps the original lights and colours; the others use IBL. */
+    const applyLighting = (environment: DisplaySettings["environment"]) => {
+      const classic = environment === "classic";
+      ambient.intensity = classic ? 0.48 : 0;
+      hemisphere.color.set(classic ? 0xffffff : 0xf8fafc);
+      hemisphere.groundColor.set(classic ? 0x64748b : 0x7c8594);
+      hemisphere.intensity = classic ? 0.28 : 0.55;
+      sun.intensity = classic ? 0.82 : 1.35;
+      if (renderer) renderer.toneMapping = classic ? THREE.NoToneMapping : THREE.NeutralToneMapping;
+    };
     let grid: THREE.GridHelper | null = null;
 
     // Six persistent planes: dragging mutates their constants in place, so
@@ -177,6 +281,7 @@ export function BimCanvas(props: BimCanvasProps) {
       new THREE.Plane(new THREE.Vector3(0, 0, 1), 0),
     ];
     let activePlanes: THREE.Plane[] = NO_PLANES;
+    let activeKey = "";
     let clip: BimClipPlanes = current.clipPlanes;
     const applyClip = (next: BimClipPlanes) => {
       clip = next;
@@ -186,10 +291,15 @@ export function BimCanvas(props: BimCanvasProps) {
       planes[3].constant = -next.minY;
       planes[4].constant = next.z;
       planes[5].constant = -next.minZ;
-      const nextPlanes = next.enabled ? planes : NO_PLANES;
-      if (nextPlanes !== activePlanes) {
-        activePlanes = nextPlanes;
-        for (const m of [...materials.values(), ...highlights.values()]) {
+      // A section box uses all six planes, a single section plane just one.
+      const faces = activeFaces(next);
+      const key = faces.map((f) => planeIndex(f.axis, f.side)).join(",");
+      if (key !== activeKey) {
+        activeKey = key;
+        activePlanes = faces.length
+          ? faces.map((f) => planes[planeIndex(f.axis, f.side)])
+          : NO_PLANES;
+        for (const m of [...materials.values(), ...highlights.values(), ...batchMaterials.values(), ...overrideMaterials.values(), ghost, ghostBatch]) {
           m.clippingPlanes = activePlanes;
           m.needsUpdate = true;
         }
@@ -204,8 +314,12 @@ export function BimCanvas(props: BimCanvasProps) {
     let span = 10;
     const maxPixelRatio = Math.min(window.devicePixelRatio || 1, 2);
     // Handles and the hover marker keep a constant on-screen size.
-    const handleRadius = (p: THREE.Vector3) =>
-      Math.max(1e-3, camera.position.distanceTo(p) * 0.014);
+    let pipeline: ViewerPipeline;
+    const screenScale = (p: THREE.Vector3) =>
+      pipeline ? pipeline.screenScale(p, controls.target) : camera.position.distanceTo(p);
+    const handleRadius = (p: THREE.Vector3) => Math.max(1e-3, screenScale(p) * 0.014);
+    /** The camera that renders and picks: perspective or the synced ortho one. */
+    const view = () => (pipeline ? pipeline.camera : camera);
     const pointRadius = () => Math.max(0.015, span * 0.0025);
 
     const requestRender = () => {
@@ -213,7 +327,7 @@ export function BimCanvas(props: BimCanvasProps) {
         frame = requestAnimationFrame(render);
     };
     const toScreen = (p: THREE.Vector3): [number, number, boolean] => {
-      const v = p.clone().project(camera);
+      const v = p.clone().project(view());
       const rect = renderer.domElement.getBoundingClientRect();
       return [
         ((v.x + 1) / 2) * rect.width,
@@ -231,17 +345,90 @@ export function BimCanvas(props: BimCanvasProps) {
         node.style.visibility = onScreen ? "visible" : "hidden";
       }
     }
+    // ---- Camera flights -------------------------------------------------
+    let flight: { from: OrbitPose; to: OrbitPose; start: number; duration: number } | null = null;
+    const currentPose = (): OrbitPose => ({
+      position: camera.position.toArray(),
+      target: controls.target.toArray(),
+    });
+    const applyPose = (pose: OrbitPose) => {
+      camera.up.set(0, 1, 0);
+      camera.position.set(...pose.position);
+      controls.target.set(...pose.target);
+      camera.lookAt(controls.target);
+    };
+    /** Animated move; a zero duration (first framing) jumps straight there. */
+    const flyTo = (to: OrbitPose, radius: number, duration = FLIGHT_MS) => {
+      // Flush any damping momentum so it cannot add a spin to the flight.
+      controls.enableDamping = false;
+      controls.update();
+      controls.enableDamping = true;
+      const range = clipRange(
+        radius,
+        new THREE.Vector3(...to.position).distanceTo(new THREE.Vector3(...to.target)),
+      );
+      camera.near = Math.min(camera.near, range.near);
+      camera.far = Math.max(camera.far, range.far, span * 20);
+      camera.updateProjectionMatrix();
+      controls.maxDistance = camera.far * 0.4;
+      const reduced = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+      if (!duration || reduced) {
+        flight = null;
+        applyPose(to);
+        camera.near = range.near;
+        camera.updateProjectionMatrix();
+      } else flight = { from: currentPose(), to, start: performance.now(), duration };
+      requestRender();
+    };
+    let interacting = false;
+    let settle = 0;
+    const markInteraction = () => {
+      interacting = true;
+      window.clearTimeout(settle);
+      settle = window.setTimeout(() => {
+        interacting = false;
+        requestRender();
+      }, 180);
+    };
+    let quality = maxPixelRatio;
+    const setQuality = (ratio: number) => {
+      if (ratio === quality) return;
+      quality = ratio;
+      renderer.setPixelRatio(ratio);
+      pipeline?.setSize(container.clientWidth, container.clientHeight, ratio);
+    };
+    const stepFlight = () => {
+      if (!flight) return;
+      markInteraction();
+      const t = Math.min(1, (performance.now() - flight.start) / flight.duration);
+      applyPose(interpolatePose(flight.from, flight.to, easeInOutCubic(t)));
+      if (t >= 1) flight = null;
+      requestRender();
+    };
+
     function render() {
       frame = 0;
       if (disposed || renderer.getContext().isContextLost()) return;
+      stepFlight();
       if (controls.update()) requestRender();
+      if (cubeRef.current) {
+        cubeRef.current.style.transform = cubeCssMatrix(camera.quaternion);
+        // Plan views cannot turn left/right with a fixed up axis; hide those arrows.
+        const widget = cubeRef.current.closest<HTMLElement>("[data-viewcube]");
+        const vertical = Math.abs(camera.getWorldDirection(new THREE.Vector3()).y) > 0.98;
+        if (widget && widget.dataset.vertical !== String(vertical)) widget.dataset.vertical = String(vertical);
+      }
       if (gizmo.root.visible) gizmo.update(clip, handleRadius);
+      pipeline.sync(controls.target, span);
       if (hoverGroup.visible)
         hoverMarker.scale.setScalar(
-          camera.position.distanceTo(hoverMarker.position) *
+          screenScale(hoverMarker.position) *
             (hoverKind === "face" ? 0.005 : 0.008),
         );
-      renderer.render(scene, camera);
+      renderer.info.reset();
+      pipeline.render(interacting, activePlanes, span);
+      // Read by performance checks (draw calls for the last frame, all passes).
+      renderer.domElement.dataset.drawCalls = String(renderer.info.render.calls);
       current.onCameraChange({ position: camera.position.toArray(), target: controls.target.toArray(), up: camera.up.toArray(), fov: camera.fov });
       positionLabels();
     }
@@ -261,7 +448,7 @@ export function BimCanvas(props: BimCanvasProps) {
     // ---- Scene extent --------------------------------------------------
     let lastBoundsKey = "";
     const applySceneBounds = (bounds: BimBounds) => {
-      const key = [...bounds.min, ...bounds.max].join(",");
+      const key = [...bounds.min, ...bounds.max, current.display.environment].join(",");
       if (key === lastBoundsKey) return;
       lastBoundsKey = key;
       const box = new THREE.Box3(
@@ -277,7 +464,9 @@ export function BimCanvas(props: BimCanvasProps) {
         grid.geometry.dispose();
         (grid.material as THREE.Material).dispose();
       }
-      grid = new THREE.GridHelper(span * 2, 40, 0x64748b, 0xcbd5e1);
+      const [major, minor] = ENVIRONMENTS[current.display.environment].grid;
+      grid = new THREE.GridHelper(span * 2, 40, major, minor);
+      grid.visible = current.display.grid;
       grid.position.set(center.x, box.min.y - span * 0.005, center.z);
       scene.add(grid);
       camera.far = Math.max(camera.far, span * 20);
@@ -291,7 +480,7 @@ export function BimCanvas(props: BimCanvasProps) {
       for (const entry of entries.values())
         if (entry.ready && entry.group.visible)
           for (const mesh of entry.meshes.values())
-            if (mesh.visible) list.push(mesh);
+            if (mesh.visible && !mesh.userData.ghost) list.push(mesh);
       return list;
     };
     const reportStats = () => {
@@ -308,6 +497,7 @@ export function BimCanvas(props: BimCanvasProps) {
           bytes += a.array.byteLength;
         bytes += g.index?.array.byteLength ?? 0;
       }
+      for (const entry of entries.values()) bytes += entry.batches?.bytes ?? 0;
       current.onStats({ bytes, triangles });
     };
     const removeEntry = (entry: ModelEntry) => {
@@ -320,13 +510,15 @@ export function BimCanvas(props: BimCanvasProps) {
         }
       }
       disposeObject(entry.markers);
+      for (const batch of entry.batches?.batches.values() ?? []) batch.dispose();
+      entry.batches = null;
       entry.meshes.clear();
       entry.group.clear();
     };
     const buildEntry = async (entry: ModelEntry) => {
       setBuilding((n) => n + 1);
       try {
-        let lastYield = performance.now();
+        const slice = timeSlicer();
         for (const element of entry.source.model.elements) {
           if (disposed || !entries.has(entry.source.key)) return;
           const mesh = createElementMesh(
@@ -340,10 +532,21 @@ export function BimCanvas(props: BimCanvasProps) {
           for (const m of list) m.clippingPlanes = activePlanes;
           entry.group.add(mesh);
           entry.meshes.set(element.id, mesh);
-          if (performance.now() - lastYield > 12) {
-            await new Promise((resolve) => setTimeout(resolve, 0));
-            lastYield = performance.now();
-          }
+          await slice();
+        }
+        const built = await buildElementBatches(
+          entry.source.model.elements,
+          batchMaterial,
+          async () => {
+            await slice();
+            return disposed || !entries.has(entry.source.key);
+          },
+        );
+        if (!built) return;
+        entry.batches = built;
+        for (const batch of built.batches.values()) {
+          batch.userData.solid = batch.material;
+          entry.group.add(batch);
         }
         for (const clash of entry.source.model.clashes) {
           const marker = new THREE.Mesh(
@@ -381,7 +584,7 @@ export function BimCanvas(props: BimCanvasProps) {
           group.add(markers);
           group.name = source.key;
           federation.add(group);
-          entry = { source, group, markers, meshes: new Map(), ready: false };
+          entry = { source, group, markers, meshes: new Map(), batches: null, ready: false };
           entries.set(source.key, entry);
           void buildEntry(entry).catch(() => {
             if (!disposed) setError(true);
@@ -412,30 +615,79 @@ export function BimCanvas(props: BimCanvasProps) {
       }
       return highlights.get(m)!;
     };
+    let lastOverrides: ReadonlyMap<string, string> | null = null;
+    const overrideColors = new Map<string, THREE.Color>();
+    const overrideMaterials = new Map<string, THREE.MeshStandardMaterial>();
+    const overrideMaterial = (hex: string) => {
+      if (!overrideMaterials.has(hex))
+        overrideMaterials.set(
+          hex,
+          new THREE.MeshStandardMaterial({ color: hex, roughness: 0.86, metalness: 0.02, side: THREE.DoubleSide, clippingPlanes: activePlanes }),
+        );
+      return overrideMaterials.get(hex)!;
+    };
     const applyMeshState = (next: BimCanvasProps) => {
-      const key = `${next.explodeFactor}|${JSON.stringify(next.visibleLayers)}|${[...next.selectedElementIds].join(",")}|${[...next.hiddenElementIds].join(",")}|${lastBoundsKey}`;
-      if (key === meshStateKey) return;
+      const isolated = next.isolatedElementIds;
+      const key = `${next.explodeFactor}|${JSON.stringify(next.visibleLayers)}|${[...next.selectedElementIds].join(",")}|${[...next.hiddenElementIds].join(",")}|${isolated ? [...isolated].join(",") : "-"}|${lastBoundsKey}`;
+      if (key === meshStateKey && next.colorOverrides === lastOverrides) return;
       meshStateKey = key;
+      lastOverrides = next.colorOverrides;
+      const offset = new THREE.Vector3();
       for (const entry of entries.values()) {
         if (!entry.ready) continue;
+        const batched = entry.batches;
         // Explode about the federation centre, expressed in the model frame.
         const localCenter = entry.group.worldToLocal(center.clone());
         for (const [id, mesh] of entry.meshes) {
           const element = mesh.userData.element as BimElementData;
-          mesh.visible =
+          const visible =
             next.visibleLayers[element.discipline] &&
             !next.hiddenElementIds.has(element.id);
+          const selected = next.selectedElementIds.has(id);
+          mesh.visible = visible;
           mesh.position.copy(
             explodedPosition(element, localCenter, next.explodeFactor),
           );
-          const original = mesh.userData.baseMaterial as
-            THREE.Material | THREE.Material[];
-          mesh.material = next.selectedElementIds.has(id)
+          // While isolating, the isolated (and selected) elements are drawn
+          // solid by their own meshes over a ghosted batch.
+          const promoted = Boolean(isolated && (isolated.has(id) || selected));
+          const ghosted = Boolean(isolated) && !promoted;
+          mesh.userData.ghost = ghosted;
+          mesh.layers.mask = promoted || !batched ? DRAWN_AND_PICKABLE : PICK_ONLY;
+          const overrideHex = next.colorOverrides?.get(id);
+          const original = (overrideHex
+            ? Array.isArray(mesh.userData.baseMaterial)
+              ? (mesh.userData.baseMaterial as THREE.Material[]).map(() => overrideMaterial(overrideHex))
+              : overrideMaterial(overrideHex)
+            : mesh.userData.baseMaterial) as THREE.Material | THREE.Material[];
+          mesh.material = ghosted && !batched
             ? Array.isArray(original)
-              ? original.map(highlight)
-              : highlight(original)
-            : original;
+              ? original.map(() => ghost)
+              : ghost
+            : selected
+              ? Array.isArray(original)
+                ? original.map(highlight)
+                : highlight(original)
+              : original;
+          if (batched)
+            applySlotState(
+              batched.slots.get(id),
+              visible && !promoted,
+              selected,
+              offset.subVectors(mesh.position, new THREE.Vector3(...element.position)),
+              overrideHex
+                ? (overrideColors.get(overrideHex) ??
+                    overrideColors.set(overrideHex, new THREE.Color(overrideHex)).get(overrideHex))
+                : undefined,
+            );
         }
+        if (batched)
+          for (const batch of batched.batches.values()) {
+            batch.material = isolated ? ghostBatch : (batch.userData.solid as THREE.Material);
+            // Explode moves instances; keep whole-batch culling bounds honest.
+            batch.computeBoundingBox();
+            batch.computeBoundingSphere();
+          }
         entry.markers.visible =
           next.visibleLayers.clash && next.explodeFactor === 0;
       }
@@ -565,6 +817,7 @@ export function BimCanvas(props: BimCanvasProps) {
 
     const ray = new THREE.Raycaster();
     (ray as THREE.Raycaster & { firstHitOnly?: boolean }).firstHitOnly = true;
+    ray.layers.enableAll();
     const pointerNdc = (clientX: number, clientY: number) => {
       const rect = renderer.domElement.getBoundingClientRect();
       return {
@@ -578,7 +831,7 @@ export function BimCanvas(props: BimCanvasProps) {
     const castFrom = (clientX: number, clientY: number) => {
       const { ndc, local } = pointerNdc(clientX, clientY);
       camera.updateMatrixWorld();
-      ray.setFromCamera(ndc, camera);
+      ray.setFromCamera(ndc, view());
       return local;
     };
     const snapLabels = (): Record<SnapKind, string> =>
@@ -720,7 +973,150 @@ export function BimCanvas(props: BimCanvasProps) {
     const handleAt = (clientX: number, clientY: number) => {
       if (!sectionActive()) return null;
       castFrom(clientX, clientY);
-      return ray.intersectObjects(gizmo.handles, false)[0]?.object ?? null;
+      // The raycaster ignores visibility; only the active face arrows count.
+      return (
+        ray.intersectObjects(
+          gizmo.handles.filter((h) => h.visible),
+          false,
+        )[0]?.object ?? null
+      );
+    };
+
+    // ---- Orbit around the pressed point ----------------------------------
+    // Mouse and pen orbit about the surface point under the cursor, the way
+    // Autodesk viewers do; OrbitControls only handles pan, zoom and touch.
+    const pivotMarker = new THREE.Mesh(
+      new THREE.SphereGeometry(1, 16, 12),
+      new THREE.MeshBasicMaterial({ color: 0x14b8a6, depthTest: false, transparent: true, opacity: 0.9 }),
+    );
+    pivotMarker.renderOrder = 8;
+    pivotMarker.visible = false;
+    scene.add(pivotMarker);
+    const WORLD_UP = new THREE.Vector3(0, 1, 0);
+    let orbit: {
+      pointerId: number;
+      x: number;
+      y: number;
+      pivot: THREE.Vector3;
+      moved: boolean;
+    } | null = null;
+    const rotateAround = (pivot: THREE.Vector3, dx: number, dy: number) => {
+      const height = renderer.domElement.clientHeight || 1;
+      const yaw = new THREE.Quaternion().setFromAxisAngle(WORLD_UP, (-Math.PI * dx) / height);
+      const right = new THREE.Vector3(1, 0, 0).applyQuaternion(camera.quaternion).applyQuaternion(yaw);
+      const pitch = new THREE.Quaternion().setFromAxisAngle(right, (-Math.PI * dy) / height);
+      const forward = controls.target.clone().sub(camera.position).normalize();
+      let turn = pitch.clone().multiply(yaw);
+      // Never tip over the pole, but always allow tilting back out of a plan view.
+      const tilted = forward.clone().applyQuaternion(turn);
+      if (Math.abs(tilted.y) > 0.995 && Math.abs(tilted.y) > Math.abs(forward.y)) turn = yaw;
+      markInteraction();
+      camera.position.sub(pivot).applyQuaternion(turn).add(pivot);
+      controls.target.sub(pivot).applyQuaternion(turn).add(pivot);
+      camera.up.set(0, 1, 0);
+      camera.lookAt(controls.target);
+    };
+    const endOrbit = () => {
+      if (!orbit) return;
+      if (renderer.domElement.hasPointerCapture(orbit.pointerId))
+        renderer.domElement.releasePointerCapture(orbit.pointerId);
+      if (orbit.moved) {
+        pivotMarker.visible = false;
+        setQuality(maxPixelRatio);
+        requestRender();
+      }
+      orbit = null;
+    };
+
+    // ---- Walk (first person) -------------------------------------------
+    const walkKeys = new Set<string>();
+    let walkFactor = 1;
+    let walkFrame = 0;
+    let walkLast = 0;
+    let look: { pointerId: number; x: number; y: number } | null = null;
+    const walking = () => current.activeTool === "walk";
+    /** Metres per second: a brisk walk, scaled up for very large sites. */
+    const walkSpeed = () => Math.max(1.4, span / 60) * walkFactor;
+    const showWalkSpeed = () => {
+      if (walkSpeedRef.current)
+        walkSpeedRef.current.textContent = `${walkSpeed().toLocaleString(localeRef.current === "vi" ? "vi-VN" : "en-US", { maximumFractionDigits: 1 })} m/s`;
+    };
+    const walkStep = (now: number) => {
+      walkFrame = 0;
+      if (disposed || !walking() || !walkKeys.size) return;
+      const dt = Math.min(0.1, (now - walkLast) / 1000);
+      walkLast = now;
+      const forward = camera.getWorldDirection(new THREE.Vector3());
+      forward.y = 0;
+      if (forward.lengthSq() < 1e-8) forward.set(0, 0, -1);
+      forward.normalize();
+      const right = forward.clone().cross(WORLD_UP).normalize();
+      const move = new THREE.Vector3();
+      const has = (...keys: string[]) => keys.some((k) => walkKeys.has(k));
+      if (has("w", "arrowup")) move.add(forward);
+      if (has("s", "arrowdown")) move.sub(forward);
+      if (has("d", "arrowright")) move.add(right);
+      if (has("a", "arrowleft")) move.sub(right);
+      if (has("e", "pageup")) move.y += 1;
+      if (has("q", "pagedown")) move.y -= 1;
+      if (move.lengthSq()) {
+        move.normalize().multiplyScalar(walkSpeed() * (walkKeys.has("shift") ? 3 : 1) * dt);
+        camera.position.add(move);
+        controls.target.add(move);
+        markInteraction();
+        requestRender();
+      }
+      walkFrame = requestAnimationFrame(walkStep);
+    };
+    const walkKeyDown = (e: KeyboardEvent) => {
+      if (!walking() || (e.target as HTMLElement | null)?.closest?.("input, textarea, select")) return;
+      const key = e.key.toLowerCase();
+      if (!["w", "a", "s", "d", "q", "e", "arrowup", "arrowdown", "arrowleft", "arrowright", "pageup", "pagedown", "shift"].includes(key)) return;
+      e.preventDefault();
+      walkKeys.add(key);
+      if (!walkFrame) {
+        walkLast = performance.now();
+        walkFrame = requestAnimationFrame(walkStep);
+      }
+    };
+    const walkKeyUp = (e: KeyboardEvent) => walkKeys.delete(e.key.toLowerCase());
+    const walkBlur = () => walkKeys.clear();
+    /** Turn the head: yaw about the vertical, pitch about the eye's right axis. */
+    const lookAround = (dx: number, dy: number) => {
+      const offset = controls.target.clone().sub(camera.position);
+      const yaw = new THREE.Quaternion().setFromAxisAngle(WORLD_UP, -dx * 0.004);
+      offset.applyQuaternion(yaw);
+      const right = offset.clone().cross(WORLD_UP).normalize();
+      const pitched = offset.clone().applyAxisAngle(right, -dy * 0.004);
+      if (Math.abs(pitched.clone().normalize().y) < 0.98) offset.copy(pitched);
+      controls.target.copy(camera.position).add(offset);
+      camera.lookAt(controls.target);
+      markInteraction();
+      requestRender();
+    };
+    const walkWheel = (e: WheelEvent) => {
+      if (!walking()) return;
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      walkFactor = THREE.MathUtils.clamp(walkFactor * (e.deltaY < 0 ? 1.25 : 0.8), 0.1, 20);
+      showWalkSpeed();
+    };
+
+    // ---- Rectangle selection ------------------------------------------
+    let box: { pointerId: number; x: number; y: number; moved: boolean } | null = null;
+    const worldBox = new THREE.Box3();
+    const selectInRectangle = (x0: number, y0: number, x1: number, y1: number, append: boolean) => {
+      const bounds = container.getBoundingClientRect();
+      const rect = rectFrom(x0 - bounds.left, y0 - bounds.top, x1 - bounds.left, y1 - bounds.top);
+      const mode = boxMode(x0, x1);
+      const ids: string[] = [];
+      for (const mesh of pickable()) {
+        if (!mesh.geometry.boundingBox) mesh.geometry.computeBoundingBox();
+        worldBox.copy(mesh.geometry.boundingBox!).applyMatrix4(mesh.matrixWorld);
+        if (boxPicked(worldBox, rect, mode, toScreen, activePlanes))
+          ids.push((mesh.userData.element as BimElementData).id);
+      }
+      current.onSelectMany(ids, append);
     };
 
     // ---- Pointer events ------------------------------------------------
@@ -728,7 +1124,12 @@ export function BimCanvas(props: BimCanvasProps) {
     let gesture = false;
     let hoverFrame = 0;
     let lastMove: PointerEvent | null = null;
+    let rightDown: { x: number; y: number } | null = null;
     const pointerDown = (e: PointerEvent) => {
+      if (e.button === 2) {
+        rightDown = { x: e.clientX, y: e.clientY };
+        return;
+      }
       if (e.button !== 0) return;
       const handle = handleAt(e.clientX, e.clientY);
       if (handle) {
@@ -740,8 +1141,75 @@ export function BimCanvas(props: BimCanvasProps) {
       }
       down.set(e.pointerId, { x: e.clientX, y: e.clientY });
       if (down.size > 1) gesture = true;
+      if (walking() && e.pointerType === "mouse") {
+        look = { pointerId: e.pointerId, x: e.clientX, y: e.clientY };
+        renderer.domElement.setPointerCapture(e.pointerId);
+        return;
+      }
+      // Shift + drag draws a selection rectangle instead of orbiting.
+      if (e.shiftKey && e.pointerType === "mouse" && current.activeTool !== "measure") {
+        box = { pointerId: e.pointerId, x: e.clientX, y: e.clientY, moved: false };
+        renderer.domElement.setPointerCapture(e.pointerId);
+        return;
+      }
+      if (e.pointerType !== "touch" && down.size === 1) {
+        flight = null;
+        const hit = pick(e.clientX, e.clientY, false);
+        const pivot = hit ? hit.point.clone() : controls.target.clone();
+        // Move the orbit target to the pivot's depth on the line of sight:
+        // nothing turns now, and later zooming scales with that distance.
+        const aligned = pivotOnViewLine(
+          camera.position.toArray(),
+          controls.target.toArray(),
+          pivot.toArray(),
+        );
+        if (aligned) controls.target.set(...aligned);
+        orbit = { pointerId: e.pointerId, x: e.clientX, y: e.clientY, pivot, moved: false };
+        renderer.domElement.setPointerCapture(e.pointerId);
+      }
     };
     const pointerMove = (e: PointerEvent) => {
+      if (look && e.pointerId === look.pointerId) {
+        lookAround(e.clientX - look.x, e.clientY - look.y);
+        look.x = e.clientX;
+        look.y = e.clientY;
+        return;
+      }
+      if (box && e.pointerId === box.pointerId) {
+        const el = boxRef.current;
+        if (!el) return;
+        if (!box.moved && Math.hypot(e.clientX - box.x, e.clientY - box.y) < CLICK_TOLERANCE_PX) return;
+        box.moved = true;
+        const bounds = container.getBoundingClientRect();
+        const r = rectFrom(box.x - bounds.left, box.y - bounds.top, e.clientX - bounds.left, e.clientY - bounds.top);
+        el.hidden = false;
+        el.dataset.mode = boxMode(box.x, e.clientX);
+        Object.assign(el.style, {
+          left: `${r.left}px`,
+          top: `${r.top}px`,
+          width: `${r.right - r.left}px`,
+          height: `${r.bottom - r.top}px`,
+        });
+        return;
+      }
+      if (orbit && e.pointerId === orbit.pointerId && !gesture) {
+        const dx = e.clientX - orbit.x;
+        const dy = e.clientY - orbit.y;
+        if (!orbit.moved) {
+          if (Math.hypot(dx, dy) < 2) return;
+          orbit.moved = true;
+          pivotMarker.position.copy(orbit.pivot);
+          pivotMarker.visible = true;
+          setQuality(Math.min(maxPixelRatio, 1));
+          hideHover();
+        }
+        orbit.x = e.clientX;
+        orbit.y = e.clientY;
+        rotateAround(orbit.pivot, dx, dy);
+        pivotMarker.scale.setScalar(screenScale(orbit.pivot) * 0.006);
+        requestRender();
+        return;
+      }
       if (drag && e.pointerId === drag.pointerId) {
         castFrom(e.clientX, e.clientY);
         const anchor = gizmo.handles.find(
@@ -785,6 +1253,9 @@ export function BimCanvas(props: BimCanvasProps) {
         });
     };
     const pointerCancel = () => {
+      endOrbit();
+      box = null;
+      if (boxRef.current) boxRef.current.hidden = true;
       if (drag) {
         drag = null;
         controls.enabled = true;
@@ -798,6 +1269,22 @@ export function BimCanvas(props: BimCanvasProps) {
       hideHover();
     };
     const pointerUp = (e: PointerEvent) => {
+      if (look && e.pointerId === look.pointerId) {
+        look = null;
+        if (renderer.domElement.hasPointerCapture(e.pointerId)) renderer.domElement.releasePointerCapture(e.pointerId);
+      }
+      if (box && e.pointerId === box.pointerId) {
+        const finished = box;
+        box = null;
+        if (boxRef.current) boxRef.current.hidden = true;
+        if (renderer.domElement.hasPointerCapture(e.pointerId)) renderer.domElement.releasePointerCapture(e.pointerId);
+        if (finished.moved) {
+          down.delete(e.pointerId);
+          selectInRectangle(finished.x, finished.y, e.clientX, e.clientY, e.ctrlKey || e.metaKey);
+          return;
+        }
+        // A shift-click without a drag keeps its usual meaning (add/remove).
+      }
       if (drag && e.pointerId === drag.pointerId) {
         drag = null;
         controls.enabled = true;
@@ -805,6 +1292,7 @@ export function BimCanvas(props: BimCanvasProps) {
         current.onClipPlanesChange(clip);
         return;
       }
+      if (orbit && e.pointerId === orbit.pointerId) endOrbit();
       const start = down.get(e.pointerId);
       down.delete(e.pointerId);
       const multi = gesture;
@@ -839,8 +1327,31 @@ export function BimCanvas(props: BimCanvasProps) {
       );
     };
 
+    const elementAt = (clientX: number, clientY: number) =>
+      (pick(clientX, clientY, false)?.hit.object.userData.element as
+        | BimElementData
+        | undefined) ?? null;
+    const contextMenu = (e: MouseEvent) => {
+      e.preventDefault();
+      const start = rightDown;
+      rightDown = null;
+      // A right-drag pans; only a still right-click opens the menu.
+      if (!start || Math.hypot(e.clientX - start.x, e.clientY - start.y) > CLICK_TOLERANCE_PX) return;
+      const rect = container.getBoundingClientRect();
+      current.onContextMenu({
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top,
+        element: elementAt(e.clientX, e.clientY),
+      });
+    };
+    const doubleClick = (e: MouseEvent) => {
+      if (current.activeTool === "measure" || handleAt(e.clientX, e.clientY)) return;
+      current.onDoubleClick(elementAt(e.clientX, e.clientY));
+    };
+
     // ---- Commands --------------------------------------------------------
     let lastView = -1;
+    let framed = false;
     let lastSnapshot = current.snapshotRevision;
     let lastSectionFit = current.sectionFitRequest.revision;
     let lastClash: BimCanvasProps["activeClashPoint"] = null;
@@ -878,37 +1389,41 @@ export function BimCanvas(props: BimCanvasProps) {
             new THREE.Vector3(...next.sceneBounds.min),
             new THREE.Vector3(...next.sceneBounds.max),
           );
-          controls.enableDamping = false;
-          controls.update();
-          controls.enableDamping = true;
-          controls.target.copy(
-            fitCamera(
-              camera,
-              visible.isEmpty() ? fallback : visible,
-              next.viewRequest.preset,
-            ),
-          );
-          camera.far = Math.max(camera.far, span * 20);
+          const box = visible.isEmpty() ? fallback : visible;
+          const radius = Math.max(0.01, box.getSize(new THREE.Vector3()).length() / 2);
+          const viewOffset = camera.position.clone().sub(controls.target);
+          const direction: [number, number, number] =
+            next.viewRequest.keepDirection && viewOffset.lengthSq() > 1e-12
+              ? (viewOffset.normalize().toArray() as [number, number, number])
+              : (PRESET_DIRECTIONS[next.viewRequest.preset] ?? PRESET_DIRECTIONS.perspective);
+          let pose = framePose(box, direction, camera.fov, camera.aspect);
           if (next.viewRequest.camera) {
             const saved = next.viewRequest.camera;
-            camera.position.set(...saved.position);
-            camera.up.set(...saved.up);
             camera.fov = saved.fov;
-            controls.target.set(...saved.target);
+            camera.updateProjectionMatrix();
+            const offset = new THREE.Vector3(...saved.position).sub(new THREE.Vector3(...saved.target));
+            // Views saved from the old plan preset looked straight down.
+            if (Math.abs(offset.clone().normalize().y) > 0.9999) offset.z += offset.length() * 1e-4;
+            pose = {
+              position: new THREE.Vector3(...saved.target).add(offset).toArray(),
+              target: saved.target,
+            };
           }
-          camera.updateProjectionMatrix();
-          controls.maxDistance = camera.far * 0.4;
-          controls.update();
+          // The first framing of a loaded model jumps; everything after flies.
+          flyTo(pose, radius, framed ? FLIGHT_MS : 0);
+          if (!visible.isEmpty()) framed = true;
           lastView = next.viewRequest.revision;
         }
       }
       if (next.activeClashPoint && next.activeClashPoint !== lastClash) {
-        controls.target.set(...next.activeClashPoint);
-        camera.up.set(0, 1, 0);
-        camera.position
-          .copy(controls.target)
-          .add(new THREE.Vector3(span * 0.15, span * 0.1, span * 0.15));
-        controls.update();
+        const point = new THREE.Vector3(...next.activeClashPoint);
+        flyTo(
+          {
+            position: point.clone().add(new THREE.Vector3(span * 0.15, span * 0.1, span * 0.15)).toArray(),
+            target: point.toArray(),
+          },
+          span * 0.1,
+        );
       }
       lastClash = next.activeClashPoint;
       if (lastSectionFit !== next.sectionFitRequest.revision) {
@@ -942,7 +1457,9 @@ export function BimCanvas(props: BimCanvasProps) {
           const gizmoVisible = gizmo.root.visible;
           gizmo.root.visible = false;
           hoverGroup.visible = false;
-          renderer.render(scene, camera);
+          pivotMarker.visible = false;
+          pipeline.sync(controls.target, span);
+          pipeline.render(false, activePlanes, span);
           next.onSnapshot(renderer.domElement.toDataURL("image/png"));
           gizmo.root.visible = gizmoVisible;
         } catch {
@@ -956,11 +1473,22 @@ export function BimCanvas(props: BimCanvasProps) {
     const update = (next: BimCanvasProps) => {
       current = next;
       if (!initialized) return;
+      if (next.display !== pipeline.settings) {
+        const changed = JSON.stringify(next.display) !== JSON.stringify(pipeline.settings);
+        if (changed) {
+          pipeline.apply(next.display);
+          applyLighting(next.display.environment);
+        }
+      }
+      if (grid) grid.visible = next.display.grid;
       applySceneBounds(next.sceneBounds);
       reconcileModels(next.models);
       if (!drag && next.clipPlanes !== clip) applyClip(next.clipPlanes);
       gizmo.root.visible = next.activeTool === "section" && clip.enabled;
       gizmo.update(clip, handleRadius);
+      controls.enabled = next.activeTool !== "walk" && !drag;
+      if (next.activeTool !== "walk") walkKeys.clear();
+      else showWalkSpeed();
       applyMeshState(next);
       renderMeasurements(next);
       if (next.activeTool !== "measure") {
@@ -977,6 +1505,7 @@ export function BimCanvas(props: BimCanvasProps) {
       camera.aspect = width / height;
       camera.updateProjectionMatrix();
       renderer.setSize(width, height);
+      pipeline?.setSize(width, height, quality);
       requestRender();
     };
     const visibility = () => {
@@ -997,24 +1526,53 @@ export function BimCanvas(props: BimCanvasProps) {
         antialias: true,
         powerPreference: "high-performance",
         preserveDrawingBuffer: false,
+        // Needed by section caps (three defaults to no stencil since r163).
+        stencil: true,
       });
       renderer.setPixelRatio(maxPixelRatio);
       renderer.localClippingEnabled = true;
+      // Khronos PBR Neutral keeps material colours true while handling highlights.
       renderer.toneMapping = THREE.NoToneMapping;
       renderer.outputColorSpace = THREE.SRGBColorSpace;
+      renderer.info.autoReset = false;
       container.appendChild(renderer.domElement);
       renderer.domElement.addEventListener("webglcontextlost", onContextLost);
+      pipeline = new ViewerPipeline(renderer, scene, camera, (object) => {
+        // Normals/depth only for solid model surfaces: no helpers, lines,
+        // ghosts or glass (they would draw false edges and AO halos).
+        if (object === grid || object === gizmo.root || object === hoverGroup || object === measurementGroup || object === pivotMarker) return true;
+        if ((object as THREE.Line).isLine || (object as THREE.Points).isPoints) return true;
+        const material = (object as THREE.Mesh).material;
+        if (!material) return false;
+        return (Array.isArray(material) ? material : [material]).some(
+          (m) => m.transparent || (m as THREE.MeshBasicMaterial).wireframe,
+        );
+      });
+      pipeline.apply(current.display);
+      applyLighting(current.display.environment);
       controls = new OrbitControls(camera, renderer.domElement);
       controls.enableDamping = true;
       controls.dampingFactor = 0.08;
-      controls.addEventListener("change", requestRender);
+      // Left button orbits about the picked point (see rotateAround); middle
+      // and right drag pan; the wheel zooms towards the cursor.
+      controls.mouseButtons = {
+        LEFT: -1 as THREE.MOUSE,
+        MIDDLE: THREE.MOUSE.PAN,
+        RIGHT: THREE.MOUSE.PAN,
+      };
+      controls.zoomToCursor = true;
+      controls.addEventListener("change", () => {
+        markInteraction();
+        requestRender();
+      });
       // Lower raster resolution while orbiting to keep 4K screens responsive.
       controls.addEventListener("start", () => {
-        renderer.setPixelRatio(Math.min(maxPixelRatio, 1));
+        flight = null;
+        setQuality(Math.min(maxPixelRatio, 1));
         requestRender();
       });
       controls.addEventListener("end", () => {
-        renderer.setPixelRatio(maxPixelRatio);
+        setQuality(maxPixelRatio);
         requestRender();
       });
       resize();
@@ -1026,13 +1584,48 @@ export function BimCanvas(props: BimCanvasProps) {
       canvas.addEventListener("pointerup", pointerUp);
       canvas.addEventListener("pointercancel", pointerCancel);
       canvas.addEventListener("pointerleave", pointerLeave);
+      canvas.addEventListener("contextmenu", contextMenu);
+      canvas.addEventListener("dblclick", doubleClick);
+      // Capture phase, so the speed change wins over OrbitControls' zoom.
+      canvas.addEventListener("wheel", walkWheel, { capture: true, passive: false });
+      window.addEventListener("keydown", walkKeyDown);
+      window.addEventListener("keyup", walkKeyUp);
+      window.addEventListener("blur", walkBlur);
       document.addEventListener("visibilitychange", visibility);
       initialized = true;
       applyClip(current.clipPlanes);
       hideHover();
       update(current);
     };
-    engineRef.current = { update };
+    engineRef.current = {
+      update,
+      flyToDirection: (direction) => {
+        if (!initialized) return;
+        const meshes = [...entries.values()].flatMap((e) => [...e.meshes.values()]);
+        let box = worldBoxOf(meshes.filter((m) => !m.userData.ghost));
+        if (box.isEmpty())
+          box = new THREE.Box3(
+            new THREE.Vector3(...current.sceneBounds.min),
+            new THREE.Vector3(...current.sceneBounds.max),
+          );
+        const radius = Math.max(0.01, box.getSize(new THREE.Vector3()).length() / 2);
+        flyTo(framePose(box, direction, camera.fov, camera.aspect), radius);
+      },
+      // Arrow buttons keep the orbit centre and distance; only the side changes.
+      turn: (turn) => {
+        if (!initialized) return;
+        const offset = camera.position.clone().sub(controls.target);
+        const distance = offset.length();
+        const next = new THREE.Vector3(...safeViewDirection(turnDirection(offset.normalize().toArray() as Vec3, turn)));
+        flyTo(
+          {
+            position: controls.target.clone().addScaledVector(next, distance).toArray(),
+            target: controls.target.toArray(),
+          },
+          span / 2,
+        );
+      },
+    };
     void Promise.resolve()
       .then(initialize)
       .catch(() => {
@@ -1044,6 +1637,10 @@ export function BimCanvas(props: BimCanvasProps) {
       engineRef.current = null;
       if (frame) cancelAnimationFrame(frame);
       if (hoverFrame) cancelAnimationFrame(hoverFrame);
+      if (walkFrame) cancelAnimationFrame(walkFrame);
+      window.removeEventListener("keydown", walkKeyDown);
+      window.removeEventListener("keyup", walkKeyUp);
+      window.removeEventListener("blur", walkBlur);
       observer?.disconnect();
       document.removeEventListener("visibilitychange", visibility);
       controls?.dispose();
@@ -1054,17 +1651,26 @@ export function BimCanvas(props: BimCanvasProps) {
         canvas.removeEventListener("pointerup", pointerUp);
         canvas.removeEventListener("pointercancel", pointerCancel);
         canvas.removeEventListener("pointerleave", pointerLeave);
+        canvas.removeEventListener("contextmenu", contextMenu);
+        canvas.removeEventListener("dblclick", doubleClick);
+        canvas.removeEventListener("wheel", walkWheel, { capture: true });
         canvas.removeEventListener("webglcontextlost", onContextLost);
         canvas.remove();
       }
       for (const entry of entries.values()) removeEntry(entry);
       entries.clear();
       gizmo.dispose();
+      ghost.dispose();
+      ghostBatch.dispose();
+      overrideMaterials.forEach((m) => m.dispose());
+      batchMaterials.forEach((m) => m.dispose());
       disposeObject(scene);
       materials.forEach((m) => m.dispose());
       highlights.forEach((m) => m.dispose());
       primitiveGeometries.forEach((g) => g.dispose());
       labels.replaceChildren();
+      window.clearTimeout(settle);
+      pipeline?.dispose();
       renderer?.dispose();
       renderer?.forceContextLoss();
       setBuilding(0);
@@ -1078,10 +1684,36 @@ export function BimCanvas(props: BimCanvasProps) {
         className={`absolute inset-0 touch-none ${props.activeTool === "measure" ? "cursor-crosshair" : "cursor-grab active:cursor-grabbing"}`}
         aria-label={ui(locale).bimCanvas.t3DModelDragToOrbit}
       />
+      <BimViewCube
+        ref={cubeRef}
+        shifted={props.rightPanelOpen}
+        onPick={(direction) => engineRef.current?.flyToDirection(direction)}
+        onTurn={(turn) => engineRef.current?.turn(turn)}
+        onHome={props.onHome}
+      />
       <div
         ref={labelsRef}
         className="pointer-events-none absolute inset-0 z-10"
         aria-hidden="true"
+      />
+      {props.activeTool === "walk" && (
+        <div
+          role="status"
+          className="pointer-events-none absolute bottom-14 left-1/2 z-20 max-w-[calc(100%-1rem)] -translate-x-1/2 rounded-xl bg-slate-950/85 px-4 py-2 text-center text-xs text-slate-100 shadow-lg"
+        >
+          <p className="font-semibold text-teal-300">
+            {ui(locale).bimWalk.title} · {ui(locale).bimWalk.speed} <span ref={walkSpeedRef} className="font-mono" />
+          </p>
+          <p className="mt-0.5">{ui(locale).bimWalk.help}</p>
+          <p className="mt-0.5 text-[11px] text-slate-400">{ui(locale).bimWalk.note}</p>
+        </div>
+      )}
+      <div
+        ref={boxRef}
+        hidden
+        aria-hidden="true"
+        // Window (left→right): solid blue. Crossing (right→left): dashed green.
+        className="pointer-events-none absolute z-20 border-2 border-blue-500 bg-blue-500/10 data-[mode=crossing]:border-dashed data-[mode=crossing]:border-emerald-500 data-[mode=crossing]:bg-emerald-500/10"
       />
       <div
         ref={tooltipRef}

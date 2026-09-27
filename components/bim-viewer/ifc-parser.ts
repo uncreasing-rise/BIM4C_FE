@@ -264,6 +264,13 @@ export function parseIfcData(
     };
     const mep = new Set(ids(IFC.IFCDISTRIBUTIONELEMENT, true));
     const candidates = new Set(ids(IFC.IFCELEMENT, true));
+    // Openings and virtual elements never have a visible body, so they are not
+    // "missing" geometry (web-ifc does not stream openings at all).
+    for (const type of [IFC.IFCOPENINGELEMENT, IFC.IFCVIRTUALELEMENT])
+      for (const id of ids(type, true)) candidates.delete(id);
+    // Assemblies (curtain walls, stairs, roofs…) are usually drawn by their
+    // parts; an assembly without a body of its own is not missing geometry.
+    for (const parent of parents.values()) candidates.delete(parent);
     progress(10);
     api.StreamAllMeshes(modelID, (flat, index, total) => {
       if (!flat.geometries.size()) return;
@@ -420,7 +427,10 @@ export function parseIfcData(
         ifcType,
         discipline: mep.has(expressID)
           ? "mep"
-          : /SLAB|COLUMN|BEAM|FOOTING|PILE|MEMBER|PLATE|REINFORC/.test(
+          : // Plates and members of a curtain wall are its glass and
+            // mullions: architecture, not structure.
+            !spatialPath.some((n) => n.type.toUpperCase() === "IFCCURTAINWALL") &&
+              /SLAB|COLUMN|BEAM|FOOTING|PILE|MEMBER|PLATE|REINFORC/.test(
                 ifcType.toUpperCase(),
               )
             ? "structure"

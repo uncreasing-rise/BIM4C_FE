@@ -1,11 +1,21 @@
 "use client";
-import React, { useState } from "react";
-import { X, Info } from "lucide-react";
+import React, { useMemo, useState } from "react";
+import { ChevronsDownUp, ChevronsUpDown, Copy, Info, Search, X } from "lucide-react";
+import { toast } from "sonner";
 import { useLanguage } from "@/lib/i18n/context";
 import { formatLength } from "./federation";
 import type { BimElementData } from "./types";
 
 import { ui } from "@/lib/i18n/ui";
+
+/** Case- and accent-insensitive text for property filtering ("dien tich" finds "Diện tích"). */
+const fold = (value: unknown) =>
+  String(value ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/đ/gi, "d")
+    .toLowerCase();
+
 /** Selected element position in IFC world coordinates (metres). */
 export interface ElementCoordinates {
   modelName: string;
@@ -24,7 +34,9 @@ export function BimPropertyInspector({
   onIsolate,
   onResetVisibility,
   onFitSelection,
+  selectionCount = 1,
 }: {
+  selectionCount?: number;
   element: BimElementData | null;
   coordinates?: ElementCoordinates | null;
   isOpen: boolean;
@@ -37,7 +49,30 @@ export function BimPropertyInspector({
   const { t, locale } = useLanguage();
   const v = t.bimViewerPage.properties;
   const [tab, setTab] = useState<"psets" | "tree">("psets");
-  const unknown = ui(locale).bimPropertyInspector.notProvided;
+  const [filter, setFilter] = useState("");
+  const [collapsed, setCollapsed] = useState<ReadonlySet<number>>(() => new Set());
+  const s = ui(locale).bimPropertyInspector;
+  const unknown = s.notProvided;
+  const psets = useMemo(() => {
+    const q = fold(filter.trim());
+    return (e?.psets ?? [])
+      .map((pset, index) => ({
+        index,
+        name: pset.name,
+        properties: q && !fold(pset.name).includes(q)
+          ? pset.properties.filter(
+              (prop) => fold(prop.name).includes(q) || fold(prop.value).includes(q),
+            )
+          : pset.properties,
+      }))
+      .filter((pset) => !q || pset.properties.length);
+  }, [e, filter]);
+  const copy = (text: string) => {
+    void navigator.clipboard
+      ?.writeText(text)
+      .then(() => toast.success(`${s.copied}: ${text.length > 60 ? `${text.slice(0, 60)}…` : text}`))
+      .catch(() => undefined);
+  };
   if (!isOpen) return null;
   return (
     <aside
@@ -61,9 +96,26 @@ export function BimPropertyInspector({
       {e ? (
         <div className="min-h-0 flex-1 overflow-y-auto p-4">
           <div className="space-y-2 break-words">
+            {selectionCount > 1 && (
+              <p className="rounded-md bg-teal-500/15 px-2 py-1 text-teal-200">
+                {s.selectedCount(selectionCount)}
+              </p>
+            )}
             <span className="font-mono text-teal-300">{e.ifcType}</span>
             <h3 className="text-sm font-bold">{e.name}</h3>
-            <p className="font-mono text-[10px]">{e.guid || unknown}</p>
+            {e.guid ? (
+              <button
+                type="button"
+                onClick={() => copy(e.guid)}
+                title={s.copyValue}
+                className="group flex max-w-full items-center gap-1 font-mono text-[10px] text-slate-300 hover:text-white"
+              >
+                <span className="truncate">{e.guid}</span>
+                <Copy className="size-3 shrink-0 opacity-0 group-hover:opacity-100" />
+              </button>
+            ) : (
+              <p className="font-mono text-[10px]">{unknown}</p>
+            )}
             <p>
               {v.storey}: {e.storey || unknown}
             </p>
@@ -175,7 +227,42 @@ export function BimPropertyInspector({
           </div>
           {tab === "psets" ? (
             <div className="space-y-3">
-              {e.dimensions && (
+              <div className="flex items-center gap-1">
+                <label className="flex min-h-9 min-w-0 flex-1 items-center gap-2 rounded-lg border border-white/15 bg-slate-900 px-2">
+                  <Search className="size-3.5 shrink-0 text-teal-300" />
+                  <input
+                    value={filter}
+                    onChange={(event) => setFilter(event.target.value)}
+                    placeholder={s.searchProperties}
+                    aria-label={s.searchProperties}
+                    className="min-w-0 flex-1 bg-transparent outline-none placeholder:text-slate-500"
+                  />
+                  {filter && (
+                    <button type="button" onClick={() => setFilter("")} aria-label={ui(locale).bimShortcuts.close}>
+                      <X className="size-3.5 text-slate-400" />
+                    </button>
+                  )}
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setCollapsed(new Set())}
+                  aria-label={s.expandAll}
+                  title={s.expandAll}
+                  className="grid size-9 shrink-0 place-items-center rounded-lg border border-white/15 hover:bg-white/10"
+                >
+                  <ChevronsUpDown className="size-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCollapsed(new Set(e.psets.map((_, i) => i)))}
+                  aria-label={s.collapseAll}
+                  title={s.collapseAll}
+                  className="grid size-9 shrink-0 place-items-center rounded-lg border border-white/15 hover:bg-white/10"
+                >
+                  <ChevronsDownUp className="size-4" />
+                </button>
+              </div>
+              {e.dimensions && !filter && (
                 <div className="rounded-lg border border-white/10 p-3">
                   <h4 className="mb-2 font-semibold">
                     {e.dimensionsSource === "bounds"
@@ -224,10 +311,24 @@ export function BimPropertyInspector({
                   )}
                 </div>
               )}
-              {e.psets.map((pset, i) => (
+              {filter && !psets.length && (
+                <p className="py-4 text-center text-slate-400">{s.noMatchingProperties}</p>
+              )}
+              {psets.map((pset) => (
                 <details
-                  key={`${pset.name}-${i}`}
-                  open
+                  key={`${pset.name}-${pset.index}`}
+                  // A filter always shows its matches, even in collapsed groups.
+                  open={Boolean(filter) || !collapsed.has(pset.index)}
+                  onToggle={(event) => {
+                    const isOpen = event.currentTarget.open;
+                    if (filter) return;
+                    setCollapsed((current) => {
+                      const next = new Set(current);
+                      if (isOpen) next.delete(pset.index);
+                      else next.add(pset.index);
+                      return next;
+                    });
+                  }}
                   className="rounded-lg border border-white/10"
                 >
                   <summary className="cursor-pointer break-words p-3 font-mono text-teal-300">
@@ -240,8 +341,16 @@ export function BimPropertyInspector({
                         className="grid grid-cols-2 gap-2 break-words px-3 py-2"
                       >
                         <dt className="text-slate-400">{prop.name}</dt>
-                        <dd className="whitespace-pre-wrap font-mono">
-                          {prop.value} {prop.unit}
+                        <dd>
+                          <button
+                            type="button"
+                            onClick={() => copy(`${prop.value}${prop.unit ? ` ${prop.unit}` : ""}`)}
+                            title={s.copyValue}
+                            className="group w-full whitespace-pre-wrap rounded text-left font-mono hover:bg-white/5"
+                          >
+                            {prop.value} {prop.unit}
+                            <Copy className="ml-1 inline size-3 opacity-0 group-hover:opacity-60" />
+                          </button>
                         </dd>
                       </div>
                     ))}

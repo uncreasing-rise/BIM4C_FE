@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { acceleratedRaycast, MeshBVH } from "three-mesh-bvh";
+import { clipRange, framePose, PRESET_DIRECTIONS } from "./camera-motion";
 import type {
   BimBounds,
   BimClipPlanes,
@@ -83,26 +84,15 @@ export function fitCamera(
   bounds: THREE.Box3,
   preset: BimViewPreset,
 ) {
-  const center = bounds.getCenter(new THREE.Vector3());
-  const radius = Math.max(
-    0.01,
-    bounds.getSize(new THREE.Vector3()).length() / 2,
-  );
-  const vFov = THREE.MathUtils.degToRad(camera.fov);
-  const hFov = 2 * Math.atan(Math.tan(vFov / 2) * camera.aspect);
-  const distance = (radius / Math.sin(Math.min(vFov, hFov) / 2)) * 1.15;
-  const direction =
-    preset === "top"
-      ? new THREE.Vector3(0, 1, 0)
-      : preset === "front"
-        ? new THREE.Vector3(0, 0, 1)
-        : preset === "right"
-          ? new THREE.Vector3(1, 0, 0)
-          : new THREE.Vector3(1, 0.75, 1).normalize();
-  camera.up.set(0, preset === "top" ? 0 : 1, preset === "top" ? -1 : 0);
-  camera.position.copy(center).addScaledVector(direction, distance);
-  camera.near = Math.max(0.001, radius / 10000);
-  camera.far = Math.max(100, distance + radius * 20);
+  const pose = framePose(bounds, PRESET_DIRECTIONS[preset], camera.fov, camera.aspect);
+  const center = new THREE.Vector3(...pose.target);
+  const radius = Math.max(0.01, bounds.getSize(new THREE.Vector3()).length() / 2);
+  const range = clipRange(radius, center.distanceTo(new THREE.Vector3(...pose.position)));
+  // Up stays +y for every preset; see safeViewDirection for the plan view.
+  camera.up.set(0, 1, 0);
+  camera.position.set(...pose.position);
+  camera.near = range.near;
+  camera.far = range.far;
   camera.lookAt(center);
   camera.updateProjectionMatrix();
   camera.updateMatrixWorld();
