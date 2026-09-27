@@ -12,6 +12,17 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const require = createRequire(import.meta.url);
 const cache = new Map();
 
+test("stored display preferences reject invalid render environments and projections", () => {
+  const { displaySettingsSchema } = load("components/bim-viewer/session-schema");
+  assert.equal(displaySettingsSchema.safeParse({ environment: "broken" }).success, false);
+  assert.equal(displaySettingsSchema.safeParse({ projection: "broken" }).success, false);
+  assert.equal(displaySettingsSchema.safeParse({ edges: "true" }).success, false);
+  assert.deepEqual(displaySettingsSchema.parse({ environment: "dark", projection: "orthographic" }), {
+    environment: "dark", projection: "orthographic",
+  });
+  assert.deepEqual(displaySettingsSchema.parse({ grid: false }), { grid: false });
+});
+
 test("three-point metrics handle right angles, tilted triangles, straight angles and repeated points", () => {
   const { triangleMetrics } = load("components/bim-viewer/measurement-math");
   const p = (x, y, z) => ({ x, y, z });

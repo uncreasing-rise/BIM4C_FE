@@ -37,7 +37,7 @@ import { DEFAULT_CLASH_RULES, detectClashes } from "./clash-detection";
 import { BimClashPanel, type ClashTest } from "./BimClashPanel";
 import { timeSlicer } from "./yield";
 import { EMPTY_BIM_MODEL } from "./empty-model";
-import { sessionSchema } from "./session-schema";
+import { displaySettingsSchema, sessionSchema } from "./session-schema";
 import type { z } from "zod";
 import {
   applyPlacement,
@@ -137,14 +137,8 @@ export function BimViewerPage() {
   useEffect(() => {
     const timer = window.setTimeout(() => {
       try {
-        const saved = JSON.parse(localStorage.getItem(DISPLAY_KEY) ?? "null");
-        if (saved && typeof saved === "object")
-          setDisplay((current) => {
-            const next = { ...current };
-            for (const key of Object.keys(DEFAULT_DISPLAY) as (keyof DisplaySettings)[])
-              if (typeof saved[key] === typeof DEFAULT_DISPLAY[key]) (next as Record<string, unknown>)[key] = saved[key];
-            return next;
-          });
+        const saved = displaySettingsSchema.safeParse(JSON.parse(localStorage.getItem(DISPLAY_KEY) ?? "null"));
+        if (saved.success) setDisplay({ ...DEFAULT_DISPLAY, ...saved.data });
       } catch {
         /* Storage unavailable: defaults are fine. */
       }
@@ -589,7 +583,7 @@ export function BimViewerPage() {
     const onKey = (e: KeyboardEvent) => {
       if (e.defaultPrevented || e.ctrlKey || e.metaKey || e.altKey) return;
       const target = e.target instanceof Element ? e.target : null;
-      if (target?.closest("input, textarea, select, [contenteditable=true], [role=menu], dialog")) return;
+      if (shortcutsOpen || target?.closest("input, textarea, select, [contenteditable=true], [role=menu], dialog")) return;
       if (target && !containerRef.current?.contains(target) && target !== document.body) return;
       if (activeTool === "markup") return;
       if (activeTool === "walk") {
@@ -613,7 +607,7 @@ export function BimViewerPage() {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [activeTool, clearSelection, focusIds, goHome, hideIds, isolateIds, pendingPoints.length, selectedIdList, showAll]);
+  }, [activeTool, clearSelection, focusIds, goHome, hideIds, isolateIds, pendingPoints.length, selectedIdList, shortcutsOpen, showAll]);
 
   const levels = useMemo(() => computeLevels(canvasModels), [canvasModels]);
 
@@ -682,6 +676,18 @@ export function BimViewerPage() {
     setPendingPoint(null);
     setClashPoint(null);
     setClashId(null);
+    setLocalClashes([]);
+    setClashColors(null);
+    setClashStatus({});
+    setClashTest(null);
+    setClashSection(false);
+    setComparison(null);
+    setActiveLevelId(null);
+    setMarkupShapes([]);
+    setSavedViews([]);
+    setIssues([]);
+    setSearchSets([]);
+    setLayers(ALL_LAYERS);
     setExplode(0);
     setActiveTool("orbit");
     setStats({ bytes: 0, triangles: 0 });
@@ -755,7 +761,7 @@ export function BimViewerPage() {
       setLoading(null);
     }
     // Frame everything once the batch is in, so newly added files are visible.
-    if (modelsRef.current.length) requestView("perspective");
+    if (!controller.signal.aborted && modelsRef.current.length) requestView("perspective");
   };
 
   // The public demo is a real IFC file, so the viewer is useful immediately
@@ -902,9 +908,9 @@ export function BimViewerPage() {
       center,
       bottom: center[2] - half,
       top: center[2] + half,
-      map: mapConversion ? worldToMap(center, mapConversion) : undefined,
+      map: owner.model.mapConversion ? worldToMap(center, owner.model.mapConversion) : undefined,
     };
-  }, [selectedElement, canvasModels, sceneOrigin, mapConversion]);
+  }, [selectedElement, canvasModels, sceneOrigin]);
 
   const snapshot = (data: string | null) => {
     // A pending capture (markup export) takes the image instead of downloading it.
@@ -972,6 +978,7 @@ export function BimViewerPage() {
       layers,
       explode,
       searchSets,
+      clashStatus,
     };
     const url = URL.createObjectURL(
       new Blob([JSON.stringify(data, null, 2)], { type: "application/json" }),

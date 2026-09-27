@@ -10,6 +10,12 @@ export const uiVi: UiStrings = {
     retry: "Thử lại",
   },
   bimControlsOverlay: {
+    viewName: "Tên góc nhìn",
+    saveView: "Lưu",
+    defaultViewName: (count: number) => `Góc nhìn ${count}`,
+    savedViewHelp: "Lưu camera, vùng chọn, trạng thái hiển thị và mặt cắt trong trình duyệt này.",
+    noSavedViews: "Chưa có góc nhìn đã lưu.",
+    deleteView: (name: string) => `Xóa ${name}`,
     t3DSectionBox: "Hộp cắt 3D",
     no: "STT",
     type: "Loại",

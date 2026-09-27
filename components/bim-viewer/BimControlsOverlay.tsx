@@ -136,7 +136,7 @@ export function BimControlsOverlay(p: Props) {
     p.activeTool === "section"
       ? ui(locale).bimControlsOverlay.t3DSectionBox
       : p.activeTool === "views"
-        ? "Saved viewpoints"
+        ? ui(locale).bimToolbar.savedViews
         : v.tools[p.activeTool];
   const button =
     "flex min-h-10 w-full items-center justify-center gap-2 rounded-lg border border-white/15 px-3 text-xs hover:bg-white/10 disabled:opacity-40";
@@ -728,8 +728,8 @@ export function BimControlsOverlay(p: Props) {
             <input
               value={viewName}
               onChange={(e) => setViewName(e.target.value)}
-              placeholder="View name"
-              aria-label="View name"
+              placeholder={ui(locale).bimControlsOverlay.viewName}
+              aria-label={ui(locale).bimControlsOverlay.viewName}
               className="min-h-10 min-w-0 flex-1 rounded-lg border border-white/15 bg-slate-900 px-2"
             />
             <button
@@ -737,20 +737,19 @@ export function BimControlsOverlay(p: Props) {
               className="min-h-10 rounded-lg border border-teal-500/40 px-3 text-teal-200"
               onClick={() => {
                 const name =
-                  viewName.trim() || `View ${p.savedViews.length + 1}`;
+                  viewName.trim() || ui(locale).bimControlsOverlay.defaultViewName(p.savedViews.length + 1);
                 p.onSaveView(name);
                 setViewName("");
               }}
             >
-              Save
+              {ui(locale).bimControlsOverlay.saveView}
             </button>
           </div>
           <p className="text-slate-400">
-            Saves the current preset and selected elements locally in this
-            browser.
+            {ui(locale).bimControlsOverlay.savedViewHelp}
           </p>
           {!p.savedViews.length && (
-            <p className="text-slate-400">No saved viewpoints.</p>
+            <p className="text-slate-400">{ui(locale).bimControlsOverlay.noSavedViews}</p>
           )}
           {p.savedViews.map((view) => (
             <div
@@ -768,7 +767,7 @@ export function BimControlsOverlay(p: Props) {
                 type="button"
                 className="rounded px-2 text-red-300 hover:bg-white/10"
                 onClick={() => p.onDeleteView(view.id)}
-                aria-label={`Delete ${view.name}`}
+                aria-label={ui(locale).bimControlsOverlay.deleteView(view.name)}
               >
                 ×
               </button>

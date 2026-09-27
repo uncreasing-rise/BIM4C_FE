@@ -8,6 +8,12 @@ export const uiEn = {
     retry: "Retry",
   },
   bimControlsOverlay: {
+    viewName: "View name",
+    saveView: "Save",
+    defaultViewName: (count: number) => `View ${count}`,
+    savedViewHelp: "Saves the camera, selection, visibility and section settings locally in this browser.",
+    noSavedViews: "No saved viewpoints.",
+    deleteView: (name: string) => `Delete ${name}`,
     t3DSectionBox: "3D section box",
     no: "No.",
     type: "Type",

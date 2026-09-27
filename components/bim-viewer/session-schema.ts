@@ -1,5 +1,14 @@
 import { z } from "zod";
 
+export const displaySettingsSchema = z.object({
+  edges: z.boolean().optional(),
+  ambientOcclusion: z.boolean().optional(),
+  projection: z.enum(["perspective", "orthographic"]).optional(),
+  environment: z.enum(["classic", "light", "neutral", "dark"]).optional(),
+  grid: z.boolean().optional(),
+  sectionCaps: z.boolean().optional(),
+});
+
 const id = z.string().min(1).max(512);
 const ids = z.array(id).max(100000);
 const vector = z.tuple([z.number().finite(), z.number().finite(), z.number().finite()]);

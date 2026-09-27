@@ -1731,17 +1731,22 @@ export function BimCanvas(props: BimCanvasProps) {
       }
       if (lastSnapshot !== next.snapshotRevision) {
         lastSnapshot = next.snapshotRevision;
+        const gizmoVisible = gizmo.root.visible;
+        const hoverVisible = hoverGroup.visible;
+        const pivotVisible = pivotMarker.visible;
         try {
-          const gizmoVisible = gizmo.root.visible;
           gizmo.root.visible = false;
           hoverGroup.visible = false;
           pivotMarker.visible = false;
           pipeline.sync(controls.target, span);
           pipeline.render(false, activePlanes, span);
           next.onSnapshot(renderer.domElement.toDataURL("image/png"));
-          gizmo.root.visible = gizmoVisible;
         } catch {
           next.onSnapshot(null);
+        } finally {
+          gizmo.root.visible = gizmoVisible;
+          hoverGroup.visible = hoverVisible;
+          pivotMarker.visible = pivotVisible;
         }
       }
     };
