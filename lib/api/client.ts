@@ -14,7 +14,34 @@ function buildHeaders(options: RequestOptions): Headers {
   return headers;
 }
 
+/**
+ * Failures worth one more try: the API restarting (deploys, cold starts),
+ * a dropped connection or a timeout. Never a 4xx, never a cancelled request.
+ */
+export function isTransientError(error: unknown): boolean {
+  return (
+    error instanceof ApiError &&
+    ([502, 503, 504].includes(error.status) ||
+      ["NETWORK_ERROR", "REQUEST_TIMEOUT"].includes(error.code ?? ""))
+  );
+}
+
+const RETRY_DELAY_MS = 400;
+
 async function request<T>(method: HttpMethod, endpoint: string, options: RequestOptions = {}): Promise<T> {
+  // Reads are idempotent, so a transient failure gets a second chance before
+  // a whole page falls back to its error screen. Writes are never repeated.
+  if (method !== "GET") return requestOnce<T>(method, endpoint, options);
+  try {
+    return await requestOnce<T>(method, endpoint, options);
+  } catch (error) {
+    if (!isTransientError(error) || options.signal?.aborted) throw error;
+    await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY_MS));
+    return requestOnce<T>(method, endpoint, options);
+  }
+}
+
+async function requestOnce<T>(method: HttpMethod, endpoint: string, options: RequestOptions = {}): Promise<T> {
   assertApiEnvironment();
   const timeoutController = new AbortController();
   const timeoutId = setTimeout(() => timeoutController.abort(), options.timeoutMs ?? DEFAULT_TIMEOUT_MS);
