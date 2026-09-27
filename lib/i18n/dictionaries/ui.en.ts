@@ -257,6 +257,12 @@ export const uiEn = {
       "Drag the arrow or the slider to move the cut. A horizontal plane gives a floor plan cut.",
     position: "Plane position",
     flip: "Flip side",
+    faceMode: "Section at a surface",
+    faceHint: "Click a surface on the model: the plane lies on it and removes what is in front.",
+    rotation: "Rotate section",
+    rotateHint: "Drag the coloured rings in the view to rotate (5° steps, hold Shift for free rotation), or type an angle.",
+    about: { x: "About X", y: "About Y", z: "About Z (up)" },
+    resetRotation: "Reset rotation",
   },
   bimViewCube: {
     label: "ViewCube: click a face, edge or corner to turn the view",

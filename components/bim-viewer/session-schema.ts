@@ -37,7 +37,7 @@ export const sessionSchema = z
           modelKey: id.optional(),
           elementIds: ids,
           camera: z.object({ position: vector, target: vector, up: vector.refine((v) => Math.hypot(...v) > 0), fov: z.number().min(1).max(179) }).optional(),
-          clip: z.object({ x: z.number().finite(), y: z.number().finite(), z: z.number().finite(), minX: z.number().finite(), minY: z.number().finite(), minZ: z.number().finite(), enabled: z.boolean(), planeAxis: z.union([z.literal(0), z.literal(1), z.literal(2)]).optional(), flip: z.boolean().optional() }).refine((b) => b.x >= b.minX && b.y >= b.minY && b.z >= b.minZ).optional(),
+          clip: z.object({ x: z.number().finite(), y: z.number().finite(), z: z.number().finite(), minX: z.number().finite(), minY: z.number().finite(), minZ: z.number().finite(), enabled: z.boolean(), planeAxis: z.union([z.literal(0), z.literal(1), z.literal(2)]).optional(), flip: z.boolean().optional(), rotation: z.tuple([z.number().finite(), z.number().finite(), z.number().finite(), z.number().finite()]).refine((q) => Math.abs(Math.hypot(...q) - 1) < 1e-3).optional() }).refine((b) => b.x >= b.minX && b.y >= b.minY && b.z >= b.minZ).optional(),
           hiddenElements: ids.optional(),
           isolatedElements: ids.optional(),
           markup: z

@@ -186,6 +186,7 @@ export function BimViewerPage() {
   const [clashPoint, setClashPoint] = useState<[number, number, number] | null>(
     null,
   );
+  const [sectionFacePick, setSectionFacePick] = useState(false);
   const [clashId, setClashId] = useState<string | null>(null);
   const [localClashes, setLocalClashes] = useState<BimClashItem[]>([]);
   const [savedViews, setSavedViews] = useState<BimSavedView[]>([]);
@@ -1193,6 +1194,8 @@ export function BimViewerPage() {
             visibleLayers={layers}
             clipPlanes={effectiveClip}
             onClipPlanesChange={setClip}
+            sectionFacePick={sectionFacePick && activeTool === "section"}
+            onSectionFacePickDone={() => setSectionFacePick(false)}
             sectionFitRequest={sectionFit}
             explodeFactor={explode}
             activeClashPoint={clashPoint}
@@ -1269,7 +1272,7 @@ export function BimViewerPage() {
             <BimLevelsPanel
               levels={levels}
               // A plan stays "active" only while its horizontal cut is on.
-              activeLevelId={clip.enabled && clip.planeAxis === 1 ? activeLevelId : null}
+              activeLevelId={clip.enabled && clip.planeAxis === 1 && !clip.rotation ? activeLevelId : null}
               elevationOffset={sceneOrigin[1]}
               multipleModels={models.length > 1}
               onPlan={showPlan}
@@ -1354,6 +1357,8 @@ export function BimViewerPage() {
             onCloseTool={() => setActiveTool("orbit")}
             clipPlanes={effectiveClip}
             onChangeClipPlanes={setClip}
+            sectionFacePick={sectionFacePick}
+            onToggleSectionFacePick={() => setSectionFacePick((on) => !on)}
             onFitSection={(target) =>
               setSectionFit((r) => ({ revision: r.revision + 1, target }))
             }

@@ -257,6 +257,12 @@ export const uiVi: UiStrings = {
       "Kéo mũi tên hoặc thanh trượt để dời mặt cắt. Mặt cắt ngang cho hình dạng mặt bằng tầng.",
     position: "Vị trí mặt cắt",
     flip: "Đảo phía cắt",
+    faceMode: "Mặt cắt theo bề mặt",
+    faceHint: "Bấm vào một bề mặt trên mô hình: mặt cắt nằm trên bề mặt đó và bỏ phần phía trước.",
+    rotation: "Xoay mặt cắt",
+    rotateHint: "Kéo các vòng tròn màu trên khung nhìn để xoay (bước 5°, giữ Shift để xoay tự do), hoặc nhập góc.",
+    about: { x: "Quanh X", y: "Quanh Y", z: "Quanh Z (đứng)" },
+    resetRotation: "Đặt lại góc",
   },
   bimViewCube: {
     label: "ViewCube: bấm mặt, cạnh hoặc góc để xoay góc nhìn",

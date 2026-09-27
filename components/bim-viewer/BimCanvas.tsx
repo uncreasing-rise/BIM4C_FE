@@ -53,6 +53,11 @@ import {
   activeFaces,
   axisDragValue,
   clipFromBox,
+  clipPivot,
+  clipRotation,
+  faceClip,
+  localBounds,
+  rotateClip,
   createSectionBoxGizmo,
   moveFace,
   planeIndex,
@@ -135,6 +140,9 @@ export interface BimCanvasProps {
   visibleLayers: Record<BimDiscipline, boolean>;
   clipPlanes: BimClipPlanes;
   onClipPlanesChange: (clip: BimClipPlanes) => void;
+  /** Next click on the model places a section plane on the clicked surface. */
+  sectionFacePick?: boolean;
+  onSectionFacePickDone?: () => void;
   sectionFitRequest: SectionFitRequest;
   explodeFactor: number;
   activeClashPoint: [number, number, number] | null;
@@ -294,11 +302,17 @@ export function BimCanvas(props: BimCanvasProps) {
       new THREE.Plane(new THREE.Vector3(0, 0, -1), 0),
       new THREE.Plane(new THREE.Vector3(0, 0, 1), 0),
     ];
+    const PLANE_NORMALS = planes.map((plane) => plane.normal.clone());
     let activePlanes: THREE.Plane[] = NO_PLANES;
     let activeKey = "";
     let clip: BimClipPlanes = current.clipPlanes;
+    const turn = new THREE.Quaternion();
     const applyClip = (next: BimClipPlanes) => {
       clip = next;
+      // A turned box turns the normals; the constants stay the same because
+      // they are measured in the box's own frame (see BimClipPlanes.rotation).
+      turn.copy(clipRotation(next));
+      planes.forEach((plane, i) => plane.normal.copy(PLANE_NORMALS[i]).applyQuaternion(turn));
       planes[0].constant = next.x;
       planes[1].constant = -next.minX;
       planes[2].constant = next.y;
@@ -1102,7 +1116,29 @@ export function BimCanvas(props: BimCanvasProps) {
     };
 
     // ---- Section box dragging ------------------------------------------
-    let drag: { axis: Axis; side: Side; pointerId: number } | null = null;
+    let drag:
+      | { kind: "face"; axis: Axis; side: Side; pointerId: number }
+      | {
+          kind: "ring";
+          axis: Axis;
+          pointerId: number;
+          start: BimClipPlanes;
+          pivot: THREE.Vector3;
+          normal: THREE.Vector3;
+          from: THREE.Vector3;
+        }
+      | null = null;
+    /**
+     * Direction from the ring centre to where the pointer ray meets the
+     * ring plane, or null when the ring is seen edge-on.
+     */
+    const ringVector = (pivot: THREE.Vector3, normal: THREE.Vector3) => {
+      if (Math.abs(ray.ray.direction.dot(normal)) < 0.05) return null;
+      const hit = ray.ray.intersectPlane(new THREE.Plane().setFromNormalAndCoplanarPoint(normal, pivot), new THREE.Vector3());
+      if (!hit) return null;
+      const v = hit.sub(pivot);
+      return v.lengthSq() > 1e-12 ? v.normalize() : null;
+    };
     const sectionActive = () =>
       current.activeTool === "section" && clip.enabled;
     const handleAt = (clientX: number, clientY: number) => {
@@ -1333,8 +1369,18 @@ export function BimCanvas(props: BimCanvasProps) {
       if (e.button !== 0) return;
       const handle = handleAt(e.clientX, e.clientY);
       if (handle) {
-        const { axis, side } = handle.userData as { axis: Axis; side: Side };
-        drag = { axis, side, pointerId: e.pointerId };
+        if (handle.userData.ring !== undefined) {
+          const axis = handle.userData.ring as Axis;
+          const pivot = clipPivot(clip);
+          const normal = new THREE.Vector3().setComponent(axis, 1).applyQuaternion(clipRotation(clip));
+          castFrom(e.clientX, e.clientY);
+          const from = ringVector(pivot, normal);
+          if (!from) return;
+          drag = { kind: "ring", axis, pointerId: e.pointerId, start: clip, pivot, normal, from };
+        } else {
+          const { axis, side } = handle.userData as { axis: Axis; side: Side };
+          drag = { kind: "face", axis, side, pointerId: e.pointerId };
+        }
         controls.enabled = false;
         renderer.domElement.setPointerCapture(e.pointerId);
         return;
@@ -1412,25 +1458,37 @@ export function BimCanvas(props: BimCanvasProps) {
       }
       if (drag && e.pointerId === drag.pointerId) {
         castFrom(e.clientX, e.clientY);
+        const b = current.sceneBounds;
+        const margin = span * 0.05;
+        const limits: BimBounds = {
+          min: [b.min[0] - margin, b.min[1] - margin, b.min[2] - margin],
+          max: [b.max[0] + margin, b.max[1] + margin, b.max[2] + margin],
+        };
+        if (drag.kind === "ring") {
+          const to = ringVector(drag.pivot, drag.normal);
+          if (!to) return;
+          let angle = Math.atan2(drag.from.clone().cross(to).dot(drag.normal), drag.from.dot(to));
+          // Steps of 5° like Autodesk; Shift turns freely.
+          if (!e.shiftKey) angle = THREE.MathUtils.degToRad(Math.round(THREE.MathUtils.radToDeg(angle) / 5) * 5);
+          const turned = new THREE.Quaternion().setFromAxisAngle(drag.normal, angle).multiply(clipRotation(drag.start));
+          applyClip(rotateClip(drag.start, turned, limits));
+          requestRender();
+          return;
+        }
+        // Faces move along the box's own axes: work in its frame.
+        const inverse = clipRotation(clip).invert();
         const anchor = gizmo.handles.find(
-          (h) =>
-            h.userData.axis === drag!.axis && h.userData.side === drag!.side,
+          (h) => h.userData.axis === drag!.axis && h.userData.side === (drag as { side: Side }).side,
         )!.position;
         const value = axisDragValue(
-          ray.ray.origin.toArray() as Vec3,
-          ray.ray.direction.toArray() as Vec3,
+          ray.ray.origin.clone().applyQuaternion(inverse).toArray() as Vec3,
+          ray.ray.direction.clone().applyQuaternion(inverse).toArray() as Vec3,
           anchor.toArray() as Vec3,
           drag.axis,
         );
         if (value !== null) {
-          const b = current.sceneBounds;
-          const margin = span * 0.05;
-          const limits: BimBounds = {
-            min: [b.min[0] - margin, b.min[1] - margin, b.min[2] - margin],
-            max: [b.max[0] + margin, b.max[1] + margin, b.max[2] + margin],
-          };
           applyClip(
-            moveFace(clip, drag.axis, drag.side, value, limits, span * 0.001),
+            moveFace(clip, drag.axis, drag.side, value, localBounds(limits, clipRotation(clip)), span * 0.001),
           );
           requestRender();
         }
@@ -1517,6 +1575,20 @@ export function BimCanvas(props: BimCanvasProps) {
             guid: (result.hit.object.userData.element as BimElementData).guid,
             localPoint: result.hit.object.parent!.worldToLocal(result.point.clone()).toArray(),
           });
+        return;
+      }
+      if (current.activeTool === "section" && current.sectionFacePick) {
+        const picked = pick(e.clientX, e.clientY, false);
+        if (picked?.hit.face) {
+          const normal = picked.hit.face.normal.clone().transformDirection(picked.hit.object.matrixWorld);
+          // Point it at the viewer, so the plane removes what is in front.
+          if (normal.dot(view().position.clone().sub(picked.point)) < 0) normal.negate();
+          const next = faceClip(picked.point, normal, current.sceneBounds);
+          applyClip(next);
+          current.onClipPlanesChange(next);
+          requestRender();
+        }
+        current.onSectionFacePickDone?.();
         return;
       }
       const result = pick(e.clientX, e.clientY, false);

@@ -1,10 +1,20 @@
 "use client";
 import { triangleMetrics } from "./measurement-math";
 import React from "react";
-import { ArrowLeftRight, Crosshair, Download, RotateCcw, Scan, Trash2, X } from "lucide-react";
+import { ArrowLeftRight, Crosshair, Download, MousePointerClick, RotateCcw, Scan, Trash2, X } from "lucide-react";
 import { useLanguage } from "@/lib/i18n/context";
 import { defaultClip } from "./viewer-geometry";
-import { HANDLE_KEYS, planeClip, type Axis } from "./section-box";
+import {
+  clipAngles,
+  clipRotation,
+  flipClip,
+  HANDLE_KEYS,
+  localBounds,
+  planeClip,
+  rotateClip,
+  rotationFromAngles,
+  type Axis,
+} from "./section-box";
 import {
   distanceSummary,
   formatLength,
@@ -35,6 +45,9 @@ interface Props {
   clipPlanes: BimClipPlanes;
   onChangeClipPlanes: (planes: BimClipPlanes) => void;
   onFitSection: (target: "selection" | "all") => void;
+  /** Waiting for a click on the model to place a plane on that surface. */
+  sectionFacePick: boolean;
+  onToggleSectionFacePick: () => void;
   hasSelection: boolean;
   bounds: BimBounds;
   sceneOrigin: Vec3;
@@ -224,6 +237,8 @@ export function BimControlsOverlay(p: Props) {
           { id: 2, label: s.planeY },
         ];
         const single = typeof mode === "number" ? mode : null;
+        const turned = Boolean(clip.rotation);
+        const angles = clipAngles(clip);
         return (
         <div className="space-y-3">
           <div className="grid grid-cols-2 gap-1" role="radiogroup" aria-label={s.mode}>
@@ -251,9 +266,62 @@ export function BimControlsOverlay(p: Props) {
           <p className="leading-relaxed text-slate-400">
             {single === null ? s.boxHelp : s.planeHelp}
           </p>
+          <button
+            type="button"
+            aria-pressed={p.sectionFacePick}
+            className={`${button} ${p.sectionFacePick ? "border-teal-400 bg-teal-500/15 text-teal-200" : ""}`}
+            onClick={p.onToggleSectionFacePick}
+          >
+            <MousePointerClick className="size-4" />
+            {s.faceMode}
+          </button>
+          {p.sectionFacePick && <p className="leading-relaxed text-teal-200">{s.faceHint}</p>}
+          {clip.enabled && (
+            <fieldset className="space-y-2 rounded-lg border border-white/10 p-2">
+              <legend className="px-1 font-bold">{s.rotation} (°)</legend>
+              <p className="leading-relaxed text-slate-400">{s.rotateHint}</p>
+              <div className="grid grid-cols-3 gap-1.5">
+                {(["z", "x", "y"] as const).map((k) => (
+                  <label key={k} className="block">
+                    <span className="mb-0.5 block text-slate-400">{s.about[k]}</span>
+                    <input
+                      type="number"
+                      step={5}
+                      value={angles[k]}
+                      aria-label={`${s.rotation} ${s.about[k]}`}
+                      onChange={(e) => {
+                        const value = Number(e.target.value);
+                        if (!Number.isFinite(value)) return;
+                        p.onChangeClipPlanes(rotateClip(clip, rotationFromAngles({ ...angles, [k]: value }), p.bounds));
+                      }}
+                      className="h-8 w-full rounded-md border border-white/15 bg-slate-900 px-1.5 font-mono outline-none focus:border-teal-400"
+                    />
+                  </label>
+                ))}
+              </div>
+              <button
+                type="button"
+                className={button}
+                disabled={!turned}
+                onClick={() => p.onChangeClipPlanes(rotateClip(clip, rotationFromAngles({ x: 0, y: 0, z: 0 }), p.bounds))}
+              >
+                <RotateCcw className="size-4" />
+                {s.resetRotation}
+              </button>
+            </fieldset>
+          )}
           {single !== null && (() => {
-            const axis = axisOf(single);
             const key = HANDLE_KEYS[single][clip.flip ? "min" : "max"];
+            // A turned plane has no world axis: measure from the model's edge along its normal.
+            const span = localBounds(p.bounds, clipRotation(clip));
+            const axis = turned
+              ? {
+                  id: "n",
+                  range: [0, span.max[single] - span.min[single]],
+                  toWorld: (v: number) => v - span.min[single],
+                  toScene: (w: number) => w + span.min[single],
+                }
+              : axisOf(single);
             const [min, max] = axis.range;
             const value = axis.toWorld(Number(clip[key]));
             return (
@@ -279,13 +347,8 @@ export function BimControlsOverlay(p: Props) {
                 <button
                   type="button"
                   className={button}
-                  onClick={() => {
-                    // Keep the cut where it is and show the other side.
-                    const keys = HANDLE_KEYS[single];
-                    const at = Number(clip[clip.flip ? keys.min : keys.max]);
-                    const base = planeClip(p.bounds, single, !clip.flip);
-                    p.onChangeClipPlanes({ ...base, [clip.flip ? keys.max : keys.min]: at });
-                  }}
+                  // Keep the cut where it is and show the other side.
+                  onClick={() => p.onChangeClipPlanes(flipClip(clip, p.bounds))}
                 >
                   <ArrowLeftRight className="size-4" />
                   {s.flip}
@@ -312,7 +375,7 @@ export function BimControlsOverlay(p: Props) {
               {ui(locale).bimControlsOverlay.wholeModel}
             </button>
           </div>
-          {single === null && sectionAxes(p.sceneOrigin, p.bounds).map((axis) => {
+          {single === null && !turned && sectionAxes(p.sceneOrigin, p.bounds).map((axis) => {
             const [min, max] = axis.range;
             const step = Math.max(0.001, (max - min) / 400);
             const lower = axis.toWorld(p.clipPlanes[axis.lowerKey]);

@@ -49,7 +49,9 @@ export function defaultClip(bounds: BimBounds): BimClipPlanes {
 
 export function clippingPlanes(clip: BimClipPlanes): THREE.Plane[] {
   if (!clip.enabled) return [];
-  return [
+  // Rotation keeps dot products, so only the normals turn (see BimClipPlanes.rotation).
+  const turn = clip.rotation ? new THREE.Quaternion(...clip.rotation) : null;
+  const planes = [
     new THREE.Plane(new THREE.Vector3(-1, 0, 0), clip.x),
     new THREE.Plane(new THREE.Vector3(1, 0, 0), -clip.minX),
     new THREE.Plane(new THREE.Vector3(0, -1, 0), clip.y),
@@ -57,6 +59,8 @@ export function clippingPlanes(clip: BimClipPlanes): THREE.Plane[] {
     new THREE.Plane(new THREE.Vector3(0, 0, -1), clip.z),
     new THREE.Plane(new THREE.Vector3(0, 0, 1), -clip.minZ),
   ];
+  if (turn) for (const plane of planes) plane.normal.applyQuaternion(turn);
+  return planes;
 }
 
 export function visibleHit(hits: THREE.Intersection[], planes: THREE.Plane[]) {

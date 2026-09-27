@@ -127,6 +127,12 @@ export interface BimClipPlanes {
    */
   planeAxis?: 0 | 1 | 2;
   flip?: boolean;
+  /**
+   * Orientation of the box (quaternion x, y, z, w). The min/max values are
+   * then coordinates in the box's own frame: local = rotation⁻¹ · scene.
+   * Absent: aligned with the scene axes.
+   */
+  rotation?: [number, number, number, number];
 }
 
 export interface MeasurementPoint {
