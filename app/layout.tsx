@@ -16,6 +16,7 @@ import { cn } from "@/lib/utils";
 import { LanguageProvider } from "@/lib/i18n/context";
 import type { Locale } from "@/lib/i18n/config";
 import { Toaster } from "sonner";
+import { AnalyticsTracker } from "@/components/analytics/AnalyticsTracker";
 import { getSiteSettings } from "@/features/settings/queries";
 
 const fontSans = Manrope({
@@ -112,6 +113,7 @@ export default async function RootLayout({
         <LanguageProvider initialLocale={locale}>
           {children}
           <Toaster richColors position="top-right" closeButton />
+          <AnalyticsTracker />
         </LanguageProvider>
       </body>
     </html>

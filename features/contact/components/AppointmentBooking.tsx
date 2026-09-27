@@ -1,5 +1,6 @@
 "use client";
 
+import { trackEvent, visitAttribution } from "@/lib/analytics/tracker";
 import {
   useId,
   useRef,
@@ -119,9 +120,11 @@ export function AppointmentBooking({ projectSlug }: { projectSlug?: string }) {
           locale,
           consent: form.get("consent") === "on",
           privacyPolicyVersion: PRIVACY_POLICY_VERSION,
+          attribution: visitAttribution(),
         },
         { cache: "no-store", timeoutMs: 30000 },
       );
+      trackEvent("form_submit", { label: "appointment" });
       setReceipt({ email, when: summary, notification: result.notification });
     } catch (err) {
       setError(

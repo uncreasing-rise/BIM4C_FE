@@ -3,6 +3,7 @@
 import { ROUTES } from "@/constants/routes";
 import { useSiteSettings } from "@/features/page-content/context";
 import { telHref } from "@/lib/utils/contact";
+import { trackEvent } from "@/lib/analytics/tracker";
 import { useLanguage } from "@/lib/i18n/context";
 import {
   Boxes,
@@ -48,6 +49,13 @@ export function CommandMenu({ isOpen, onClose }: CommandMenuProps) {
   const router = useRouter();
   const { locale } = useLanguage();
   const [query, setQuery] = useState("");
+  // What visitors look for: the term once they stop typing.
+  useEffect(() => {
+    const term = query.trim();
+    if (term.length < 2) return;
+    const timer = window.setTimeout(() => trackEvent("search", { target: term }), 1500);
+    return () => window.clearTimeout(timer);
+  }, [query]);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const dialogRef = useRef<HTMLDivElement>(null);

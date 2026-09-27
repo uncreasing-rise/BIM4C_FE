@@ -23,7 +23,7 @@ export const legalDocumentsEn: LegalDocument[] = [
     title: "Privacy Policy",
     summary:
       "How BIM4C collects, uses and protects information when you visit our website or contact us.",
-    updatedAt: "20 August 2026",
+    updatedAt: "28 September 2026",
     sections: [
       {
         title: "Scope",
@@ -55,9 +55,11 @@ export const legalDocumentsEn: LegalDocument[] = [
         ],
       },
       {
-        title: "Cookies",
+        title: "Cookies and visit statistics",
         paragraphs: [
-          "The website may use essential cookies to maintain functionality, remember preferences and measure content performance. You can manage cookies in your browser settings.",
+          "The website may use essential cookies to maintain functionality and remember preferences. You can manage cookies in your browser settings.",
+          "To understand which content is useful, the website measures visits itself, without cookies and without third-party analytics: pages viewed, time on page, clicks on links and buttons, site searches and the website or campaign that brought you here. No IP address is stored; a visitor is counted with an anonymous code that changes every day, and a visit ends when you close the tab. If your browser sends Do Not Track or Global Privacy Control, nothing is measured. Visit statistics are kept for about 13 months.",
+          "When you send a form, how your visit began (source, first page and the pages viewed during that visit) is stored with your request so we can understand how people find BIM4C.",
         ],
       },
       {
@@ -177,7 +179,7 @@ export const legalDocumentsVi: LegalDocument[] = [
     title: "Chính Sách Bảo Mật",
     summary:
       "Cách thức BIM4C thu thập, sử dụng và bảo vệ thông tin khi bạn truy cập website hoặc liên hệ với chúng tôi.",
-    updatedAt: "20 Tháng 8, 2026",
+    updatedAt: "28 Tháng 9, 2026",
     sections: [
       {
         title: "Phạm vi áp dụng",
@@ -209,9 +211,11 @@ export const legalDocumentsVi: LegalDocument[] = [
         ],
       },
       {
-        title: "Cookie và công nghệ theo dõi",
+        title: "Cookie và thống kê truy cập",
         paragraphs: [
-          "Website có thể sử dụng cookie thiết yếu để duy trì hoạt động, ghi nhớ tùy chọn ngôn ngữ và đo lường hiệu suất nội dung. Bạn có thể quản lý hoặc tắt cookie trong cài đặt trình duyệt.",
+          "Website có thể sử dụng cookie thiết yếu để duy trì hoạt động và ghi nhớ tùy chọn ngôn ngữ. Bạn có thể quản lý hoặc tắt cookie trong cài đặt trình duyệt.",
+          "Để biết nội dung nào hữu ích, website tự thống kê lượt truy cập mà không dùng cookie và không dùng dịch vụ phân tích của bên thứ ba: trang đã xem, thời gian xem, lượt bấm vào link và nút, từ khóa tìm kiếm trên website và website hoặc chiến dịch đã dẫn bạn tới. Địa chỉ IP không được lưu; mỗi khách được đếm bằng một mã ẩn danh đổi mỗi ngày và lượt truy cập kết thúc khi bạn đóng tab. Nếu trình duyệt của bạn bật “Không theo dõi” (Do Not Track) hoặc Global Privacy Control, website không ghi nhận gì. Số liệu truy cập được lưu khoảng 13 tháng.",
+          "Khi bạn gửi form, cách lượt truy cập bắt đầu (nguồn, trang đầu tiên và các trang đã xem trong lượt đó) được lưu cùng yêu cầu của bạn để chúng tôi hiểu khách hàng tìm đến BIM4C như thế nào.",
         ],
       },
       {

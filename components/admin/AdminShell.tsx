@@ -16,6 +16,7 @@ import {
   GraduationCap,
   Handshake,
   Inbox,
+  BarChart3,
   LayoutDashboard,
   Layers,
   LogOut,
@@ -52,7 +53,10 @@ interface NavItem {
 const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
   {
     label: "",
-    items: [{ href: "/admin", label: "Tổng quan", icon: LayoutDashboard, permission: "dashboard.read" }],
+    items: [
+      { href: "/admin", label: "Tổng quan", icon: LayoutDashboard, permission: "dashboard.read" },
+      { href: "/admin/thong-ke", label: "Thống kê truy cập", icon: BarChart3, permission: "analytics.read" },
+    ],
   },
   {
     label: "Nội dung",
