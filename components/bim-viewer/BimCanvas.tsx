@@ -3,6 +3,9 @@
 import React, { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
+import { Line2 } from "three/examples/jsm/lines/Line2.js";
+import { LineGeometry } from "three/examples/jsm/lines/LineGeometry.js";
+import { LineMaterial } from "three/examples/jsm/lines/LineMaterial.js";
 import { useLanguage } from "@/lib/i18n/context";
 import {
   createElementMesh,
@@ -332,7 +335,44 @@ export function BimCanvas(props: BimCanvasProps) {
     const handleRadius = (p: THREE.Vector3) => Math.max(1e-3, screenScale(p) * 0.014);
     /** The camera that renders and picks: perspective or the synced ortho one. */
     const view = () => (pipeline ? pipeline.camera : camera);
-    const pointRadius = () => Math.max(0.015, span * 0.0025);
+    /** World length of `px` screen pixels at `p` (perspective or ortho). */
+    const pxToWorld = (p: THREE.Vector3, px: number) =>
+      (screenScale(p) * 2 * Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2) * px) / viewport.height;
+    // Markers are flat shapes facing the camera, a fixed number of pixels
+    // across at any zoom (Autodesk style), re-sized every frame in render().
+    const screenMarkers = new Set<THREE.Object3D>();
+    const DISC = new THREE.CircleGeometry(1, 24);
+    const OUTLINE = new THREE.RingGeometry(1, 1.4, 24);
+    const markerMaterials = new Map<number, THREE.MeshBasicMaterial>();
+    const markerMaterial = (color: number) => {
+      if (!markerMaterials.has(color))
+        markerMaterials.set(color, new THREE.MeshBasicMaterial({ color, depthTest: false, side: THREE.DoubleSide }));
+      return markerMaterials.get(color)!;
+    };
+    const OUTLINE_MATERIAL = new THREE.MeshBasicMaterial({ color: 0xffffff, depthTest: false, side: THREE.DoubleSide });
+    /** Filled dot with a white rim, `px` pixels in radius. */
+    const screenDot = (color: number, px: number) => {
+      const dot = new THREE.Mesh(DISC, markerMaterial(color));
+      dot.renderOrder = 4;
+      const rim = new THREE.Mesh(OUTLINE, OUTLINE_MATERIAL);
+      rim.renderOrder = 3;
+      dot.add(rim);
+      dot.userData.px = px;
+      return dot;
+    };
+    // Fat lines: WebGL ignores line widths, so measurement lines use Line2.
+    const lineMaterials = new Set<LineMaterial>();
+    const fatLine = (points: THREE.Vector3[], color: number, width: number, material?: LineMaterial) => {
+      const geometry = new LineGeometry();
+      geometry.setPositions(points.flatMap((p) => [p.x, p.y, p.z]));
+      const lineMaterial = material ?? new LineMaterial({ color, linewidth: width, depthTest: false, transparent: true });
+      lineMaterial.resolution.set(viewport.width, viewport.height);
+      lineMaterials.add(lineMaterial);
+      const line = new Line2(geometry, lineMaterial);
+      line.computeLineDistances();
+      line.renderOrder = 3;
+      return line;
+    };
 
     const requestRender = () => {
       if (!disposed && !frame && !document.hidden)
@@ -446,6 +486,20 @@ export function BimCanvas(props: BimCanvasProps) {
       perf.since = now;
     };
 
+    const markerWorld = new THREE.Vector3();
+    const parentTurn = new THREE.Quaternion();
+    /** Face every marker to the camera at its fixed pixel size. */
+    const sizeScreenMarkers = () => {
+      const facing = view().quaternion;
+      for (const marker of screenMarkers) {
+        if (!marker.parent) continue;
+        marker.getWorldPosition(markerWorld);
+        // Clash markers live in a model group that may be rotated.
+        marker.quaternion.copy(marker.parent.getWorldQuaternion(parentTurn).invert()).multiply(facing);
+        marker.scale.setScalar(pxToWorld(markerWorld, marker.userData.px as number));
+      }
+    };
+
     function render() {
       frame = 0;
       if (disposed || renderer.getContext().isContextLost()) return;
@@ -461,11 +515,7 @@ export function BimCanvas(props: BimCanvasProps) {
       }
       if (gizmo.root.visible) gizmo.update(clip, handleRadius);
       pipeline.sync(controls.target, span);
-      if (hoverGroup.visible)
-        hoverMarker.scale.setScalar(
-          screenScale(hoverMarker.position) *
-            (hoverKind === "face" ? 0.005 : 0.008),
-        );
+      sizeScreenMarkers();
       renderer.info.reset();
       pipeline.render(interacting, activePlanes, span);
       // Read by performance checks (draw calls for the last frame, all passes).
@@ -572,6 +622,7 @@ export function BimCanvas(props: BimCanvasProps) {
     };
     const removeEntry = (entry: ModelEntry) => {
       federation.remove(entry.group);
+      for (const marker of entry.markers.children) screenMarkers.delete(marker);
       for (const mesh of entry.meshes.values()) {
         const g = mesh.geometry;
         if (![...primitiveGeometries.values()].includes(g)) {
@@ -619,10 +670,8 @@ export function BimCanvas(props: BimCanvasProps) {
           entry.group.add(batch);
         }
         for (const clash of entry.source.model.clashes) {
-          const marker = new THREE.Mesh(
-            new THREE.SphereGeometry(pointRadius() * 3, 12, 8),
-            new THREE.MeshBasicMaterial({ color: 0xef4444, wireframe: true }),
-          );
+          const marker = screenDot(0xef4444, 6);
+          screenMarkers.add(marker);
           marker.position.set(...clash.point);
           entry.markers.add(marker);
         }
@@ -816,19 +865,21 @@ export function BimCanvas(props: BimCanvasProps) {
       )
         return;
       measurementsKey = key;
-      disposeObject(measurementGroup);
+      for (const child of measurementGroup.children) {
+        screenMarkers.delete(child);
+        if (child instanceof Line2) {
+          lineMaterials.delete(child.material);
+          child.geometry.dispose();
+          child.material.dispose();
+        }
+      }
+      measurementGroup.clear();
       labels.replaceChildren();
       // Measurements refer to assembled geometry, not presentation offsets.
       if (next.explodeFactor > 0) return;
-      const markerGeometry = new THREE.SphereGeometry(pointRadius(), 12, 8);
       const marker = (p: MeasurePoint) => {
-        const mesh = new THREE.Mesh(
-          markerGeometry,
-          new THREE.MeshBasicMaterial({
-            color: SNAP_COLORS[p.snap],
-            depthTest: false,
-          }),
-        );
+        const mesh = screenDot(SNAP_COLORS[p.snap], 4);
+        screenMarkers.add(mesh);
         mesh.position.copy(vec(p));
         mesh.renderOrder = 3;
         measurementGroup.add(mesh);
@@ -837,12 +888,7 @@ export function BimCanvas(props: BimCanvasProps) {
         m.points.forEach(marker);
         if (m.mode === "distance" && m.points.length === 2) {
           const [a, b] = m.points;
-          const line = new THREE.Line(
-            new THREE.BufferGeometry().setFromPoints([vec(a), vec(b)]),
-            new THREE.LineBasicMaterial({ color: 0x0f766e, depthTest: false }),
-          );
-          line.renderOrder = 3;
-          measurementGroup.add(line);
+          measurementGroup.add(fatLine([vec(a), vec(b)], 0x0f766e, 2.5));
           const s = distanceSummary(a, b);
           addLabel(
             vec(a).add(vec(b)).multiplyScalar(0.5),
@@ -853,9 +899,7 @@ export function BimCanvas(props: BimCanvasProps) {
           const metrics = triangleMetrics(m.points);
           const vertices = m.points.map(vec);
           if (m.mode === "triangle") vertices.push(vec(m.points[0]));
-          const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(vertices), new THREE.LineBasicMaterial({ color: 0x0f766e, depthTest: false }));
-          line.renderOrder = 3;
-          measurementGroup.add(line);
+          measurementGroup.add(fatLine(vertices, 0x0f766e, 2.5));
           addLabel(vec(m.points[1]), metrics ? (m.mode === "angle" ? `${fmt(metrics.angle)}°` : `${fmt(metrics.area)} m²`) : "—", "result");
         } else if (m.mode === "point" && m.points[0]) {
           addLabel(
@@ -866,41 +910,37 @@ export function BimCanvas(props: BimCanvasProps) {
         }
       }
       next.pendingPoints.forEach(marker);
-      if (next.pendingPoints.length > 1) measurementGroup.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(next.pendingPoints.map(vec)), new THREE.LineBasicMaterial({ color: 0x0f766e, depthTest: false })));
+      if (next.pendingPoints.length > 1) measurementGroup.add(fatLine(next.pendingPoints.map(vec), 0x0f766e, 2.5));
       requestRender();
     };
 
     // ---- Hover: snapping preview and coordinate readout ------------------
+    // Snap glyphs as in Autodesk viewers: square = vertex, triangle =
+    // midpoint, ring = edge, dot = face.
+    const SNAP_GLYPHS: Record<SnapKind, THREE.BufferGeometry> = {
+      vertex: new THREE.PlaneGeometry(1.6, 1.6),
+      midpoint: new THREE.CircleGeometry(1.25, 3).rotateZ(Math.PI / 2),
+      edge: new THREE.RingGeometry(0.45, 1, 24),
+      face: DISC,
+    };
     const hoverMarker = new THREE.Mesh(
-      new THREE.SphereGeometry(1, 12, 8),
-      new THREE.MeshBasicMaterial({
-        color: SNAP_COLORS.face,
-        depthTest: false,
-      }),
+      SNAP_GLYPHS.face,
+      new THREE.MeshBasicMaterial({ color: SNAP_COLORS.face, depthTest: false, side: THREE.DoubleSide }),
     );
     hoverMarker.renderOrder = 7;
-    const hoverEdge = new THREE.Line(
-      new THREE.BufferGeometry(),
-      new THREE.LineBasicMaterial({
-        color: SNAP_COLORS.edge,
-        depthTest: false,
-        linewidth: 2,
-      }),
-    );
+    hoverMarker.userData.px = 5;
+    screenMarkers.add(hoverMarker);
+    const hoverEdge = fatLine([new THREE.Vector3(), new THREE.Vector3(1, 0, 0)], SNAP_COLORS.edge, 3);
     hoverEdge.renderOrder = 7;
-    const rubberBand = new THREE.Line(
-      new THREE.BufferGeometry(),
-      new THREE.LineDashedMaterial({
-        color: 0x0f766e,
-        depthTest: false,
-        dashSize: 0.2,
-        gapSize: 0.1,
-      }),
+    const rubberBand = fatLine(
+      [new THREE.Vector3(), new THREE.Vector3(1, 0, 0)],
+      0x0f766e,
+      2,
+      new LineMaterial({ color: 0x0f766e, linewidth: 2, depthTest: false, transparent: true, dashed: true }),
     );
     rubberBand.renderOrder = 7;
     hoverGroup.add(hoverMarker, hoverEdge, rubberBand);
     hoverGroup.visible = false;
-    let hoverKind: SnapKind = "face";
 
     const ray = new THREE.Raycaster();
     (ray as THREE.Raycaster & { firstHitOnly?: boolean }).firstHitOnly = true;
@@ -1030,22 +1070,27 @@ export function BimCanvas(props: BimCanvasProps) {
       }
       hoverGroup.visible = true;
       hoverMarker.position.copy(result.point);
-      hoverKind = result.kind;
+      hoverMarker.geometry = SNAP_GLYPHS[result.kind];
       (hoverMarker.material as THREE.MeshBasicMaterial).color.setHex(
         SNAP_COLORS[result.kind],
       );
       hoverEdge.visible = Boolean(result.edge);
-      if (result.edge)
-        hoverEdge.geometry.setFromPoints(
-          result.edge.map((e) => new THREE.Vector3(...e)),
-        );
+      if (result.edge) {
+        hoverEdge.geometry.setPositions(result.edge.flat());
+        hoverEdge.computeLineDistances();
+      }
       const pending =
         current.measureMode === "distance" ? current.pendingPoint : null;
       rubberBand.visible = Boolean(pending);
       let text = snapLabels()[result.kind];
       if (pending) {
-        rubberBand.geometry.setFromPoints([vec(pending), result.point]);
+        const start = vec(pending);
+        rubberBand.geometry.setPositions([start.x, start.y, start.z, result.point.x, result.point.y, result.point.z]);
         rubberBand.computeLineDistances();
+        // Dashes of ~8 px wherever the line is.
+        const dash = pxToWorld(start.clone().lerp(result.point, 0.5), 8);
+        rubberBand.material.dashSize = dash;
+        rubberBand.material.gapSize = dash * 0.6;
         const s = distanceSummary(pending, { x: p[0], y: p[1], z: p[2] });
         text += ` · ${fmt(s.distance)} m`;
       }
@@ -1663,6 +1708,7 @@ export function BimCanvas(props: BimCanvasProps) {
       const height = Math.max(1, container.clientHeight);
       viewport.width = width;
       viewport.height = height;
+      for (const m of lineMaterials) m.resolution.set(width, height);
       camera.aspect = width / height;
       camera.updateProjectionMatrix();
       renderer.setSize(width, height);
