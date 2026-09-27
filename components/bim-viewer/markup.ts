@@ -78,12 +78,44 @@ export function shapeSvg(input: MarkupShape, w: number, h: number): string {
       return `<ellipse cx="${(a[0] + b[0]) / 2}" cy="${(a[1] + b[1]) / 2}" rx="${Math.abs(b[0] - a[0]) / 2}" ry="${Math.abs(b[1] - a[1]) / 2}" ${stroke}/>`;
     }
     case "text": {
-      const [a] = pts;
-      const size = 12 + shape.width * 2;
-      // A light halo keeps text readable over any part of the model.
-      return `<text x="${a[0]}" y="${a[1]}" font-family="Inter, system-ui, sans-serif" font-size="${size}" font-weight="700" fill="${shape.color}" stroke="#ffffff" stroke-width="3" paint-order="stroke" dominant-baseline="hanging">${escapeXml(shape.text ?? "")}</text>`;
+      const box = textBox(shape, w, h);
+      // One tspan per line; a light halo keeps text readable over the model.
+      const lines = box.lines
+        .map((line, i) => `<tspan x="${box.x}" dy="${i ? box.lineHeight : 0}">${escapeXml(line) || " "}</tspan>`)
+        .join("");
+      return `<text x="${box.x}" y="${box.y}" font-family="${TEXT_FONT}" font-size="${box.size}" font-weight="700" fill="${shape.color}" stroke="#ffffff" stroke-width="3" paint-order="stroke" dominant-baseline="hanging" xml:space="preserve">${lines}</text>`;
     }
   }
+}
+
+export const TEXT_FONT = "Inter, system-ui, sans-serif";
+/** Font size (px) of markup text for a stroke width. */
+export const textSize = (width: number) => 12 + safeWidth(width) * 2;
+
+/**
+ * Where a text markup sits, in pixels: its lines and an estimated bounding
+ * box (0.6 em per character) used to click on it.
+ */
+export function textBox(shape: MarkupShape, w: number, h: number) {
+  const [x, y] = px(shape.points[0] ?? [0, 0], w, h);
+  const size = textSize(shape.width);
+  const lineHeight = Math.round(size * 1.25);
+  const lines = (shape.text ?? "").split("\n");
+  const width = Math.max(...lines.map((line) => line.length), 1) * size * 0.6;
+  return { x, y, size, lineHeight, lines, width, height: lines.length * lineHeight };
+}
+
+/** Topmost text markup under the pixel point, if any. */
+export function textAt(shapes: MarkupShape[], point: [number, number], w: number, h: number): MarkupShape | null {
+  for (let i = shapes.length - 1; i >= 0; i--) {
+    const shape = shapes[i];
+    if (shape.kind !== "text") continue;
+    const box = textBox(shape, w, h);
+    const pad = 4;
+    if (point[0] >= box.x - pad && point[0] <= box.x + box.width + pad && point[1] >= box.y - pad && point[1] <= box.y + box.height + pad)
+      return shape;
+  }
+  return null;
 }
 
 /** The whole markup as an SVG document; `outW/outH` rescale it (e.g. to a hi-DPI image). */

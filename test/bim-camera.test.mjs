@@ -189,6 +189,26 @@ test("markups are resolution-independent vectors with escaped text", () => {
   assert.ok(!out.includes("<script") && !out.includes("onload"), out);
 });
 
+test("text markups keep their lines and can be clicked on", () => {
+  const mk = load("components/bim-viewer/markup");
+  const note = { id: "n", kind: "text", color: "#2563eb", width: 4, points: [[0.1, 0.2]], text: "Ống gió\nva <dầm>" };
+  const svg = mk.shapeSvg(note, 1000, 500);
+  const lines = [...svg.matchAll(/<tspan x="100" dy="(\d+)">([^<]*)<\/tspan>/g)];
+  assert.equal(lines.length, 2, svg);
+  assert.equal(lines[0][1], "0");
+  assert.equal(Number(lines[1][1]), Math.round(mk.textSize(4) * 1.25), "second line one line-height lower");
+  assert.equal(lines[1][2], "va &lt;dầm&gt;");
+  const box = mk.textBox(note, 1000, 500);
+  assert.deepEqual([box.x, box.y, box.lines.length], [100, 100, 2]);
+  assert.equal(mk.textAt([note], [110, 110], 1000, 500), note, "inside the first line");
+  assert.equal(mk.textAt([note], [110, 100 + box.height - 2], 1000, 500), note, "inside the second line");
+  assert.equal(mk.textAt([note], [100 + box.width + 30, 110], 1000, 500), null, "right of the text");
+  const rect = { id: "r", kind: "rect", color: "#000", width: 2, points: [[0, 0], [1, 1]] };
+  assert.equal(mk.textAt([rect], [10, 10], 100, 100), null, "only text is picked");
+  const top = { ...note, id: "top" };
+  assert.equal(mk.textAt([note, top], [110, 110], 1000, 500), top, "the topmost text wins");
+});
+
 test("version comparison matches GlobalIds and tells geometry from property changes", () => {
   const { compareModels } = load("components/bim-viewer/compare");
   const el = (key, guid, x, props = [{ name: "FireRating", value: "EI60" }]) => ({
