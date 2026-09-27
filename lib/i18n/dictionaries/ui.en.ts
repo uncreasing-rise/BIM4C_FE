@@ -168,9 +168,12 @@ export const uiEn = {
   },
   bimWalk: {
     title: "Walk",
-    help: "W A S D or arrows to move · Q / E down / up · drag to look · Shift to run · scroll to change speed · Esc to exit",
+    help: "W A S D or arrows to walk · drag to look · Shift to run · scroll to change speed · Esc to exit",
+    helpFly: "W A S D or arrows to fly · Q / E down / up · drag to look · Shift to go faster · scroll to change speed · Esc to exit",
     speed: "Speed",
-    note: "Free flight: walls and floors do not stop you.",
+    gravity: "Gravity",
+    collision: "Collision",
+    keys: { arrowup: "Forward", arrowdown: "Back", arrowleft: "Left", arrowright: "Right" },
   },
   bimMarkup: {
     title: "Markup",

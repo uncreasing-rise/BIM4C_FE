@@ -168,9 +168,12 @@ export const uiVi: UiStrings = {
   },
   bimWalk: {
     title: "Đi bộ",
-    help: "W A S D hoặc phím mũi tên để đi · Q / E hạ / nâng · kéo chuột để nhìn · Shift để chạy · cuộn để đổi tốc độ · Esc để thoát",
+    help: "W A S D hoặc phím mũi tên để đi · kéo chuột để nhìn · Shift để chạy · cuộn để đổi tốc độ · Esc để thoát",
+    helpFly: "W A S D hoặc phím mũi tên để bay · Q / E hạ / nâng · kéo chuột để nhìn · Shift để nhanh · cuộn để đổi tốc độ · Esc để thoát",
     speed: "Tốc độ",
-    note: "Chế độ bay tự do: tường và sàn không chặn chuyển động.",
+    gravity: "Trọng lực",
+    collision: "Va chạm",
+    keys: { arrowup: "Đi tới", arrowdown: "Đi lùi", arrowleft: "Sang trái", arrowright: "Sang phải" },
   },
   bimMarkup: {
     title: "Ghi chú",

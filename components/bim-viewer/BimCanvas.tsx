@@ -25,6 +25,7 @@ import {
 } from "./camera-motion";
 import { BimViewCube } from "./BimViewCube";
 import { timeSlicer } from "./yield";
+import { entryPose, walkStep as stepWalk, type WalkWorld } from "./walk-physics";
 import { boxMode, boxPicked, rectFrom } from "./box-select";
 import {
   ENVIRONMENTS,
@@ -185,7 +186,17 @@ export function BimCanvas(props: BimCanvasProps) {
     update: (props: BimCanvasProps) => void;
     flyToDirection: (direction: [number, number, number]) => void;
     turn: (turn: CubeTurn) => void;
+    walkPress: (key: string, pressed: boolean) => void;
+    walkNudge: () => void;
   } | null>(null);
+  const [walkGravity, setWalkGravity] = useState(true);
+  const [walkCollision, setWalkCollision] = useState(true);
+  const walkSettingsRef = useRef({ gravity: true, collision: true });
+  useEffect(() => {
+    walkSettingsRef.current = { gravity: walkGravity, collision: walkCollision };
+    // Turning gravity back on mid-air starts the fall.
+    engineRef.current?.walkNudge();
+  }, [walkGravity, walkCollision]);
   const latestRef = useRef(props);
   const localeRef = useRef(locale);
   const [error, setError] = useState(false);
@@ -312,6 +323,7 @@ export function BimCanvas(props: BimCanvasProps) {
     let observer: ResizeObserver;
     let center = new THREE.Vector3();
     let span = 10;
+    const sceneBox = new THREE.Box3(new THREE.Vector3(-5, 0, -5), new THREE.Vector3(5, 5, 5));
     const maxPixelRatio = Math.min(window.devicePixelRatio || 1, 2);
     // Handles and the hover marker keep a constant on-screen size.
     let pipeline: ViewerPipeline;
@@ -456,6 +468,7 @@ export function BimCanvas(props: BimCanvasProps) {
         new THREE.Vector3(...bounds.max),
       );
       center = box.getCenter(new THREE.Vector3());
+      sceneBox.copy(box);
       span = Math.max(1, box.getSize(new THREE.Vector3()).length());
       hemisphere.position.copy(center).add(new THREE.Vector3(0, span, 0));
       sun.position.copy(center).add(new THREE.Vector3(span, span, span));
@@ -1035,17 +1048,75 @@ export function BimCanvas(props: BimCanvasProps) {
     let walkLast = 0;
     let look: { pointerId: number; x: number; y: number } | null = null;
     const walking = () => current.activeTool === "walk";
+    let wasWalking = false;
     /** Metres per second: a brisk walk, scaled up for very large sites. */
     const walkSpeed = () => Math.max(1.4, span / 60) * walkFactor;
     const showWalkSpeed = () => {
       if (walkSpeedRef.current)
         walkSpeedRef.current.textContent = `${walkSpeed().toLocaleString(localeRef.current === "vi" ? "vi-VN" : "en-US", { maximumFractionDigits: 1 })} m/s`;
     };
-    const walkStep = (now: number) => {
+    let walkVy = 0;
+    /** Walked through, never stood on: rooms, openings and doors. */
+    const PASS_THROUGH = /^Ifc(Space|OpeningElement|Door|VirtualElement|Annotation|Grid)/i;
+    const walkRay = new THREE.Raycaster();
+    walkRay.layers.enableAll();
+    const DOWN = new THREE.Vector3(0, -1, 0);
+    /** The visible, unclipped solids, probed like the pointer picks them. */
+    const walkWorld = (): WalkWorld => {
+      const meshes = pickable().filter(
+        (mesh) => !PASS_THROUGH.test((mesh.userData.element as BimElementData).ifcType ?? ""),
+      );
+      const cast = (origin: THREE.Vector3, direction: THREE.Vector3, max: number) => {
+        walkRay.set(origin, direction);
+        walkRay.far = max;
+        return visibleHit(walkRay.intersectObjects(meshes, false), activePlanes);
+      };
+      return {
+        castDown: (origin, max) => cast(origin, DOWN, max)?.distance ?? null,
+        castAlong: (origin, direction, max) => {
+          const hit = cast(origin, direction, max);
+          if (!hit?.face) return null;
+          return {
+            distance: hit.distance,
+            normal: hit.face.normal.clone().transformDirection(hit.object.matrixWorld),
+          };
+        },
+      };
+    };
+    const walkOptions = () => ({ ...walkSettingsRef.current, groundY: sceneBox.min.y });
+    const startWalkLoop = () => {
+      if (walkFrame || disposed) return;
+      walkLast = performance.now();
+      walkFrame = requestAnimationFrame(walkTick);
+    };
+    /** Enter at eye height: on the ground in front of the model, or level where you are. */
+    const enterWalk = () => {
+      walkVy = 0;
+      const top = sceneBox.max.y + 1;
+      const world = walkWorld();
+      const pose = entryPose(camera.position, sceneBox, (x, z) => {
+        const d = world.castDown(new THREE.Vector3(x, top, z), top - sceneBox.min.y + 1);
+        return d === null ? null : top - d;
+      });
+      if (!pose.moved) {
+        const forward = camera.getWorldDirection(new THREE.Vector3()).setY(0);
+        if (forward.lengthSq() < 1e-8) forward.set(0, 0, -1);
+        pose.target.copy(pose.position).addScaledVector(forward.normalize(), 5);
+      }
+      flyTo({ position: pose.position.toArray(), target: pose.target.toArray() }, span / 2);
+      startWalkLoop();
+    };
+    function walkTick(now: number) {
       walkFrame = 0;
-      if (disposed || !walking() || !walkKeys.size) return;
-      const dt = Math.min(0.1, (now - walkLast) / 1000);
+      if (disposed || !walking()) return;
+      const dt = Math.min(0.05, (now - walkLast) / 1000);
       walkLast = now;
+      // Let the entry flight finish before gravity takes over.
+      if (flight) {
+        walkFrame = requestAnimationFrame(walkTick);
+        return;
+      }
+      const options = walkOptions();
       const forward = camera.getWorldDirection(new THREE.Vector3());
       forward.y = 0;
       if (forward.lengthSq() < 1e-8) forward.set(0, 0, -1);
@@ -1057,27 +1128,34 @@ export function BimCanvas(props: BimCanvasProps) {
       if (has("s", "arrowdown")) move.sub(forward);
       if (has("d", "arrowright")) move.add(right);
       if (has("a", "arrowleft")) move.sub(right);
-      if (has("e", "pageup")) move.y += 1;
-      if (has("q", "pagedown")) move.y -= 1;
-      if (move.lengthSq()) {
+      // Up and down only in free flight; with gravity the floor decides.
+      if (!options.gravity) {
+        if (has("e", "pageup")) move.y += 1;
+        if (has("q", "pagedown")) move.y -= 1;
+      }
+      if (move.lengthSq())
         move.normalize().multiplyScalar(walkSpeed() * (walkKeys.has("shift") ? 3 : 1) * dt);
-        camera.position.add(move);
-        controls.target.add(move);
+      const next = stepWalk({ position: camera.position, vy: walkVy }, move, walkWorld(), options, dt);
+      walkVy = next.vy;
+      const delta = next.position.sub(camera.position);
+      const moved = delta.lengthSq() > 1e-12;
+      if (moved) {
+        camera.position.add(delta);
+        controls.target.add(delta);
         markInteraction();
         requestRender();
       }
-      walkFrame = requestAnimationFrame(walkStep);
-    };
+      // Keep stepping while a key is held or the body is still falling.
+      if (walkKeys.size || walkVy !== 0 || (options.gravity && moved))
+        walkFrame = requestAnimationFrame(walkTick);
+    }
     const walkKeyDown = (e: KeyboardEvent) => {
       if (!walking() || (e.target as HTMLElement | null)?.closest?.("input, textarea, select")) return;
       const key = e.key.toLowerCase();
       if (!["w", "a", "s", "d", "q", "e", "arrowup", "arrowdown", "arrowleft", "arrowright", "pageup", "pagedown", "shift"].includes(key)) return;
       e.preventDefault();
       walkKeys.add(key);
-      if (!walkFrame) {
-        walkLast = performance.now();
-        walkFrame = requestAnimationFrame(walkStep);
-      }
+      startWalkLoop();
     };
     const walkKeyUp = (e: KeyboardEvent) => walkKeys.delete(e.key.toLowerCase());
     const walkBlur = () => walkKeys.clear();
@@ -1141,7 +1219,7 @@ export function BimCanvas(props: BimCanvasProps) {
       }
       down.set(e.pointerId, { x: e.clientX, y: e.clientY });
       if (down.size > 1) gesture = true;
-      if (walking() && e.pointerType === "mouse") {
+      if (walking() && down.size === 1) {
         look = { pointerId: e.pointerId, x: e.clientX, y: e.clientY };
         renderer.domElement.setPointerCapture(e.pointerId);
         return;
@@ -1488,7 +1566,11 @@ export function BimCanvas(props: BimCanvasProps) {
       gizmo.update(clip, handleRadius);
       controls.enabled = next.activeTool !== "walk" && !drag;
       if (next.activeTool !== "walk") walkKeys.clear();
-      else showWalkSpeed();
+      else {
+        showWalkSpeed();
+        if (!wasWalking && initialized) enterWalk();
+      }
+      wasWalking = next.activeTool === "walk";
       applyMeshState(next);
       renderMeasurements(next);
       if (next.activeTool !== "measure") {
@@ -1625,6 +1707,13 @@ export function BimCanvas(props: BimCanvasProps) {
           span / 2,
         );
       },
+      walkPress: (key, pressed) => {
+        if (pressed) {
+          walkKeys.add(key);
+          startWalkLoop();
+        } else walkKeys.delete(key);
+      },
+      walkNudge: startWalkLoop,
     };
     void Promise.resolve()
       .then(initialize)
@@ -1704,8 +1793,49 @@ export function BimCanvas(props: BimCanvasProps) {
           <p className="font-semibold text-teal-300">
             {ui(locale).bimWalk.title} · {ui(locale).bimWalk.speed} <span ref={walkSpeedRef} className="font-mono" />
           </p>
-          <p className="mt-0.5">{ui(locale).bimWalk.help}</p>
-          <p className="mt-0.5 text-[11px] text-slate-400">{ui(locale).bimWalk.note}</p>
+          <p className="mt-0.5">{walkGravity ? ui(locale).bimWalk.help : ui(locale).bimWalk.helpFly}</p>
+          <div className="pointer-events-auto mt-1.5 flex justify-center gap-1.5">
+            {([
+              ["gravity", walkGravity, setWalkGravity],
+              ["collision", walkCollision, setWalkCollision],
+            ] as const).map(([key, on, set]) => (
+              <button
+                key={key}
+                type="button"
+                aria-pressed={on}
+                onClick={() => set(!on)}
+                className={`rounded-md px-2 py-0.5 text-[11px] font-medium transition ${on ? "bg-teal-500 text-slate-950" : "bg-slate-800 text-slate-300 hover:bg-slate-700"}`}
+              >
+                {ui(locale).bimWalk[key]}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+      {props.activeTool === "walk" && (
+        // On touch screens: hold an arrow to walk, drag the view to look.
+        <div className="absolute bottom-36 left-3 z-20 hidden grid-cols-3 gap-1 [@media(pointer:coarse)]:grid">
+          {([
+            ["arrowup", "▲", "col-start-2"],
+            ["arrowleft", "◀", "col-start-1 row-start-2"],
+            ["arrowdown", "▼", "col-start-2 row-start-2"],
+            ["arrowright", "▶", "col-start-3 row-start-2"],
+          ] as const).map(([key, glyph, place]) => (
+            <button
+              key={key}
+              type="button"
+              aria-label={ui(locale).bimWalk.keys[key]}
+              onPointerDown={(e) => {
+                e.currentTarget.setPointerCapture(e.pointerId);
+                engineRef.current?.walkPress(key, true);
+              }}
+              onPointerUp={() => engineRef.current?.walkPress(key, false)}
+              onPointerCancel={() => engineRef.current?.walkPress(key, false)}
+              className={`${place} grid h-11 w-11 touch-none select-none place-items-center rounded-lg bg-slate-950/75 text-slate-100 active:bg-teal-500 active:text-slate-950`}
+            >
+              {glyph}
+            </button>
+          ))}
         </div>
       )}
       <div
