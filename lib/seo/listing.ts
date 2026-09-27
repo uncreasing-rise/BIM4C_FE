@@ -53,6 +53,14 @@ export function parsePage(value: string | string[] | null | undefined): number {
   return Math.max(1, Number(raw));
 }
 
+/** A single filter value from the URL; "All" and blanks mean no filter. */
+export function filterParam(
+  value: string | string[] | null | undefined,
+): string | undefined {
+  const raw = (Array.isArray(value) ? value[0] : value)?.trim();
+  return raw && raw !== "All" ? raw : undefined;
+}
+
 export async function listingMetadata(
   title: string,
   description: string,

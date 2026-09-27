@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import {
   listingMetadata,
+  filterParam,
   normalizedPageRedirect,
+  parsePage,
   type ListingSearchParams,
 } from "@/lib/seo/listing";
 import { getRequestLocale } from "@/lib/i18n/request";
@@ -69,13 +71,11 @@ export default async function TechnicalKnowledgePage({
   const content = copy[locale];
   const [postsPage, categories] = await Promise.all([
     getPostsPage({
-      page: Number(params.page ?? 1),
+      page: parsePage(params.page),
       limit: 6,
-      search: typeof params.q === "string" ? params.q : undefined,
+      search: filterParam(params.q),
       category:
-        typeof params.category === "string" && params.category !== "All"
-          ? params.category
-          : undefined,
+        filterParam(params.category),
       group: "technical",
     }),
     getPostCategories("technical").catch(() => []),

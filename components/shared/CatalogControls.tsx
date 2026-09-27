@@ -2,7 +2,7 @@
 
 import { type ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { ChevronLeft, ChevronRight, Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -66,20 +66,10 @@ export function CatalogCategories({
     }
   }, [value]);
 
-  const isItemActive = (item: string) => {
-    const v = value.trim().toLowerCase();
-    const it = item.trim().toLowerCase();
-    const fmtV = formatLabel(value).trim().toLowerCase();
-    const fmtIt = formatLabel(item).trim().toLowerCase();
-    return (
-      v === it ||
-      fmtV === fmtIt ||
-      v === fmtIt ||
-      it === fmtV ||
-      (v === "all" && (it === "all" || it === "tất cả")) ||
-      (v === "tất cả" && (it === "all" || it === "tất cả"))
-    );
-  };
+  // Items are stable keys (slugs); comparing translated labels could light up
+  // several chips that happen to share a display name.
+  const isItemActive = (item: string) =>
+    item.trim().toLowerCase() === value.trim().toLowerCase();
 
   return (
     <div className="relative mb-3.5 group/categories">
@@ -224,18 +214,20 @@ export function CatalogSelect({
 
 export function CatalogPagination({
   ariaLabel,
-  page,
+  page: rawPage,
   pages,
-  pathname,
 }: {
   ariaLabel: string;
   page: number;
   pages: number;
-  pathname: string;
 }) {
   const { locale } = useLanguage();
+  // Links stay on the page that renders them (with its locale prefix); several
+  // listings share this control, so a fixed route sent readers to the wrong one.
+  const pathname = usePathname();
   const searchParams = useSearchParams();
   if (pages <= 1) return null;
+  const page = Math.min(Math.max(1, rawPage), pages);
 
   const changePage = (trigger: HTMLElement) => {
     scrollToElementTop(trigger.closest("section"));

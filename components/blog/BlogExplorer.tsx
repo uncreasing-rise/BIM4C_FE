@@ -45,29 +45,34 @@ export function BlogExplorer({
   const { t, locale } = useLanguage();
   const posts = localizeContentList(rawPosts, locale);
 
-  const allLabel = t.common.all;
+  const ALL = "All";
   // Only categories that currently hold published posts, straight from the API.
-  const rawCatList = categoryItems.filter((c) => c.count > 0).map((c) => c.name);
-
-  const categories = [
-    allLabel,
-    ...rawCatList.map((cat) => toLocalizedLabel(cat, locale)),
-  ];
+  // The URL carries the slug; the chip shows the localized name.
+  const liveCategories = categoryItems.filter((c) => c.count > 0);
+  const categoryNames = new Map(liveCategories.map((c) => [c.slug, c.name]));
+  const categories = [ALL, ...liveCategories.map((c) => c.slug)];
 
   const { searchParams, query, setQuery, update, reset, pending } =
     useCatalogFilters();
-  const categoryParam = searchParams.get("category") ?? "All";
+  const categoryParam = searchParams.get("category") ?? ALL;
+  // Older links used the category name; resolve them to the slug chip.
   const category =
-    categoryParam === "All" || categoryParam === "Tất cả"
-      ? allLabel
-      : toLocalizedLabel(categoryParam, locale);
+    liveCategories.find(
+      (c) =>
+        c.slug === categoryParam ||
+        c.name.toLowerCase() === categoryParam.toLowerCase(),
+    )?.slug ?? categoryParam;
+  const hasFilters = Boolean(query.trim()) || categoryParam !== ALL;
 
   const pages = meta.totalPages;
   const page = meta.page;
   const visible = posts;
   const detailHref = (slug: string) => `${detailRoute}/${slug}`;
 
-  const formatFilterLabel = (val: string) => toLocalizedLabel(val, locale);
+  const formatFilterLabel = (val: string) =>
+    val === ALL
+      ? t.common.all
+      : toLocalizedLabel(categoryNames.get(val) ?? val, locale);
 
 
   return (
@@ -82,15 +87,13 @@ export function BlogExplorer({
             {catalogueDesc || t.blogPage.catalogueDesc}
           </p>
         </header>
-        {rawCatList.length > 0 && (
+        {liveCategories.length > 0 && (
           <CatalogCategories
             ariaLabel={catalogueEyebrow || t.blogPage.catalogueEyebrow}
             items={categories}
-            value={category === "All" ? allLabel : category}
+            value={category}
             formatLabel={formatFilterLabel}
-            onChange={(value) => {
-              update("category", value === allLabel ? "All" : value);
-            }}
+            onChange={(value) => update("category", value)}
           />
         )}
         <CatalogFilterBar>
@@ -101,7 +104,7 @@ export function BlogExplorer({
             onChange={setQuery}
           />
         </CatalogFilterBar>
-        {categoryParam !== "All" && (
+        {hasFilters && (
           <button
             type="button"
             className="mb-6 inline-flex min-h-8 items-center rounded-lg border border-primary/30 bg-primary/10 px-3 text-xs font-semibold text-primary hover:bg-primary/20"
@@ -249,7 +252,6 @@ export function BlogExplorer({
           ariaLabel={t.blogPage.catalogueTitle}
           page={page}
           pages={pages}
-          pathname={ROUTES.blog}
         />
       </div>
     </section>

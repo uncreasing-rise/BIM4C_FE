@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import {
   listingMetadata,
+  filterParam,
   normalizedPageRedirect,
+  parsePage,
   type ListingSearchParams,
 } from "@/lib/seo/listing";
 import { ROUTES } from "@/constants/routes";
@@ -32,13 +34,11 @@ export default async function CoursesPage({
 }) {
   const params = await searchParams;
   const coursesPage = await getCoursesPage({
-    page: Number(params.page ?? 1),
+    page: parsePage(params.page),
     limit: 6,
-    search: typeof params.q === "string" ? params.q : undefined,
+    search: filterParam(params.q),
     category:
-      typeof params.category === "string" && params.category !== "All"
-        ? params.category
-        : undefined,
+      filterParam(params.category),
   });
 
   const destination = normalizedPageRedirect(

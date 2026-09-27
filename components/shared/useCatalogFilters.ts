@@ -9,9 +9,14 @@ export function useCatalogFilters() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const source = searchParams.toString();
+  const urlQuery = searchParams.get("q") ?? "";
+  // `committed` is the last q this hook wrote to the URL. When the URL settles
+  // on that value, the input keeps whatever was typed while the request ran;
+  // only an outside change (back/forward, a link) replaces the input text.
   const [draft, setDraft] = useState({
     source,
-    query: searchParams.get("q") ?? "",
+    query: urlQuery,
+    committed: urlQuery,
   });
   const [pending, startTransition] = useTransition();
   const latest = useRef(source);
@@ -20,14 +25,15 @@ export function useCatalogFilters() {
   }, [source]);
 
   if (draft.source !== source) {
-    setDraft({ source, query: searchParams.get("q") ?? "" });
+    const external = urlQuery !== draft.committed;
+    setDraft({
+      source,
+      query: external ? urlQuery : draft.query,
+      committed: urlQuery,
+    });
   }
 
-  const update = (key: string, value: string) => {
-    const params = new URLSearchParams(latest.current);
-    params.delete("page");
-    if (!value || value === "All") params.delete(key);
-    else params.set(key, value);
+  const navigate = (params: URLSearchParams) => {
     latest.current = params.toString();
     startTransition(() =>
       router.replace(`${pathname}${params.size ? `?${params}` : ""}`, {
@@ -36,33 +42,40 @@ export function useCatalogFilters() {
     );
   };
 
+  const update = (key: string, value: string) => {
+    const params = new URLSearchParams(latest.current);
+    params.delete("page");
+    if (!value || value === "All") params.delete(key);
+    else params.set(key, value);
+    navigate(params);
+  };
+
+  const trimmedQuery = draft.query.trim();
   useEffect(() => {
-    if (draft.query === (searchParams.get("q") ?? "")) return;
+    if (trimmedQuery === draft.committed) return;
     const timer = window.setTimeout(() => {
       const params = new URLSearchParams(latest.current);
       params.delete("page");
-      if (draft.query.trim()) params.set("q", draft.query.trim());
+      if (trimmedQuery) params.set("q", trimmedQuery);
       else params.delete("q");
-      latest.current = params.toString();
-      startTransition(() =>
-        router.replace(`${pathname}${params.size ? `?${params}` : ""}`, {
-          scroll: false,
-        }),
-      );
-    }, 250);
+      setDraft((current) => ({ ...current, committed: trimmedQuery }));
+      navigate(params);
+    }, 300);
     return () => window.clearTimeout(timer);
-  }, [draft.query, pathname, router, searchParams]);
+    // navigate only closes over stable router/pathname values.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [trimmedQuery, draft.committed, pathname]);
 
   return {
     searchParams,
     query: draft.query,
     pending,
-    setQuery: (query: string) => setDraft({ source, query }),
+    setQuery: (query: string) =>
+      setDraft((current) => ({ ...current, query })),
     update,
     reset: () => {
-      setDraft({ source, query: "" });
-      latest.current = "";
-      startTransition(() => router.replace(pathname, { scroll: false }));
+      setDraft((current) => ({ ...current, query: "", committed: "" }));
+      navigate(new URLSearchParams());
     },
   };
 }

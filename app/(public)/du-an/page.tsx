@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import {
   listingMetadata,
+  filterParam,
   normalizedPageRedirect,
+  parsePage,
   type ListingSearchParams,
 } from "@/lib/seo/listing";
 import { ROUTES } from "@/constants/routes";
@@ -33,25 +35,17 @@ export default async function ProjectsPage({
   const params = await searchParams;
   const [projectsPage, filters] = await Promise.all([
     getProjectsPage({
-    page: Number(params.page ?? 1),
+    page: parsePage(params.page),
     limit: PROJECT_PAGE_SIZE,
-    search: typeof params.q === "string" ? params.q : undefined,
+    search: filterParam(params.q),
     category:
-      typeof params.category === "string" && params.category !== "All"
-        ? params.category
-        : undefined,
+      filterParam(params.category),
     location:
-      typeof params.location === "string" && params.location !== "All"
-        ? params.location
-        : undefined,
+      filterParam(params.location),
     year:
-      typeof params.year === "string" && params.year !== "All"
-        ? params.year
-        : undefined,
+      filterParam(params.year),
     status:
-      typeof params.status === "string" && params.status !== "All"
-        ? params.status
-        : undefined,
+      filterParam(params.status),
     }),
     getProjectFilters(),
   ]);

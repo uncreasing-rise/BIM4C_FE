@@ -146,7 +146,6 @@ export function ServiceExplorer({
             ariaLabel={t.servicesPage.catalogueTitle}
             page={page}
             pages={pages}
-            pathname={ROUTES.services}
           />
         </div>
       </div>

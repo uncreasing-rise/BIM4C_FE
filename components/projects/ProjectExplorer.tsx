@@ -10,7 +10,6 @@ import {
   CatalogSearch,
   CatalogSelect,
 } from "@/components/shared/CatalogControls";
-import { ROUTES } from "@/constants/routes";
 import {
   ALL_PROJECT_FILTER,
   PROJECT_PAGE_SIZE,
@@ -130,7 +129,7 @@ export function ProjectExplorer({
           >
             {meta.total ? (
               t.projectsPage.showingText(
-                Math.min(page * PROJECT_PAGE_SIZE, meta.total),
+                Math.min(page * (meta.limit || PROJECT_PAGE_SIZE), meta.total),
                 meta.total,
               )
             ) : (
@@ -155,7 +154,7 @@ export function ProjectExplorer({
             />
           ))}
           {visible.length === 0 && (
-            <div>
+            <div className="col-span-full">
               <EmptyState
                 title={
                   hasFilters
@@ -175,7 +174,6 @@ export function ProjectExplorer({
           ariaLabel={t.projectsPage.catalogueTitle}
           page={page}
           pages={pages}
-          pathname={ROUTES.projects}
         />
       </div>
     </section>

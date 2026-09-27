@@ -171,7 +171,6 @@ export function CourseExplorer({
           ariaLabel={t.coursesPage.catalogueTitle}
           page={page}
           pages={pages}
-          pathname={ROUTES.courses}
         />
       </div>
     </section>
