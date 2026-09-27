@@ -9,6 +9,7 @@ import type { PageContentKey } from "@/features/page-content/types";
 import { Plus, Save, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
+import { SearchBox, matchesSearch } from "./list-controls";
 
 type Json = string | number | boolean | null | Json[] | { [key: string]: Json };
 type Block = { [key: string]: Json };
@@ -248,6 +249,8 @@ export function PageContentManager() {
   const [draft, setDraft] = useState<{ vi: Block; en: Block } | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [blockSearch, setBlockSearch] = useState("");
+  const shownBlocks = BLOCKS.filter((item) => matchesSearch(blockSearch, item.label, item.hint, item.key));
 
   useEffect(() => {
     adminRequest<{ data: PageContentRow[] }>("page-content")
@@ -296,7 +299,11 @@ export function PageContentManager() {
   return (
     <div className="grid gap-6 lg:grid-cols-[260px_1fr]">
       <nav aria-label="Khối nội dung" className="space-y-1">
-        {BLOCKS.map((item) => (
+        <SearchBox value={blockSearch} onChange={setBlockSearch} placeholder="Tìm khối nội dung..." className="mb-2" />
+        {shownBlocks.length === 0 && (
+          <p className="px-3 py-2 text-xs text-muted-foreground">Không có khối nào khớp.</p>
+        )}
+        {shownBlocks.map((item) => (
           <button
             key={item.key}
             type="button"

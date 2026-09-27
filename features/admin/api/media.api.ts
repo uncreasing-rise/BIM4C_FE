@@ -14,8 +14,17 @@ export interface AdminMedia {
 }
 
 export const mediaApi = {
-  list: (search = "", signal?: AbortSignal) => {
-    const qs = buildQueryString({ search: search.trim() || undefined });
+  list: (
+    search = "",
+    signal?: AbortSignal,
+    options: {
+      page?: number;
+      limit?: number;
+      sortBy?: "createdAt" | "filename" | "size";
+      sortOrder?: "asc" | "desc";
+    } = {},
+  ) => {
+    const qs = buildQueryString({ ...options, search: search.trim() || undefined });
     return adminRequest<PageResult<AdminMedia>>(`media${qs ? `?${qs}` : ""}`, {
       signal,
     });

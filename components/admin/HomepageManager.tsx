@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { revalidateCmsCache } from "@/features/admin/api/revalidate";
 import type { StrategicPartner } from "@/features/homepage/types";
 import { MediaPicker } from "./MediaPicker";
@@ -25,6 +25,7 @@ import { toast } from "sonner";
 
 import { adminRequest } from "@/features/admin/api/http-client";
 import { useConfirm } from "./ConfirmDialog";
+import { FilterSelect, SearchBox, matchesSearch, selectClass } from "./list-controls";
 
 export function HomepageManager() {
   const { confirm, dialog } = useConfirm();
@@ -32,6 +33,22 @@ export function HomepageManager() {
   const [editing, setEditing] = useState<StrategicPartner | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [search, setSearch] = useState("");
+  const [visibility, setVisibility] = useState("");
+  const [order, setOrder] = useState<"manual" | "name-asc" | "name-desc">("manual");
+  const shown = useMemo(() => {
+    const list = items.filter(
+      (p) =>
+        matchesSearch(search, p.name, p.website) &&
+        (!visibility || (visibility === "active") === p.isActive),
+    );
+    if (order === "manual") return list;
+    const factor = order === "name-asc" ? 1 : -1;
+    return [...list].sort((a, b) => factor * a.name.localeCompare(b.name, "vi", { sensitivity: "base" }));
+  }, [items, search, visibility, order]);
+  // Up/down buttons swap neighbours in the real display order, so they only
+  // make sense while the full list is shown in that order.
+  const canReorder = order === "manual" && !search && !visibility;
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -204,6 +221,37 @@ export function HomepageManager() {
         </Button>
       </div>
 
+      {!loading && items.length > 0 && (
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+          <SearchBox value={search} onChange={setSearch} placeholder="Tìm theo tên đối tác hoặc website..." className="max-w-md" />
+          <FilterSelect
+            label="Lọc theo hiển thị"
+            value={visibility}
+            onChange={setVisibility}
+            allLabel="Tất cả"
+            options={[
+              { value: "active", label: "Đang hiển thị" },
+              { value: "hidden", label: "Đang ẩn" },
+            ]}
+          />
+          <select
+            value={order}
+            onChange={(e) => setOrder(e.target.value as typeof order)}
+            aria-label="Sắp xếp đối tác"
+            className={selectClass}
+          >
+            <option value="manual">Thứ tự hiển thị trên web</option>
+            <option value="name-asc">Tên A → Z</option>
+            <option value="name-desc">Tên Z → A</option>
+          </select>
+          {!canReorder && (
+            <span className="text-xs text-muted-foreground">
+              Bỏ lọc và chọn “Thứ tự hiển thị” để đổi vị trí.
+            </span>
+          )}
+        </div>
+      )}
+
       {loading ? (
         <div className="p-16 text-center text-xs text-muted-foreground">
           Đang tải danh sách đối tác…
@@ -212,10 +260,16 @@ export function HomepageManager() {
         <div className="p-12 text-center text-sm text-muted-foreground border border-dashed rounded-xl">
           Chưa có đối tác nào. Nhấn &quot;Thêm đối tác mới&quot; ở trên để bắt đầu.
         </div>
+      ) : shown.length === 0 ? (
+        <div className="p-12 text-center text-sm text-muted-foreground border border-dashed rounded-xl">
+          Không có đối tác nào khớp bộ lọc.
+        </div>
       ) : (
         /* Partners Grid */
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {items.map((item, index) => (
+          {shown.map((item) => {
+            const index = items.indexOf(item);
+            return (
             <div
               key={item.id}
               className="group flex flex-col justify-between rounded-xl border border-border bg-card p-5 shadow-xs transition hover:border-primary/40 hover:shadow-md space-y-4"
@@ -270,7 +324,7 @@ export function HomepageManager() {
                 <Button
                   variant="ghost"
                   size="icon"
-                  disabled={index === 0}
+                  disabled={!canReorder || index === 0}
                   onClick={() => move(index, -1)}
                   className="size-7 text-muted-foreground hover:text-foreground"
                   title="Di chuyển lên"
@@ -280,7 +334,7 @@ export function HomepageManager() {
                 <Button
                   variant="ghost"
                   size="icon"
-                  disabled={index === items.length - 1}
+                  disabled={!canReorder || index === items.length - 1}
                   onClick={() => move(index, 1)}
                   className="size-7 text-muted-foreground hover:text-foreground"
                   title="Di chuyển xuống"
@@ -320,7 +374,8 @@ export function HomepageManager() {
                 </Button>
               </div>
             </div>
-          ))}
+            );
+          })}
         </div>
       )}
 

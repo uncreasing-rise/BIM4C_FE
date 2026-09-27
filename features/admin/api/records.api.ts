@@ -24,18 +24,21 @@ export type RecordKind =
   | "course-registrations"
   | "newsletter/subscriptions";
 
+export interface RecordListQuery {
+  search?: string;
+  status?: string;
+  page?: number;
+  limit?: number;
+  sortBy?: string;
+  sortOrder?: "asc" | "desc";
+}
+
 export const recordsApi = {
-  list: (
-    kind: RecordKind,
-    search: string,
-    status: string,
-    page: number,
-    signal?: AbortSignal,
-  ) => {
+  list: (kind: RecordKind, query: RecordListQuery, signal?: AbortSignal) => {
     const qs = buildQueryString({
-      page,
-      search: search.trim() || undefined,
-      status: status || undefined,
+      ...query,
+      search: query.search?.trim() || undefined,
+      status: query.status || undefined,
     });
     return adminRequest<PageResult<AdminRecord>>(
       `${kind}${qs ? `?${qs}` : ""}`,

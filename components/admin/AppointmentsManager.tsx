@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { adminRequest } from "@/features/admin/api/http-client";
 import { Button } from "@/components/ui/button";
 import { Panel, StatusBadge, table } from "./admin-ui";
+import { SearchBox, SortableTh, matchesSearch, useClientSort } from "./list-controls";
 
 type Status = "REQUESTED" | "CONFIRMED" | "CANCELLED" | "COMPLETED" | "NO_SHOW";
 type Appointment = {
@@ -83,6 +84,7 @@ export function AppointmentsManager() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [filter, setFilter] = useState<Status | "ALL">("ALL");
+  const [search, setSearch] = useState("");
   const [busyId, setBusyId] = useState<string | null>(null);
   const [confirming, setConfirming] = useState<string | null>(null);
 
@@ -106,10 +108,26 @@ export function AppointmentsManager() {
     for (const a of appointments) c[a.status] = (c[a.status] ?? 0) + 1;
     return c;
   }, [appointments]);
-  const visible =
-    filter === "ALL"
-      ? appointments
-      : appointments.filter((a) => a.status === filter);
+  const filtered = useMemo(
+    () =>
+      appointments.filter(
+        (a) =>
+          (filter === "ALL" || a.status === filter) &&
+          matchesSearch(search, a.name, a.email, a.phone, a.company, a.topic, a.message),
+      ),
+    [appointments, filter, search],
+  );
+  // Latest slot first: upcoming meetings sit above past history.
+  const { sorted: visible, sort, setSort } = useClientSort(
+    filtered,
+    { by: "startAt", dir: "desc" },
+    {
+      name: (a) => a.name,
+      topic: (a) => a.topic,
+      startAt: (a) => new Date(a.startAt),
+      status: (a) => a.status,
+    },
+  );
 
   async function changeStatus(item: Appointment, to: Status) {
     setBusyId(item.id);
@@ -149,6 +167,14 @@ export function AppointmentsManager() {
         icon={CalendarClock}
         bodyClassName="p-0"
       >
+        <div className="px-3 pt-3">
+          <SearchBox
+            value={search}
+            onChange={setSearch}
+            placeholder="Tìm theo khách, email, SĐT, công ty, chủ đề..."
+            className="max-w-md"
+          />
+        </div>
         <div
           className="flex gap-1 overflow-x-auto border-b border-slate-200 px-3 py-2"
           role="tablist"
@@ -174,10 +200,10 @@ export function AppointmentsManager() {
           <table className={table.table}>
             <thead className={table.head}>
               <tr>
-                <th className={table.th}>Khách hàng</th>
-                <th className={table.th}>Chủ đề</th>
-                <th className={table.th}>Thời gian (giờ Việt Nam)</th>
-                <th className={table.th}>Trạng thái</th>
+                <SortableTh label="Khách hàng" field="name" sort={sort} onSort={setSort} />
+                <SortableTh label="Chủ đề" field="topic" sort={sort} onSort={setSort} />
+                <SortableTh label="Thời gian (giờ Việt Nam)" field="startAt" sort={sort} onSort={setSort} firstDir="desc" />
+                <SortableTh label="Trạng thái" field="status" sort={sort} onSort={setSort} />
                 <th className={`${table.th} text-right`}>Thao tác</th>
               </tr>
             </thead>
@@ -197,9 +223,11 @@ export function AppointmentsManager() {
                     colSpan={5}
                     className="px-4 py-12 text-center text-sm text-slate-500"
                   >
-                    {filter === "ALL"
-                      ? "Chưa có lịch hẹn nào."
-                      : "Không có lịch hẹn ở trạng thái này."}
+                    {search
+                      ? "Không có lịch hẹn nào khớp từ khóa."
+                      : filter === "ALL"
+                        ? "Chưa có lịch hẹn nào."
+                        : "Không có lịch hẹn ở trạng thái này."}
                   </td>
                 </tr>
               ) : (

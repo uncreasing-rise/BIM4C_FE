@@ -1,11 +1,10 @@
 "use client";
 
 import Image from "next/image";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { adminMediaApi, type AdminMedia } from "@/features/admin/api/media";
 import {
   UploadCloud,
-  Search,
   Copy,
   Trash2,
   Check,
@@ -18,12 +17,35 @@ import { ErrorState } from "@/components/ui/ErrorState";
 import { LoadingState } from "@/components/ui/LoadingState";
 import { toast } from "sonner";
 import { useConfirm } from "./ConfirmDialog";
+import {
+  ListFooter,
+  SearchBox,
+  selectClass,
+  useDebouncedValue,
+  useLoader,
+} from "./list-controls";
+
+type MediaOrder = `${"createdAt" | "filename" | "size"}:${"asc" | "desc"}`;
+const MEDIA_ORDERS: { value: MediaOrder; label: string }[] = [
+  { value: "createdAt:desc", label: "Mới tải lên trước" },
+  { value: "createdAt:asc", label: "Cũ nhất trước" },
+  { value: "filename:asc", label: "Tên A → Z" },
+  { value: "filename:desc", label: "Tên Z → A" },
+  { value: "size:desc", label: "Dung lượng lớn nhất" },
+  { value: "size:asc", label: "Dung lượng nhỏ nhất" },
+];
 
 export function MediaLibrary() {
   const { confirm, dialog } = useConfirm();
   const [items, setItems] = useState<AdminMedia[]>([]);
   const [selected, setSelected] = useState<AdminMedia | null>(null);
   const [search, setSearch] = useState("");
+  const [order, setOrder] = useState<MediaOrder>("createdAt:desc");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(48);
+  const [pages, setPages] = useState(1);
+  const [total, setTotal] = useState(0);
+  const debouncedSearch = useDebouncedValue(search.trim(), 300);
   const [feedback, setFeedback] = useState("");
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -35,7 +57,16 @@ export function MediaLibrary() {
       setLoading(true);
       setFeedback("");
       try {
-        const result = await adminMediaApi.list(search, signal);
+        const [sortBy, sortOrder] = order.split(":") as [
+          "createdAt" | "filename" | "size",
+          "asc" | "desc",
+        ];
+        const result = await adminMediaApi.list(debouncedSearch, signal, {
+          page,
+          limit: pageSize,
+          sortBy,
+          sortOrder,
+        });
         const list = Array.isArray(result?.data)
           ? result.data
           : Array.isArray(result)
@@ -43,7 +74,12 @@ export function MediaLibrary() {
             : Array.isArray((result as unknown as { items: AdminMedia[] })?.items)
               ? (result as unknown as { items: AdminMedia[] }).items
               : [];
-        if (!signal?.aborted) setItems(list);
+        if (signal?.aborted) return;
+        const totalPages = result?.meta?.totalPages || 1;
+        setItems(list);
+        setPages(totalPages);
+        setTotal(Number(result?.meta?.total ?? list.length));
+        if (page > totalPages) setPage(totalPages);
       } catch (error) {
         if (signal?.aborted) return;
         setFeedback(
@@ -53,17 +89,10 @@ export function MediaLibrary() {
         if (!signal?.aborted) setLoading(false);
       }
     },
-    [search],
+    [debouncedSearch, order, page, pageSize],
   );
 
-  useEffect(() => {
-    const controller = new AbortController();
-    const timer = window.setTimeout(() => void load(controller.signal), 250);
-    return () => {
-      window.clearTimeout(timer);
-      controller.abort();
-    };
-  }, [load]);
+  useLoader(load);
 
   async function upload(file?: File) {
     if (!file || busy) return;
@@ -147,15 +176,30 @@ export function MediaLibrary() {
 
       {/* Top Header & Upload Bar */}
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border p-4 sm:p-5">
-        <div className="relative min-w-[240px] flex-1">
-          <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Tìm kiếm tệp theo tên..."
-            className="pl-9"
-          />
-        </div>
+        <SearchBox
+          value={search}
+          onChange={(value) => {
+            setSearch(value);
+            setPage(1);
+          }}
+          placeholder="Tìm theo tên tệp hoặc mô tả ảnh..."
+          className="min-w-[240px]"
+        />
+        <select
+          value={order}
+          onChange={(e) => {
+            setOrder(e.target.value as MediaOrder);
+            setPage(1);
+          }}
+          aria-label="Sắp xếp media"
+          className={selectClass}
+        >
+          {MEDIA_ORDERS.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
 
         <input
           ref={inputRef}
@@ -225,7 +269,26 @@ export function MediaLibrary() {
           {!loading && !feedback && !items.length && (
             <div className="col-span-full py-16 text-center text-sm text-muted-foreground">
               <ImageIcon className="mx-auto size-8 text-muted-foreground/50 mb-2" />
-              Chưa có tệp nào trong thư viện media. Hãy nhấn &quot;Tải ảnh mới&quot; để thêm ảnh.
+              {debouncedSearch
+                ? "Không có tệp nào khớp từ khóa."
+                : <>Chưa có tệp nào trong thư viện media. Hãy nhấn &quot;Tải ảnh mới&quot; để thêm ảnh.</>}
+            </div>
+          )}
+          {!feedback && total > 0 && (
+            <div className="col-span-full -mx-4 -mb-4 sm:-mx-6 sm:-mb-6">
+              <ListFooter
+                page={page}
+                pages={pages}
+                total={total}
+                pageSize={pageSize}
+                itemLabel="tệp"
+                onPage={setPage}
+                onPageSize={(size) => {
+                  setPageSize(size);
+                  setPage(1);
+                }}
+                pageSizes={[24, 48, 96]}
+              />
             </div>
           )}
         </div>

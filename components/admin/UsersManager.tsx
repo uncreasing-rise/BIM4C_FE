@@ -1,11 +1,19 @@
 "use client";
 
-import { FormEvent, useCallback, useEffect, useState } from "react";
-import { UserPlus, Search, AlertCircle, X } from "lucide-react";
+import { FormEvent, useCallback, useState } from "react";
+import { UserPlus, AlertCircle, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { StatusBadge, statusLabel, table } from "./admin-ui";
+import { StatusBadge, formatDateTime, statusLabel, table } from "./admin-ui";
+import {
+  FilterSelect,
+  SearchBox,
+  SortableTh,
+  useClientSort,
+  useDebouncedValue,
+  useLoader,
+} from "./list-controls";
 
 import { adminRequest } from "@/features/admin/api/http-client";
 
@@ -15,7 +23,13 @@ type UserItem = {
   name: string;
   status: "ACTIVE" | "DISABLED";
   roles: { role: string }[];
+  lastLoginAt?: string | null;
+  createdAt?: string;
 };
+
+const ROLE_RANK: Record<string, number> = { SUPER_ADMIN: 0, ADMIN: 1, EDITOR: 2 };
+const roleOf = (u: UserItem) =>
+  Math.min(...(u.roles ?? []).map((x) => ROLE_RANK[typeof x === "string" ? x : x.role] ?? 9), 9);
 
 type UsersResponse = { data: UserItem[] } | UserItem[];
 
@@ -32,6 +46,21 @@ export function UsersManager() {
   const [items, setItems] = useState<UserItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [roleFilter, setRoleFilter] = useState("");
+  const debouncedSearch = useDebouncedValue(search.trim(), 300);
+  const { sorted, sort, setSort } = useClientSort(
+    items,
+    { by: "createdAt", dir: "desc" },
+    {
+      name: (u) => u.name,
+      email: (u) => u.email,
+      role: roleOf,
+      status: (u) => u.status,
+      lastLoginAt: (u) => (u.lastLoginAt ? new Date(u.lastLoginAt) : null),
+      createdAt: (u) => (u.createdAt ? new Date(u.createdAt) : null),
+    },
+  );
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [show, setShow] = useState(false);
@@ -39,7 +68,11 @@ export function UsersManager() {
   const load = useCallback(async (signal?: AbortSignal) => {
     setLoading(true);
     try {
-      const qs = search.trim() ? `?search=${encodeURIComponent(search.trim())}` : "";
+      const params = new URLSearchParams();
+      if (debouncedSearch) params.set("search", debouncedSearch);
+      if (statusFilter) params.set("status", statusFilter);
+      if (roleFilter) params.set("role", roleFilter);
+      const qs = params.size ? `?${params}` : "";
       const result = await api(qs, { signal });
       if (!signal?.aborted) {
         const list = Array.isArray(result)
@@ -55,16 +88,9 @@ export function UsersManager() {
     } finally {
       if (!signal?.aborted) setLoading(false);
     }
-  }, [search]);
+  }, [debouncedSearch, statusFilter, roleFilter]);
 
-  useEffect(() => {
-    const controller = new AbortController();
-    const timer = window.setTimeout(() => void load(controller.signal), 250);
-    return () => {
-      window.clearTimeout(timer);
-      controller.abort();
-    };
-  }, [load]);
+  useLoader(load);
 
   async function create(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -116,13 +142,32 @@ export function UsersManager() {
   return (
     <section className="overflow-hidden rounded-xl border border-slate-200 dark:border-border bg-white dark:bg-card shadow-xs">
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 border-b border-slate-200 dark:border-border p-4 bg-slate-50/60 dark:bg-muted/20">
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-          <Input
-            placeholder="Tìm theo tên hoặc email..."
+        <div className="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row sm:items-center">
+          <SearchBox
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-9 h-10 bg-white dark:bg-background border-slate-200 dark:border-border"
+            onChange={setSearch}
+            placeholder="Tìm theo tên hoặc email..."
+            className="max-w-md"
+          />
+          <FilterSelect
+            label="Lọc theo vai trò"
+            value={roleFilter}
+            onChange={setRoleFilter}
+            allLabel="Tất cả vai trò"
+            options={["SUPER_ADMIN", "ADMIN", "EDITOR"].map((value) => ({
+              value,
+              label: statusLabel("role", value),
+            }))}
+          />
+          <FilterSelect
+            label="Lọc theo trạng thái"
+            value={statusFilter}
+            onChange={setStatusFilter}
+            allLabel="Tất cả trạng thái"
+            options={["ACTIVE", "DISABLED"].map((value) => ({
+              value,
+              label: statusLabel("user", value),
+            }))}
           />
         </div>
         <Button
@@ -196,9 +241,11 @@ export function UsersManager() {
         <table className={table.table}>
           <thead className={table.head}>
             <tr>
-              <th className={table.th}>Người dùng</th>
-              <th className={table.th}>Vai trò</th>
-              <th className={table.th}>Trạng thái</th>
+              <SortableTh label="Người dùng" field="name" sort={sort} onSort={setSort} />
+              <SortableTh label="Vai trò" field="role" sort={sort} onSort={setSort} />
+              <SortableTh label="Trạng thái" field="status" sort={sort} onSort={setSort} />
+              <SortableTh label="Đăng nhập gần nhất" field="lastLoginAt" sort={sort} onSort={setSort} firstDir="desc" />
+              <SortableTh label="Ngày tạo" field="createdAt" sort={sort} onSort={setSort} firstDir="desc" />
               <th className={`${table.th} text-right`}>Thao tác</th>
             </tr>
           </thead>
@@ -221,6 +268,12 @@ export function UsersManager() {
                   <td className={table.td}>
                     <div className="h-5 w-24 bg-muted rounded-full" />
                   </td>
+                  <td className={table.td}>
+                    <div className="h-4 w-24 bg-muted rounded" />
+                  </td>
+                  <td className={table.td}>
+                    <div className="h-4 w-20 bg-muted rounded" />
+                  </td>
                   <td className={`${table.td} text-right`}>
                     <div className="h-8 w-20 bg-muted rounded ml-auto" />
                   </td>
@@ -228,12 +281,12 @@ export function UsersManager() {
               ))
             ) : items.length === 0 ? (
               <tr>
-                <td colSpan={4} className="py-12 text-center text-muted-foreground">
+                <td colSpan={6} className="py-12 text-center text-muted-foreground">
                   Chưa tìm thấy người dùng nào.
                 </td>
               </tr>
             ) : (
-              items.map((u) => (
+              sorted.map((u) => (
                 <tr key={u.id} className={table.row}>
                   <td className={table.td}>
                     <div className="flex items-center gap-2.5">
@@ -258,6 +311,12 @@ export function UsersManager() {
                   </td>
                   <td className={table.td}>
                     <StatusBadge domain="user" value={u.status} />
+                  </td>
+                  <td className={`${table.td} whitespace-nowrap text-xs text-slate-500`}>
+                    {u.lastLoginAt ? formatDateTime(u.lastLoginAt) : "Chưa đăng nhập"}
+                  </td>
+                  <td className={`${table.td} whitespace-nowrap text-xs text-slate-500`}>
+                    {formatDateTime(u.createdAt, false)}
                   </td>
                   <td className={`${table.td} text-right`}>
                     <Button

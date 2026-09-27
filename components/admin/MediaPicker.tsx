@@ -32,7 +32,7 @@ export function MediaPicker({
   const loadMedia = useCallback(async (signal?: AbortSignal) => {
     try {
       setError("");
-      const result = await adminMediaApi.list(search, signal);
+      const result = await adminMediaApi.list(search, signal, { limit: 60 });
       const list = Array.isArray(result?.data)
         ? result.data
         : Array.isArray(result)

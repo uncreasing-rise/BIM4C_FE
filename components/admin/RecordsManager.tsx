@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import {
   adminRecordsApi,
   type AdminRecord,
@@ -8,10 +8,7 @@ import {
 } from "@/features/admin/api/records";
 import { scrollToPageTop } from "@/lib/utils/scroll";
 import {
-  Search,
   Trash2,
-  ChevronLeft,
-  ChevronRight,
   CheckCircle2,
   AlertCircle,
   Mail,
@@ -24,12 +21,19 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { exportToCsv } from "@/lib/utils/export-csv";
 import { toast } from "sonner";
 import { formatDateTime, statusLabel, table } from "./admin-ui";
 import { useConfirm } from "./ConfirmDialog";
+import {
+  ListFooter,
+  SearchBox,
+  SortableTh,
+  useDebouncedValue,
+  useLoader,
+  type SortState,
+} from "./list-controls";
 
 function renderMessageContent(
   rawMessage?: string,
@@ -126,35 +130,53 @@ export function RecordsManager({ kind }: { kind: RecordKind }) {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("");
+  const [sort, setSort] = useState<SortState>({ by: "createdAt", dir: "desc" });
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
   const [pages, setPages] = useState(1);
+  const [total, setTotal] = useState(0);
   const [busy, setBusy] = useState(false);
+  const [exporting, setExporting] = useState(false);
   const [error, setError] = useState("");
   const [activeDetail, setActiveDetail] = useState<AdminRecord | null>(null);
+  const debouncedSearch = useDebouncedValue(search.trim(), 300);
+
+  // Any filter or sort change starts again from page 1.
+  const changeFilter = <T,>(setter: (value: T) => void) => (value: T) => {
+    setter(value);
+    setPage(1);
+  };
+
+  const unwrap = (result: unknown): AdminRecord[] => {
+    const r = result as { data?: AdminRecord[]; items?: AdminRecord[] } | AdminRecord[];
+    return Array.isArray(r) ? r : Array.isArray(r?.data) ? r.data : Array.isArray(r?.items) ? r.items : [];
+  };
 
   const load = useCallback(
     async (signal?: AbortSignal) => {
       setLoading(true);
+      setError("");
       try {
         const result = await adminRecordsApi.list(
           kind,
-          search,
-          status,
-          page,
+          {
+            search: debouncedSearch,
+            status,
+            page,
+            limit: pageSize,
+            sortBy: sort.by,
+            sortOrder: sort.dir,
+          },
           signal,
         );
         if (signal?.aborted) return;
-        const list = Array.isArray(result?.data)
-          ? result.data
-          : Array.isArray(result)
-            ? result
-            : Array.isArray(
-                  (result as unknown as { items: AdminRecord[] })?.items,
-                )
-              ? (result as unknown as { items: AdminRecord[] }).items
-              : [];
+        const list = unwrap(result);
+        const totalPages = result?.meta?.totalPages || 1;
         setItems(list);
-        setPages(result?.meta?.totalPages || 1);
+        setPages(totalPages);
+        setTotal(Number(result?.meta?.total ?? list.length));
+        // Deleting the last row of the last page leaves an empty page behind.
+        if (page > totalPages) setPage(totalPages);
       } catch (e) {
         if (signal?.aborted) return;
         setError(e instanceof Error ? e.message : "Không thể tải dữ liệu");
@@ -162,17 +184,10 @@ export function RecordsManager({ kind }: { kind: RecordKind }) {
         if (!signal?.aborted) setLoading(false);
       }
     },
-    [kind, page, search, status],
+    [kind, page, pageSize, debouncedSearch, status, sort],
   );
 
-  useEffect(() => {
-    const controller = new AbortController();
-    const t = window.setTimeout(() => void load(controller.signal), 250);
-    return () => {
-      clearTimeout(t);
-      controller.abort();
-    };
-  }, [load]);
+  useLoader(load);
 
   async function update(item: AdminRecord, value: string) {
     const prevItems = [...items];
@@ -229,9 +244,36 @@ export function RecordsManager({ kind }: { kind: RecordKind }) {
     }
   }
 
-  function handleExportCsv() {
-    if (!items || items.length === 0) {
+  /** Every row matching the current filters, in table order — not just this page. */
+  async function fetchAllFiltered(): Promise<AdminRecord[]> {
+    const rows: AdminRecord[] = [];
+    for (let next = 1; ; next += 1) {
+      const result = await adminRecordsApi.list(kind, {
+        search: debouncedSearch,
+        status,
+        page: next,
+        limit: 100,
+        sortBy: sort.by,
+        sortOrder: sort.dir,
+      });
+      const batch = unwrap(result);
+      rows.push(...batch);
+      if (batch.length < 100 || next >= (result?.meta?.totalPages ?? 1)) return rows;
+    }
+  }
+
+  async function handleExportCsv() {
+    if (total === 0) {
       toast.error("Không có dữ liệu để xuất");
+      return;
+    }
+    setExporting(true);
+    let rows: AdminRecord[];
+    try {
+      rows = await fetchAllFiltered();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Không thể tải dữ liệu để xuất");
+      setExporting(false);
       return;
     }
     const columns = [
@@ -269,7 +311,7 @@ export function RecordsManager({ kind }: { kind: RecordKind }) {
             ? r.isActive
               ? "Đang hoạt động"
               : "Đã hủy"
-            : r.status || "",
+            : statusLabel("submission", r.status),
       },
       {
         key: "createdAt",
@@ -294,16 +336,18 @@ export function RecordsManager({ kind }: { kind: RecordKind }) {
     try {
       exportToCsv(
         filePrefix,
-        items as unknown as Record<string, unknown>[],
+        rows as unknown as Record<string, unknown>[],
         columns as unknown as {
           key: string;
           header: string;
           format?: (row: Record<string, unknown>) => string;
         }[],
       );
-      toast.success("Đã xuất file CSV.");
+      toast.success(`Đã xuất ${rows.length} bản ghi ra file CSV.`);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Không thể xuất file");
+    } finally {
+      setExporting(false);
     }
   }
 
@@ -311,19 +355,16 @@ export function RecordsManager({ kind }: { kind: RecordKind }) {
     <section className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
       {dialog}
       <div className="flex flex-col items-stretch justify-between gap-2 border-b border-slate-200 p-3 sm:flex-row sm:items-center sm:p-4">
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-          <Input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder={searchPlaceholder}
-            className="h-9 bg-white pl-9 text-sm"
-          />
-        </div>
+        <SearchBox
+          value={search}
+          onChange={changeFilter(setSearch)}
+          placeholder={searchPlaceholder}
+          className="max-w-md"
+        />
         <div className="flex items-center gap-2.5">
           <select
             value={status}
-            onChange={(e) => setStatus(e.target.value)}
+            onChange={(e) => changeFilter(setStatus)(e.target.value)}
             aria-label="Lọc theo trạng thái"
             className="h-9 rounded-md border border-slate-300 bg-white px-2.5 text-sm text-slate-700 shadow-sm focus:outline-hidden focus:ring-2 focus:ring-teal-600/20"
           >
@@ -344,11 +385,13 @@ export function RecordsManager({ kind }: { kind: RecordKind }) {
           </select>
           <Button
             variant="outline"
-            onClick={handleExportCsv}
+            onClick={() => void handleExportCsv()}
+            disabled={exporting}
             className="h-9 gap-1.5"
+            title="Xuất toàn bộ bản ghi khớp bộ lọc hiện tại"
           >
             <Download className="size-4" />
-            <span>Xuất CSV</span>
+            <span>{exporting ? "Đang xuất…" : `Xuất CSV (${total})`}</span>
           </Button>
         </div>
       </div>
@@ -364,11 +407,20 @@ export function RecordsManager({ kind }: { kind: RecordKind }) {
         <table className={table.table}>
           <thead className={table.head}>
             <tr>
-              <th className={table.th}>Người gửi</th>
-              <th className={table.th}>Liên hệ</th>
+              {isNewsletter ? (
+                <th className={table.th}>Người gửi</th>
+              ) : (
+                <SortableTh label="Người gửi" field="name" sort={sort} onSort={changeFilter(setSort)} />
+              )}
+              <SortableTh label="Liên hệ" field="email" sort={sort} onSort={changeFilter(setSort)} />
               <th className={table.th}>{contentHeader}</th>
-              <th className={table.th}>Trạng thái</th>
-              <th className={table.th}>Thời gian</th>
+              <SortableTh
+                label="Trạng thái"
+                field={isNewsletter ? "isActive" : "status"}
+                sort={sort}
+                onSort={changeFilter(setSort)}
+              />
+              <SortableTh label="Thời gian" field="createdAt" sort={sort} onSort={changeFilter(setSort)} firstDir="desc" />
               <th className={table.th}>Đồng ý điều khoản</th>
               <th className={`${table.th} text-right`}>Thao tác</th>
             </tr>
@@ -533,37 +585,18 @@ export function RecordsManager({ kind }: { kind: RecordKind }) {
         </table>
       </div>
 
-      <footer className="flex items-center justify-between border-t border-slate-200 px-4 py-3 text-xs text-slate-500">
-        <Button
-          variant="outline"
-          size="sm"
-          disabled={page <= 1}
-          onClick={() => {
-            setPage((x) => x - 1);
-            scrollToPageTop();
-          }}
-          aria-label="Trang trước"
-          className="gap-1 h-8 px-3"
-        >
-          <ChevronLeft className="size-3.5" /> Trước
-        </Button>
-        <span className="font-medium">
-          Trang {page} / {pages}
-        </span>
-        <Button
-          variant="outline"
-          size="sm"
-          disabled={page >= pages}
-          onClick={() => {
-            setPage((x) => x + 1);
-            scrollToPageTop();
-          }}
-          aria-label="Trang sau"
-          className="gap-1 h-8 px-3"
-        >
-          Sau <ChevronRight className="size-3.5" />
-        </Button>
-      </footer>
+      <ListFooter
+        page={page}
+        pages={pages}
+        total={total}
+        pageSize={pageSize}
+        itemLabel="bản ghi"
+        onPage={(next) => {
+          setPage(next);
+          scrollToPageTop();
+        }}
+        onPageSize={changeFilter(setPageSize)}
+      />
 
       {/* Detail Modal */}
       {activeDetail && (

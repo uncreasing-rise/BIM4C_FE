@@ -39,7 +39,6 @@ import {
   Trash2,
   Globe,
   Image as ImageIcon,
-  Search,
   FileText,
   X,
 } from "lucide-react";
@@ -53,6 +52,15 @@ import {
 } from "@/features/shared/schemas/content-block.schema";
 import { StatusBadge, Tag, formatDateTime, missingLanguages, statusLabel } from "./admin-ui";
 import { useConfirm } from "./ConfirmDialog";
+import {
+  FilterSelect,
+  ListFooter,
+  SearchBox,
+  SortableTh,
+  useDebouncedValue,
+  useLoader,
+  type SortState,
+} from "./list-controls";
 
 function prepareEditorContent(value: AdminContent, contentType: AdminContentType): AdminContent {
   const sections = Array.isArray(value.sections) ? value.sections : [];
@@ -100,8 +108,27 @@ export function ContentManager({
   const [categories, setCategories] = useState<AdminCategory[]>([]);
   const [query, setQuery] = useState(params.get("search") ?? "");
   const [status, setStatus] = useState(params.get("status") ?? "");
-  const [page, setPage] = useState(Number(params.get("page") ?? 1));
+  const [category, setCategory] = useState(params.get("category") ?? "");
+  const [sort, setSort] = useState<SortState>(() => ({
+    by: params.get("sortBy") || "updatedAt",
+    dir: params.get("sortOrder") === "asc" ? "asc" : "desc",
+  }));
+  const [pageSize, setPageSize] = useState(() => {
+    const raw = Number(params.get("limit"));
+    return [10, 20, 50, 100].includes(raw) ? raw : 20;
+  });
+  const [page, setPage] = useState(() => {
+    const raw = Number(params.get("page"));
+    return Number.isInteger(raw) && raw > 1 ? raw : 1;
+  });
+  const hasCategories =
+    contentType === "Dự án" || contentType === "Tin tức" || contentType === "Chuyên môn";
+  // "Tin tức" and "Chuyên môn" are two views of the same posts table.
+  const group =
+    contentType === "Tin tức" ? "news" : contentType === "Chuyên môn" ? "technical" : undefined;
+  const debouncedQuery = useDebouncedValue(query.trim(), 300);
   const [totalPages, setTotalPages] = useState(1);
+  const [total, setTotal] = useState(0);
   const [selected, setSelected] = useState<string[]>([]);
   const [editor, setEditor] = useState<AdminContent | null>(() =>
     params.get("create") ? createEmptyContent(contentType) : null,
@@ -131,11 +158,13 @@ export function ContentManager({
           contentType,
           {
             page,
-            limit: 20,
-            search: query,
+            limit: pageSize,
+            search: debouncedQuery,
             status,
-            sortBy: "updatedAt",
-            sortOrder: "desc",
+            category: hasCategories ? category : undefined,
+            group,
+            sortBy: sort.by,
+            sortOrder: sort.dir,
           },
           signal,
         );
@@ -150,24 +179,12 @@ export function ContentManager({
         setItems(list.map((x) => ({ ...x, type: contentType })));
         const totalPages = Number(
           result?.meta?.totalPages ??
-            Math.max(1, Math.ceil((result?.meta?.total ?? list.length) / 20)),
+            Math.max(1, Math.ceil((result?.meta?.total ?? list.length) / pageSize)),
         );
         setTotalPages(totalPages || 1);
-        // Categories are auxiliary data. A category permission/schema problem
-        // must not prevent the content list and editor from opening.
-        try {
-          const categoryResult = await adminContentApi.categories(contentType, signal);
-          const catList = Array.isArray(categoryResult?.data)
-            ? categoryResult.data
-            : Array.isArray(categoryResult)
-              ? categoryResult
-              : [];
-          setCategories(catList);
-        } catch (categoryError) {
-          if (signal?.aborted) return;
-          console.warn("Could not load content categories", categoryError);
-          setCategories([]);
-        }
+        setTotal(Number(result?.meta?.total ?? list.length));
+        // After a delete or a narrower filter the current page can vanish.
+        if (page > 1 && page > (totalPages || 1)) setPage(totalPages || 1);
       } catch (error) {
         if (signal?.aborted) return;
         setFeedback(
@@ -177,17 +194,41 @@ export function ContentManager({
         if (!signal?.aborted) setLoading(false);
       }
     },
-    [contentType, page, query, status],
+    [contentType, page, pageSize, debouncedQuery, status, category, group, hasCategories, sort],
   );
 
-  useEffect(() => {
-    const controller = new AbortController();
-    const timer = window.setTimeout(() => void load(controller.signal), 250);
-    return () => {
-      window.clearTimeout(timer);
-      controller.abort();
-    };
-  }, [load]);
+  // Categories are auxiliary data. A category permission/schema problem
+  // must not prevent the content list and editor from opening.
+  const loadCategories = useCallback(
+    async (signal?: AbortSignal) => {
+      try {
+        const categoryResult = await adminContentApi.categories(contentType, signal);
+        if (signal?.aborted) return;
+        setCategories(
+          Array.isArray(categoryResult?.data)
+            ? categoryResult.data
+            : Array.isArray(categoryResult)
+              ? categoryResult
+              : [],
+        );
+      } catch (categoryError) {
+        if (signal?.aborted) return;
+        console.warn("Could not load content categories", categoryError);
+        setCategories([]);
+      }
+    },
+    [contentType],
+  );
+
+  useLoader(load);
+  useLoader(loadCategories);
+
+  // Any filter change starts again from page 1.
+  const changeFilter = <T,>(setter: (value: T) => void) => (value: T) => {
+    setter(value);
+    setPage(1);
+    setSelected([]);
+  };
 
   useEffect(() => {
     if (!dirty) return;
@@ -199,14 +240,20 @@ export function ContentManager({
   useEffect(() => {
     const q = new URLSearchParams();
     if (page > 1) q.set("page", String(page));
-    if (query) q.set("search", query);
+    if (pageSize !== 20) q.set("limit", String(pageSize));
+    if (debouncedQuery) q.set("search", debouncedQuery);
     if (status) q.set("status", status);
+    if (category) q.set("category", category);
+    if (sort.by !== "updatedAt" || sort.dir !== "desc") {
+      q.set("sortBy", sort.by);
+      q.set("sortOrder", sort.dir);
+    }
     const text = q.toString();
     if (params.toString() === text) return;
     router.replace(text ? `?${text}` : window.location.pathname, {
       scroll: false,
     });
-  }, [page, query, params, router, status]);
+  }, [page, pageSize, debouncedQuery, params, router, status, category, sort]);
 
   async function closeEditor() {
     if (
@@ -952,33 +999,58 @@ export function ContentManager({
         {/* Search & Filter Header Bar */}
         <div className="flex flex-col gap-2 border-b border-slate-200 p-3 dark:border-border sm:flex-row sm:items-center sm:p-4">
           <div className="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row sm:items-center">
-            <div className="relative min-w-0 flex-1">
-              <Search className="size-4 text-muted-foreground absolute left-3.5 top-1/2 -translate-y-1/2" />
-              <input
-                value={query}
-                onChange={(e) => {
-                  setQuery(e.target.value);
+            <SearchBox
+              value={query}
+              onChange={changeFilter(setQuery)}
+              placeholder={`Tìm theo tiêu đề, slug ${contentType.toLowerCase()}...`}
+            />
+            <FilterSelect
+              label="Lọc theo trạng thái"
+              value={status}
+              onChange={changeFilter(setStatus)}
+              allLabel="Tất cả trạng thái"
+              options={
+                contentType === "Dự án"
+                  ? [
+                      { value: "draft", label: statusLabel("project", "DRAFT") },
+                      { value: "published", label: "Đang hiển thị (mọi giai đoạn)" },
+                      { value: "profiled", label: statusLabel("project", "PROFILED") },
+                      { value: "planned", label: statusLabel("project", "PLANNED") },
+                      { value: "in_progress", label: statusLabel("project", "IN_PROGRESS") },
+                      { value: "completed", label: statusLabel("project", "COMPLETED") },
+                      { value: "archived", label: statusLabel("project", "ARCHIVED") },
+                    ]
+                  : [
+                      { value: "draft", label: statusLabel("content", "DRAFT") },
+                      { value: "published", label: statusLabel("content", "PUBLISHED") },
+                      { value: "archived", label: statusLabel("content", "ARCHIVED") },
+                    ]
+              }
+            />
+            {hasCategories && categories.length > 0 && (
+              <FilterSelect
+                label="Lọc theo danh mục"
+                value={category}
+                onChange={changeFilter(setCategory)}
+                allLabel="Tất cả danh mục"
+                options={categories.map((c) => ({ value: c.id, label: c.name }))}
+              />
+            )}
+            {(query || status || category) && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-9 shrink-0 text-xs"
+                onClick={() => {
+                  setQuery("");
+                  setStatus("");
+                  setCategory("");
                   setPage(1);
                 }}
-                placeholder={`Tìm kiếm ${contentType.toLowerCase()}...`}
-                aria-label={`Tìm kiếm ${contentType.toLowerCase()}`}
-                className="h-9 w-full rounded-md border border-slate-300 bg-white pl-9 pr-3 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-teal-600 focus:ring-2 focus:ring-teal-600/20 dark:border-border dark:bg-background dark:text-foreground"
-              />
-            </div>
-            <select
-              value={status}
-              onChange={(e) => {
-                setStatus(e.target.value);
-                setPage(1);
-              }}
-              aria-label="Lọc theo trạng thái"
-              className="h-9 rounded-md border border-slate-300 bg-white px-2.5 text-sm text-slate-700 shadow-sm outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-600/20 dark:border-border dark:bg-background dark:text-foreground"
-            >
-              <option value="">Tất cả trạng thái</option>
-              <option value="draft">{statusLabel("content", "DRAFT")}</option>
-              <option value="published">{statusLabel("content", "PUBLISHED")}</option>
-              <option value="archived">{statusLabel("content", "ARCHIVED")}</option>
-            </select>
+              >
+                Xóa lọc
+              </Button>
+            )}
           </div>
 
           <Button
@@ -1039,17 +1111,18 @@ export function ContentManager({
                     className="size-4 rounded accent-primary cursor-pointer"
                   />
                 </th>
-                <th className="whitespace-nowrap px-4 py-2.5 font-medium">Nội dung</th>
-                <th className="whitespace-nowrap px-4 py-2.5 font-medium">Loại</th>
-                <th className="whitespace-nowrap px-4 py-2.5 font-medium">Trạng thái</th>
-                <th className="whitespace-nowrap px-4 py-2.5 font-medium">Cập nhật</th>
+                <SortableTh label="Nội dung" field="title" sort={sort} onSort={changeFilter(setSort)} />
+                <th className="whitespace-nowrap px-4 py-2.5 font-medium">{hasCategories ? "Danh mục" : "Loại"}</th>
+                <SortableTh label="Trạng thái" field="status" sort={sort} onSort={changeFilter(setSort)} />
+                <SortableTh label="Xuất bản" field="publishedAt" sort={sort} onSort={changeFilter(setSort)} firstDir="desc" />
+                <SortableTh label="Cập nhật" field="updatedAt" sort={sort} onSort={changeFilter(setSort)} firstDir="desc" />
                 <th className="w-24 whitespace-nowrap px-4 py-2.5 text-right font-medium">Thao tác</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border text-sm">
               {loading && (
                 <tr>
-                  <td colSpan={6} className="py-12">
+                  <td colSpan={7} className="py-12">
                     <LoadingState label="Đang tải nội dung…" />
                   </td>
                 </tr>
@@ -1106,10 +1179,17 @@ export function ContentManager({
                     </div>
                   </td>
                   <td className="px-4 py-3.5 text-xs text-muted-foreground">
-                    <span className="rounded-md bg-muted px-2.5 py-1 font-medium">{item.type}</span>
+                    <span className="rounded-md bg-muted px-2.5 py-1 font-medium">
+                      {hasCategories
+                        ? ("category" in item && item.category?.name) || "Chưa phân loại"
+                        : item.type}
+                    </span>
                   </td>
                   <td className="px-4 py-3.5 text-xs">
                     <StatusBadge domain={contentType === "Dự án" ? "project" : "content"} value={item.status} />
+                  </td>
+                  <td className="px-4 py-3.5 text-xs text-muted-foreground">
+                    {formatDateTime(item.publishedAt, false)}
                   </td>
                   <td className="px-4 py-3.5 text-xs text-muted-foreground">
                     {formatDateTime(item.updatedAt, false)}
@@ -1145,7 +1225,7 @@ export function ContentManager({
               ))}
               {!loading && items.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="py-12 text-center text-muted-foreground">
+                  <td colSpan={7} className="py-12 text-center text-muted-foreground">
                     <div className="flex flex-col items-center justify-center gap-2">
                       <FileText className="size-8 text-muted-foreground/50" />
                       <p className="text-sm font-medium">Chưa có {contentType.toLowerCase()} nào phù hợp.</p>
@@ -1165,44 +1245,30 @@ export function ContentManager({
           </table>
         </div>
 
-        {/* Pagination Footer */}
-        <footer className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 dark:border-border p-4 text-xs text-muted-foreground bg-slate-50/60 dark:bg-muted/20">
-          <span>
-            Trang <b>{page}</b> / <b>{totalPages}</b>
-          </span>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={page <= 1}
-              onClick={() => {
-                setPage((x) => Math.max(1, x - 1));
-                scrollToPageTop();
-              }}
-              className="h-8 text-xs font-semibold"
-            >
-              ← Trang trước
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={page >= totalPages}
-              onClick={() => {
-                setPage((x) => x + 1);
-                scrollToPageTop();
-              }}
-              className="h-8 text-xs font-semibold"
-            >
-              Trang sau →
-            </Button>
-          </div>
-          <span>Tổng cộng {items.length} mục</span>
-        </footer>
+        <ListFooter
+          page={page}
+          pages={totalPages}
+          total={total}
+          pageSize={pageSize}
+          itemLabel={contentType.toLowerCase()}
+          onPage={(next) => {
+            setPage(next);
+            setSelected([]);
+            scrollToPageTop();
+          }}
+          onPageSize={changeFilter(setPageSize)}
+        />
       </section>
 
       {(contentType === "Dự án" || contentType === "Tin tức") && (
         <div className="mt-8">
-          <CategoryManager type={contentType} onChange={() => void load()} />
+          <CategoryManager
+            type={contentType}
+            onChange={() => {
+              void load();
+              void loadCategories();
+            }}
+          />
         </div>
       )}
     </>
