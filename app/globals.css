@@ -1798,6 +1798,3 @@ html.lenis body {
   flex-direction: column;
   justify-content: center;
 }
-[data-home-section] > * {
-  width: 100%;
-}

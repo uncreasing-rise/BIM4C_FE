@@ -4,8 +4,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { revalidateCmsCache } from "@/features/admin/api/revalidate";
-import { DEFAULT_METRICS, type CompanyMetric } from "@/features/settings/types";
-import { BarChart3, Building2, FileText, Globe, Save, Share2 } from "lucide-react";
+import type { CompanyMetric } from "@/features/settings/types";
+import {
+  BarChart3,
+  Building2,
+  FileText,
+  Globe,
+  Plus,
+  Save,
+  Share2,
+  Trash2,
+} from "lucide-react";
 import { FormEvent, useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -33,8 +42,10 @@ export function SettingsManager() {
   const [socialLinksError, setSocialLinksError] = useState("");
   // Serialized form state as last loaded/saved, to detect unsaved changes.
   const [savedSnapshot, setSavedSnapshot] = useState("");
-  const snapshotOf = (value: Settings | null, links: string) => JSON.stringify([value, links]);
-  const dirty = Boolean(data) && snapshotOf(data, socialLinksJson) !== savedSnapshot;
+  const snapshotOf = (value: Settings | null, links: string) =>
+    JSON.stringify([value, links]);
+  const dirty =
+    Boolean(data) && snapshotOf(data, socialLinksJson) !== savedSnapshot;
 
   useEffect(() => {
     if (!dirty) return;
@@ -57,14 +68,13 @@ export function SettingsManager() {
 
         const merged: Settings = {
           ...body.data,
-          metrics:
-            body.data.metrics && Array.isArray(body.data.metrics) && body.data.metrics.length > 0
-              ? body.data.metrics
-              : DEFAULT_METRICS,
+          metrics: Array.isArray(body.data.metrics) ? body.data.metrics : [],
         };
         setData(merged);
         setSocialLinksJson(JSON.stringify(merged.socialLinks, null, 2));
-        setSavedSnapshot(snapshotOf(merged, JSON.stringify(merged.socialLinks, null, 2)));
+        setSavedSnapshot(
+          snapshotOf(merged, JSON.stringify(merged.socialLinks, null, 2)),
+        );
         setMsg("");
       } catch (error) {
         if (!controller.signal.aborted) {
@@ -80,9 +90,32 @@ export function SettingsManager() {
     return () => controller.abort();
   }, []);
 
-  const handleMetricChange = (index: number, field: keyof CompanyMetric, val: string) => {
+  const addMetric = () => {
     if (!data) return;
-    const currentMetrics = [...(data.metrics || DEFAULT_METRICS)];
+    setData({
+      ...data,
+      metrics: [
+        ...(data.metrics ?? []),
+        { value: "", label_vi: "", label_en: "" },
+      ],
+    });
+  };
+
+  const removeMetric = (index: number) => {
+    if (!data) return;
+    setData({
+      ...data,
+      metrics: (data.metrics ?? []).filter((_, i) => i !== index),
+    });
+  };
+
+  const handleMetricChange = (
+    index: number,
+    field: keyof CompanyMetric,
+    val: string,
+  ) => {
+    if (!data) return;
+    const currentMetrics = [...(data.metrics ?? [])];
     if (!currentMetrics[index]) {
       currentMetrics[index] = { value: "", label_vi: "", label_en: "" };
     }
@@ -123,7 +156,7 @@ export function SettingsManager() {
         phone: data.phone || (null as unknown as string),
         address: data.address || (null as unknown as string),
         brochureUrl: data.brochureUrl || (null as unknown as string),
-        metrics: data.metrics || DEFAULT_METRICS,
+        metrics: data.metrics ?? [],
         socialLinks,
         defaultSeoTitle: data.defaultSeoTitle,
         defaultSeoDescription: data.defaultSeoDescription,
@@ -139,7 +172,8 @@ export function SettingsManager() {
       setSavedSnapshot(snapshotOf(data, socialLinksJson));
       await revalidateCmsCache();
     } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : "Không thể lưu cài đặt";
+      const errorMsg =
+        err instanceof Error ? err.message : "Không thể lưu cài đặt";
       toast.error(errorMsg, { id: toastId });
       setMsg(errorMsg);
     } finally {
@@ -172,14 +206,22 @@ export function SettingsManager() {
         <p className="text-[13px] text-slate-600" aria-live="polite">
           {dirty ? (
             <span className="inline-flex items-center gap-1.5 font-medium text-amber-800">
-              <span className="size-1.5 rounded-full bg-amber-500" aria-hidden="true" />
+              <span
+                className="size-1.5 rounded-full bg-amber-500"
+                aria-hidden="true"
+              />
               Có thay đổi chưa lưu
             </span>
           ) : (
             "Mọi thay đổi đã được lưu"
           )}
         </p>
-        <Button type="submit" size="sm" disabled={busy || !dirty} className="gap-1.5">
+        <Button
+          type="submit"
+          size="sm"
+          disabled={busy || !dirty}
+          className="gap-1.5"
+        >
           <Save className="size-4" />
           {busy ? "Đang lưu…" : "Lưu cài đặt"}
         </Button>
@@ -237,12 +279,15 @@ export function SettingsManager() {
           </div>
           <div>
             <label className="block text-xs font-semibold text-muted-foreground mb-1.5 flex items-center gap-1.5">
-              <FileText className="size-3.5 text-primary" /> Đường dẫn tải Brochure / Hồ sơ năng lực (PDF)
+              <FileText className="size-3.5 text-primary" /> Đường dẫn tải
+              Brochure / Hồ sơ năng lực (PDF)
             </label>
             <Input
               value={data.brochureUrl ?? ""}
               placeholder="https://www.bim4c.vn/brochure.pdf hoặc /files/hsnl.pdf"
-              onChange={(e) => setData({ ...data, brochureUrl: e.target.value })}
+              onChange={(e) =>
+                setData({ ...data, brochureUrl: e.target.value })
+              }
               className="bg-white dark:bg-background border-slate-200 dark:border-border"
             />
           </div>
@@ -299,12 +344,17 @@ export function SettingsManager() {
             </label>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
               <div>
-                <span className="text-[11px] font-medium text-muted-foreground block mb-1">LinkedIn Company:</span>
+                <span className="text-[11px] font-medium text-muted-foreground block mb-1">
+                  LinkedIn Company:
+                </span>
                 <Input
                   value={data.socialLinks?.linkedin ?? ""}
                   placeholder="https://linkedin.com/company/bim4c"
                   onChange={(e) => {
-                    const next = { ...(data.socialLinks || {}), linkedin: e.target.value };
+                    const next = {
+                      ...(data.socialLinks || {}),
+                      linkedin: e.target.value,
+                    };
                     setData({ ...data, socialLinks: next });
                     setSocialLinksJson(JSON.stringify(next, null, 2));
                   }}
@@ -312,12 +362,17 @@ export function SettingsManager() {
                 />
               </div>
               <div>
-                <span className="text-[11px] font-medium text-muted-foreground block mb-1">Facebook Fanpage:</span>
+                <span className="text-[11px] font-medium text-muted-foreground block mb-1">
+                  Facebook Fanpage:
+                </span>
                 <Input
                   value={data.socialLinks?.facebook ?? ""}
                   placeholder="https://facebook.com/bim4c"
                   onChange={(e) => {
-                    const next = { ...(data.socialLinks || {}), facebook: e.target.value };
+                    const next = {
+                      ...(data.socialLinks || {}),
+                      facebook: e.target.value,
+                    };
                     setData({ ...data, socialLinks: next });
                     setSocialLinksJson(JSON.stringify(next, null, 2));
                   }}
@@ -325,12 +380,17 @@ export function SettingsManager() {
                 />
               </div>
               <div>
-                <span className="text-[11px] font-medium text-muted-foreground block mb-1">YouTube Channel:</span>
+                <span className="text-[11px] font-medium text-muted-foreground block mb-1">
+                  YouTube Channel:
+                </span>
                 <Input
                   value={data.socialLinks?.youtube ?? ""}
                   placeholder="https://youtube.com/@bim4c"
                   onChange={(e) => {
-                    const next = { ...(data.socialLinks || {}), youtube: e.target.value };
+                    const next = {
+                      ...(data.socialLinks || {}),
+                      youtube: e.target.value,
+                    };
                     setData({ ...data, socialLinks: next });
                     setSocialLinksJson(JSON.stringify(next, null, 2));
                   }}
@@ -348,19 +408,31 @@ export function SettingsManager() {
       {/* Card 3: Chỉ số năng lực & Thành tựu (Track Record Metrics) */}
       <div className="rounded-xl border border-slate-200 dark:border-border bg-white dark:bg-card p-6 shadow-xs flex flex-col gap-4">
         <h3 className="text-base font-semibold text-foreground flex items-center gap-2 border-b border-slate-200 dark:border-border/80 pb-3">
-          <BarChart3 className="size-4 text-primary" /> Chỉ số Năng lực & Thành tựu (Track Record Metrics)
+          <BarChart3 className="size-4 text-primary" /> Chỉ số Năng lực & Thành
+          tựu (Track Record Metrics)
         </h3>
         <p className="text-xs text-muted-foreground">
-          Các chỉ số này được hiển thị nổi bật trên Trang Chủ (Hero / Stats section) và Trang Giới Thiệu (About Us).
+          Các chỉ số này được hiển thị nổi bật trên Trang Chủ (Hero / Stats
+          section) và Trang Giới Thiệu (About Us).
         </p>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 pt-2">
-          {(data.metrics || DEFAULT_METRICS).map((metric, idx) => (
+          {(data.metrics ?? []).map((metric, idx) => (
             <div
               key={idx}
               className="rounded-xl border border-slate-200 dark:border-border/80 p-4 bg-slate-50/50 dark:bg-muted/20 space-y-3"
             >
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-primary uppercase">Chỉ số #{idx + 1}</span>
+                <span className="text-xs font-bold text-primary uppercase">
+                  Chỉ số #{idx + 1}
+                </span>
+                <button
+                  type="button"
+                  aria-label={`Xóa chỉ số #${idx + 1}`}
+                  onClick={() => removeMetric(idx)}
+                  className="rounded-md p-1 text-muted-foreground hover:bg-red-50 hover:text-red-600"
+                >
+                  <Trash2 className="size-3.5" />
+                </button>
               </div>
               <div>
                 <label className="block text-[11px] font-medium text-muted-foreground mb-1">
@@ -369,7 +441,9 @@ export function SettingsManager() {
                 <Input
                   value={metric.value}
                   placeholder="50+, 100+, 98%..."
-                  onChange={(e) => handleMetricChange(idx, "value", e.target.value)}
+                  onChange={(e) =>
+                    handleMetricChange(idx, "value", e.target.value)
+                  }
                   className="bg-white dark:bg-background text-sm font-bold"
                 />
               </div>
@@ -380,7 +454,9 @@ export function SettingsManager() {
                 <Input
                   value={metric.label_vi}
                   placeholder="Dự án BIM & Quản lý"
-                  onChange={(e) => handleMetricChange(idx, "label_vi", e.target.value)}
+                  onChange={(e) =>
+                    handleMetricChange(idx, "label_vi", e.target.value)
+                  }
                   className="bg-white dark:bg-background text-xs"
                 />
               </div>
@@ -391,15 +467,25 @@ export function SettingsManager() {
                 <Input
                   value={metric.label_en}
                   placeholder="BIM & Management Projects"
-                  onChange={(e) => handleMetricChange(idx, "label_en", e.target.value)}
+                  onChange={(e) =>
+                    handleMetricChange(idx, "label_en", e.target.value)
+                  }
                   className="bg-white dark:bg-background text-xs"
                 />
               </div>
             </div>
           ))}
         </div>
+        {!data.metrics?.length && (
+          <p className="text-xs text-muted-foreground">
+            Chưa có chỉ số nào. Khối số liệu sẽ được ẩn trên website cho đến khi
+            bạn thêm.
+          </p>
+        )}
+        <Button type="button" variant="outline" size="sm" onClick={addMetric}>
+          <Plus className="size-4" /> Thêm chỉ số
+        </Button>
       </div>
-
     </form>
   );
 }

@@ -1,6 +1,8 @@
 "use client";
 
-import { CONTACT_EMAIL, ROUTES } from "@/constants/routes";
+import { ROUTES } from "@/constants/routes";
+import { useSiteSettings } from "@/features/page-content/context";
+import { telHref } from "@/lib/utils/contact";
 import { useLanguage } from "@/lib/i18n/context";
 import {
   Boxes,
@@ -50,6 +52,10 @@ export function CommandMenu({ isOpen, onClose }: CommandMenuProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
+  const settings = useSiteSettings();
+  const phone = settings?.phone;
+  const email = settings?.email;
+  const address = settings?.address;
 
   const items: CommandItem[] = useMemo(
     () => [
@@ -110,7 +116,8 @@ export function CommandMenu({ isOpen, onClose }: CommandMenuProps) {
         id: "nav-courses",
         category: "navigation",
         title: ui(locale).commandMenu.bIM4CAcademyProfessionalTraining,
-        subtitle: ui(locale).commandMenu.practicalRevitNavisworksOpenBIMCurriculum,
+        subtitle:
+          ui(locale).commandMenu.practicalRevitNavisworksOpenBIMCurriculum,
         icon: GraduationCap,
         keywords: [
           "khoa hoc",
@@ -155,44 +162,63 @@ export function CommandMenu({ isOpen, onClose }: CommandMenuProps) {
           onClose();
         },
       },
-      {
-        id: "act-call-hotline",
-        category: "action",
-        title: ui(locale).commandMenu.technicalHotline84932468,
-        subtitle: ui(locale).commandMenu.directProjectScopingSupport,
-        icon: Phone,
-        keywords: ["hotline", "dien thoai", "phone", "call", "lien he"],
-        action: () => {
-          window.location.href = "tel:+84932468099";
-          onClose();
-        },
-      },
-      {
-        id: "act-email-contact",
-        category: "action",
-        title: `Email: ${CONTACT_EMAIL}`,
-        subtitle: ui(locale).commandMenu.sendRFPAndProjectRequirements,
-        icon: Mail,
-        keywords: ["email", "thu dien tu", "mail", "Bim4c.lab@gmail.com"],
-        action: () => {
-          window.location.href = ROUTES.contactEmail;
-          onClose();
-        },
-      },
-      {
-        id: "act-danang-hq",
-        category: "legal",
-        title: ui(locale).commandMenu.hQ20BacSonDa,
-        subtitle: ui(locale).commandMenu.taxAddressAnKheWard,
-        icon: MapPin,
-        keywords: ["tru so", "da nang", "dia chi", "headquarters", "bac son"],
-        action: () => {
-          router.push(ROUTES.contact);
-          onClose();
-        },
-      },
+      // Contact shortcuts appear only for details set in admin settings.
+      ...(telHref(phone)
+        ? [
+            {
+              id: "act-call-hotline",
+              category: "action" as const,
+              title: `${ui(locale).commandMenu.technicalHotline}: ${phone}`,
+              subtitle: ui(locale).commandMenu.directProjectScopingSupport,
+              icon: Phone,
+              keywords: ["hotline", "dien thoai", "phone", "call", "lien he"],
+              action: () => {
+                window.location.href = telHref(phone)!;
+                onClose();
+              },
+            },
+          ]
+        : []),
+      ...(email
+        ? [
+            {
+              id: "act-email-contact",
+              category: "action" as const,
+              title: `Email: ${email}`,
+              subtitle: ui(locale).commandMenu.sendRFPAndProjectRequirements,
+              icon: Mail,
+              keywords: ["email", "thu dien tu", "mail", email],
+              action: () => {
+                window.location.href = `mailto:${email}`;
+                onClose();
+              },
+            },
+          ]
+        : []),
+      ...(address
+        ? [
+            {
+              id: "act-headquarters",
+              category: "legal" as const,
+              title: ui(locale).commandMenu.headquarters,
+              subtitle: address,
+              icon: MapPin,
+              keywords: [
+                "tru so",
+                "dia chi",
+                "headquarters",
+                "address",
+                address,
+              ],
+              action: () => {
+                router.push(ROUTES.contact);
+                onClose();
+              },
+            },
+          ]
+        : []),
     ],
-    [locale, router, onClose],
+    [locale, router, onClose, phone, email, address],
   );
 
   const filteredItems = useMemo(() => {
@@ -301,9 +327,7 @@ export function CommandMenu({ isOpen, onClose }: CommandMenuProps) {
         ref={dialogRef}
         role="dialog"
         aria-modal="true"
-        aria-label={
-          ui(locale).commandMenu.quickSearchNavigationMenu
-        }
+        aria-label={ui(locale).commandMenu.quickSearchNavigationMenu}
         className="relative w-full max-w-2xl overflow-hidden rounded-2xl border border-white/20 bg-brand-ink/95 shadow-2xl backdrop-blur-2xl text-white"
         onClick={(e) => e.stopPropagation()}
       >
@@ -338,9 +362,7 @@ export function CommandMenu({ isOpen, onClose }: CommandMenuProps) {
         <div className="max-h-[60vh] overflow-y-auto p-2 divide-y divide-white/5">
           {filteredItems.length === 0 ? (
             <div className="py-12 text-center text-sm text-zinc-400">
-              <p>
-                {ui(locale).commandMenu.noMatchingCommandsFound}
-              </p>
+              <p>{ui(locale).commandMenu.noMatchingCommandsFound}</p>
               <p className="mt-1 text-xs text-zinc-500">
                 {ui(locale).commandMenu.trySearchingBIMProjectsOr}
               </p>

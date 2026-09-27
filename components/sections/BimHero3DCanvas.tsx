@@ -61,8 +61,8 @@ export function BimHero3DCanvas() {
 
     // 2. Camera (Isometric Architectural Angle)
     const camera = new THREE.PerspectiveCamera(36, width / height, 0.1, 80);
-    const cameraBase = new THREE.Vector3(19, 13, 21);
-    const lookTarget = new THREE.Vector3(0, 6.2, 0);
+    const cameraBase = new THREE.Vector3(15.5, 11, 17);
+    const lookTarget = new THREE.Vector3(0, 6.4, 0);
     camera.position.copy(cameraBase);
     camera.lookAt(lookTarget);
 
@@ -603,7 +603,7 @@ export function BimHero3DCanvas() {
   }, []);
 
   return (
-    <div className="relative h-[380px] sm:h-[440px] lg:h-[480px] w-full select-none pointer-events-none">
+    <div className="relative h-[460px] sm:h-[540px] lg:h-[640px] w-full select-none pointer-events-none">
       {/* Soft teal halo behind the model so it sits in the hero's light, not in a box */}
       <div
         aria-hidden="true"

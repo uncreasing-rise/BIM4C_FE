@@ -1,6 +1,11 @@
 "use client";
 
-import { CONTACT_EMAIL, ROUTES } from "@/constants/routes";
+import { ROUTES } from "@/constants/routes";
+import {
+  usePageContent,
+  useSiteSettings,
+} from "@/features/page-content/context";
+import { telHref } from "@/lib/utils/contact";
 import { NewsletterForm } from "@/features/contact/components/NewsletterForm";
 import { useLanguage } from "@/lib/i18n/context";
 import { ArrowUpRight, Mail, MapPin, Phone } from "lucide-react";
@@ -11,6 +16,12 @@ import { SocialLinks } from "@/components/shared/SocialLinks";
 import { ui } from "@/lib/i18n/ui";
 export function Footer() {
   const { t, locale } = useLanguage();
+  const settings = useSiteSettings();
+  const company = usePageContent("company");
+  const companyName =
+    settings?.companyName || company?.enterpriseInfo?.companyName;
+  const address = settings?.address || company?.enterpriseInfo?.headquarters;
+  const phoneHref = telHref(settings?.phone);
   const navigation = [
     { label: t.navigation.about, href: ROUTES.about },
     { label: t.navigation.services, href: ROUTES.services },
@@ -46,28 +57,34 @@ export function Footer() {
               </span>
             </div>
           </Link>
-          <p className="mt-5 max-w-sm text-sm leading-7">
-            {t.footer.enterpriseInfo.companyName}
-          </p>
+          {companyName && (
+            <p className="mt-5 max-w-sm text-sm leading-7">{companyName}</p>
+          )}
           <div className="mt-6 grid gap-4 text-sm leading-6">
-            <p className="flex gap-3">
-              <MapPin className="mt-1 size-4 shrink-0 text-teal-300" />
-              <span>{t.footer.enterpriseInfo.headquarters}</span>
-            </p>
-            <a
-              href={ROUTES.contactEmail}
-              className="flex min-h-8 items-center gap-3 hover:text-white"
-            >
-              <Mail className="size-4 text-teal-300" />
-              {CONTACT_EMAIL}
-            </a>
-            <a
-              href="tel:+84932468099"
-              className="flex min-h-8 items-center gap-3 hover:text-white"
-            >
-              <Phone className="size-4 text-teal-300" />
-              +84 93 2468 099
-            </a>
+            {address && (
+              <p className="flex gap-3">
+                <MapPin className="mt-1 size-4 shrink-0 text-teal-300" />
+                <span>{address}</span>
+              </p>
+            )}
+            {settings?.email && (
+              <a
+                href={`mailto:${settings.email}`}
+                className="flex min-h-8 items-center gap-3 hover:text-white"
+              >
+                <Mail className="size-4 text-teal-300" />
+                {settings.email}
+              </a>
+            )}
+            {phoneHref && (
+              <a
+                href={phoneHref}
+                className="flex min-h-8 items-center gap-3 hover:text-white"
+              >
+                <Phone className="size-4 text-teal-300" />
+                {settings?.phone}
+              </a>
+            )}
             <div className="pt-2">
               <span className="text-[11px] font-medium tracking-wider uppercase text-slate-400 block mb-2.5">
                 {ui(locale).footer.connectWithUs}
@@ -82,9 +99,7 @@ export function Footer() {
           </h2>
           <nav
             className="mt-5 grid gap-1"
-            aria-label={
-              ui(locale).footer.footerNavigation
-            }
+            aria-label={ui(locale).footer.footerNavigation}
           >
             {navigation.map((item) => (
               <Link
@@ -119,7 +134,7 @@ export function Footer() {
       </div>
       <div className="border-t border-white/10">
         <div className="site-container flex flex-col justify-between gap-4 py-6 text-xs leading-6 text-slate-400 lg:flex-row">
-          <span>{t.footer.copyright}</span>
+          <span>{company?.copyright}</span>
           <div className="flex flex-wrap gap-x-6 gap-y-2">
             <Link
               href={ROUTES.legalDetail("dieu-khoan-su-dung")}

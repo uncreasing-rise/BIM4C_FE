@@ -5,7 +5,6 @@ import { LocalizedLink as Link } from "@/components/shared/LocalizedLink";
 import { ArrowUpRight, Check } from "lucide-react";
 import { useCatalogFilters } from "@/components/shared/useCatalogFilters";
 import {
-  CatalogCategories,
   CatalogFilterBar,
   CatalogPagination,
   CatalogSearch,
@@ -13,31 +12,10 @@ import {
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ROUTES } from "@/constants/routes";
 import type { ContentEntry } from "@/types/content";
-import { toLocalizedLabel } from "@/lib/utils/public-labels";
 import type { PageMeta } from "@/features/shared/types/pagination";
 import { useLanguage } from "@/lib/i18n/context";
 import { localizeContentList } from "@/lib/i18n/localize";
 import { resolveCoverImage } from "@/lib/content/cover-images";
-
-const LEGACY_SERVICE_BASE_CATEGORIES = [
-  "Tư vấn BIM",
-  "Đào tạo",
-  "Thiết kế",
-  "Tư vấn giám sát",
-  "BIM Coordination",
-  "Digital Twin & Dữ liệu tài sản",
-];
-
-void LEGACY_SERVICE_BASE_CATEGORIES;
-
-const SERVICE_BASE_CATEGORIES = [
-  "Tư vấn BIM",
-  "Đào tạo",
-  "Thiết kế",
-  "Tư vấn giám sát",
-  "BIM Coordination",
-  "Digital Twin & Dữ liệu tài sản",
-];
 
 const pageSize = 6;
 
@@ -51,25 +29,13 @@ export function ServiceExplorer({
   const { t, locale } = useLanguage();
   const services = localizeContentList(rawServices, locale);
 
-  const allLabel = t.common.all;
-  const categories = [
-    allLabel,
-    ...SERVICE_BASE_CATEGORIES.map((cat) => toLocalizedLabel(cat, locale)),
-  ];
-
-  const { searchParams, query, setQuery, update, reset, pending } =
-    useCatalogFilters();
-  const categoryParam = searchParams.get("category") ?? "All";
-  const category =
-    categoryParam === "All" || categoryParam === "Tất cả"
-      ? allLabel
-      : toLocalizedLabel(categoryParam, locale);
+  // Services have no category in the API, so the catalogue offers search only.
+  const { query, setQuery, reset, pending } = useCatalogFilters();
 
   const pages = meta.totalPages;
   const page = meta.page;
   const visible = services;
 
-  const formatFilterLabel = (val: string) => toLocalizedLabel(val, locale);
 
   return (
     <section className="py-12 lg:py-16" id="service-list" aria-busy={pending}>
@@ -84,17 +50,6 @@ export function ServiceExplorer({
           </p>
         </header>
         <div>
-          {categories.length > 2 && (
-            <CatalogCategories
-              ariaLabel={t.servicesPage.catalogueTitle}
-              items={categories}
-              value={category === "All" ? allLabel : category}
-              formatLabel={formatFilterLabel}
-              onChange={(value) => {
-                update("category", value === allLabel ? "All" : value);
-              }}
-            />
-          )}
           <CatalogFilterBar>
             <CatalogSearch
               label={t.servicesPage.searchLabel}
@@ -103,8 +58,7 @@ export function ServiceExplorer({
               onChange={setQuery}
             />
           </CatalogFilterBar>
-          {(query ||
-            (categoryParam !== "All" && categoryParam !== allLabel)) && (
+          {query && (
             <button
               className="mb-4 min-h-11 rounded-lg px-3 text-sm font-semibold text-primary hover:bg-muted"
               onClick={reset}

@@ -49,32 +49,15 @@ export async function getProjectsPage(
 ): Promise<PageResult<Project>> {
   const page = params.page ?? 1;
   const limit = params.limit ?? 6;
-  const categorySlug: Record<string, string> = {
-    "high-rise": "nha-cao-tang",
-    "low-rise": "nha-thap-tang",
-    industrial: "cong-nghiep",
-    infrastructure: "ha-tang",
-    mep: "co-dien",
-  };
-  const statusSlug: Record<string, string> = {
-    "in delivery": "in_progress",
-    "in progress": "in_progress",
-    completed: "completed",
-    planned: "planned",
-    profiled: "profiled",
-  };
+  // Filter values are the slugs/keys returned by getProjectFilters.
   const endpoint = withQueryParams(API_ENDPOINTS.projects.list, {
     page,
     limit,
     search: params.search,
-    category:
-      categorySlug[params.category?.toLowerCase().replace(/\s+/g, "-") ?? ""] ??
-      params.category?.toLowerCase().replace(/\s+/g, "-"),
+    category: params.category,
     location: params.location,
     year: params.year,
-    status:
-      statusSlug[params.status?.trim().toLowerCase() ?? ""] ??
-      params.status?.trim().toLowerCase(),
+    status: params.status?.trim().toLowerCase(),
     sortBy: params.sortBy,
     sortOrder: params.sortOrder,
   });
@@ -91,6 +74,31 @@ export async function getProjectsPage(
     if (canDeferBuildData(error))
       return { items: [], meta: { page, limit, total: 0, totalPages: 1 } };
     throw error;
+  }
+}
+
+/** Filter options present in published projects; empty lists when the API is unavailable. */
+export interface ProjectFilters {
+  categories: { slug: string; name: string }[];
+  locations: { value: string; label_vi: string | null }[];
+  years: number[];
+  statuses: string[];
+}
+
+export async function getProjectFilters(): Promise<ProjectFilters> {
+  try {
+    const response = await apiClient.get<Partial<ProjectFilters>>(
+      API_ENDPOINTS.projects.filters,
+      { next: { revalidate: 300, tags: ["projects"] } },
+    );
+    return {
+      categories: response?.categories ?? [],
+      locations: response?.locations ?? [],
+      years: response?.years ?? [],
+      statuses: response?.statuses ?? [],
+    };
+  } catch {
+    return { categories: [], locations: [], years: [], statuses: [] };
   }
 }
 

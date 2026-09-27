@@ -12,18 +12,34 @@ import {
   Share2,
 } from "lucide-react";
 import { toast } from "sonner";
+import {
+  usePageContent,
+  useSiteSettings,
+} from "@/features/page-content/context";
+import { telHref } from "@/lib/utils/contact";
 
 import { ui } from "@/lib/i18n/ui";
-const MAP_EMBED_URL =
-  "https://maps.google.com/maps?q=20+Bac+Son+Da+Nang&output=embed";
 
-const GOOGLE_MAPS_DIRECTION_URL =
-  "https://www.google.com/maps/dir/?api=1&destination=20+Bac+Son+Da+Nang";
-
-const HEADQUARTERS_ADDRESS = "20 Bắc Sơn, Đà Nẵng, Việt Nam";
-
+/** Map, directions and contact card are all derived from the admin address; no address hides the section. */
 export function OfficeLocationMap() {
   const { t, locale } = useLanguage();
+  const settings = useSiteSettings();
+  const map = usePageContent("contact")?.map;
+  const info = usePageContent("company")?.enterpriseInfo;
+  const address = settings?.address?.trim();
+  if (!address) return null;
+
+  const query = encodeURIComponent(address);
+  const mapEmbedUrl = `https://maps.google.com/maps?q=${query}&output=embed`;
+  const directionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${query}`;
+  const companyName =
+    (locale === "en" && info?.internationalName) ||
+    settings?.companyName ||
+    info?.companyName;
+  const phoneHref = telHref(settings?.phone);
+  const hasSocial = Object.values(settings?.socialLinks ?? {}).some((url) =>
+    url?.trim(),
+  );
 
   return (
     <section
@@ -34,19 +50,22 @@ export function OfficeLocationMap() {
         {/* Header Section */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
           <div>
-            <p className="eyebrow">{t.contactPage.mapSection.eyebrow}</p>
-            <h2 className="section-title">{t.contactPage.mapSection.title}</h2>
-            <p className="mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground">
-              {t.contactPage.mapSection.desc}
-            </p>
+            {map?.eyebrow && <p className="eyebrow">{map.eyebrow}</p>}
+            {map?.title && <h2 className="section-title">{map.title}</h2>}
+            {map?.desc && (
+              <p className="mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground">
+                {map.desc}
+              </p>
+            )}
           </div>
           <div className="flex flex-wrap items-center gap-3 shrink-0">
             <button
               type="button"
               onClick={() => {
-                navigator.clipboard.writeText(HEADQUARTERS_ADDRESS);
+                navigator.clipboard.writeText(address);
                 toast.success(
-                  ui(locale).officeLocationMap.headquartersAddressCopiedToClipboard,
+                  ui(locale).officeLocationMap
+                    .headquartersAddressCopiedToClipboard,
                 );
               }}
               className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2.5 text-xs font-semibold text-foreground shadow-2xs hover:bg-muted transition-colors"
@@ -55,7 +74,7 @@ export function OfficeLocationMap() {
               <span>{t.contactPage.mapSection.copyAddressBtn}</span>
             </button>
             <a
-              href={GOOGLE_MAPS_DIRECTION_URL}
+              href={directionsUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-xs font-semibold text-white shadow-sm hover:bg-primary-hover transition-colors"
@@ -70,26 +89,26 @@ export function OfficeLocationMap() {
         {/* Map Viewport Container */}
         <div className="relative overflow-hidden rounded-3xl border border-border/80 bg-card shadow-2xl">
           {/* Top Bar on Map */}
-          <div className="flex flex-wrap items-center justify-end gap-3 border-b border-border/60 bg-muted/60 px-5 py-3 text-xs">
-            <div className="flex items-center gap-2 text-muted-foreground font-mono text-[11px]">
-              <Clock className="size-3.5 text-primary" />
-              <span>{t.contactPage.mapSection.workingHours}</span>
+          {map?.workingHours && (
+            <div className="flex flex-wrap items-center justify-end gap-3 border-b border-border/60 bg-muted/60 px-5 py-3 text-xs">
+              <div className="flex items-center gap-2 text-muted-foreground font-mono text-[11px]">
+                <Clock className="size-3.5 text-primary" />
+                <span>{map.workingHours}</span>
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Map & Telemetry HUD Overlay Grid */}
           <div className="relative w-full h-[420px] sm:h-[480px] lg:h-[540px] bg-muted">
             <iframe
-              src={MAP_EMBED_URL}
+              src={mapEmbedUrl}
               width="100%"
               height="100%"
               style={{ border: 0 }}
               allowFullScreen
               loading="lazy"
               referrerPolicy="strict-origin-when-cross-origin"
-              title={
-                ui(locale).officeLocationMap.bIM4CDaNangHeadquartersMap
-              }
+              title={ui(locale).officeLocationMap.bIM4CDaNangHeadquartersMap}
               className="w-full h-full grayscale-[10%] contrast-[105%]"
             />
 
@@ -108,25 +127,29 @@ export function OfficeLocationMap() {
                   </span>
                 </div>
 
-                <p className="mt-2.5 text-sm font-bold leading-snug text-white">
-                  {ui(locale).officeLocationMap.bIM4CTECHNOLOGYCONSTRUCTIONJOINTSTOCK}
-                </p>
+                {companyName && (
+                  <p className="mt-2.5 text-sm font-bold leading-snug text-white">
+                    {companyName}
+                  </p>
+                )}
 
                 <p className="mt-1 flex items-start gap-2 text-xs text-slate-300 leading-relaxed">
                   <MapPin className="size-4 shrink-0 text-teal-400 mt-0.5" />
-                  <span>{HEADQUARTERS_ADDRESS}</span>
+                  <span>{address}</span>
                 </p>
 
                 <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-white/10 pt-2.5 text-xs text-slate-300">
+                  {phoneHref && (
+                    <a
+                      href={phoneHref}
+                      className="flex items-center gap-1.5 text-teal-300 hover:text-white transition-colors"
+                    >
+                      <Phone className="size-3.5" />
+                      <span>{settings?.phone}</span>
+                    </a>
+                  )}
                   <a
-                    href="tel:+84932468099"
-                    className="flex items-center gap-1.5 text-teal-300 hover:text-white transition-colors"
-                  >
-                    <Phone className="size-3.5" />
-                    <span>+84 93 2468 099</span>
-                  </a>
-                  <a
-                    href={GOOGLE_MAPS_DIRECTION_URL}
+                    href={directionsUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-1 text-teal-300 hover:text-white transition-colors font-medium"
@@ -141,24 +164,26 @@ export function OfficeLocationMap() {
         </div>
 
         {/* Social Networks & Digital Channels Section */}
-        <div className="mt-12">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-primary flex items-center gap-1.5">
-                <Share2 className="size-3.5" />
-                {ui(locale).officeLocationMap.socialMediaNetworks}
+        {hasSocial && (
+          <div className="mt-12">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wider text-primary flex items-center gap-1.5">
+                  <Share2 className="size-3.5" />
+                  {ui(locale).officeLocationMap.socialMediaNetworks}
+                </p>
+                <h3 className="text-xl font-bold text-foreground mt-1">
+                  {ui(locale).officeLocationMap.connectWithBIM4CAcrossPlatforms}
+                </h3>
+              </div>
+              <p className="text-xs text-muted-foreground max-w-sm">
+                {ui(locale).officeLocationMap.followUsToStayUpdated}
               </p>
-              <h3 className="text-xl font-bold text-foreground mt-1">
-                {ui(locale).officeLocationMap.connectWithBIM4CAcrossPlatforms}
-              </h3>
             </div>
-            <p className="text-xs text-muted-foreground max-w-sm">
-              {ui(locale).officeLocationMap.followUsToStayUpdated}
-            </p>
-          </div>
 
-          <SocialLinks variant="cards" />
-        </div>
+            <SocialLinks variant="cards" />
+          </div>
+        )}
       </div>
     </section>
   );

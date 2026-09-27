@@ -1,6 +1,7 @@
 "use client";
 
 import { usePublicMotion } from "@/components/motion/hooks/use-public-motion";
+import { usePageContent } from "@/features/page-content/context";
 
 import { JsonLd } from "@/components/seo/JsonLd";
 import { ContentBlockRenderer } from "@/components/shared/ContentBlockRenderer";
@@ -60,6 +61,7 @@ export function CourseDetailView({
 }: CourseDetailViewProps) {
   usePublicMotion();
   const { t, locale } = useLanguage();
+  const b2b = usePageContent("detail")?.b2bTraining;
   const entry = localizeContent(rawEntry, locale) as CourseDetailEntry;
   const related = localizeContentList(rawRelated, locale);
 
@@ -271,31 +273,34 @@ export function CourseDetailView({
               </div>}
 
               {/* B2B Cohort Training Banner */}
+              {(b2b?.title || b2b?.desc) && (
               <div className="mt-10 relative overflow-hidden rounded-2xl bg-brand-ink p-6 text-white sm:p-8">
                 <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
                   <div>
                     <span className="rounded bg-teal-500/20 px-2.5 py-1 text-xs font-bold text-teal-300 border border-teal-500/30">
                       B2B CORPORATE TRAINING
                     </span>
-                    <h3 className="mt-3 text-2xl font-bold text-white">
-                      {t.detailPage.b2bTrainingTitle}
-                    </h3>
-                    <p className="mt-2 max-w-xl text-sm leading-relaxed text-slate-300">
-                      {t.detailPage.b2bTrainingDesc}
-                    </p>
+                    {b2b.title && (
+                      <h3 className="mt-3 text-2xl font-bold text-white">{b2b.title}</h3>
+                    )}
+                    {b2b.desc && (
+                      <p className="mt-2 max-w-xl text-sm leading-relaxed text-slate-300">{b2b.desc}</p>
+                    )}
                   </div>
-                  <Button
-                    asChild
-                    size="lg"
-                    className="shrink-0 bg-teal-500 hover:bg-teal-400 text-brand-ink font-bold"
-                  >
-                    <a href="#course-registration">
-                      {t.detailPage.b2bTrainingAction}{" "}
-                      <ArrowUpRight className="size-4 ml-1" />
-                    </a>
-                  </Button>
+                  {b2b.action && (
+                    <Button
+                      asChild
+                      size="lg"
+                      className="shrink-0 bg-teal-500 hover:bg-teal-400 text-brand-ink font-bold"
+                    >
+                      <a href="#course-registration">
+                        {b2b.action} <ArrowUpRight className="size-4 ml-1" />
+                      </a>
+                    </Button>
+                  )}
                 </div>
               </div>
+              )}
             </div>
 
             {/* Sidebar: Course Registration + Training Trust Signals (NOT Project NDA!) */}

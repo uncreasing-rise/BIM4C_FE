@@ -1,7 +1,4 @@
-export const CONTACT_EMAIL = "Bim4c.lab@gmail.com";
-
 export const ROUTES = {
-  profile: "/documents/hsnl-bim4c-2026.pdf",
   home: "/",
   about: "/gioi-thieu",
   services: "/dich-vu",
@@ -20,5 +17,4 @@ export const ROUTES = {
   legalDetail: (slug: string) => `/phap-ly/${slug}`,
   contact: "/lien-he",
   bimViewer: "/bim-viewer",
-  contactEmail: `mailto:${CONTACT_EMAIL}`,
 } as const;

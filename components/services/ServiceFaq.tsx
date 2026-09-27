@@ -1,10 +1,13 @@
 "use client";
 
 import { Plus } from "lucide-react";
-import { useLanguage } from "@/lib/i18n/context";
+import { usePageContent } from "@/features/page-content/context";
+import { filled } from "@/lib/utils/contact";
 
 export function ServiceFaq() {
-  const { t } = useLanguage();
+  const faq = usePageContent("services.faq");
+  const items = filled(faq?.items).filter((item) => item.question && item.answer);
+  if (!items.length) return null;
 
   return (
     <section
@@ -13,16 +16,20 @@ export function ServiceFaq() {
     >
       <div className="site-container grid gap-8 lg:grid-cols-[.75fr_1.25fr] lg:gap-16">
         <div>
-          <p className="eyebrow">{t.servicesPage.faqEyebrow}</p>
-          <h2 id="service-faq-title" className="section-title">
-            {t.servicesPage.faqTitle}
-          </h2>
-          <p className="mt-4 text-sm leading-7 text-muted-foreground">
-            {t.servicesPage.faqDesc}
-          </p>
+          {faq?.eyebrow && <p className="eyebrow">{faq.eyebrow}</p>}
+          {faq?.title && (
+            <h2 id="service-faq-title" className="section-title">
+              {faq.title}
+            </h2>
+          )}
+          {faq?.desc && (
+            <p className="mt-4 text-sm leading-7 text-muted-foreground">
+              {faq.desc}
+            </p>
+          )}
         </div>
         <div className="space-y-4">
-          {t.servicesPage.faqs.map(({ question, answer }) => (
+          {items.map(({ question, answer }) => (
             <details
               key={question}
               className="group rounded-2xl border bg-card p-5 shadow-xs transition-all duration-200 hover:border-primary/40 hover:shadow-md [&_summary::-webkit-details-marker]:hidden"

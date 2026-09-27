@@ -1,6 +1,7 @@
 "use client";
 
 import { usePublicMotion } from "@/components/motion/hooks/use-public-motion";
+import { TrustSignals } from "@/components/shared/TrustSignals";
 
 import { JsonLd } from "@/components/seo/JsonLd";
 import { ContentBlockRenderer } from "@/components/shared/ContentBlockRenderer";
@@ -19,11 +20,8 @@ import type { ContentEntry } from "@/types/content";
 import {
   ArrowLeft,
   ArrowRight,
-  Award,
   CheckCircle2,
-  Clock,
   Layers,
-  ShieldCheck,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -172,43 +170,7 @@ export function ServiceDetailView({
                 />
 
                 {/* Service Trust Signals */}
-                {t.detailPage.trustSignals && (
-                  <div className="mt-6 pt-5 border-t border-white/15 space-y-3 bg-teal-500/[0.04] p-4 rounded-xl border border-teal-500/20">
-                    <div className="flex items-start gap-2.5 text-xs text-slate-200">
-                      <ShieldCheck className="size-4 text-teal-400 shrink-0 mt-0.5" />
-                      <div>
-                        <strong className="font-bold text-teal-300">
-                          {t.detailPage.trustSignals.ndaTitle}:{" "}
-                        </strong>
-                        <span className="text-slate-200">
-                          {t.detailPage.trustSignals.ndaDesc}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="flex items-start gap-2.5 text-xs text-slate-200">
-                      <Clock className="size-4 text-teal-400 shrink-0 mt-0.5" />
-                      <div>
-                        <strong className="font-bold text-teal-300">
-                          {t.detailPage.trustSignals.slaTitle}:{" "}
-                        </strong>
-                        <span className="text-slate-200">
-                          {t.detailPage.trustSignals.slaDesc}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="flex items-start gap-2.5 text-xs text-slate-200">
-                      <Award className="size-4 text-teal-400 shrink-0 mt-0.5" />
-                      <div>
-                        <strong className="font-bold text-teal-300">
-                          {t.detailPage.trustSignals.expertTitle}:{" "}
-                        </strong>
-                        <span className="text-slate-200">
-                          {t.detailPage.trustSignals.expertDesc}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                )}
+                <TrustSignals />
               </CardContent>
             </Card>
           </div>

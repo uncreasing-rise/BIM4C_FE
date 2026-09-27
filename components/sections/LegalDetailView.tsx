@@ -5,7 +5,8 @@ import { usePublicMotion } from "@/components/motion/hooks/use-public-motion";
 import { LocalizedLink as Link } from "@/components/shared/LocalizedLink";
 import { notFound } from "next/navigation";
 import { PageHero } from "@/components/shared/PageHero";
-import { getLegalDocument } from "@/constants/legal-content";
+import { CONTACT_EMAIL_TOKEN, getLegalDocument } from "@/constants/legal-content";
+import { useSiteSettings } from "@/features/page-content/context";
 import { ROUTES } from "@/constants/routes";
 import { useLanguage } from "@/lib/i18n/context";
 
@@ -14,6 +15,8 @@ export function LegalDetailView({ slug }: { slug: string }) {
   usePublicMotion();
   const { t, locale } = useLanguage();
   const document = getLegalDocument(slug, locale);
+  const contactEmail =
+    useSiteSettings()?.email || ui(locale).legalDetailView.contactPageFallback;
   if (!document) notFound();
 
   return (
@@ -74,7 +77,7 @@ export function LegalDetailView({ slug }: { slug: string }) {
                       className="mb-4 leading-[1.8] text-muted-foreground"
                       key={paragraph}
                     >
-                      {paragraph}
+                      {paragraph.replaceAll(CONTACT_EMAIL_TOKEN, contactEmail)}
                     </p>
                   ))}
                   {section.items && (

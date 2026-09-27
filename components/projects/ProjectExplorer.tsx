@@ -13,31 +13,23 @@ import {
 import { ROUTES } from "@/constants/routes";
 import {
   ALL_PROJECT_FILTER,
-  PROJECT_CATEGORIES,
   PROJECT_PAGE_SIZE,
 } from "@/features/projects/constants";
 import type { Project } from "@/features/projects/types/project";
+import type { ProjectFilters } from "@/features/projects/api/queries";
 import { toLocalizedLabel } from "@/lib/utils/public-labels";
 import type { PageMeta } from "@/features/shared/types/pagination";
 import { useLanguage } from "@/lib/i18n/context";
 import { localizeContentList } from "@/lib/i18n/localize";
 
-const ALL_PROJECT_LOCATIONS = [
-  "Hà Nội",
-  "TP. Hồ Chí Minh",
-  "Bình Dương",
-  "Nghệ An",
-  "Bắc Ninh",
-];
-const ALL_PROJECT_YEARS = ["2026", "2025"];
-const ALL_PROJECT_STATUSES = ["In delivery", "Completed", "Planned"];
-
 export function ProjectExplorer({
   projects: rawProjects,
   meta,
+  filters,
 }: {
   projects: Project[];
   meta: PageMeta;
+  filters: ProjectFilters;
 }) {
   const { t, locale } = useLanguage();
   const projects = localizeContentList(rawProjects, locale);
@@ -60,6 +52,13 @@ export function ProjectExplorer({
   );
 
   const formatFilterLabel = (val: string) => toLocalizedLabel(val, locale);
+  // Every option comes from /projects/filters; a filter with nothing to choose is hidden.
+  const categoryNames = new Map(filters.categories.map((c) => [c.slug, c.name]));
+  const locationLabels = new Map(
+    filters.locations.map((l) => [l.value, (locale === "vi" && l.label_vi) || l.value]),
+  );
+  const categoryItems = [ALL_PROJECT_FILTER, ...filters.categories.map((c) => c.slug)];
+  const years = filters.years.map(String);
 
   return (
     <section
@@ -79,13 +78,15 @@ export function ProjectExplorer({
             {t.projectsPage.catalogueDesc}
           </p>
         </header>
-        <CatalogCategories
-          ariaLabel={t.projectsPage.catalogueTitle}
-          items={PROJECT_CATEGORIES}
-          value={category}
-          formatLabel={formatFilterLabel}
-          onChange={(value) => update("category", value)}
-        />
+        {filters.categories.length > 0 && (
+          <CatalogCategories
+            ariaLabel={t.projectsPage.catalogueTitle}
+            items={categoryItems}
+            value={category}
+            formatLabel={(slug) => formatFilterLabel(categoryNames.get(slug) ?? slug)}
+            onChange={(value) => update("category", value)}
+          />
+        )}
         <CatalogFilterBar>
           <CatalogSearch
             label={t.projectsPage.searchLabel}
@@ -93,27 +94,33 @@ export function ProjectExplorer({
             value={query}
             onChange={setQuery}
           />
-          <CatalogSelect
-            label={t.projectsPage.locationFilter}
-            value={location}
-            values={ALL_PROJECT_LOCATIONS}
-            onChange={(value) => update("location", value)}
-            formatLabel={formatFilterLabel}
-          />
-          <CatalogSelect
-            label={t.projectsPage.yearFilter}
-            value={year}
-            values={ALL_PROJECT_YEARS}
-            onChange={(value) => update("year", value)}
-            formatLabel={formatFilterLabel}
-          />
-          <CatalogSelect
-            label={t.projectsPage.statusFilter}
-            value={status}
-            values={ALL_PROJECT_STATUSES}
-            onChange={(value) => update("status", value)}
-            formatLabel={formatFilterLabel}
-          />
+          {filters.locations.length > 0 && (
+            <CatalogSelect
+              label={t.projectsPage.locationFilter}
+              value={location}
+              values={filters.locations.map((l) => l.value)}
+              onChange={(value) => update("location", value)}
+              formatLabel={(value) => formatFilterLabel(locationLabels.get(value) ?? value)}
+            />
+          )}
+          {years.length > 0 && (
+            <CatalogSelect
+              label={t.projectsPage.yearFilter}
+              value={year}
+              values={years}
+              onChange={(value) => update("year", value)}
+              formatLabel={formatFilterLabel}
+            />
+          )}
+          {filters.statuses.length > 0 && (
+            <CatalogSelect
+              label={t.projectsPage.statusFilter}
+              value={status}
+              values={filters.statuses}
+              onChange={(value) => update("status", value)}
+              formatLabel={formatFilterLabel}
+            />
+          )}
         </CatalogFilterBar>
         <div className="mb-6 flex items-center justify-between gap-4">
           <p

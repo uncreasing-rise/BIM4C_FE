@@ -4,7 +4,6 @@ import Image from "next/image";
 import { LocalizedLink as Link } from "@/components/shared/LocalizedLink";
 import { ArrowUpRight, Clock3 } from "lucide-react";
 import {
-  CatalogCategories,
   CatalogFilterBar,
   CatalogPagination,
   CatalogSearch,
@@ -19,15 +18,6 @@ import type { PageMeta } from "@/features/shared/types/pagination";
 import { useLanguage } from "@/lib/i18n/context";
 import { localizeContentList } from "@/lib/i18n/localize";
 import { resolveCoverImage } from "@/lib/content/cover-images";
-
-const COURSE_BASE_CATEGORIES = [
-  "Nền tảng",
-  "Chuyên sâu",
-  "Quản lý",
-  "Chuyên ngành",
-  "Thực chiến",
-  "Quản trị thông tin",
-];
 
 export function CourseExplorer({
   courses: rawCourses,
@@ -45,19 +35,8 @@ export function CourseExplorer({
       locale,
     );
 
-  const { searchParams, query, setQuery, update, reset, pending } =
-    useCatalogFilters();
-  const categoryParam = searchParams.get("category") ?? "All";
-  const category =
-    categoryParam === "All" || categoryParam === "Tất cả"
-      ? t.common.all
-      : toLocalizedLabel(categoryParam, locale);
-
-  const allLabel = t.common.all;
-  const categories = [
-    allLabel,
-    ...COURSE_BASE_CATEGORIES.map((cat) => toLocalizedLabel(cat, locale)),
-  ];
+  // Courses have no category in the API, so the catalogue offers search only.
+  const { query, setQuery, reset, pending } = useCatalogFilters();
 
   const pages = meta.totalPages;
   const page = meta.page;
@@ -79,14 +58,6 @@ export function CourseExplorer({
             {t.coursesPage.catalogueDesc}
           </p>
         </header>
-        <CatalogCategories
-          ariaLabel={t.coursesPage.catalogueTitle}
-          items={categories}
-          value={category}
-          onChange={(value) =>
-            update("category", value === allLabel ? "All" : value)
-          }
-        />
         <CatalogFilterBar>
           <CatalogSearch
             label={t.coursesPage.searchLabel}
@@ -99,8 +70,7 @@ export function CourseExplorer({
           <p role="status" className="text-sm text-muted-foreground">
             {t.coursesPage.programmesCount(meta.total)}
           </p>
-          {(query ||
-            (categoryParam !== "All" && categoryParam !== allLabel)) && (
+          {query && (
             <Button variant="ghost" onClick={reset}>
               {t.common.clearFilters}
             </Button>

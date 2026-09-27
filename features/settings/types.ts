@@ -16,10 +16,3 @@ export interface SiteSettingsData {
   defaultSeoDescription: string;
   defaultOgImage?: string;
 }
-
-export const DEFAULT_METRICS: CompanyMetric[] = [
-  { value: "50+", label_vi: "Dự án BIM & Quản lý", label_en: "BIM & Management Projects" },
-  { value: "100+", label_vi: "Kỹ sư & Chuyên gia", label_en: "Engineers & Specialists" },
-  { value: "05+", label_vi: "Năm phát triển", label_en: "Years of Growth" },
-  { value: "98%", label_vi: "Hài lòng đối tác", label_en: "Partner Satisfaction" },
-];

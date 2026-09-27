@@ -164,217 +164,8 @@ export const enDictionary: Dictionary = {
     subscribeButton: "Subscribe",
     consentText: "I agree to receive communications from BIM4C.",
     privacyLink: "Privacy Policy",
-    copyright:
-      "© 2026 BIM4C TECHNOLOGY & CONSTRUCTION JOINT STOCK COMPANY (BIM4C JSC). All rights reserved.",
     termsLink: "Terms of Service",
     privacyPolicyLink: "Privacy Policy",
-    enterpriseInfo: {
-      companyName: "BIM4C Technology and Construction Joint Stock Company",
-      internationalName:
-        "BIM4C TECHNOLOGY & CONSTRUCTION JOINT STOCK COMPANY",
-      shortName: "BIM4C JSC",
-      headquarters: "Office: 20 Bac Son, Da Nang",
-      legalRepresentative: "TRAN NGOC HIEU",
-      certificationsTitle: "Applied Standards & Technologies",
-      autodeskCert: "Autodesk Solutions (Revit, Navisworks & ACC)",
-    },
-  },
-  aboutPage: {
-    eyebrow: "About BIM4C",
-    heroTitle: "Construction expertise. Connected by BIM.",
-    heroDesc:
-      "We connect people, processes and project information to enable better design, construction and asset operations.",
-    letter: {
-      title: "A Message from BIM4C",
-      subtitle: "Partnering to create sustainable value for the construction industry",
-      paragraphs: [
-        "From investment planning and design through construction and asset management, we partner with clients on their digital transformation journey with practical, high-impact solutions. With a commitment to innovation and continuous improvement, BIM4C helps organizations build smarter, more sustainable, and future-ready infrastructure through technology integration at every stage.",
-        "BIM4C Technology and Construction JSC is a consulting and engineering firm focused on digital transformation in the construction sector. We combine deep domain expertise with practical deployment of technologies such as Building Information Modelling (BIM) to increase efficiency, streamline workflows, and enhance collaboration.",
-        "At BIM4C, 3D modelling serves as the foundational data backbone to integrate materials, schedule, cost, and operational performance. Artificial intelligence, machine learning, and IoT support automated clash detection, risk forecasting, and site progress analytics.",
-        "BIM4C connects BIM with digital twins to create a live digital representation of physical assets, supporting simulation, predictive maintenance, and lifecycle asset optimization.",
-        "Our work begins with the decisions project teams must make: what to design, how to coordinate, how to verify on site, what data to hand over, and how to operate assets. We define information requirements, roles, and milestones before selecting tools, ensuring technology is strictly aligned with project delivery outcomes.",
-        "BIM4C collaborates with developers, consultants, contractors, and facility managers to transform fragmented drawings and models into a single, reliable source of truth. The result is an actionable digital foundation that teams can sustain and scale.",
-      ],
-    },
-    visionMission: {
-      vision: {
-        title: "Vision",
-        text: "BIM4C aims to become a trusted global benchmark for practical digital transformation in construction — bringing accurate data, open collaboration, and measurable innovation to every organization. We envision a built environment where data creates continuous value from investment planning through design, construction, operations, and renewal.",
-      },
-      mission: {
-        title: "Mission",
-        text: "BIM4C accelerates construction digital transformation by aligning people, processes, and information around clear project decisions. We establish actionable BIM standards, coordinate multidisciplinary data, strengthen CDE governance, and enable structured digital handover so clients can increase predictability, protect budgets, reduce waste, and manage assets effectively.",
-      },
-    },
-    workMethod: {
-      eyebrow: "How We Work",
-      title: "Innovation, Collaboration & Client-Centricity",
-      intro:
-        "We tailor strategies to individual project needs, encourage diverse perspectives, adapt swiftly, and pursue innovative solutions that deliver tangible value.",
-      items: [
-        {
-          title: "Client-Centric Approach",
-          text: "Understanding each client's unique requirements and aligning solutions with specific project goals.",
-        },
-        {
-          title: "Collaborative Culture",
-          text: "Maintaining open communication and seamless coordination across multidisciplinary teams.",
-        },
-        {
-          title: "Agile Management",
-          text: "Responding swiftly to changes and project complexities while maintaining uncompromising quality.",
-        },
-        {
-          title: "Continuous Innovation",
-          text: "Leveraging emerging technologies to deliver forward-thinking strategies for our clients.",
-        },
-      ],
-    },
-    operation: {
-      eyebrow: "How We Operate",
-      title: "From Needs to Deployable Solutions",
-      items: [
-        {
-          title: "Comprehensive Needs Assessment",
-          text: "Identifying requirements and challenges to ensure solutions fit the project and optimize resource usage.",
-        },
-        {
-          title: "Strategic Planning",
-          text: "Connecting client objectives, industry context, and project complexity into an actionable technology roadmap.",
-        },
-        {
-          title: "Advanced Technology Integration",
-          text: "Integrating BIM and compatible digital tools to establish transparent, manageable 3D information models.",
-        },
-        {
-          title: "Agile Delivery",
-          text: "Delivering in structured phases, continuously refining workflows, and adapting quickly as client needs evolve.",
-        },
-      ],
-    },
-    whyChoose: {
-      eyebrow: "WHY CHOOSE BIM4C",
-      title: "Proven Capability to Create Long-Term Project Value",
-      intro:
-        "Three pillars that establish BIM4C as a trusted partner in digital construction transformation.",
-      items: [
-        {
-          title: "Domain Expertise & Tailored Solutions",
-          text: "Our BIM specialists customize solutions for each project, combining deep industry knowledge with cutting-edge construction technology.",
-        },
-        {
-          title: "High Performance & Advanced Tech",
-          text: "We leverage BIM to streamline construction workflows, enhance handover efficiency, and continuously elevate project delivery standards.",
-        },
-        {
-          title: "Strategic Partnership & Ongoing Support",
-          text: "We partner long-term with clients, providing technical advisory and cost-optimized BIM workflows for sustainable success.",
-        },
-      ],
-    },
-    trackRecord: {
-      eyebrow: "BIM4C CAPABILITIES",
-      title: "Services Across the Whole Building Lifecycle",
-      metrics: [
-        {
-          value: "3D–7D",
-          label: "BIM Services",
-          subtext: "Models, scheduling, cost, energy and operations",
-        },
-        {
-          value: "LiDAR",
-          label: "Laser Scanning",
-          subtext: "Existing condition surveys and Scan-to-BIM",
-        },
-        {
-          value: "Design",
-          label: "Architecture & Engineering",
-          subtext: "Interiors, landscape and infrastructure",
-        },
-        {
-          value: "Training",
-          label: "Technology Transfer",
-          subtext: "Owners, project managers, businesses and students",
-        },
-      ],
-    },
-    whoWeAreEyebrow: "Who we are",
-    whoWeAreTitle: "A practical partner for digital construction.",
-    whoWeAreP1:
-      "BIM4C combines construction knowledge with Building Information Modelling, coordination and information management. We help project owners, consultants and contractors make BIM useful in their everyday work.",
-    whoWeAreP2:
-      "Our work spans consulting, multidisciplinary design, model coordination, training and digital handover. Every engagement starts with the project goal and the people responsible for delivering it.",
-    check1: "A scope matched to your project stage",
-    check2: "Workflows your team can use and maintain",
-    check3: "Information prepared for its next purpose",
-    guidesEyebrow: "What guides us",
-    guidesTitle: "Principles you can see in the work.",
-    guidesDesc:
-      "Technology serves the project when responsibilities, information and decisions are clear.",
-    values: {
-      integrity: {
-        title: "Integrity",
-        desc: "Build partnerships based on trust, transparency and honesty.",
-      },
-      innovation: {
-        title: "Working smart",
-        desc: "Use BIM to organize work, reduce errors and improve efficiency.",
-      },
-      collaboration: {
-        title: "Sincerity",
-        desc: "Support clients with dedication and work with partners through challenges.",
-      },
-    },
-    teamEyebrow: "Leadership & Senior Specialists",
-    teamTitle: "Executive Leadership & Senior Specialists with Proven Track Record",
-    teamDesc:
-      "The founding, executive and specialist team steering BIM4C's digital transformation strategy.",
-    teamMembers: [
-      {
-        name: "Trần Ngọc Hiếu",
-        role: "Founder / CEO",
-        image: "/images/team/avatar-default.jpg",
-        spec: "BIM digital transformation strategy, workflow implementation and enterprise training.",
-      },
-      {
-        name: "Nguyễn Vũ Long",
-        role: "BIM Manager / Co-Founder",
-        image: "/images/team/avatar-default.jpg",
-        spec: "Over 8 years of practical experience in refurbishment, steel structures, concrete and BIM workflows.",
-      },
-      {
-        name: "Nguyễn Tiến Cường",
-        role: "BIM Coordinator / Co-Founder",
-        image: "/images/team/avatar-default.jpg",
-        spec: "Over 9 years of experience in BIM coordination, design optimization, structures and digital tools.",
-      },
-      {
-        name: "Nguyễn Văn Chiêu",
-        role: "BIM Developer / IT Manager",
-        image: "/images/team/avatar-default.jpg",
-        spec: "Over 6 years in software development and BIM automation with more than 100 dedicated add-ins.",
-      },
-      {
-        name: "Nguyễn Hồng Chinh",
-        role: "Structural Design Lead",
-        image: "/images/team/avatar-default.jpg",
-        spec: "Over 14 years of experience in reinforced concrete, structural steel, foundation and superstructure design.",
-      },
-      {
-        name: "Nguyễn Ngọc Phước",
-        role: "MEP & Fire Protection Design Lead",
-        image: "/images/team/avatar-default.jpg",
-        spec: "Over 13 years of experience in MEP engineering, HVAC, electrical, plumbing and fire protection.",
-      },
-      {
-        name: "Phan Thị Kiều Diệu",
-        role: "Cost Estimation & Management Lead",
-        image: "/images/team/avatar-female.jpg",
-        spec: "Over 14 years of experience in BIM 5D quantity take-off, cost estimation and project budget control.",
-      },
-    ],
-    ctaEyebrow: "Work with BIM4C",
-    ctaTitle: "A clearer path for your next project.",
   },
   projectsPage: {
     eyebrow: "BIM4C portfolio",
@@ -420,22 +211,6 @@ export const enDictionary: Dictionary = {
     exploreProgramme: "Explore programme",
     emptyTitle: "No programmes match your search",
     emptyDesc: "Try another skill or clear the filters.",
-    howWeTeachEyebrow: "How we teach",
-    howWeTeachTitle: "Learn by doing.",
-    learningValues: [
-      {
-        title: "Project-based practice",
-        text: "Exercises, data and models selected from real delivery situations.",
-      },
-      {
-        title: "Expert mentorship",
-        text: "Direct feedback helps learners identify issues and improve after every exercise.",
-      },
-      {
-        title: "Job-ready outcomes",
-        text: "Completed work you can apply to projects or include in a professional portfolio.",
-      },
-    ],
   },
   servicesPage: {
     eyebrow: "BIM4C Capabilities",
@@ -456,76 +231,9 @@ export const enDictionary: Dictionary = {
     startEyebrow: "Start with BIM4C",
     startTitle: "Turn project challenges into a clear path forward.",
     talkToExpert: "Talk to an expert",
-    guideEyebrow: "Find your starting point",
-    guideTitle: "What does your team need?",
-    guideDesc:
-      "Select a priority to see the recommended starting point. We can shape the scope together.",
     suggestedStartingPoint: "Suggested starting point",
     usefulForFirstConversation: "Useful for a first conversation",
     discussNeeds: "Discuss your needs",
-    faqEyebrow: "Before you start",
-    faqTitle: "A few helpful answers.",
-    faqDesc: "Know what to expect before getting in touch.",
-    needs: [
-      {
-        label: "Start with a BIM plan",
-        slug: "tu-van-bim",
-        title: "Establish a clear direction before modelling begins.",
-        description:
-          "Agree on project goals, information requirements and responsibilities across teams.",
-        preparation:
-          "Project stage, team setup and any existing BIM requirements.",
-      },
-      {
-        label: "Coordinate project models",
-        slug: "bim-coordination",
-        title: "Keep disciplines aligned on coordinated information.",
-        description:
-          "Federate models, resolve clashes and make issue tracking straightforward.",
-        preparation:
-          "Existing discipline models, milestones and current coordination pain points.",
-      },
-      {
-        label: "Develop our team",
-        slug: "dao-tao",
-        title: "Build skills your team can apply directly to live projects.",
-        description:
-          "Discuss training shaped by your team's current experience, roles and project workflows.",
-        preparation:
-          "Team roles, software experience and the skills you want to build.",
-      },
-      {
-        label: "Prepare for digital handover",
-        slug: "digital-twin-va-du-lieu-tai-san",
-        title: "Make project information useful beyond construction.",
-        description:
-          "Define how asset data should be structured, validated and handed over for downstream use.",
-        preparation:
-          "Asset information requirements, existing model data and operational priorities.",
-      },
-    ],
-    faqs: [
-      {
-        question: "When should we bring in BIM4C?",
-        answer:
-          "You can start at planning, design, construction or handover. Tell us your current stage and upcoming decisions so we can discuss where BIM support will be most helpful.",
-      },
-      {
-        question: "What should we prepare for a first conversation?",
-        answer:
-          "A short summary of the project, its current stage, key milestones and the challenge you want to address. Existing models or BIM requirements help, but you do not need a full brief to get in touch.",
-      },
-      {
-        question: "Can we discuss support for part of a project?",
-        answer:
-          "Yes. Your engagement can focus on a specific need like BIM planning, model coordination, team training or asset data. The scope and responsibilities will be agreed around that focus.",
-      },
-      {
-        question: "How are scope, fees and deliverables agreed?",
-        answer:
-          "They depend on the project stage, scale, existing information and the level of support required. An initial conversation will help clarify these before a proposal is prepared.",
-      },
-    ],
   },
   blogPage: {
     eyebrow: "BIM4C Insights",
@@ -552,29 +260,13 @@ export const enDictionary: Dictionary = {
     talkTitle: "A clear scope starts here.",
     talkDesc:
       "Tell us about your challenge. We will help clarify the scope, priorities and practical next steps.",
-    commitments: [
-      "Speak directly with a BIM specialist",
-      "Proposals tailored to your stage and project scale",
-      "Your commercial information remains confidential",
-    ],
     enquiryTitle: "Project enquiry",
     enquiryDesc:
       "Fields marked with * are required. We usually respond within one business day.",
     responseTime: "1 business day",
-    officesTitle: "BIM4C Headquarters & Office",
-    danangHq: {
-      title: "BIM4C Da Nang",
-      address: "20 Bac Son, Da Nang City",
-      phone: "+84 93 2468 099",
-      note: "Mr. Hieu: +84 796 879 899",
-    },
     mapSection: {
-      eyebrow: "Location & Directions",
-      title: "BIM4C Headquarters in Da Nang",
-      desc: "BIM4C Office: 20 Bac Son, Da Nang City.",
       directionsBtn: "Directions on Google Maps",
       copyAddressBtn: "Copy address",
-      workingHours: "Please contact us to arrange an appointment.",
     },
   },
   detailPage: {
@@ -602,10 +294,6 @@ export const enDictionary: Dictionary = {
     backServices: "All solutions",
     backBlog: "All articles",
     softwareStack: "Software & Tech Stack",
-    b2bTrainingTitle: "Enterprise B2B Group Training",
-    b2bTrainingDesc:
-      "Tailored training programs aligned with your project models and organization's live workflows.",
-    b2bTrainingAction: "Request Enterprise Training",
     standardsCompliance: "International Standards Compliance",
     deliverablesChecklist: "CDE Deliverables Checklist",
     deliverables: [
@@ -627,15 +315,6 @@ export const enDictionary: Dictionary = {
       level: "Level",
       price: "Tuition",
       instructor: "Instructor",
-    },
-    trustSignals: {
-      ndaTitle: "Confidentiality Agreement (NDA)",
-      ndaDesc:
-        "We sign non-disclosure agreements before reviewing proprietary models and drawings.",
-      slaTitle: "Direct Advisory",
-      slaDesc: "Contact BIM4C to agree on scope and consultation schedule.",
-      expertTitle: "Senior BIM Leadership",
-      expertDesc: "Direct access to BIM4C's consulting and delivery leads.",
     },
   },
   forms: {

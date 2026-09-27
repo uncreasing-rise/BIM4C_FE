@@ -1,51 +1,37 @@
 import { apiClient } from "@/lib/api/client";
-import { canDeferBuildData } from "@/lib/config/build";
-import { DEFAULT_METRICS, type SiteSettingsData } from "./types";
-
-export const DEFAULT_SITE_SETTINGS: SiteSettingsData = {
-  companyName: "Công ty Cổ phần Công nghệ và Xây dựng BIM4C",
-  email: "Bim4c.lab@gmail.com",
-  phone: "+84 93 2468 099",
-  address: "20 Bắc Sơn, Đà Nẵng, Việt Nam",
-  brochureUrl: "/documents/bim4c-profile-2026-vi.pdf",
-  metrics: DEFAULT_METRICS,
-  socialLinks: {
-    linkedin: "https://www.linkedin.com/company/bim4c",
-    facebook: "https://facebook.com/bim4c",
-    youtube: "https://youtube.com/@bim4c",
-  },
-  defaultSeoTitle: "BIM4C - Tiên phong Chuyển đổi số Xây dựng",
-  defaultSeoDescription: "Giải pháp BIM, Chuyển đổi số Xây dựng & Tư vấn 3D-7D toàn diện.",
-  defaultOgImage: "/images/hero-skyline-bim.jpg",
-};
+import type { SiteSettingsData } from "./types";
 
 interface SettingsResponse {
-  data?: Partial<SiteSettingsData>;
+  data?: Partial<SiteSettingsData> | null;
 }
 
-export async function getSiteSettings(): Promise<SiteSettingsData> {
+/**
+ * Returns null when the API is unreachable or the settings row was deleted.
+ * Callers hide contact details instead of showing stale hard-coded values.
+ */
+export async function getSiteSettings(): Promise<SiteSettingsData | null> {
   try {
-    const response = await apiClient.get<SettingsResponse | SiteSettingsData>("/settings/public", {
+    const response = await apiClient.get<SettingsResponse>("/settings/public", {
       next: { revalidate: 60, tags: ["settings"] },
     });
-    
-    const data: Partial<SiteSettingsData> = (response && "data" in response && response.data)
-      ? response.data
-      : (response as Partial<SiteSettingsData>) || {};
-
+    const data = response?.data;
+    if (!data) return null;
     return {
-      ...DEFAULT_SITE_SETTINGS,
-      ...data,
-      metrics: data?.metrics && Array.isArray(data.metrics) && data.metrics.length > 0 ? data.metrics : DEFAULT_METRICS,
-      socialLinks: {
-        ...DEFAULT_SITE_SETTINGS.socialLinks,
-        ...(data?.socialLinks || {}),
-      },
+      companyName: data.companyName ?? "",
+      email: data.email ?? "",
+      phone: data.phone || undefined,
+      address: data.address || undefined,
+      brochureUrl: data.brochureUrl || undefined,
+      metrics: Array.isArray(data.metrics) ? data.metrics : [],
+      socialLinks:
+        data.socialLinks && typeof data.socialLinks === "object"
+          ? data.socialLinks
+          : {},
+      defaultSeoTitle: data.defaultSeoTitle ?? "",
+      defaultSeoDescription: data.defaultSeoDescription ?? "",
+      defaultOgImage: data.defaultOgImage || undefined,
     };
-  } catch (error) {
-    if (canDeferBuildData(error)) {
-      return DEFAULT_SITE_SETTINGS;
-    }
-    return DEFAULT_SITE_SETTINGS;
+  } catch {
+    return null;
   }
 }

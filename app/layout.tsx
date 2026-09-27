@@ -16,6 +16,7 @@ import { cn } from "@/lib/utils";
 import { LanguageProvider } from "@/lib/i18n/context";
 import type { Locale } from "@/lib/i18n/config";
 import { Toaster } from "sonner";
+import { getSiteSettings } from "@/features/settings/queries";
 
 const fontSans = Manrope({
   subsets: ["latin", "vietnamese"],
@@ -31,65 +32,69 @@ export const dynamic = "force-dynamic";
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await getRequestLocale();
   const canonical = localizedPath("/", locale);
+  // Admin-managed SEO copy wins; the brand constants only keep a title when settings are unavailable.
+  const settings = await getSiteSettings();
+  const title = settings?.defaultSeoTitle || DEFAULT_TITLE;
+  const description = settings?.defaultSeoDescription || DEFAULT_DESCRIPTION;
+  const socialImage = settings?.defaultOgImage || DEFAULT_SOCIAL_IMAGE;
   return {
-  metadataBase: new URL(env.appUrl),
-  title: { default: DEFAULT_TITLE, template: `%s | ${SITE_NAME}` },
-  description: DEFAULT_DESCRIPTION,
-  keywords: DEFAULT_KEYWORDS,
-  applicationName: SITE_NAME,
-  icons: {
-    icon: [
-      {
-        url: "/images/bim4c-logo.png",
-        type: "image/png",
-      },
-    ],
-    shortcut: "/images/bim4c-logo.png",
-    apple: "/images/bim4c-logo.png",
-  },
-  authors: [{ name: SITE_NAME }],
-  creator: SITE_NAME,
-  publisher: SITE_NAME,
-  alternates: {
-    canonical,
-    languages: getAlternateLanguages("/"),
-  },
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: {
+    metadataBase: new URL(env.appUrl),
+    title: { default: title, template: `%s | ${SITE_NAME}` },
+    description,
+    keywords: DEFAULT_KEYWORDS,
+    applicationName: SITE_NAME,
+    icons: {
+      icon: [
+        {
+          url: "/images/bim4c-logo.png",
+          type: "image/png",
+        },
+      ],
+      shortcut: "/images/bim4c-logo.png",
+      apple: "/images/bim4c-logo.png",
+    },
+    authors: [{ name: SITE_NAME }],
+    creator: SITE_NAME,
+    publisher: SITE_NAME,
+    alternates: {
+      canonical,
+      languages: getAlternateLanguages("/"),
+    },
+    robots: {
       index: true,
       follow: true,
-      "max-video-preview": -1,
-      "max-image-preview": "large",
-      "max-snippet": -1,
+      googleBot: {
+        index: true,
+        follow: true,
+        "max-video-preview": -1,
+        "max-image-preview": "large",
+        "max-snippet": -1,
+      },
     },
-  },
-  openGraph: {
-    title: DEFAULT_TITLE,
-    description: DEFAULT_DESCRIPTION,
-    siteName: SITE_NAME,
-    type: "website",
-    locale: locale === "vi" ? "vi_VN" : "en_US",
-    alternateLocale: [locale === "vi" ? "en_US" : "vi_VN"],
-    url: "/",
-    images: [{ url: DEFAULT_SOCIAL_IMAGE, alt: "BIM4C Digital Construction" }],
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: DEFAULT_TITLE,
-    description: DEFAULT_DESCRIPTION,
-    images: [DEFAULT_SOCIAL_IMAGE],
-  },
-  verification: {
-    google: env.googleSiteVerification || undefined,
-    other: env.bingSiteVerification
-      ? { "msvalidate.01": env.bingSiteVerification }
-      : undefined,
-  },
+    openGraph: {
+      title,
+      description,
+      siteName: SITE_NAME,
+      type: "website",
+      locale: locale === "vi" ? "vi_VN" : "en_US",
+      alternateLocale: [locale === "vi" ? "en_US" : "vi_VN"],
+      url: "/",
+      images: [{ url: socialImage, alt: title }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [socialImage],
+    },
+    verification: {
+      google: env.googleSiteVerification || undefined,
+      other: env.bingSiteVerification
+        ? { "msvalidate.01": env.bingSiteVerification }
+        : undefined,
+    },
   };
 }
-
 
 export default async function RootLayout({
   children,

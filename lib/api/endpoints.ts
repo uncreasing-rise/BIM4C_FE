@@ -5,6 +5,7 @@ export const API_ENDPOINTS = {
   },
   projects: {
     list: "/projects",
+    filters: "/projects/filters",
     detail: (slug: string) => `/projects/${encodeURIComponent(slug)}`,
   },
   courses: {

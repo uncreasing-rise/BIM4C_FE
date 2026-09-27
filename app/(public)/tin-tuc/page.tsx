@@ -11,14 +11,6 @@ import { getPostsPage, getPostCategories } from "@/features/blog/api/queries";
 import { PageHero } from "@/components/shared/PageHero";
 import { BlogExplorer } from "@/components/blog/BlogExplorer";
 
-const NEWS_BASE_CATEGORIES = [
-  "Tin tức công ty",
-  "Sự kiện & Hội thảo",
-  "Hợp tác & Đối tác",
-  "Hoạt động doanh nghiệp",
-  "Tuyển dụng & Nhân sự",
-];
-
 const copy = {
   en: {
     breadcrumb: "News",
@@ -111,7 +103,6 @@ export default async function NewsPage({
         catalogueDesc={content.catalogueDesc}
         searchLabel={content.searchLabel}
         searchPlaceholder={content.searchPlaceholder}
-        baseCategories={NEWS_BASE_CATEGORIES}
       />
     </main>
   );

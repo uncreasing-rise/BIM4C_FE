@@ -21,17 +21,6 @@ import { resolveCoverImage } from "@/lib/content/cover-images";
 import type { PostCategoryItem } from "@/features/blog/api/queries";
 
 import { ui } from "@/lib/i18n/ui";
-const BLOG_BASE_CATEGORIES = [
-  "Khảo sát & Scan-to-BIM",
-  "Quy trình & Tiêu chuẩn",
-  "Công nghệ & Tự động hóa",
-  "Phối hợp & Xử lý va chạm",
-  "Quản lý Dự án BIM",
-  "Vận hành & Digital Twin",
-  "Kiến thức BIM",
-  "Đào tạo BIM",
-];
-
 export function BlogExplorer({
   posts: rawPosts,
   meta,
@@ -42,7 +31,6 @@ export function BlogExplorer({
   catalogueDesc,
   searchLabel,
   searchPlaceholder,
-  baseCategories,
 }: {
   posts: ContentEntry[];
   meta: PageMeta;
@@ -53,16 +41,13 @@ export function BlogExplorer({
   catalogueDesc?: string;
   searchLabel?: string;
   searchPlaceholder?: string;
-  baseCategories?: string[];
 }) {
   const { t, locale } = useLanguage();
   const posts = localizeContentList(rawPosts, locale);
 
   const allLabel = t.common.all;
-  const rawCatList =
-    categoryItems.length > 0
-      ? categoryItems.map((c) => c.name)
-      : (baseCategories || BLOG_BASE_CATEGORIES);
+  // Only categories that currently hold published posts, straight from the API.
+  const rawCatList = categoryItems.filter((c) => c.count > 0).map((c) => c.name);
 
   const categories = [
     allLabel,
@@ -97,15 +82,17 @@ export function BlogExplorer({
             {catalogueDesc || t.blogPage.catalogueDesc}
           </p>
         </header>
-        <CatalogCategories
-          ariaLabel={catalogueEyebrow || t.blogPage.catalogueEyebrow}
-          items={categories}
-          value={category === "All" ? allLabel : category}
-          formatLabel={formatFilterLabel}
-          onChange={(value) => {
-            update("category", value === allLabel ? "All" : value);
-          }}
-        />
+        {rawCatList.length > 0 && (
+          <CatalogCategories
+            ariaLabel={catalogueEyebrow || t.blogPage.catalogueEyebrow}
+            items={categories}
+            value={category === "All" ? allLabel : category}
+            formatLabel={formatFilterLabel}
+            onChange={(value) => {
+              update("category", value === allLabel ? "All" : value);
+            }}
+          />
+        )}
         <CatalogFilterBar>
           <CatalogSearch
             label={searchLabel || t.blogPage.searchLabel}

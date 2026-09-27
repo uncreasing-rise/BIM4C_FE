@@ -1,6 +1,7 @@
 "use client";
 
 import { useLanguage } from "@/lib/i18n/context";
+import { useSiteSettings } from "@/features/page-content/context";
 import React from "react";
 
 export interface SocialItem {
@@ -125,26 +126,10 @@ export const SOCIAL_TEMPLATES: Record<string, Omit<SocialItem, "url">> = {
     hoverBg: "hover:bg-slate-500/10",
     hoverBorder: "hover:border-slate-500/40",
     description: "Kho mã nguồn mở, add-in và công cụ số hóa BIM4C.",
-    description_en: "Open-source repositories, add-ins and BIM4C automation tools.",
+    description_en:
+      "Open-source repositories, add-ins and BIM4C automation tools.",
   },
 };
-
-export const DEFAULT_SOCIAL_NETWORKS: SocialItem[] = [
-  {
-    ...SOCIAL_TEMPLATES.linkedin,
-    url: "https://www.linkedin.com/company/bim4c",
-  },
-  {
-    ...SOCIAL_TEMPLATES.facebook,
-    url: "https://www.facebook.com/bim4c",
-  },
-  {
-    ...SOCIAL_TEMPLATES.youtube,
-    url: "https://www.youtube.com/@bim4c",
-  },
-];
-
-export const SOCIAL_NETWORKS: SocialItem[] = DEFAULT_SOCIAL_NETWORKS;
 
 interface SocialLinksProps {
   variant?: "cards" | "icons" | "pills";
@@ -158,19 +143,21 @@ export function SocialLinks({
   customLinks,
 }: SocialLinksProps) {
   const { locale } = useLanguage();
+  const settings = useSiteSettings();
 
-  let networks: SocialItem[];
-
-  if (customLinks) {
-    networks = Object.entries(customLinks)
-      .filter(([id, url]) => Boolean(url && typeof url === "string" && url.trim() && SOCIAL_TEMPLATES[id]))
-      .map(([id, url]) => ({
-        ...SOCIAL_TEMPLATES[id],
-        url: url.trim(),
-      }));
-  } else {
-    networks = DEFAULT_SOCIAL_NETWORKS.filter((item) => Boolean(item.url && item.url.trim()));
-  }
+  // Links come from admin settings; networks without a URL are not shown.
+  const networks: SocialItem[] = Object.entries(
+    customLinks ?? settings?.socialLinks ?? {},
+  )
+    .filter(([id, url]) =>
+      Boolean(
+        url && typeof url === "string" && url.trim() && SOCIAL_TEMPLATES[id],
+      ),
+    )
+    .map(([id, url]) => ({
+      ...SOCIAL_TEMPLATES[id],
+      url: url.trim(),
+    }));
 
   if (networks.length === 0) {
     return null;

@@ -134,64 +134,8 @@ export interface Dictionary {
     subscribeButton: string;
     consentText: string;
     privacyLink: string;
-    copyright: string;
     termsLink: string;
     privacyPolicyLink: string;
-    enterpriseInfo: {
-      companyName: string;
-      internationalName: string;
-      shortName: string;
-      headquarters: string;
-      legalRepresentative: string;
-      certificationsTitle: string;
-      autodeskCert: string;
-    };
-  };
-  aboutPage: {
-    eyebrow: string;
-    heroTitle: string;
-    heroDesc: string;
-    letter: { title: string; subtitle?: string; paragraphs: string[] };
-    visionMission: { vision: { title: string; text: string }; mission: { title: string; text: string } };
-    workMethod: { eyebrow: string; title: string; intro: string; items: { title: string; text: string }[] };
-    operation: { eyebrow: string; title: string; items: { title: string; text: string }[] };
-    whyChoose: {
-      eyebrow: string;
-      title: string;
-      intro: string;
-      items: { title: string; text: string }[];
-    };
-    trackRecord: {
-      eyebrow: string;
-      title: string;
-      metrics: { value: string; label: string; subtext: string }[];
-    };
-    whoWeAreEyebrow: string;
-    whoWeAreTitle: string;
-    whoWeAreP1: string;
-    whoWeAreP2: string;
-    check1: string;
-    check2: string;
-    check3: string;
-    guidesEyebrow: string;
-    guidesTitle: string;
-    guidesDesc: string;
-    values: {
-      integrity: { title: string; desc: string };
-      innovation: { title: string; desc: string };
-      collaboration: { title: string; desc: string };
-    };
-    teamEyebrow: string;
-    teamTitle: string;
-    teamDesc: string;
-    teamMembers: {
-      name: string;
-      role: string;
-      spec: string;
-      image?: string;
-    }[];
-    ctaEyebrow: string;
-    ctaTitle: string;
   };
   projectsPage: {
     eyebrow: string;
@@ -230,9 +174,6 @@ export interface Dictionary {
     exploreProgramme: string;
     emptyTitle: string;
     emptyDesc: string;
-    howWeTeachEyebrow: string;
-    howWeTeachTitle: string;
-    learningValues: { title: string; text: string }[];
   };
   servicesPage: {
     eyebrow: string;
@@ -251,23 +192,9 @@ export interface Dictionary {
     startEyebrow: string;
     startTitle: string;
     talkToExpert: string;
-    guideEyebrow: string;
-    guideTitle: string;
-    guideDesc: string;
     suggestedStartingPoint: string;
     usefulForFirstConversation: string;
     discussNeeds: string;
-    faqEyebrow: string;
-    faqTitle: string;
-    faqDesc: string;
-    needs: {
-      label: string;
-      slug: string;
-      title: string;
-      description: string;
-      preparation: string;
-    }[];
-    faqs: { question: string; answer: string }[];
   };
   blogPage: {
     eyebrow: string;
@@ -290,19 +217,12 @@ export interface Dictionary {
     talkEyebrow: string;
     talkTitle: string;
     talkDesc: string;
-    commitments: string[];
     enquiryTitle: string;
     enquiryDesc: string;
     responseTime: string;
-    officesTitle: string;
-    danangHq: { title: string; address: string; phone: string; note: string };
     mapSection: {
-      eyebrow: string;
-      title: string;
-      desc: string;
       directionsBtn: string;
       copyAddressBtn: string;
-      workingHours: string;
     };
   };
   detailPage: {
@@ -328,9 +248,6 @@ export interface Dictionary {
     backServices: string;
     backBlog: string;
     softwareStack: string;
-    b2bTrainingTitle: string;
-    b2bTrainingDesc: string;
-    b2bTrainingAction: string;
     standardsCompliance: string;
     deliverablesChecklist: string;
     deliverables: string[];
@@ -348,14 +265,6 @@ export interface Dictionary {
       level: string;
       price: string;
       instructor: string;
-    };
-    trustSignals: {
-      ndaTitle: string;
-      ndaDesc: string;
-      slaTitle: string;
-      slaDesc: string;
-      expertTitle: string;
-      expertDesc: string;
     };
   };
   forms: {

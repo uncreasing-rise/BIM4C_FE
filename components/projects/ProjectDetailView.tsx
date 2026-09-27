@@ -1,6 +1,7 @@
 "use client";
 
 import { usePublicMotion } from "@/components/motion/hooks/use-public-motion";
+import { TrustSignals } from "@/components/shared/TrustSignals";
 
 import { JsonLd } from "@/components/seo/JsonLd";
 import { ContentBlockRenderer } from "@/components/shared/ContentBlockRenderer";
@@ -10,7 +11,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ROUTES } from "@/constants/routes";
 import { ConsultationForm } from "@/features/contact/components/ConsultationForm";
-import { AppointmentBooking } from "@/features/contact/components/AppointmentBooking";
+import { LocalizedLink } from "@/components/shared/LocalizedLink";
+import { cn } from "@/lib/utils";
 import type { Project } from "@/features/projects/types/project";
 import { useLanguage } from "@/lib/i18n/context";
 import { localizeContent, localizeContentList } from "@/lib/i18n/localize";
@@ -18,7 +20,7 @@ import { breadcrumbSchema, contentSchema } from "@/lib/seo/structured-data";
 import { legacyBlocks } from "@/lib/utils/legacy-blocks";
 import { toLocalizedLabel } from "@/lib/utils/public-labels";
 import type { ContentEntry } from "@/types/content";
-import { ArrowLeft, ArrowRight, Award, Clock, ShieldCheck } from "lucide-react";
+import { ArrowLeft, ArrowRight, CalendarClock } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -110,19 +112,28 @@ export function ProjectDetailView({
           {/* Project Specifications Card Strip */}
           {projectProfile.length > 0 && (
             <dl
-              className="mb-8 grid grid-cols-2 gap-x-6 gap-y-4 rounded-2xl border bg-card p-6 md:grid-cols-3 lg:grid-cols-6 shadow-xs"
+              className="mb-8 grid grid-cols-1 gap-x-6 gap-y-5 rounded-2xl border bg-card p-6 shadow-xs sm:grid-cols-[repeat(auto-fill,minmax(12rem,1fr))]"
               data-motion="tile"
             >
-              {projectProfile.map(([label, value]) => (
-                <div key={label}>
-                  <dt className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-                    {label}
-                  </dt>
-                  <dd className="mt-1 text-sm font-extrabold leading-snug text-foreground">
-                    {value}
-                  </dd>
-                </div>
-              ))}
+              {projectProfile.map(([label, value]) => {
+                // Long free-text facts (scale, package) get two columns instead of a cramped one.
+                const long = String(value).length > 48;
+                return (
+                  <div key={label} className={cn("min-w-0", long && "sm:col-span-2")}>
+                    <dt className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                      {label}
+                    </dt>
+                    <dd
+                      className={cn(
+                        "mt-1 break-words text-sm leading-relaxed text-foreground [overflow-wrap:anywhere]",
+                        long ? "font-semibold" : "font-extrabold",
+                      )}
+                    >
+                      {value}
+                    </dd>
+                  </div>
+                );
+              })}
             </dl>
           )}
 
@@ -169,46 +180,17 @@ export function ProjectDetailView({
                   compact
                   subject={`${t.detailPage.projectProfile}: ${entry.title}`}
                 />
-                <AppointmentBooking projectSlug={entry.slug} />
+                {/* Booking lives on the contact page; link there instead of embedding a second form. */}
+                <LocalizedLink
+                  href={`${ROUTES.contact}#dat-lich`}
+                  className="mt-4 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-teal-400/40 px-4 text-sm font-semibold text-teal-300 transition-colors hover:bg-teal-400/10 hover:text-white"
+                >
+                  <CalendarClock className="size-4" />
+                  {ui(locale).consultationSection.bookAConsultation}
+                </LocalizedLink>
 
                 {/* Project Trust Signals (NDA, SLA, Expert) */}
-                {t.detailPage.trustSignals && (
-                  <div className="mt-6 pt-5 border-t border-white/15 space-y-3 bg-teal-500/[0.04] p-4 rounded-xl border border-teal-500/20">
-                    <div className="flex items-start gap-2.5 text-xs text-slate-200">
-                      <ShieldCheck className="size-4 text-teal-400 shrink-0 mt-0.5" />
-                      <div>
-                        <strong className="font-bold text-teal-300">
-                          {t.detailPage.trustSignals.ndaTitle}:{" "}
-                        </strong>
-                        <span className="text-slate-200">
-                          {t.detailPage.trustSignals.ndaDesc}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="flex items-start gap-2.5 text-xs text-slate-200">
-                      <Clock className="size-4 text-teal-400 shrink-0 mt-0.5" />
-                      <div>
-                        <strong className="font-bold text-teal-300">
-                          {t.detailPage.trustSignals.slaTitle}:{" "}
-                        </strong>
-                        <span className="text-slate-200">
-                          {t.detailPage.trustSignals.slaDesc}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="flex items-start gap-2.5 text-xs text-slate-200">
-                      <Award className="size-4 text-teal-400 shrink-0 mt-0.5" />
-                      <div>
-                        <strong className="font-bold text-teal-300">
-                          {t.detailPage.trustSignals.expertTitle}:{" "}
-                        </strong>
-                        <span className="text-slate-200">
-                          {t.detailPage.trustSignals.expertDesc}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                )}
+                <TrustSignals />
               </CardContent>
             </Card>
           </div>

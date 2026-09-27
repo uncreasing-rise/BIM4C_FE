@@ -8,7 +8,7 @@ import {
 import { ROUTES } from "@/constants/routes";
 import { PROJECT_PAGE_SIZE } from "@/features/projects/constants";
 import { ProjectsPageView } from "@/components/projects/ProjectsPageView";
-import { getProjectsPage } from "@/features/projects/api/queries";
+import { getProjectFilters, getProjectsPage } from "@/features/projects/api/queries";
 
 const description = "Explore BIM4C construction and digital delivery projects.";
 
@@ -31,7 +31,8 @@ export default async function ProjectsPage({
   searchParams: Promise<ListingSearchParams>;
 }) {
   const params = await searchParams;
-  const projectsPage = await getProjectsPage({
+  const [projectsPage, filters] = await Promise.all([
+    getProjectsPage({
     page: Number(params.page ?? 1),
     limit: PROJECT_PAGE_SIZE,
     search: typeof params.q === "string" ? params.q : undefined,
@@ -51,7 +52,9 @@ export default async function ProjectsPage({
       typeof params.status === "string" && params.status !== "All"
         ? params.status
         : undefined,
-  });
+    }),
+    getProjectFilters(),
+  ]);
 
   const destination = normalizedPageRedirect(
     ROUTES.projects,
@@ -65,6 +68,7 @@ export default async function ProjectsPage({
     <ProjectsPageView
       projects={projectsPage.items}
       meta={projectsPage.meta}
+      filters={filters}
     />
   );
 }

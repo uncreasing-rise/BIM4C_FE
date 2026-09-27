@@ -1,5 +1,7 @@
 import type { ContentEntry } from "@/types/content";
 import { absoluteUrl, SITE_NAME, DEFAULT_DESCRIPTION } from "./site";
+import type { SiteSettingsData } from "@/features/settings/types";
+import type { PageContentBlock } from "@/features/page-content/types";
 
 type Schema = Record<string, unknown>;
 const organizationId = absoluteUrl("/#organization");
@@ -18,68 +20,49 @@ const compact = (value: Schema): Schema =>
 
 const imageUrl = (value?: string) => (value ? absoluteUrl(value) : undefined);
 
-export const organizationSchema = (): Schema => ({
-  "@context": "https://schema.org",
-  "@type": "Corporation",
-  "@id": organizationId,
-  name: SITE_NAME,
-  legalName: "CÔNG TY CỔ PHẦN XÂY DỰNG & CÔNG NGHỆ BIM4C",
-  alternateName: [
-    "BIM4C JSC",
-    "BIM4C TECHNOLOGY & CONSTRUCTION JOINT STOCK COMPANY",
-    "BIM4C Digital Construction",
-    "BIM4C",
-  ],
-  url: absoluteUrl("/"),
-  logo: absoluteUrl("/images/logo.png"),
-  image: absoluteUrl("/images/news-project-coordination.webp"),
-  description: DEFAULT_DESCRIPTION,
-  founder: {
-    "@type": "Person",
-    name: "TRẦN NGỌC HIẾU",
-    jobTitle: "Tổng Giám Đốc / CEO",
-  },
-  address: {
-    "@type": "PostalAddress",
-    streetAddress: "20 Bắc Sơn, Phường Hòa An, Quận Cẩm Lệ",
-    addressLocality: "Đà Nẵng",
-    addressRegion: "Thành phố Đà Nẵng",
-    postalCode: "550000",
-    addressCountry: "VN",
-  },
-  contactPoint: [
-    {
-      "@type": "ContactPoint",
-      telephone: "+84-93-2468-099",
-      contactType: "customer service",
-      areaServed: "VN",
-      availableLanguage: ["vi", "en"],
-    },
-    {
-      "@type": "ContactPoint",
-      telephone: "+84-93-2468-099",
-      contactType: "sales",
-      areaServed: "VN",
-      availableLanguage: ["vi", "en"],
-    },
-  ],
-  sameAs: [
-    "https://www.facebook.com/bim4c",
-    "https://www.linkedin.com/company/bim4c",
-    "https://zalo.me/0932468099",
-  ],
-  knowsAbout: [
-    "Building Information Modeling (BIM)",
-    "Scan-to-BIM",
-    "Laser Scanning 3D & LiDAR",
-    "Digital Twin",
-    "Common Data Environment (CDE ISO 19650)",
-    "BIM Coordination & Clash Detection",
-    "Construction Project Management",
-    "BIM Training & Certification",
-  ],
-  email: "Bim4c.lab@gmail.com",
-});
+/** Built from admin settings and the company block; empty fields are omitted. */
+export const organizationSchema = (
+  settings?: SiteSettingsData | null,
+  company?: PageContentBlock<"company"> | null,
+): Schema => {
+  const info = company?.enterpriseInfo;
+  const alternateName = [info?.shortName, info?.internationalName].filter(
+    Boolean,
+  );
+  const sameAs = Object.values(settings?.socialLinks ?? {}).filter((url) =>
+    url?.trim(),
+  );
+  return compact({
+    "@context": "https://schema.org",
+    "@type": "Corporation",
+    "@id": organizationId,
+    name: settings?.companyName || SITE_NAME,
+    legalName: info?.companyName,
+    alternateName: alternateName.length ? alternateName : undefined,
+    url: absoluteUrl("/"),
+    logo: absoluteUrl("/images/logo.png"),
+    image: imageUrl(settings?.defaultOgImage),
+    description: settings?.defaultSeoDescription,
+    founder: info?.legalRepresentative
+      ? { "@type": "Person", name: info.legalRepresentative }
+      : undefined,
+    address: settings?.address
+      ? { "@type": "PostalAddress", streetAddress: settings.address }
+      : undefined,
+    contactPoint: settings?.phone
+      ? [
+          {
+            "@type": "ContactPoint",
+            telephone: settings.phone,
+            contactType: "customer service",
+            availableLanguage: ["vi", "en"],
+          },
+        ]
+      : undefined,
+    sameAs: sameAs.length ? sameAs : undefined,
+    email: settings?.email,
+  });
+};
 
 export const websiteSchema = (): Schema => ({
   "@context": "https://schema.org",
@@ -213,4 +196,3 @@ export function contentSchema(
     dateModified: validDate(entry.updatedAt || entry.publishedAt),
   });
 }
-

@@ -1,5 +1,7 @@
-import { CONTACT_EMAIL } from "./routes";
 import type { Locale } from "@/lib/i18n/config";
+
+/** `{contactEmail}` is filled from admin settings when a document is rendered. */
+export const CONTACT_EMAIL_TOKEN = "{contactEmail}";
 
 export interface LegalSection {
   title: string;
@@ -61,7 +63,7 @@ export const legalDocumentsEn: LegalDocument[] = [
       {
         title: "Contact",
         paragraphs: [
-          `Questions about privacy can be sent to ${CONTACT_EMAIL}. BIM4C will respond within a reasonable timeframe.`,
+          `Questions about privacy can be sent to {contactEmail}. BIM4C will respond within a reasonable timeframe.`,
         ],
       },
     ],
@@ -162,7 +164,7 @@ export const legalDocumentsEn: LegalDocument[] = [
       {
         title: "Making a request",
         paragraphs: [
-          `Send a request to ${CONTACT_EMAIL}, with information needed to verify your identity and explain what you need. BIM4C may request reasonable additional information to prevent fraudulent requests.`,
+          `Send a request to {contactEmail}, with information needed to verify your identity and explain what you need. BIM4C may request reasonable additional information to prevent fraudulent requests.`,
         ],
       },
     ],
@@ -215,7 +217,7 @@ export const legalDocumentsVi: LegalDocument[] = [
       {
         title: "Liên hệ giải đáp",
         paragraphs: [
-          `Mọi thắc mắc về bảo mật và quyền riêng tư, vui lòng gửi email đến ${CONTACT_EMAIL}. BIM4C sẽ phản hồi trong thời gian sớm nhất.`,
+          `Mọi thắc mắc về bảo mật và quyền riêng tư, vui lòng gửi email đến {contactEmail}. BIM4C sẽ phản hồi trong thời gian sớm nhất.`,
         ],
       },
     ],
@@ -316,7 +318,7 @@ export const legalDocumentsVi: LegalDocument[] = [
       {
         title: "Gửi yêu cầu thực hiện quyền",
         paragraphs: [
-          `Vui lòng gửi văn bản yêu cầu đến ${CONTACT_EMAIL} kèm theo thông tin xác minh danh tính để được hỗ trợ xử lý kịp thời.`,
+          `Vui lòng gửi văn bản yêu cầu đến {contactEmail} kèm theo thông tin xác minh danh tính để được hỗ trợ xử lý kịp thời.`,
         ],
       },
     ],

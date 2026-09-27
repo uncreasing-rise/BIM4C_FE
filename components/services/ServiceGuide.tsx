@@ -7,6 +7,8 @@ import { ROUTES } from "@/constants/routes";
 import type { ContentEntry } from "@/types/content";
 import { useLanguage } from "@/lib/i18n/context";
 import { localizeContent } from "@/lib/i18n/localize";
+import { usePageContent } from "@/features/page-content/context";
+import { filled } from "@/lib/utils/contact";
 
 export function ServiceGuide({
   services: rawServices,
@@ -16,8 +18,10 @@ export function ServiceGuide({
   const { t, locale } = useLanguage();
   const [selected, setSelected] = useState(0);
 
-  const needs = t.servicesPage.needs;
+  const guide = usePageContent("services.guide");
+  const needs = filled(guide?.items).filter((item) => item.label);
   const need = needs[selected] ?? needs[0];
+  if (!need) return null;
 
   const rawService = rawServices.find((item) => item.slug === need.slug);
   const service = rawService
@@ -31,23 +35,29 @@ export function ServiceGuide({
     >
       <div className="site-container grid gap-7 lg:grid-cols-[.8fr_1.2fr] lg:gap-12">
         <div>
-          <p className="eyebrow">
-            <Compass className="size-4" /> {t.servicesPage.guideEyebrow}
-          </p>
-          <h2 id="service-guide-title" className="section-title">
-            {t.servicesPage.guideTitle}
-          </h2>
-          <p className="mt-3 text-sm leading-6 text-muted-foreground">
-            {t.servicesPage.guideDesc}
-          </p>
+          {guide?.eyebrow && (
+            <p className="eyebrow">
+              <Compass className="size-4" /> {guide.eyebrow}
+            </p>
+          )}
+          {guide?.title && (
+            <h2 id="service-guide-title" className="section-title">
+              {guide.title}
+            </h2>
+          )}
+          {guide?.desc && (
+            <p className="mt-3 text-sm leading-6 text-muted-foreground">
+              {guide.desc}
+            </p>
+          )}
           <div
             className="mt-5 grid gap-2 sm:grid-cols-2 lg:grid-cols-1"
             role="group"
-            aria-label={t.servicesPage.guideTitle}
+            aria-label={guide?.title}
           >
             {needs.map((item, index) => (
               <button
-                key={item.slug}
+                key={item.slug ?? index}
                 type="button"
                 aria-pressed={selected === index}
                 aria-controls="service-recommendation"
@@ -75,15 +85,17 @@ export function ServiceGuide({
           <p className="mt-4 max-w-lg text-sm leading-7 text-slate-300">
             {need.description}
           </p>
-          <div className="my-6 border-y border-white/15 py-5">
-            <p className="flex items-center gap-2 text-sm font-semibold">
-              <Check className="size-4 text-teal-300" />{" "}
-              {t.servicesPage.usefulForFirstConversation}
-            </p>
-            <p className="mt-2 text-sm leading-6 text-slate-300">
-              {need.preparation}
-            </p>
-          </div>
+          {need.preparation && (
+            <div className="my-6 border-y border-white/15 py-5">
+              <p className="flex items-center gap-2 text-sm font-semibold">
+                <Check className="size-4 text-teal-300" />{" "}
+                {t.servicesPage.usefulForFirstConversation}
+              </p>
+              <p className="mt-2 text-sm leading-6 text-slate-300">
+                {need.preparation}
+              </p>
+            </div>
+          )}
           <div className="mt-auto flex flex-wrap items-center gap-4">
             {service && (
               <Link

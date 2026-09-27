@@ -7,6 +7,7 @@ export const DEFAULT_REVALIDATION_TAGS = [
   "posts",
   "homepage",
   "settings",
+  "page-content",
 ] as const;
 
 const TAG_PATTERN = /^[a-z0-9][a-z0-9-]{0,119}$/;

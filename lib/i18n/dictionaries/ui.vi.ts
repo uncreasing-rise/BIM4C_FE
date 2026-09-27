@@ -248,11 +248,6 @@ export const uiVi: UiStrings = {
     keyDeliverable: "Sản phẩm đầu ra:",
   },
   homeView: {
-    bIMConstructionTechnology: "Công nghệ số hóa công trình BIM",
-    connectedData: "Kết nối dữ liệu.",
-    betterBuildings: "Kiến tạo công trình.",
-    bIMConsultingMultidisciplinaryModelCoordination:
-      "Tư vấn chiến lược BIM, điều phối mô hình đa bộ môn và quản lý dữ liệu số CDE — đồng hành tin cậy từ thiết kế, thi công đến vận hành.",
     exploreBIMIn3D: "Trải nghiệm BIM 3D",
     contentIsBeingUpdatedPlease:
       "Nội dung đang được cập nhật. Vui lòng liên hệ BIM4C.",
@@ -278,6 +273,7 @@ export const uiVi: UiStrings = {
     contactTheBIM4CTeam: "Liên hệ đội ngũ BIM4C",
   },
   legalDetailView: {
+    contactPageFallback: "trang Liên hệ",
     lASTUPDATED: "CẬP NHẬT LẦN CUỐI",
     allLegalInformation: "Tất cả thông tin pháp lý",
   },
@@ -286,8 +282,6 @@ export const uiVi: UiStrings = {
       "Đã sao chép địa chỉ: 20 Bắc Sơn, Đà Nẵng, Việt Nam",
     bIM4CDaNangHeadquartersMap: "Bản đồ vị trí Trụ sở chính BIM4C Đà Nẵng",
     corporateHeadquarters: "Trụ sở Chính Doanh Nghiệp",
-    bIM4CTECHNOLOGYCONSTRUCTIONJOINTSTOCK:
-      "CÔNG TY CỔ PHẦN XÂY DỰNG CÔNG NGHỆ BIM4C",
     openMaps: "Mở Google Maps",
     socialMediaNetworks: "Mạng xã hội & Kênh kết nối",
     connectWithBIM4CAcrossPlatforms: "Kết nối với BIM4C trên các nền tảng",
@@ -333,12 +327,10 @@ export const uiVi: UiStrings = {
     aboutBIM4CLeadershipCapability: "Về BIM4C (Ban Lãnh đạo & Năng lực)",
     executiveTeamEngineeringCapability:
       "Đội ngũ chuyên gia và năng lực thực chiến",
-    technicalHotline84932468: "Hotline Kỹ thuật: +84 93 2468 099",
+    technicalHotline: "Hotline kỹ thuật",
     directProjectScopingSupport: "Hỗ trợ dự án và tư vấn phạm vi",
     sendRFPAndProjectRequirements: "Gửi yêu cầu báo giá và tài liệu dự án",
-    hQ20BacSonDa: "Trụ sở chính: 20 Bắc Sơn, Đà Nẵng",
-    taxAddressAnKheWard:
-      "Địa chỉ kê khai thuế: 20 Bắc Sơn, P. An Khê, TP Đà Nẵng",
+    headquarters: "Trụ sở chính",
     quickSearchNavigationMenu: "Menu tìm kiếm và điều hướng nhanh",
     searchProjectsServicesCoursesArticles:
       "Tìm kiếm nhanh dự án, dịch vụ, khóa học, bài viết, MST...",

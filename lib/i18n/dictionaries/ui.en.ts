@@ -248,11 +248,6 @@ export const uiEn = {
     keyDeliverable: "Key deliverable:",
   },
   homeView: {
-    bIMConstructionTechnology: "BIM Construction Technology",
-    connectedData: "Connected data.",
-    betterBuildings: "Better buildings.",
-    bIMConsultingMultidisciplinaryModelCoordination:
-      "BIM consulting, multidisciplinary model coordination and CDE information governance — from concept through operations.",
     exploreBIMIn3D: "Explore BIM in 3D",
     contentIsBeingUpdatedPlease:
       "Content is being updated. Please contact BIM4C.",
@@ -278,6 +273,7 @@ export const uiEn = {
     contactTheBIM4CTeam: "Contact the BIM4C team",
   },
   legalDetailView: {
+    contactPageFallback: "our contact page",
     lASTUPDATED: "LAST UPDATED",
     allLegalInformation: "All legal information",
   },
@@ -286,8 +282,6 @@ export const uiEn = {
       "Headquarters address copied to clipboard",
     bIM4CDaNangHeadquartersMap: "BIM4C Da Nang Headquarters Map",
     corporateHeadquarters: "Corporate Headquarters",
-    bIM4CTECHNOLOGYCONSTRUCTIONJOINTSTOCK:
-      "BIM4C TECHNOLOGY & CONSTRUCTION JOINT STOCK COMPANY",
     openMaps: "Open Maps",
     socialMediaNetworks: "Social Media & Networks",
     connectWithBIM4CAcrossPlatforms: "Connect with BIM4C across platforms",
@@ -332,11 +326,10 @@ export const uiEn = {
     aboutBIM4CLeadershipCapability: "About BIM4C (Leadership & Capability)",
     executiveTeamEngineeringCapability:
       "Executive team & engineering capability",
-    technicalHotline84932468: "Technical Hotline: +84 93 2468 099",
+    technicalHotline: "Technical hotline",
     directProjectScopingSupport: "Direct project scoping & support",
     sendRFPAndProjectRequirements: "Send RFP and project requirements",
-    hQ20BacSonDa: "HQ: 20 Bac Son, Da Nang",
-    taxAddressAnKheWard: "Tax address: An Khe Ward, Da Nang City",
+    headquarters: "Headquarters",
     quickSearchNavigationMenu: "Quick Search & Navigation Menu",
     searchProjectsServicesCoursesArticles:
       "Search projects, services, courses, articles, tax ID...",

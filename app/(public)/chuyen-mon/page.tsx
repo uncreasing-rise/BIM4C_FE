@@ -11,17 +11,6 @@ import { getPostsPage, getPostCategories } from "@/features/blog/api/queries";
 import { PageHero } from "@/components/shared/PageHero";
 import { BlogExplorer } from "@/components/blog/BlogExplorer";
 
-const TECHNICAL_BASE_CATEGORIES = [
-  "Khảo sát & Scan-to-BIM",
-  "Quy trình & Tiêu chuẩn",
-  "Công nghệ & Tự động hóa",
-  "Phối hợp & Kỹ thuật",
-  "Quản lý Dự án & Chi phí",
-  "Vận hành & Digital Twin",
-  "Dự án Thực tế",
-  "Đào tạo & Nhân lực",
-];
-
 const copy = {
   en: {
     breadcrumb: "BIM Technical",
@@ -114,7 +103,6 @@ export default async function TechnicalKnowledgePage({
         catalogueDesc={content.catalogueDesc}
         searchLabel={content.searchLabel}
         searchPlaceholder={content.searchPlaceholder}
-        baseCategories={TECHNICAL_BASE_CATEGORIES}
       />
     </main>
   );

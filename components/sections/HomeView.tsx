@@ -6,7 +6,7 @@ import Image from "next/image";
 import { LocalizedLink as Link } from "@/components/shared/LocalizedLink";
 import { ArrowRight, ArrowUpRight, Check, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { ROUTES, CONTACT_EMAIL } from "@/constants/routes";
+import { ROUTES } from "@/constants/routes";
 import { Partners } from "@/components/sections/Partners";
 import { ProjectCarousel } from "@/components/projects/ProjectCarousel";
 import { DeliveryProcess } from "@/components/sections/DeliveryProcess";
@@ -17,7 +17,10 @@ import { toLocalizedLabel } from "@/lib/utils/public-labels";
 import type { ContentEntry } from "@/types/content";
 import type { Project } from "@/features/projects/types/project";
 import type { StrategicPartner } from "@/features/homepage/types";
-import type { SiteSettingsData } from "@/features/settings/types";
+import {
+  usePageContent,
+  useSiteSettings,
+} from "@/features/page-content/context";
 
 import { ui } from "@/lib/i18n/ui";
 interface HomeViewProps {
@@ -26,7 +29,6 @@ interface HomeViewProps {
   rawPosts: ContentEntry[];
   rawCourses: ContentEntry[];
   rawPartners?: StrategicPartner[];
-  rawSettings?: SiteSettingsData;
 }
 
 export function HomeView({
@@ -35,7 +37,6 @@ export function HomeView({
   rawPosts,
   rawCourses,
   rawPartners,
-  rawSettings,
 }: HomeViewProps) {
   usePublicMotion();
   const { t, locale } = useLanguage();
@@ -46,12 +47,11 @@ export function HomeView({
   const posts = localizeContentList(rawPosts, locale);
   const courses = localizeContentList(rawCourses, locale);
 
-  const displayMetrics = rawSettings?.metrics && rawSettings.metrics.length > 0
-    ? rawSettings.metrics.map((m) => ({
-        value: m.value,
-        label: isVi ? m.label_vi : m.label_en,
-      }))
-    : t.aboutPage.trackRecord.metrics;
+  const settings = useSiteSettings();
+  const hero = usePageContent("home.hero");
+  const displayMetrics = (settings?.metrics ?? [])
+    .map((m) => ({ value: m.value, label: isVi ? m.label_vi : m.label_en }))
+    .filter((m) => m.value?.trim());
 
   const servicePriority = ["tu-van-bim", "bim-coordination", "thiet-ke"];
   const orderedServices = [...services].sort((a, b) => {
@@ -73,36 +73,42 @@ export function HomeView({
         <div className="pointer-events-none absolute -right-40 top-1/3 size-[500px] rounded-full bg-emerald-500/10 blur-[120px]" />
 
         <div className="site-container relative">
-          <div className="grid items-center gap-12 lg:grid-cols-[1.05fr_1.15fr] lg:gap-14">
+          <div className="grid items-center gap-12 lg:grid-cols-[1fr_1.3fr] lg:gap-8">
             {/* Left Hero Content */}
             <div
               className="home-hero-copy flex flex-col justify-center"
               data-motion="hero"
             >
               {/* Tech Kicker Pill */}
-              <div className="inline-flex items-center gap-2 rounded-full border border-teal-500/30 bg-teal-500/10 px-3.5 py-1.5 text-xs font-semibold text-teal-300 backdrop-blur-md w-fit mb-6">
-                <span className="relative flex size-2">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-teal-400 opacity-75" />
-                  <span className="relative inline-flex size-2 rounded-full bg-teal-500" />
-                </span>
-                <span>
-                  {ui(locale).homeView.bIMConstructionTechnology}
-                </span>
-              </div>
+              {hero?.eyebrow && (
+                <div className="inline-flex items-center gap-2 rounded-full border border-teal-500/30 bg-teal-500/10 px-3.5 py-1.5 text-xs font-semibold text-teal-300 backdrop-blur-md w-fit mb-6">
+                  <span className="relative flex size-2">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-teal-400 opacity-75" />
+                    <span className="relative inline-flex size-2 rounded-full bg-teal-500" />
+                  </span>
+                  <span>{hero.eyebrow}</span>
+                </div>
+              )}
 
               {/* Headline */}
-              <h1 className="text-4xl font-extrabold tracking-[-0.04em] sm:text-5xl lg:text-[3.6rem] leading-[1.08] text-white">
-                {ui(locale).homeView.connectedData}
-                <br />
-                <span className="bg-gradient-to-r from-teal-300 via-teal-200 to-emerald-400 bg-clip-text text-transparent">
-                  {ui(locale).homeView.betterBuildings}
-                </span>
-              </h1>
+              {(hero?.title || hero?.highlight) && (
+                <h1 className="text-4xl font-extrabold tracking-[-0.04em] sm:text-5xl lg:text-[3.6rem] leading-[1.08] text-white">
+                  {hero.title}
+                  {hero.title && hero.highlight && <br />}
+                  {hero.highlight && (
+                    <span className="bg-gradient-to-r from-teal-300 via-teal-200 to-emerald-400 bg-clip-text text-transparent">
+                      {hero.highlight}
+                    </span>
+                  )}
+                </h1>
+              )}
 
               {/* Subtitle */}
-              <p className="mt-5 max-w-xl text-base leading-relaxed text-slate-300 sm:text-lg">
-                {ui(locale).homeView.bIMConsultingMultidisciplinaryModelCoordination}
-              </p>
+              {hero?.description && (
+                <p className="mt-5 max-w-xl text-base leading-relaxed text-slate-300 sm:text-lg">
+                  {hero.description}
+                </p>
+              )}
 
               {/* Action Buttons */}
               <div className="mt-8 flex flex-wrap items-center gap-3.5">
@@ -129,20 +135,22 @@ export function HomeView({
               </div>
 
               {/* Metrics Strip */}
-              <div className="mt-8 grid grid-cols-2 gap-4 border-t border-white/15 pt-6">
-                {displayMetrics.map((metric, idx) => (
-                  <div key={idx}>
-                    <strong className="text-xl text-teal-300">
-                      {metric.value}
-                    </strong>
-                    <p className="text-xs text-slate-300">{metric.label}</p>
-                  </div>
-                ))}
-              </div>
+              {displayMetrics.length > 0 && (
+                <div className="mt-8 grid grid-cols-2 gap-4 border-t border-white/15 pt-6">
+                  {displayMetrics.map((metric, idx) => (
+                    <div key={idx}>
+                      <strong className="text-xl text-teal-300">
+                        {metric.value}
+                      </strong>
+                      <p className="text-xs text-slate-300">{metric.label}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Right Hero Interactive 3D BIM Stage */}
-            <div className="min-w-0" data-motion="slide-in">
+            <div className="min-w-0 -mx-4 sm:mx-0 lg:-mr-12 xl:-mr-20" data-motion="slide-in">
               <BimInteractiveHeroVisual />
             </div>
           </div>
@@ -165,9 +173,7 @@ export function HomeView({
             data-motion="reveal"
           >
             <div>
-              <p className="eyebrow">
-                {ui(locale).homeView.ourExpertise}
-              </p>
+              <p className="eyebrow">{ui(locale).homeView.ourExpertise}</p>
               <h2 className="section-title">
                 {ui(locale).formats.expertiseTitle[0]}
                 <br />
@@ -331,7 +337,10 @@ export function HomeView({
                   {ui(locale).homeView.buildYourTeamSNext}
                 </h2>
                 <p className="mt-3 text-sm leading-7 text-muted-foreground">
-                  {ui(locale).homeView.practicalProgrammesForModelersCoordinators}
+                  {
+                    ui(locale).homeView
+                      .practicalProgrammesForModelersCoordinators
+                  }
                 </p>
                 <div className="mt-6 divide-y divide-border/60 border-y border-border/60">
                   {courses.slice(0, 3).map((course) => (
@@ -483,13 +492,15 @@ export function HomeView({
                 <ArrowUpRight className="size-5 transition-transform duration-300 group-hover:translate-x-1 group-hover:-translate-y-1" />
               </Link>
 
-              <a
-                href={ROUTES.contactEmail}
-                className="inline-flex items-center gap-2 text-sm font-semibold text-slate-300 hover:text-teal-300 transition-colors"
-              >
-                <Mail className="size-4 text-teal-400" />
-                {CONTACT_EMAIL}
-              </a>
+              {settings?.email && (
+                <a
+                  href={`mailto:${settings.email}`}
+                  className="inline-flex items-center gap-2 text-sm font-semibold text-slate-300 hover:text-teal-300 transition-colors"
+                >
+                  <Mail className="size-4 text-teal-400" />
+                  {settings.email}
+                </a>
+              )}
 
               <p className="text-xs text-slate-400">
                 {ui(locale).homeView.contactTheBIM4CTeam}

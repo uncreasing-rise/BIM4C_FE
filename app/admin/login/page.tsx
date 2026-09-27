@@ -3,19 +3,38 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { type FormEvent, Suspense, useState } from "react";
+import { type FormEvent, Suspense, useEffect, useState } from "react";
 import { AlertCircle, ArrowLeft, Eye, EyeOff, Loader2 } from "lucide-react";
 import { env } from "@/lib/config/env";
 import { setAdminAccessToken } from "@/features/admin/auth";
-import { CONTACT_EMAIL } from "@/constants/routes";
 
 /** Backend messages are English; show admins a Vietnamese explanation. */
 function loginErrorMessage(status: number): string {
-  if (status === 401) return "Email hoặc mật khẩu không đúng, hoặc tài khoản đã bị khóa.";
-  if (status === 429) return "Bạn đã thử đăng nhập quá nhiều lần. Vui lòng đợi một phút rồi thử lại.";
-  if (status === 422) return "Vui lòng nhập email hợp lệ và mật khẩu tối thiểu 8 ký tự.";
-  if (status >= 500) return "Máy chủ đang gặp sự cố. Vui lòng thử lại sau ít phút.";
+  if (status === 401)
+    return "Email hoặc mật khẩu không đúng, hoặc tài khoản đã bị khóa.";
+  if (status === 429)
+    return "Bạn đã thử đăng nhập quá nhiều lần. Vui lòng đợi một phút rồi thử lại.";
+  if (status === 422)
+    return "Vui lòng nhập email hợp lệ và mật khẩu tối thiểu 8 ký tự.";
+  if (status >= 500)
+    return "Máy chủ đang gặp sự cố. Vui lòng thử lại sau ít phút.";
   return "Không thể đăng nhập. Vui lòng thử lại.";
+}
+
+/** Support address from public settings; the line is hidden when none is configured. */
+function useSupportEmail(): string {
+  const [supportEmail, setSupportEmail] = useState("");
+  useEffect(() => {
+    const controller = new AbortController();
+    fetch(`${env.apiUrl}/settings/public`, { signal: controller.signal })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((body: { data?: { email?: string } | null } | null) =>
+        setSupportEmail(body?.data?.email ?? ""),
+      )
+      .catch(() => {});
+    return () => controller.abort();
+  }, []);
+  return supportEmail;
 }
 
 function LoginForm() {
@@ -34,16 +53,23 @@ function LoginForm() {
     try {
       const response = await fetch(`${env.apiUrl}/auth/login`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
         credentials: "include",
         body: JSON.stringify({ email: email.trim(), password }),
       });
       if (!response.ok) throw new Error(loginErrorMessage(response.status));
       const result = (await response.json()) as { token?: string };
-      if (!result.token) throw new Error("Máy chủ không trả về phiên đăng nhập. Vui lòng thử lại.");
+      if (!result.token)
+        throw new Error(
+          "Máy chủ không trả về phiên đăng nhập. Vui lòng thử lại.",
+        );
       setAdminAccessToken(result.token);
       const next = params.get("next");
-      window.location.href = next?.startsWith("/admin") && next !== "/admin/login" ? next : "/admin";
+      window.location.href =
+        next?.startsWith("/admin") && next !== "/admin/login" ? next : "/admin";
     } catch (e) {
       setError(
         e instanceof TypeError
@@ -62,13 +88,19 @@ function LoginForm() {
   return (
     <form onSubmit={submit} className="space-y-4" noValidate={false}>
       {error && (
-        <div role="alert" className="flex gap-2 rounded-md border border-red-200 bg-red-50 px-3 py-2.5 text-[13px] text-red-800">
+        <div
+          role="alert"
+          className="flex gap-2 rounded-md border border-red-200 bg-red-50 px-3 py-2.5 text-[13px] text-red-800"
+        >
           <AlertCircle className="mt-0.5 size-4 shrink-0" />
           <span>{error}</span>
         </div>
       )}
       <div className="space-y-1.5">
-        <label htmlFor="admin-email" className="text-[13px] font-medium text-slate-700">
+        <label
+          htmlFor="admin-email"
+          className="text-[13px] font-medium text-slate-700"
+        >
           Email
         </label>
         <input
@@ -86,7 +118,10 @@ function LoginForm() {
         />
       </div>
       <div className="space-y-1.5">
-        <label htmlFor="admin-password" className="text-[13px] font-medium text-slate-700">
+        <label
+          htmlFor="admin-password"
+          className="text-[13px] font-medium text-slate-700"
+        >
           Mật khẩu
         </label>
         <div className="relative">
@@ -109,7 +144,11 @@ function LoginForm() {
             aria-pressed={showPassword}
             className="absolute inset-y-0 right-0 grid w-10 place-items-center text-slate-400 hover:text-slate-700"
           >
-            {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+            {showPassword ? (
+              <EyeOff className="size-4" />
+            ) : (
+              <Eye className="size-4" />
+            )}
           </button>
         </div>
       </div>
@@ -122,23 +161,36 @@ function LoginForm() {
         {busy ? "Đang đăng nhập…" : "Đăng nhập"}
       </button>
       <p className="text-center text-xs text-slate-500">
-        Quên mật khẩu hoặc bị khóa tài khoản? Liên hệ quản trị viên cấp cao để được cấp lại.
+        Quên mật khẩu hoặc bị khóa tài khoản? Liên hệ quản trị viên cấp cao để
+        được cấp lại.
       </p>
     </form>
   );
 }
 
 export default function AdminLoginPage() {
+  const supportEmail = useSupportEmail();
   return (
     <div className="flex min-h-dvh flex-col bg-slate-50">
       <main className="flex flex-1 items-center justify-center px-4 py-12">
         <div className="w-full max-w-sm">
           <div className="mb-6 flex flex-col items-center text-center">
             <span className="relative mb-4 size-11 overflow-hidden rounded-lg bg-white ring-1 ring-slate-200">
-              <Image src="/images/bim4c-logo.png" alt="BIM4C" fill sizes="44px" className="object-contain p-1" priority />
+              <Image
+                src="/images/bim4c-logo.png"
+                alt="BIM4C"
+                fill
+                sizes="44px"
+                className="object-contain p-1"
+                priority
+              />
             </span>
-            <h1 className="text-xl font-semibold tracking-tight text-slate-900">Đăng nhập quản trị</h1>
-            <p className="mt-1 text-sm text-slate-500">Hệ thống quản trị nội dung BIM4C</p>
+            <h1 className="text-xl font-semibold tracking-tight text-slate-900">
+              Đăng nhập quản trị
+            </h1>
+            <p className="mt-1 text-sm text-slate-500">
+              Hệ thống quản trị nội dung BIM4C
+            </p>
           </div>
           <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
             <Suspense fallback={<div className="h-64" aria-busy="true" />}>
@@ -146,13 +198,24 @@ export default function AdminLoginPage() {
             </Suspense>
           </div>
           <div className="mt-6 flex items-center justify-between text-xs text-slate-500">
-            <Link href="/" className="inline-flex items-center gap-1 hover:text-slate-800">
+            <Link
+              href="/"
+              className="inline-flex items-center gap-1 hover:text-slate-800"
+            >
               <ArrowLeft className="size-3.5" />
               Về website
             </Link>
-            <span>
-              Hỗ trợ: <a href={`mailto:${CONTACT_EMAIL}`} className="hover:text-slate-800">{CONTACT_EMAIL}</a>
-            </span>
+            {supportEmail && (
+              <span>
+                Hỗ trợ:{" "}
+                <a
+                  href={`mailto:${supportEmail}`}
+                  className="hover:text-slate-800"
+                >
+                  {supportEmail}
+                </a>
+              </span>
+            )}
           </div>
         </div>
       </main>

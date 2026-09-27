@@ -1,11 +1,14 @@
 "use client";
 
 import { SocialLinks } from "@/components/shared/SocialLinks";
-import { CONTACT_EMAIL, ROUTES } from "@/constants/routes";
 import { ConsultationForm } from "@/features/contact/components/ConsultationForm";
 import { AppointmentBooking } from "@/features/contact/components/AppointmentBooking";
+import {
+  usePageContent,
+  useSiteSettings,
+} from "@/features/page-content/context";
 import { useLanguage } from "@/lib/i18n/context";
-import type { Dictionary } from "@/lib/i18n/types";
+import { filled, telHref } from "@/lib/utils/contact";
 import { ArrowUpRight, CheckCircle2, Clock3, Mail, Phone } from "lucide-react";
 import { useEffect, useState, useSyncExternalStore } from "react";
 
@@ -16,20 +19,31 @@ const subscribeHash = (notify: () => void) => {
 };
 const readHash = () => window.location.hash;
 const serverHash = () => "";
-function OfficesAndVatCards({ t }: { t: Dictionary; locale: string }) {
+function OfficeCard() {
+  const office = usePageContent("contact")?.office;
+  if (!office?.title && !office?.address && !office?.note) return null;
+  const noteHref = telHref(office.note);
   return (
     <div className="mt-8 border-t border-white/10 pt-6 space-y-3 text-sm">
-      <h3 className="font-semibold">{t.contactPage.danangHq.title}</h3>
-      <p>{t.contactPage.danangHq.address}</p>
-      <a className="block text-teal-300" href="tel:+84796879899">
-        {t.contactPage.danangHq.note}
-      </a>
+      {office.title && <h3 className="font-semibold">{office.title}</h3>}
+      {office.address && <p>{office.address}</p>}
+      {office.note &&
+        (noteHref ? (
+          <a className="block text-teal-300" href={noteHref}>
+            {office.note}
+          </a>
+        ) : (
+          <p className="text-teal-300">{office.note}</p>
+        ))}
     </div>
   );
 }
 
 export function ConsultationSection() {
   const { t, locale } = useLanguage();
+  const settings = useSiteSettings();
+  const commitments = filled(usePageContent("contact")?.commitments);
+  const phoneHref = telHref(settings?.phone);
   const [mode, setMode] = useState<"inbox" | "appointment" | null>(null);
   const hash = useSyncExternalStore(subscribeHash, readHash, serverHash);
   const isAppointment =
@@ -64,20 +78,26 @@ export function ConsultationSection() {
             <ArrowUpRight className="size-4" />
           </a>
 
-          <div className="mt-5 flex flex-wrap gap-x-6 gap-y-2 text-sm">
-            <a
-              className="flex items-center gap-2 text-teal-300 transition hover:text-white font-medium"
-              href="tel:+84932468099"
-            >
-              <Phone className="size-4 text-primary" /> +84 93 2468 099
-            </a>
-            <a
-              className="flex items-center gap-2 text-teal-300 transition hover:text-white font-medium"
-              href={ROUTES.contactEmail}
-            >
-              <Mail className="size-4 text-primary" /> {CONTACT_EMAIL}
-            </a>
-          </div>
+          {(phoneHref || settings?.email) && (
+            <div className="mt-5 flex flex-wrap gap-x-6 gap-y-2 text-sm">
+              {phoneHref && (
+                <a
+                  className="flex items-center gap-2 text-teal-300 transition hover:text-white font-medium"
+                  href={phoneHref}
+                >
+                  <Phone className="size-4 text-primary" /> {settings?.phone}
+                </a>
+              )}
+              {settings?.email && (
+                <a
+                  className="flex items-center gap-2 text-teal-300 transition hover:text-white font-medium"
+                  href={`mailto:${settings.email}`}
+                >
+                  <Mail className="size-4 text-primary" /> {settings.email}
+                </a>
+              )}
+            </div>
+          )}
 
           <div className="mt-4 flex items-center gap-3">
             <span className="text-xs font-semibold text-white/50 uppercase tracking-wider">
@@ -86,21 +106,23 @@ export function ConsultationSection() {
             <SocialLinks variant="icons" />
           </div>
 
-          <ul className="mt-6 hidden gap-3 border-t border-white/10 pt-5 lg:grid">
-            {t.contactPage.commitments.map((item) => (
-              <li
-                className="flex items-center gap-3 text-sm text-white/75"
-                key={item}
-              >
-                <CheckCircle2 className="size-4 shrink-0 text-primary" />
-                {item}
-              </li>
-            ))}
-          </ul>
+          {commitments.length > 0 && (
+            <ul className="mt-6 hidden gap-3 border-t border-white/10 pt-5 lg:grid">
+              {commitments.map((item) => (
+                <li
+                  className="flex items-center gap-3 text-sm text-white/75"
+                  key={item}
+                >
+                  <CheckCircle2 className="size-4 shrink-0 text-primary" />
+                  {item}
+                </li>
+              ))}
+            </ul>
+          )}
 
-          {/* Desktop view for offices and VAT */}
+          {/* Desktop view for the office card */}
           <div className="hidden lg:block">
-            <OfficesAndVatCards t={t} locale={locale} />
+            <OfficeCard />
           </div>
         </div>
 
@@ -156,9 +178,9 @@ export function ConsultationSection() {
           {!isAppointment ? <ConsultationForm /> : <AppointmentBooking />}
         </div>
 
-        {/* Mobile view for offices and VAT (Appears below form) */}
+        {/* Mobile view for the office card (appears below form) */}
         <div className="block lg:hidden">
-          <OfficesAndVatCards t={t} locale={locale} />
+          <OfficeCard />
         </div>
       </div>
     </section>

@@ -164,171 +164,8 @@ export const viDictionary: Dictionary = {
         subscribeButton: "Đăng ký",
         consentText: "Tôi đồng ý nhận thông tin liên lạc từ BIM4C.",
         privacyLink: "Chính sách bảo mật",
-        copyright:
-            "© 2026 CÔNG TY CỔ PHẦN CÔNG NGHỆ VÀ XÂY DỰNG BIM4C (BIM4C JSC). Bảo lưu mọi quyền.",
         termsLink: "Điều khoản dịch vụ",
         privacyPolicyLink: "Chính sách bảo mật",
-        enterpriseInfo: {
-            companyName: "Công ty Cổ phần Công nghệ và Xây dựng BIM4C",
-            internationalName: "BIM4C TECHNOLOGY & CONSTRUCTION JOINT STOCK COMPANY",
-            shortName: "BIM4C JSC",
-            headquarters: "Văn phòng: 20 Bắc Sơn, Đà Nẵng",
-            legalRepresentative: "TRẦN NGỌC HIẾU",
-            certificationsTitle: "Tiêu chuẩn & Công nghệ áp dụng",
-            autodeskCert: "Bộ giải pháp Autodesk (Revit, Navisworks & ACC)",
-        },
-    },
-    aboutPage: {
-        eyebrow: "Về BIM4C",
-        heroTitle: "Chuyên môn xây dựng. Kết nối bằng BIM.",
-        heroDesc:
-            "Chúng tôi kết nối con người, quy trình và thông tin dự án để hỗ trợ thiết kế, thi công và vận hành tốt hơn.",
-        letter: {
-            title: "Lời ngỏ từ BIM4C",
-            subtitle: "Đồng hành kiến tạo giá trị bền vững cho ngành xây dựng",
-            paragraphs: [
-                "Từ giai đoạn hoạch định đầu tư, thiết kế cho đến thi công và quản lý tài sản, chúng tôi đồng hành cùng khách hàng trong quá trình chuyển đổi số bằng những giải pháp thiết thực, hiệu quả. Với cam kết đổi mới và không ngừng hoàn thiện, BIM4C giúp các tổ chức xây dựng hạ tầng thông minh hơn, bền vững hơn và sẵn sàng cho tương lai thông qua việc tích hợp công nghệ vào mọi giai đoạn của dự án.",
-                "Công ty Cổ phần Công nghệ và Xây dựng BIM4C là đơn vị tư vấn và thi công tập trung vào chuyển đổi số trong ngành xây dựng. Chúng tôi kết hợp tư vấn chuyên môn với việc triển khai thực tế các công nghệ như Mô hình thông tin công trình (BIM) nhằm nâng cao hiệu quả, tối ưu quy trình làm việc và tăng cường phối hợp.",
-                "Tại BIM4C, mô hình hóa 3D là nền tảng cốt lõi để tích hợp thông tin về vật liệu, tiến độ, chi phí và hiệu suất vận hành. Trí tuệ nhân tạo, học máy và IoT hỗ trợ phân tích mô hình, rà soát xung đột, dự báo rủi ro và luồng thông tin công trường.",
-                "BIM4C kết nối BIM với digital twin để tạo ra bản sao kỹ thuật số của tài sản vật lý, hỗ trợ mô phỏng, dự báo, vận hành thông minh, bảo trì dự đoán và tối ưu tài sản trong suốt vòng đời dự án.",
-                "Công việc của chúng tôi bắt đầu từ những quyết định mà đội ngũ dự án cần đưa ra: thiết kế gì, phối hợp ra sao, xây dựng và kiểm tra thế nào, bàn giao thông tin gì và vận hành tài sản trong tương lai ra sao. Chúng tôi xác định yêu cầu thông tin, trách nhiệm và điểm kiểm tra trước khi lựa chọn công cụ, để công nghệ luôn gắn với kết quả dự án.",
-                "BIM4C đồng hành cùng chủ đầu tư, đơn vị tư vấn, nhà thầu và đơn vị vận hành để biến các bản vẽ, mô hình và hồ sơ rời rạc thành nguồn thông tin đáng tin cậy. Kết quả là một nền tảng số thiết thực mà đội ngũ có thể tiếp nhận, đo lường và tiếp tục duy trì sau khi bàn giao.",
-            ],
-        },
-        visionMission: {
-            vision: { title: "Tầm nhìn", text: "BIM4C hướng tới trở thành đối tác tham chiếu đáng tin cậy trên toàn cầu về chuyển đổi số thực tiễn trong ngành xây dựng — đưa thông tin chuẩn xác, hợp tác cởi mở và đổi mới có thể đo lường đến gần hơn với mọi tổ chức. Chúng tôi hướng tới một môi trường xây dựng trong đó dữ liệu tiếp tục tạo giá trị từ hoạch định đầu tư, thiết kế, thi công đến vận hành và cải tạo công trình." },
-            mission: { title: "Sứ mệnh", text: "BIM4C thúc đẩy chuyển đổi số ngành xây dựng bằng cách kết nối con người, quy trình và thông tin quanh những quyết định rõ ràng của dự án. Chúng tôi xây dựng tiêu chuẩn BIM khả thi, điều phối dữ liệu đa bộ môn, củng cố quản trị CDE và hỗ trợ bàn giao số để khách hàng tăng khả năng dự báo, bảo vệ ngân sách, giảm lãng phí và vận hành tài sản hiệu quả hơn. Mỗi dự án đều hướng tới việc để lại năng lực mà đội ngũ có thể tự duy trì và tiếp tục cải tiến." },
-        },
-        workMethod: {
-            eyebrow: "Cách chúng tôi làm việc", title: "Đổi mới, hợp tác và lấy khách hàng làm trung tâm", intro: "Chúng tôi điều chỉnh chiến lược theo nhu cầu từng dự án, khuyến khích các góc nhìn đa chiều, phản ứng linh hoạt và theo đuổi các giải pháp sáng tạo mang lại giá trị thiết thực.",
-            items: [
-                { title: "Lấy khách hàng làm trung tâm", text: "Thấu hiểu nhu cầu của từng khách hàng và điều chỉnh chiến lược phù hợp với yêu cầu cụ thể của dự án." },
-                { title: "Văn hóa hợp tác", text: "Duy trì giao tiếp cởi mở và phối hợp chặt chẽ giữa các nhóm hướng tới mục tiêu chung của dự án." },
-                { title: "Quản lý linh hoạt", text: "Phản ứng nhanh trước thay đổi và các tình huống phức tạp trong khi vẫn đảm bảo chất lượng." },
-                { title: "Đổi mới sáng tạo", text: "Theo sát sự phát triển công nghệ để đưa ra các chiến lược tiên phong cho khách hàng." },
-            ],
-        },
-        operation: {
-            eyebrow: "Cách chúng tôi vận hành", title: "Từ nhu cầu đến giải pháp triển khai được", items: [
-                { title: "Đánh giá nhu cầu toàn diện", text: "Xác định yêu cầu và thách thức để giải pháp phù hợp với dự án và sử dụng nguồn lực hiệu quả." },
-                { title: "Hoạch định chiến lược", text: "Kết nối mục tiêu khách hàng, bối cảnh ngành và mức độ phức tạp của dự án với lộ trình công nghệ phù hợp." },
-                { title: "Công nghệ tiên tiến", text: "Tích hợp BIM và các công nghệ phù hợp để tạo ra mô hình thông tin 3D minh bạch, dễ quản lý." },
-                { title: "Phát triển linh hoạt", text: "Làm việc theo từng giai đoạn, liên tục cải tiến và phản ứng nhanh khi nhu cầu khách hàng thay đổi." },
-            ],
-        },
-        whyChoose: {
-            eyebrow: "TẠI SAO CHỌN BIM4C",
-            title: "Năng lực tạo giá trị lâu dài cho dự án",
-            intro: "Ba nền tảng giúp BIM4C trở thành đối tác tin cậy trong hành trình chuyển đổi số xây dựng.",
-            items: [
-                { title: "Chuyên môn và giải pháp tùy chỉnh", text: "Đội ngũ chuyên gia BIM của chúng tôi tùy chỉnh giải pháp cho từng dự án, kết hợp kiến thức chuyên sâu về BIM với việc không ngừng cập nhật công nghệ xây dựng." },
-                { title: "Hiệu suất cao và công nghệ tiên tiến", text: "Chúng tôi ứng dụng BIM để tinh gọn quy trình thi công, nâng cao hiệu quả bàn giao và không ngừng cải tiến cách thức triển khai dự án." },
-                { title: "Đối tác chiến lược và hỗ trợ chuyên môn", text: "Chúng tôi đồng hành lâu dài cùng khách hàng, cung cấp hỗ trợ chuyên môn và quy trình BIM tối ưu chi phí, hướng tới thành công bền vững." },
-            ],
-        },
-        trackRecord: {
-            eyebrow: "NĂNG LỰC BIM4C",
-            title: "Dịch vụ xuyên suốt vòng đời công trình",
-            metrics: [
-                {
-                    value: "3D–7D",
-                    label: "Dịch vụ BIM",
-                    subtext: "Mô hình, tiến độ, chi phí, năng lượng và vận hành",
-                },
-                {
-                    value: "LiDAR",
-                    label: "Quét Laser",
-                    subtext: "Khảo sát hiện trạng và Scan-to-BIM",
-                },
-                {
-                    value: "Thiết kế",
-                    label: "Kiến trúc & Kỹ thuật",
-                    subtext: "Nội thất, cảnh quan và hạ tầng",
-                },
-                {
-                    value: "Đào tạo",
-                    label: "Chuyển giao công nghệ",
-                    subtext: "Chủ đầu tư, quản lý dự án, doanh nghiệp và sinh viên",
-                },
-            ],
-        },
-        whoWeAreEyebrow: "Chúng tôi là ai",
-        whoWeAreTitle: "Đối tác thực tiễn cho chuyển đổi số xây dựng.",
-        whoWeAreP1:
-            "BIM4C kết hợp kiến thức xây dựng với Mô hình thông tin công trình, phối hợp và quản lý thông tin. Chúng tôi giúp chủ đầu tư, đơn vị tư vấn và nhà thầu ứng dụng BIM hiệu quả vào công việc hàng ngày.",
-        whoWeAreP2:
-            "Công việc của chúng tôi trải rộng từ tư vấn, thiết kế đa bộ môn, phối hợp mô hình, đào tạo đến bàn giao số. Mỗi dự án đều bắt đầu từ mục tiêu và những người chịu trách nhiệm triển khai.",
-        check1: "Phạm vi phù hợp với giai đoạn dự án của bạn",
-        check2: "Quy trình mà đội ngũ của bạn có thể sử dụng và duy trì",
-        check3: "Thông tin được chuẩn bị sẵn sàng cho mục đích tiếp theo",
-        guidesEyebrow: "Điều dẫn lối chúng tôi",
-        guidesTitle: "Những nguyên tắc thể hiện qua công việc.",
-        guidesDesc:
-            "Công nghệ chỉ thực sự phục vụ dự án khi trách nhiệm, thông tin và quyết định được xác định rõ ràng.",
-        values: {
-            integrity: {
-                title: "Chính trực",
-                desc: "Xây dựng quan hệ hợp tác dựa trên sự tin tưởng, minh bạch và trung thực.",
-            },
-            innovation: {
-                title: "Làm việc thông minh",
-                desc: "Sử dụng BIM để tổ chức công việc, giảm sai sót và nâng cao hiệu quả.",
-            },
-            collaboration: {
-                title: "Tận tâm",
-                desc: "Hỗ trợ khách hàng bằng sự tận tâm và đồng hành cùng đối tác vượt qua thách thức.",
-            },
-        },
-        teamEyebrow: "Ban lãnh đạo & Chuyên gia cấp cao",
-        teamTitle: "Ban lãnh đạo & Đội ngũ chuyên gia giàu kinh nghiệm thực chiến",
-        teamDesc:
-            "Đội ngũ sáng lập, quản lý và chuyên gia trưởng dẫn dắt chiến lược tư vấn và triển khai BIM4C.",
-        teamMembers: [
-            {
-                name: "Trần Ngọc Hiếu",
-                role: "Nhà sáng lập / CEO",
-                image: "/images/team/avatar-default.jpg",
-                spec: "Tư vấn chiến lược chuyển đổi số, triển khai quy trình BIM và đào tạo chuyên sâu.",
-            },
-            {
-                name: "Nguyễn Vũ Long",
-                role: "BIM Manager / Đồng sáng lập",
-                image: "/images/team/avatar-default.jpg",
-                spec: "Hơn 8 năm kinh nghiệm thực chiến trong công trình cải tạo, kết cấu thép, bê tông và quy trình BIM.",
-            },
-            {
-                name: "Nguyễn Tiến Cường",
-                role: "BIM Coordinator / Đồng sáng lập",
-                image: "/images/team/avatar-default.jpg",
-                spec: "Hơn 9 năm kinh nghiệm điều phối BIM, tối ưu thiết kế, kết cấu và tích hợp công cụ số.",
-            },
-            {
-                name: "Nguyễn Văn Chiêu",
-                role: "BIM Developer / IT Manager",
-                image: "/images/team/avatar-default.jpg",
-                spec: "Hơn 6 năm kinh nghiệm phát triển phần mềm và công cụ tự động hóa BIM với hơn 100 add-in chuyên dụng.",
-            },
-            {
-                name: "Nguyễn Hồng Chinh",
-                role: "Trưởng nhóm Thiết kế Kết cấu",
-                image: "/images/team/avatar-default.jpg",
-                spec: "Hơn 14 năm kinh nghiệm thiết kế kết cấu bê tông cốt thép, thép tiền chế và tối ưu giải pháp móng - phần thân.",
-            },
-            {
-                name: "Nguyễn Ngọc Phước",
-                role: "Trưởng nhóm Thiết kế MEP & PCCC",
-                image: "/images/team/avatar-default.jpg",
-                spec: "Hơn 13 năm kinh nghiệm thiết kế và phối hợp hệ thống Cơ Điện & Phòng cháy chữa cháy (MEP & PCCC).",
-            },
-            {
-                name: "Phan Thị Kiều Diệu",
-                role: "Trưởng nhóm Dự toán & Quản lý Chi phí",
-                image: "/images/team/avatar-female.jpg",
-                spec: "Hơn 14 năm kinh nghiệm quản lý chi phí, bóc tách khối lượng BIM 5D và kiểm soát ngân sách đầu tư.",
-            },
-        ],
-        ctaEyebrow: "Hợp tác cùng BIM4C",
-        ctaTitle: "Một lộ trình rõ ràng hơn cho dự án tiếp theo của bạn.",
     },
     projectsPage: {
         eyebrow: "Danh mục dự án BIM4C",
@@ -374,22 +211,6 @@ export const viDictionary: Dictionary = {
         exploreProgramme: "Khám phá chương trình",
         emptyTitle: "Không có chương trình phù hợp với tìm kiếm của bạn",
         emptyDesc: "Hãy thử một kỹ năng khác hoặc xóa bộ lọc.",
-        howWeTeachEyebrow: "Cách chúng tôi giảng dạy",
-        howWeTeachTitle: "Học qua thực hành.",
-        learningValues: [
-            {
-                title: "Thực hành theo dự án",
-                text: "Bài tập, dữ liệu và mô hình được chọn lọc từ các tình huống triển khai thực tế.",
-            },
-            {
-                title: "Cố vấn từ chuyên gia",
-                text: "Phản hồi trực tiếp giúp học viên nhận diện vấn đề và cải thiện sau mỗi bài tập.",
-            },
-            {
-                title: "Kết quả sẵn sàng cho công việc",
-                text: "Sản phẩm hoàn thành có thể áp dụng ngay vào công việc hoặc dùng trong hồ sơ năng lực chuyên môn.",
-            },
-        ],
     },
     servicesPage: {
         eyebrow: "Năng lực BIM4C",
@@ -410,76 +231,9 @@ export const viDictionary: Dictionary = {
         startEyebrow: "Bắt đầu với BIM4C",
         startTitle: "Biến thách thức dự án thành lộ trình triển khai rõ ràng.",
         talkToExpert: "Trao đổi với chuyên gia",
-        guideEyebrow: "Tìm điểm khởi đầu của bạn",
-        guideTitle: "Đội ngũ của bạn cần gì?",
-        guideDesc:
-            "Chọn một ưu tiên để xem điểm khởi đầu phù hợp. Chúng tôi có thể cùng nhau xác định phạm vi.",
         suggestedStartingPoint: "Điểm khởi đầu đề xuất",
         usefulForFirstConversation: "Hữu ích cho buổi trao đổi đầu tiên",
         discussNeeds: "Trao đổi nhu cầu của bạn",
-        faqEyebrow: "Trước khi bắt đầu",
-        faqTitle: "Một vài câu trả lời hữu ích.",
-        faqDesc: "Biết trước những gì cần chuẩn bị trước khi bắt đầu trao đổi.",
-        needs: [
-            {
-                label: "Bắt đầu với kế hoạch BIM",
-                slug: "tu-van-bim",
-                title: "Xác định hướng đi rõ ràng trước khi bắt đầu mô hình hóa.",
-                description:
-                    "Thống nhất mục tiêu dự án, yêu cầu thông tin và trách nhiệm của từng bộ phận.",
-                preparation:
-                    "Giai đoạn dự án, cơ cấu đội ngũ và các yêu cầu BIM hiện có (nếu có).",
-            },
-            {
-                label: "Phối hợp mô hình dự án",
-                slug: "bim-coordination",
-                title: "Giúp các bộ môn làm việc trên nền thông tin đã được phối hợp.",
-                description:
-                    "Tổng hợp mô hình, rà soát xung đột và giúp việc theo dõi, xử lý vấn đề dễ dàng hơn.",
-                preparation:
-                    "Mô hình các bộ môn hiện có, mốc tiến độ dự án và các khó khăn phối hợp hiện tại.",
-            },
-            {
-                label: "Phát triển đội ngũ của chúng tôi",
-                slug: "dao-tao",
-                title: "Xây dựng kỹ năng mà đội ngũ của bạn có thể áp dụng ngay vào công việc.",
-                description:
-                    "Trao đổi về đào tạo dựa trên kinh nghiệm hiện tại, vai trò và quy trình làm việc của đội ngũ.",
-                preparation:
-                    "Vai trò của đội ngũ, kinh nghiệm phần mềm và các kỹ năng bạn muốn phát triển.",
-            },
-            {
-                label: "Chuẩn bị bàn giao số",
-                slug: "digital-twin-va-du-lieu-tai-san",
-                title: "Giúp thông tin dự án hữu ích ngoài giai đoạn thi công.",
-                description:
-                    "Xác định cách cấu trúc, kiểm tra và bàn giao dữ liệu tài sản cho mục đích sử dụng tiếp theo.",
-                preparation:
-                    "Yêu cầu thông tin tài sản, dữ liệu mô hình hiện có và ưu tiên vận hành.",
-            },
-        ],
-        faqs: [
-            {
-                question: "Khi nào nên mời BIM4C tham gia?",
-                answer:
-                    "Bạn có thể bắt đầu ở giai đoạn hoạch định, thiết kế, thi công hoặc bàn giao. Hãy cho chúng tôi biết giai đoạn hiện tại và các quyết định sắp tới để cùng trao đổi về nơi hỗ trợ BIM sẽ hữu ích nhất.",
-            },
-            {
-                question: "Cần chuẩn bị gì cho buổi trao đổi đầu tiên?",
-                answer:
-                    "Một bản tóm tắt ngắn về dự án, giai đoạn hiện tại, các mốc quan trọng và thách thức bạn muốn giải quyết. Mô hình hoặc yêu cầu BIM hiện có (nếu có) sẽ hữu ích, nhưng bạn không cần một bản mô tả đầy đủ để liên hệ với chúng tôi.",
-            },
-            {
-                question: "Có thể trao đổi hỗ trợ cho một phần của dự án không?",
-                answer:
-                    "Có. Yêu cầu của bạn có thể tập trung vào một nhu cầu cụ thể như hoạch định BIM, phối hợp mô hình, đào tạo đội ngũ hoặc thông tin tài sản. Phạm vi và trách nhiệm sẽ được thống nhất dựa trên nhu cầu đó.",
-            },
-            {
-                question: "Phạm vi, chi phí và sản phẩm bàn giao được thống nhất như thế nào?",
-                answer:
-                    "Những yếu tố này phụ thuộc vào giai đoạn dự án, quy mô, thông tin hiện có và mức độ hỗ trợ cần thiết. Buổi trao đổi ban đầu sẽ giúp làm rõ các yếu tố này trước khi lập đề xuất.",
-            },
-        ],
     },
     blogPage: {
         eyebrow: "Kiến thức BIM4C",
@@ -506,29 +260,13 @@ export const viDictionary: Dictionary = {
         talkTitle: "Một phạm vi rõ ràng bắt đầu từ đây.",
         talkDesc:
             "Hãy cho chúng tôi biết về thách thức của bạn. Chúng tôi sẽ giúp làm rõ phạm vi, ưu tiên và các bước tiếp theo.",
-        commitments: [
-            "Trao đổi trực tiếp với chuyên gia BIM",
-            "Đề xuất phù hợp với giai đoạn và quy mô dự án của bạn",
-            "Thông tin doanh nghiệp của bạn được bảo mật",
-        ],
         enquiryTitle: "Yêu cầu về dự án",
         enquiryDesc:
             "Các trường có dấu * là bắt buộc. Chúng tôi thường phản hồi trong vòng 1 ngày làm việc.",
         responseTime: "1 ngày làm việc",
-        officesTitle: "Trụ sở & Trung tâm kỹ thuật BIM4C",
-        danangHq: {
-            title: "BIM4C tại Đà Nẵng",
-            address: "20 Bắc Sơn, Thành phố Đà Nẵng",
-            phone: "+84 93 2468 099",
-            note: "Anh Hiếu: +84 796 879 899",
-        },
         mapSection: {
-            eyebrow: "Vị trí & Chỉ đường",
-            title: "Trụ sở chính BIM4C tại Đà Nẵng",
-            desc: "Văn phòng BIM4C: 20 Bắc Sơn, Thành phố Đà Nẵng.",
             directionsBtn: "Chỉ đường trên Google Maps",
             copyAddressBtn: "Sao chép địa chỉ",
-            workingHours: "Vui lòng liên hệ để sắp xếp lịch hẹn.",
         },
     },
     detailPage: {
@@ -556,10 +294,6 @@ export const viDictionary: Dictionary = {
         backServices: "Tất cả giải pháp",
         backBlog: "Tất cả bài viết",
         softwareStack: "Phần mềm & Công nghệ sử dụng",
-        b2bTrainingTitle: "Đào tạo doanh nghiệp B2B theo nhóm",
-        b2bTrainingDesc:
-            "Chương trình đào tạo tùy chỉnh theo mô hình dự án và quy trình làm việc thực tế của tổ chức bạn.",
-        b2bTrainingAction: "Yêu cầu đào tạo doanh nghiệp",
         standardsCompliance: "Tuân thủ tiêu chuẩn quốc tế",
         deliverablesChecklist: "Danh mục sản phẩm bàn giao trên CDE",
         deliverables: [
@@ -581,15 +315,6 @@ export const viDictionary: Dictionary = {
             level: "Trình độ",
             price: "Học phí",
             instructor: "Giảng viên",
-        },
-        trustSignals: {
-            ndaTitle: "Cam kết bảo mật thông tin (NDA)",
-            ndaDesc:
-                "Chúng tôi ký thỏa thuận bảo mật trước khi rà soát dữ liệu mô hình và bản vẽ mang tính bảo mật.",
-            slaTitle: "Tư vấn trực tiếp",
-            slaDesc: "Liên hệ BIM4C để thống nhất phạm vi và lịch tư vấn.",
-            expertTitle: "Đội ngũ BIM Manager cấp cao",
-            expertDesc: "Trao đổi trực tiếp với đội ngũ tư vấn và triển khai của BIM4C.",
         },
     },
     forms: {

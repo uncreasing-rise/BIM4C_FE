@@ -13,6 +13,8 @@ import { ServiceFaq } from "@/components/services/ServiceFaq";
 import type { ContentEntry } from "@/types/content";
 import type { PageMeta } from "@/features/shared/types/pagination";
 import { useLanguage } from "@/lib/i18n/context";
+import { usePageContent } from "@/features/page-content/context";
+import { filled } from "@/lib/utils/contact";
 
 import { JsonLd } from "@/components/seo/JsonLd";
 import { breadcrumbSchema, faqPageSchema } from "@/lib/seo/structured-data";
@@ -26,6 +28,9 @@ export function ServicesPageView({
 }) {
   usePublicMotion();
   const { t } = useLanguage();
+  const faqs = filled(usePageContent("services.faq")?.items).flatMap(({ question, answer }) =>
+    question && answer ? [{ question, answer }] : [],
+  );
 
   const breadcrumbs = [
     { name: t.navigation.home, path: "/" },
@@ -37,7 +42,7 @@ export function ServicesPageView({
       <JsonLd
         data={[
           breadcrumbSchema(breadcrumbs),
-          faqPageSchema(t.servicesPage.faqs),
+          ...(faqs.length ? [faqPageSchema(faqs)] : []),
         ]}
       />
       <PageHero

@@ -9,16 +9,16 @@ import { useLanguage } from "@/lib/i18n/context";
 
 import { ui } from "@/lib/i18n/ui";
 type PageHeroProps = {
-  eyebrow: string;
+  eyebrow?: string;
   title: string;
-  description: string;
+  description?: string;
   image: string;
   variant?: "default" | "about";
   breadcrumbs?: { label: string; href?: string }[];
 };
 
 export function PageHero({
-  eyebrow,
+  eyebrow = "",
   title,
   description,
   image,
@@ -44,7 +44,8 @@ export function PageHero({
   const shouldShowEyebrowPill =
     Boolean(naturalEyebrow) &&
     naturalEyebrow.trim().toLowerCase() !== title.trim().toLowerCase() &&
-    naturalEyebrow.trim().toLowerCase() !== lastBreadcrumb?.label.trim().toLowerCase();
+    naturalEyebrow.trim().toLowerCase() !==
+      lastBreadcrumb?.label.trim().toLowerCase();
 
   return (
     <section
@@ -91,7 +92,10 @@ export function PageHero({
             <span className="sr-only">{t.navigation.home}</span>
           </Link>
           {effectiveBreadcrumbs.map((item, index, items) => (
-            <span className="flex items-center gap-1.5" key={`${item.label}-${index}`}>
+            <span
+              className="flex items-center gap-1.5"
+              key={`${item.label}-${index}`}
+            >
               <ChevronRight className="size-3 text-zinc-500 shrink-0" />
               {item.href ? (
                 <Link
@@ -126,11 +130,12 @@ export function PageHero({
         </h1>
 
         {/* Hero Description */}
-        <p className="mt-4 max-w-2xl break-words border-l-2 border-teal-400 pl-4 text-sm leading-relaxed text-slate-200/95 sm:text-base md:text-lg">
-          {description}
-        </p>
+        {description && (
+          <p className="mt-4 max-w-2xl break-words border-l-2 border-teal-400 pl-4 text-sm leading-relaxed text-slate-200/95 sm:text-base md:text-lg">
+            {description}
+          </p>
+        )}
       </div>
     </section>
   );
 }
-
