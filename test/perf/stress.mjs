@@ -59,3 +59,45 @@ for (const c of clashes) {
   pairs[kinds] = (pairs[kinds] ?? 0) + 1;
 }
 console.log("by pair:", pairs);
+
+// Picking: every element as a BVH mesh, full raycast vs the pick index.
+const { createElementMesh, getModelBounds } = load("components/bim-viewer/viewer-geometry");
+const { PickIndex } = load("components/bim-viewer/pick-index");
+const pool = new Map();
+const shared = new Map();
+const meshes = model.elements.map((e) => {
+  const mesh = createElementMesh(e, pool, shared);
+  if (!mesh.geometry.boundsTree) {
+    mesh.geometry.computeBoundsTree = BVH.computeBoundsTree;
+    mesh.geometry.computeBoundsTree();
+  }
+  mesh.updateMatrixWorld();
+  return mesh;
+});
+const index = new PickIndex();
+t = performance.now();
+index.build(meshes);
+console.log(`pick index: built over ${meshes.length} meshes in ${(performance.now() - t).toFixed(0)} ms`);
+const b = getModelBounds(model);
+const box = new THREE.Box3(new THREE.Vector3(...b.min), new THREE.Vector3(...b.max));
+const centre = box.getCenter(new THREE.Vector3());
+const extent = box.getSize(new THREE.Vector3()).length();
+const camera = new THREE.PerspectiveCamera(45, 16 / 9, 0.1, extent * 20);
+camera.position.copy(centre).add(new THREE.Vector3(extent, extent * 0.6, extent));
+camera.lookAt(centre);
+camera.updateMatrixWorld();
+const raycaster = new THREE.Raycaster();
+raycaster.firstHitOnly = true;
+const rays = Array.from({ length: 200 }, (_, i) => new THREE.Vector2(((i * 37) % 160) / 100 - 0.8, ((i * 53) % 160) / 100 - 0.8));
+t = performance.now();
+for (const p of rays) {
+  raycaster.setFromCamera(p, camera);
+  raycaster.intersectObjects(meshes, false);
+}
+const brute = (performance.now() - t) / rays.length;
+t = performance.now();
+for (const p of rays) {
+  raycaster.setFromCamera(p, camera);
+  index.firstHit(raycaster, []);
+}
+console.log(`pick: full raycast ${brute.toFixed(2)} ms, pick index ${((performance.now() - t) / rays.length).toFixed(3)} ms per pick`);

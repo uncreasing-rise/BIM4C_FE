@@ -8,7 +8,6 @@ import {
   createElementMesh,
   disposeObject,
   explodedPosition,
-  visibleHit,
 } from "./viewer-geometry";
 import {
   PRESET_DIRECTIONS,
@@ -25,6 +24,7 @@ import {
 } from "./camera-motion";
 import { BimViewCube } from "./BimViewCube";
 import { timeSlicer } from "./yield";
+import { PickIndex } from "./pick-index";
 import { entryPose, walkStep as stepWalk, type WalkWorld } from "./walk-physics";
 import { boxMode, boxPicked, rectFrom } from "./box-select";
 import {
@@ -338,12 +338,13 @@ export function BimCanvas(props: BimCanvasProps) {
       if (!disposed && !frame && !document.hidden)
         frame = requestAnimationFrame(render);
     };
+    // Updated on resize: reading the DOM rect per label per frame forces layout.
+    const viewport = { width: 1, height: 1 };
     const toScreen = (p: THREE.Vector3): [number, number, boolean] => {
       const v = p.clone().project(view());
-      const rect = renderer.domElement.getBoundingClientRect();
       return [
-        ((v.x + 1) / 2) * rect.width,
-        ((1 - v.y) / 2) * rect.height,
+        ((v.x + 1) / 2) * viewport.width,
+        ((1 - v.y) / 2) * viewport.height,
         v.z < 1 && v.z > -1,
       ];
     };
@@ -418,9 +419,37 @@ export function BimCanvas(props: BimCanvasProps) {
       requestRender();
     };
 
+    // ?perf=1: frame rate, CPU time per frame, draw calls and pick time.
+    const perf = new URLSearchParams(window.location.search).has("perf")
+      ? { box: document.createElement("pre"), frames: 0, cpu: 0, since: performance.now() }
+      : null;
+    if (perf) {
+      perf.box.className =
+        "pointer-events-none absolute left-2 top-2 z-40 rounded bg-black/75 px-2 py-1 font-mono text-[11px] leading-tight text-lime-300";
+      container.appendChild(perf.box);
+    }
+    const reportPerf = (cpu: number) => {
+      if (!perf) return;
+      perf.frames++;
+      perf.cpu += cpu;
+      const now = performance.now();
+      if (now - perf.since < 500) return;
+      const fps = (perf.frames * 1000) / (now - perf.since);
+      perf.box.textContent = [
+        `${fps.toFixed(0)} fps (while redrawing)`,
+        `cpu ${(perf.cpu / perf.frames).toFixed(1)} ms/frame`,
+        `draws ${renderer.info.render.calls} · tris ${(renderer.info.render.triangles / 1e6).toFixed(2)} M`,
+        `pick ${lastPickMs.toFixed(2)} ms · planes ${activePlanes.length}`,
+      ].join("\n");
+      perf.frames = 0;
+      perf.cpu = 0;
+      perf.since = now;
+    };
+
     function render() {
       frame = 0;
       if (disposed || renderer.getContext().isContextLost()) return;
+      const started = performance.now();
       stepFlight();
       if (controls.update()) requestRender();
       if (cubeRef.current) {
@@ -441,6 +470,7 @@ export function BimCanvas(props: BimCanvasProps) {
       pipeline.render(interacting, activePlanes, span);
       // Read by performance checks (draw calls for the last frame, all passes).
       renderer.domElement.dataset.drawCalls = String(renderer.info.render.calls);
+      reportPerf(performance.now() - started);
       current.onCameraChange({ position: camera.position.toArray(), target: controls.target.toArray(), up: camera.up.toArray(), fov: camera.fov });
       positionLabels();
     }
@@ -482,20 +512,45 @@ export function BimCanvas(props: BimCanvasProps) {
       grid.visible = current.display.grid;
       grid.position.set(center.x, box.min.y - span * 0.005, center.z);
       scene.add(grid);
+      pipeline?.invalidate();
       camera.far = Math.max(camera.far, span * 20);
       camera.updateProjectionMatrix();
       measurementsKey = null; // marker sizes depend on span
     };
 
     // ---- Models --------------------------------------------------------
+    // Rebuilt only when visibility, ghosting or the model set changes.
+    let pickList: THREE.Mesh[] | null = null;
+    const invalidatePicking = () => {
+      pickList = null;
+      pipeline?.invalidate();
+    };
     const pickable = () => {
+      if (pickList) return pickList;
       const list: THREE.Mesh[] = [];
       for (const entry of entries.values())
         if (entry.ready && entry.group.visible)
           for (const mesh of entry.meshes.values())
             if (mesh.visible && !mesh.userData.ghost) list.push(mesh);
-      return list;
+      return (pickList = list);
     };
+    // Spatial index for rays. Visibility is checked per hit, so hiding or
+    // isolating never rebuilds it; only moved or added meshes do.
+    const pickIndex = new PickIndex();
+    let indexDirty = true;
+    const pickTree = () => {
+      if (indexDirty) {
+        const all: THREE.Mesh[] = [];
+        for (const entry of entries.values())
+          if (entry.ready) for (const mesh of entry.meshes.values()) all.push(mesh);
+        pickIndex.build(all);
+        indexDirty = false;
+      }
+      return pickIndex;
+    };
+    const isPickable = (mesh: THREE.Mesh) =>
+      mesh.visible && !mesh.userData.ghost && (mesh.parent?.visible ?? true);
+    let lastPickMs = 0;
     const reportStats = () => {
       let bytes = 0;
       let triangles = 0;
@@ -512,6 +567,8 @@ export function BimCanvas(props: BimCanvasProps) {
       }
       for (const entry of entries.values()) bytes += entry.batches?.bytes ?? 0;
       current.onStats({ bytes, triangles });
+      // Big scenes skip section caps while the camera moves (see pipeline.render).
+      if (pipeline) pipeline.heavy = triangles > 1_500_000;
     };
     const removeEntry = (entry: ModelEntry) => {
       federation.remove(entry.group);
@@ -570,6 +627,13 @@ export function BimCanvas(props: BimCanvasProps) {
           entry.markers.add(marker);
         }
         entry.ready = true;
+        indexDirty = true;
+        invalidatePicking();
+        // Build the pick index while idle rather than on the first hover.
+        const idle = window.requestIdleCallback ?? ((run: () => void) => window.setTimeout(run, 200));
+        idle(() => {
+          if (!disposed && indexDirty) pickTree();
+        });
         meshStateKey = "";
         update(current);
         reportStats();
@@ -586,6 +650,7 @@ export function BimCanvas(props: BimCanvasProps) {
         ) {
           removeEntry(entry);
           entries.delete(key);
+          indexDirty = true;
           meshStateKey = "";
           reportStats();
         }
@@ -606,18 +671,22 @@ export function BimCanvas(props: BimCanvasProps) {
         if (
           entry.source.visible !== source.visible ||
           entry.source.placement !== source.placement
-        )
+        ) {
           meshStateKey = "";
+          if (entry.source.placement !== source.placement) indexDirty = true;
+        }
         entry.source = source;
         entry.group.visible = source.visible;
         entry.group.position.set(...source.placement.position);
         entry.group.rotation.set(0, source.placement.rotationY, 0);
       }
       federation.updateMatrixWorld(true);
+      invalidatePicking();
     };
 
     // ---- Per-mesh state (visibility, explode, selection) -----------------
     let meshStateKey = "";
+    let lastExplode = 0;
     const highlight = (m: THREE.Material) => {
       if (!highlights.has(m)) {
         const h = (m as THREE.MeshStandardMaterial).clone();
@@ -643,6 +712,10 @@ export function BimCanvas(props: BimCanvasProps) {
       const isolated = next.isolatedElementIds;
       const key = `${next.explodeFactor}|${JSON.stringify(next.visibleLayers)}|${[...next.selectedElementIds].join(",")}|${[...next.hiddenElementIds].join(",")}|${isolated ? [...isolated].join(",") : "-"}|${lastBoundsKey}`;
       if (key === meshStateKey && next.colorOverrides === lastOverrides) return;
+      if (next.explodeFactor !== lastExplode) {
+        lastExplode = next.explodeFactor;
+        indexDirty = true;
+      }
       meshStateKey = key;
       lastOverrides = next.colorOverrides;
       const offset = new THREE.Vector3();
@@ -705,6 +778,7 @@ export function BimCanvas(props: BimCanvasProps) {
           next.visibleLayers.clash && next.explodeFactor === 0;
       }
       federation.updateMatrixWorld(true);
+      invalidatePicking();
     };
 
     // ---- Measurements --------------------------------------------------
@@ -853,12 +927,9 @@ export function BimCanvas(props: BimCanvasProps) {
     /** Surface hit under the pointer, snapped when measuring. */
     const pick = (clientX: number, clientY: number, snap: boolean) => {
       const pointer = castFrom(clientX, clientY);
-      // A clipped nearest triangle must not hide a deeper visible surface.
-      ray.firstHitOnly = activePlanes.length === 0;
-      const hit = visibleHit(
-        ray.intersectObjects(pickable(), false),
-        activePlanes,
-      );
+      const started = performance.now();
+      const hit = pickTree().firstHit(ray, activePlanes, isPickable);
+      lastPickMs = performance.now() - started;
       if (!hit) return null;
       const mesh = hit.object as THREE.Mesh;
       if (!snap || !hit.face)
@@ -932,13 +1003,14 @@ export function BimCanvas(props: BimCanvasProps) {
     };
 
     const hideHover = () => {
+      const shown = hoverGroup.visible;
       hoverGroup.visible = false;
       tooltip.hidden = true;
       readout.dataset.empty = "true";
       readout.textContent = ui(
         localeRef.current,
       ).formats.hoverToReadCoordinates;
-      requestRender();
+      if (shown) requestRender();
     };
     const showHover = (clientX: number, clientY: number) => {
       const measuring = current.activeTool === "measure";
@@ -947,11 +1019,16 @@ export function BimCanvas(props: BimCanvasProps) {
       const p = result.point.toArray() as Vec3;
       readout.dataset.empty = "false";
       readout.textContent = coordinateText(p);
-      hoverGroup.visible = measuring;
       if (!measuring) {
+        // Only the coordinate readout changes: no need to redraw the scene.
         tooltip.hidden = true;
-        return requestRender();
+        if (hoverGroup.visible) {
+          hoverGroup.visible = false;
+          requestRender();
+        }
+        return;
       }
+      hoverGroup.visible = true;
       hoverMarker.position.copy(result.point);
       hoverKind = result.kind;
       (hoverMarker.material as THREE.MeshBasicMaterial).color.setHex(
@@ -1063,13 +1140,13 @@ export function BimCanvas(props: BimCanvasProps) {
     const DOWN = new THREE.Vector3(0, -1, 0);
     /** The visible, unclipped solids, probed like the pointer picks them. */
     const walkWorld = (): WalkWorld => {
-      const meshes = pickable().filter(
-        (mesh) => !PASS_THROUGH.test((mesh.userData.element as BimElementData).ifcType ?? ""),
-      );
+      const tree = pickTree();
+      const solid = (mesh: THREE.Mesh) =>
+        isPickable(mesh) && !PASS_THROUGH.test((mesh.userData.element as BimElementData).ifcType ?? "");
       const cast = (origin: THREE.Vector3, direction: THREE.Vector3, max: number) => {
         walkRay.set(origin, direction);
         walkRay.far = max;
-        return visibleHit(walkRay.intersectObjects(meshes, false), activePlanes);
+        return tree.firstHit(walkRay, activePlanes, solid);
       };
       return {
         castDown: (origin, max) => cast(origin, DOWN, max)?.distance ?? null,
@@ -1319,7 +1396,7 @@ export function BimCanvas(props: BimCanvasProps) {
       if (!hoverFrame)
         hoverFrame = requestAnimationFrame(() => {
           hoverFrame = 0;
-          if (!lastMove || disposed) return;
+          if (!lastMove || disposed || interacting) return;
           if (sectionActive()) {
             const handle = handleAt(lastMove.clientX, lastMove.clientY);
             gizmo.highlight(handle);
@@ -1584,6 +1661,8 @@ export function BimCanvas(props: BimCanvasProps) {
     const resize = () => {
       const width = Math.max(1, container.clientWidth);
       const height = Math.max(1, container.clientHeight);
+      viewport.width = width;
+      viewport.height = height;
       camera.aspect = width / height;
       camera.updateProjectionMatrix();
       renderer.setSize(width, height);
@@ -1724,6 +1803,7 @@ export function BimCanvas(props: BimCanvasProps) {
     return () => {
       disposed = true;
       engineRef.current = null;
+      perf?.box.remove();
       if (frame) cancelAnimationFrame(frame);
       if (hoverFrame) cancelAnimationFrame(hoverFrame);
       if (walkFrame) cancelAnimationFrame(walkFrame);

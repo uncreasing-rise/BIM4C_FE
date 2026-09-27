@@ -19,6 +19,8 @@ export class SectionCaps {
   private readonly front: THREE.MeshBasicMaterial[] = [];
   private readonly caps: THREE.Mesh[] = [];
   private readonly capGeometry = new THREE.PlaneGeometry(1, 1);
+  /** Objects hidden while stencilling; rebuilt only after invalidate(). */
+  private excluded: THREE.Object3D[] | null = null;
 
   constructor(
     private readonly scene: THREE.Scene,
@@ -64,17 +66,32 @@ export class SectionCaps {
     }
   }
 
+  /** Call when scene objects, visibility or materials change. */
+  invalidate() {
+    this.excluded = null;
+  }
+
   /**
    * Draws the caps into the current render target (which must have a stencil
    * buffer) after the model itself has been drawn.
    */
   render(renderer: THREE.WebGLRenderer, camera: THREE.Camera, planes: THREE.Plane[], size: number) {
-    if (!planes.length) return;
-    this.ensure(planes.length);
-    const hidden: THREE.Object3D[] = [];
-    this.scene.traverseVisible((object) => {
-      if (this.exclude(object)) hidden.push(object);
-    });
+    // A cap is only seen from the removed side of its plane: from the kept
+    // side the solid's own surface is always in front of it. Skipping those
+    // planes saves two full scene passes each (a box shows at most three).
+    const eye = camera.getWorldPosition(new THREE.Vector3());
+    const facing = planes.filter((plane) => plane.distanceToPoint(eye) < 0);
+    if (!facing.length) return;
+    this.ensure(facing.length);
+    if (!this.excluded) {
+      const list: THREE.Object3D[] = [];
+      // Every object, shown or not: a helper hidden now may be shown later.
+      this.scene.traverse((object) => {
+        if (object !== this.scene && this.exclude(object)) list.push(object);
+      });
+      this.excluded = list;
+    }
+    const hidden = this.excluded.filter((object) => object.visible);
     for (const object of hidden) object.visible = false;
     const background = this.scene.background;
     const autoClear = renderer.autoClear;
@@ -82,7 +99,7 @@ export class SectionCaps {
     renderer.autoClear = false;
     renderer.clearStencil();
     const normal = new THREE.Vector3();
-    planes.forEach((plane, i) => {
+    facing.forEach((plane, i) => {
       // Stencil counts on the kept side of this plane only.
       this.back[i].clippingPlanes = [plane];
       this.front[i].clippingPlanes = [plane];

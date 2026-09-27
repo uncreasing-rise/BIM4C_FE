@@ -171,6 +171,8 @@ export class ViewerPipeline {
   private readonly caps: SectionCaps;
   private readonly capsPass: CapsPass;
   private initialised = false;
+  /** Large scene: section caps are drawn only once the camera settles. */
+  heavy = false;
 
   constructor(
     private readonly renderer: THREE.WebGLRenderer,
@@ -227,6 +229,7 @@ export class ViewerPipeline {
   apply(settings: DisplaySettings) {
     const previous = this.settings;
     this.settings = { ...settings };
+    this.caps.invalidate();
     if (!this.initialised || previous.environment !== settings.environment) {
       this.initialised = true;
       const env = ENVIRONMENTS[settings.environment];
@@ -279,6 +282,11 @@ export class ViewerPipeline {
     o.updateMatrixWorld();
   }
 
+  /** Scene objects or their visibility changed. */
+  invalidate() {
+    this.caps.invalidate();
+  }
+
   /** World size of a screen-constant marker at `point`. */
   screenScale(point: THREE.Vector3, target: THREE.Vector3) {
     return this.settings.projection === "orthographic"
@@ -325,7 +333,7 @@ export class ViewerPipeline {
    */
   render(interacting: boolean, clippingPlanes: THREE.Plane[], sceneSize = 100) {
     const camera = this.camera;
-    const capPlanes = this.settings.sectionCaps ? clippingPlanes : [];
+    const capPlanes = this.settings.sectionCaps && !(interacting && this.heavy) ? clippingPlanes : [];
     this.capsPass.planes = capPlanes;
     this.capsPass.size = sceneSize * 4;
     this.capsPass.enabled = capPlanes.length > 0;
