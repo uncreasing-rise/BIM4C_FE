@@ -37,14 +37,35 @@ export interface ClashRules {
   clearance: number;
   /** Skip pairs from the same discipline (a wall against a wall). */
   ignoreSameDiscipline: boolean;
+  /** Skip parts of one assembly (a curtain wall's panels and mullions, a stair's flights). */
+  ignoreSameAssembly?: boolean;
+  /** IFC type pairs never reported, as "IfcSlab|IfcColumn" (either order). */
+  ignoredTypePairs?: string[];
 }
+
+/** Results a check returns at most, most severe first. */
+export const CLASH_RESULT_LIMIT = 500;
 
 export const DEFAULT_CLASH_RULES: ClashRules = {
   kind: "hard",
   tolerance: 0.01,
   clearance: 0.05,
   ignoreSameDiscipline: true,
+  ignoreSameAssembly: true,
+  ignoredTypePairs: [],
 };
+
+/** Spatial structure, not assemblies: sharing these says nothing about two elements. */
+const SPATIAL = /^IFC(PROJECT|SITE|BUILDING|BUILDINGSTOREY|SPACE|FACILITY|FACILITYPART|BRIDGE|ROAD|RAILWAY|MARINEFACILITY|ZONE)$/i;
+
+/** Whether two elements are parts of the same assembly (a shared non-spatial parent). */
+export function sameAssembly(a: BimElementData, b: BimElementData) {
+  if (!a.spatialPath?.length || !b.spatialPath?.length || a.modelKey !== b.modelKey) return false;
+  const parents = new Set(a.spatialPath.filter((n) => !SPATIAL.test(n.type)).map((n) => n.id));
+  return b.spatialPath.some((n) => parents.has(n.id) && !SPATIAL.test(n.type));
+}
+
+export const typePairKey = (a: string, b: string) => [a, b].sort().join("|");
 
 export interface CandidateOptions {
   a?: ClashSet;
@@ -134,6 +155,7 @@ export function clashCandidates(models: PlacedModel[], options: number | (Candid
       if (inA || inB) entries.push({ ...entry, inA, inB });
     }
   entries.sort((a, b) => a.bounds.min[0] - b.bounds.min[0]);
+  const ignoredPairs = new Set((rules.ignoredTypePairs ?? []).map((p) => typePairKey(...(p.split("|") as [string, string]))));
   const pairs: { a: Entry; b: Entry; volume: number; point: [number, number, number] }[] = [];
   for (let i = 0; i < entries.length; i++) {
     const x = entries[i];
@@ -145,6 +167,8 @@ export function clashCandidates(models: PlacedModel[], options: number | (Candid
       // Coordination checks look for conflicts between disciplines, in the
       // same file (MEP through a beam) or across federated files.
       if (rules.ignoreSameDiscipline && x.element.discipline === y.element.discipline) continue;
+      if (ignoredPairs.size && ignoredPairs.has(typePairKey(x.element.ifcType, y.element.ifcType))) continue;
+      if (rules.ignoreSameAssembly && sameAssembly(x.element, y.element)) continue;
       const hit = overlap(x.bounds, y.bounds, threshold);
       if (hit) pairs.push(forward ? { a: x, b: y, ...hit } : { a: y, b: x, ...hit });
     }
@@ -288,7 +312,7 @@ export async function detectClashes(
   options: ClashOptions = {},
 ): Promise<BimClashItem[]> {
   const {
-    maxResults = 500,
+    maxResults = CLASH_RESULT_LIMIT,
     verifyMeshes = true,
     describe = defaultDescribe,
     shouldYield = async () => false,

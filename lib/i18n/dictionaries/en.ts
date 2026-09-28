@@ -377,6 +377,7 @@ export const enDictionary: Dictionary = {
       walk: "Walk",
       markup: "Markup",
       quantities: "Quantities",
+      appearance: "Appearance",
       levels: "Levels",
       reset: "Fit to View",
       fullscreen: "Fullscreen",

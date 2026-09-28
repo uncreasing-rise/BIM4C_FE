@@ -12,7 +12,7 @@ export type Vec2 = [number, number];
 
 const KEY_PRECISION = 1e4; // 0.1 mm in model metres
 
-function vertexKey(positions: ArrayLike<number>, index: number): string {
+export function vertexKey(positions: ArrayLike<number>, index: number): string {
   const i = index * 3;
   return `${Math.round(positions[i] * KEY_PRECISION)},${Math.round(positions[i + 1] * KEY_PRECISION)},${Math.round(positions[i + 2] * KEY_PRECISION)}`;
 }
@@ -86,6 +86,8 @@ export interface SnapResult {
   kind: SnapKind;
   /** For edge/midpoint snaps: the snapped edge, for drawing. */
   edge?: [Vec3, Vec3];
+  /** Screen distance from the pointer in pixels (Infinity for a face hit). */
+  distance: number;
 }
 
 const lerp = (a: Vec3, b: Vec3, t: number): Vec3 => [
@@ -109,7 +111,7 @@ export function snapPoint(input: SnapInput): SnapResult {
       const d = screenDistance(project(corner), pointer);
       if (d <= tolerancePx && (!best || d < best.d)) best = { point: corner, d };
     }
-    if (best) return { point: best.point, kind: "vertex" };
+    if (best) return { point: best.point, kind: "vertex", distance: best.d };
   }
 
   if (settings.midpoint) {
@@ -119,7 +121,7 @@ export function snapPoint(input: SnapInput): SnapResult {
       const d = screenDistance(project(mid), pointer);
       if (d <= tolerancePx && (!best || d < best.d)) best = { point: mid, edge, d };
     }
-    if (best) return { point: best.point, kind: "midpoint", edge: best.edge };
+    if (best) return { point: best.point, kind: "midpoint", edge: best.edge, distance: best.d };
   }
 
   if (settings.edge) {
@@ -138,8 +140,8 @@ export function snapPoint(input: SnapInput): SnapResult {
       if (d <= tolerancePx && (!best || d < best.d))
         best = { point: lerp(edge[0], edge[1], t), edge, d };
     }
-    if (best) return { point: best.point, kind: "edge", edge: best.edge };
+    if (best) return { point: best.point, kind: "edge", edge: best.edge, distance: best.d };
   }
 
-  return { point: input.hitPoint, kind: "face" };
+  return { point: input.hitPoint, kind: "face", distance: Infinity };
 }

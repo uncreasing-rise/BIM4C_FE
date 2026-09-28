@@ -183,6 +183,30 @@ export function clipRange(radius: number, distance: number) {
   };
 }
 
+/**
+ * Near/far planes fitted to the scene for the current eye position, redone
+ * every frame. A perspective depth buffer resolves about d² / (near · 2²⁴) at
+ * distance d, so a fixed tiny near plane makes slabs, finishes and ceilings a
+ * few centimetres apart fight (flickering, mixed colours) when seen from
+ * afar. Here near sits just short of the scene box, the closest anything can
+ * be. Inside the box (walking, or a federation whose files lie kilometres
+ * apart) it follows the distance to what is being looked at instead, since
+ * resolution depends on near, hardly on far.
+ */
+export function fitClipPlanes(eye: Vec3, box: { min: Vec3; max: Vec3 }, focusDistance: number) {
+  let far = 0;
+  for (const x of [box.min[0], box.max[0]])
+    for (const y of [box.min[1], box.max[1]])
+      for (const z of [box.min[2], box.max[2]])
+        far = Math.max(far, Math.hypot(x - eye[0], y - eye[1], z - eye[2]));
+  far = far * 1.02 + 0.1;
+  const outside = Math.hypot(
+    ...([0, 1, 2] as const).map((i) => Math.max(box.min[i] - eye[i], 0, eye[i] - box.max[i])),
+  );
+  const near = outside > 0 ? outside * 0.9 : Math.min(1, Math.max(0.005, focusDistance * 0.005));
+  return { near, far };
+}
+
 /** Pose that frames a box from a direction, for a perspective camera. */
 export function framePose(
   box: THREE.Box3,

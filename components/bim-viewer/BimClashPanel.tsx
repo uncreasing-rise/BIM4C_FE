@@ -1,10 +1,19 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Crosshair, LogOut, Play, Square } from "lucide-react";
+import { ChevronDown, ChevronRight, Crosshair, Download, LogOut, Play, Square, X } from "lucide-react";
 import { useLanguage } from "@/lib/i18n/context";
 import { ui } from "@/lib/i18n/ui";
-import type { ClashRules, ClashSet } from "./clash-detection";
+import { typePairKey, type ClashRules, type ClashSet } from "./clash-detection";
+import {
+  CLASH_STATUSES,
+  clashReportCsv,
+  groupClashes,
+  type ClashGroupBy,
+  type ClashHistoryItem,
+  type ClashReviewEntry,
+  type ClashRun,
+} from "./clash-review";
 import type { BimClashItem, BimElementData } from "./types";
 
 export interface ClashTest {
@@ -26,8 +35,8 @@ const SEVERITY_TONE: Record<Severity, string> = {
 
 /**
  * Clash detective in the manner of Navisworks: pick model A and model B (and
- * optionally element types), set the rules, run, then review the results
- * grouped by element with filters, status and keyboard stepping.
+ * optionally element types), set the rules, run, then review the results —
+ * grouped, filtered, assigned, annotated and followed across runs.
  */
 export function BimClashPanel({
   models,
@@ -36,6 +45,7 @@ export function BimClashPanel({
   clashes,
   activeClashId,
   running,
+  checked,
   onRun,
   onCancel,
   onFocus,
@@ -44,6 +54,14 @@ export function BimClashPanel({
   onSectionAround,
   inClashView,
   onExit,
+  onExportBcf,
+  review,
+  onReview,
+  reviewer,
+  onReviewer,
+  newIds,
+  runs,
+  levelOf,
 }: {
   models: { key: string; name: string; elements: BimElementData[] }[];
   test: ClashTest;
@@ -51,6 +69,8 @@ export function BimClashPanel({
   clashes: BimClashItem[];
   activeClashId: string | null;
   running: boolean;
+  /** The current test has been run (so an empty list means no clashes). */
+  checked: boolean;
   onRun: () => void;
   onCancel: () => void;
   onFocus: (clash: BimClashItem) => void;
@@ -59,6 +79,17 @@ export function BimClashPanel({
   onSectionAround: (on: boolean) => void;
   inClashView: boolean;
   onExit: () => void;
+  /** Download every result as BCF 2.1 topics with a viewpoint on the clash. */
+  onExportBcf: () => void;
+  review: Record<string, ClashReviewEntry>;
+  /** Assignment or note changes on one clash (recorded in its history). */
+  onReview: (id: string, change: Omit<ClashHistoryItem, "at">) => void;
+  reviewer: string;
+  onReviewer: (name: string) => void;
+  /** Clashes the last run found for the first time. */
+  newIds: ReadonlySet<string>;
+  runs: ClashRun[];
+  levelOf: (elementId: string) => string;
 }) {
   const { locale } = useLanguage();
   const s = ui(locale).bimClash;
@@ -66,6 +97,11 @@ export function BimClashPanel({
   const [status, setStatus] = useState<Status | "all">("all");
   const [model, setModel] = useState<string>("all");
   const [query, setQuery] = useState("");
+  const [groupBy, setGroupBy] = useState<ClashGroupBy>("elementA");
+  const [radius, setRadius] = useState(3);
+  const [expanded, setExpanded] = useState<string | null>(null);
+  const [pairA, setPairA] = useState("");
+  const [pairB, setPairB] = useState("");
   /** Rows drawn; thousands of results render in pages of PAGE. */
   const [limit, setLimit] = useState(PAGE);
 
@@ -78,6 +114,7 @@ export function BimClashPanel({
     }
     return map;
   }, [models]);
+  const allTypes = useMemo(() => [...new Set([...typesOf.values()].flat().map(([t]) => t))].sort(), [typesOf]);
   const nameOf = (key?: string) => models.find((m) => m.key === key)?.name ?? key ?? "";
 
   const filtered = useMemo(() => {
@@ -87,23 +124,19 @@ export function BimClashPanel({
         (severity === "all" || c.severity === severity) &&
         (status === "all" || c.status === status) &&
         (model === "all" || c.modelA === model || c.modelB === model) &&
-        (!q || [c.title, c.typeA, c.typeB].some((v) => v?.toLowerCase().includes(q))),
+        (!q ||
+          [c.title, c.typeA, c.typeB, review[c.id]?.assignee, review[c.id]?.note].some((v) => v?.toLowerCase().includes(q))),
     );
-  }, [clashes, model, query, severity, status]);
-  // Grouped by element A, the way a reviewer works through one element's conflicts.
-  const groups = useMemo(() => {
-    const map = new Map<string, BimClashItem[]>();
-    for (const c of filtered) map.set(c.elementA, [...(map.get(c.elementA) ?? []), c]);
-    return [...map.values()];
-  }, [filtered]);
-  const ordered = useMemo(() => groups.flat(), [groups]);
+  }, [clashes, model, query, review, severity, status]);
+  const groups = useMemo(() => groupClashes(filtered, groupBy, levelOf, radius), [filtered, groupBy, levelOf, radius]);
+  const ordered = useMemo(() => groups.flatMap((g) => g.clashes), [groups]);
   const shown = useMemo(() => {
-    const out: BimClashItem[][] = [];
+    const out: typeof groups = [];
     let rows = 0;
     for (const group of groups) {
       if (rows >= limit) break;
-      out.push(group.slice(0, limit - rows));
-      rows += group.length;
+      out.push({ ...group, clashes: group.clashes.slice(0, limit - rows) });
+      rows += group.clashes.length;
     }
     return out;
   }, [groups, limit]);
@@ -122,6 +155,21 @@ export function BimClashPanel({
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [activeClashId, onFocus, ordered]);
+
+  const exportReport = () => {
+    const csv = clashReportCsv(
+      groups.map((g) => ({ ...g, label: groupBy === "proximity" ? s.area(g.label) : g.label })),
+      review,
+      { headers: s.reportHeaders, status: s.statuses, severity: s.severities },
+      (id) => newIds.has(id),
+    );
+    const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `BIM4C-clash-report-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  };
 
   const field = "h-8 w-full rounded-md border border-white/15 bg-slate-900 px-2 outline-none focus:border-teal-400";
   const side = (which: "a" | "b") => {
@@ -178,6 +226,9 @@ export function BimClashPanel({
   const rules = test.rules;
   const setRules = (next: Partial<ClashRules>) => onTestChange({ ...test, rules: { ...rules, ...next } });
   const mm = (m: number) => Math.round(m * 1000);
+  const ignored = rules.ignoredTypePairs ?? [];
+  const time = (iso: string) =>
+    new Date(iso).toLocaleString(locale === "vi" ? "vi-VN" : "en-US", { dateStyle: "short", timeStyle: "short" });
 
   return (
     <div className="space-y-3">
@@ -225,6 +276,67 @@ export function BimClashPanel({
             />
             {s.ignoreSameDiscipline}
           </label>
+          <label className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              className="size-4 accent-teal-400"
+              checked={rules.ignoreSameAssembly ?? false}
+              onChange={(e) => setRules({ ignoreSameAssembly: e.target.checked })}
+            />
+            {s.ignoreSameAssembly}
+          </label>
+          <div className="space-y-1">
+            <span className="block text-slate-400">{s.ignoredPairs}</span>
+            <div className="grid grid-cols-[1fr_1fr_auto] gap-1">
+              {[
+                [pairA, setPairA],
+                [pairB, setPairB],
+              ].map(([value, set], i) => (
+                <select
+                  key={i}
+                  aria-label={`${s.ignoredPairs} ${i + 1}`}
+                  className={field}
+                  value={value as string}
+                  onChange={(e) => (set as (v: string) => void)(e.target.value)}
+                >
+                  <option value="">—</option>
+                  {allTypes.map((t) => (
+                    <option key={t} value={t}>
+                      {t}
+                    </option>
+                  ))}
+                </select>
+              ))}
+              <button
+                type="button"
+                disabled={!pairA || !pairB || ignored.some((p) => p === typePairKey(pairA, pairB))}
+                onClick={() => setRules({ ignoredTypePairs: [...ignored, typePairKey(pairA, pairB)] })}
+                className="h-8 rounded-md border border-white/15 px-2 hover:bg-white/10 disabled:opacity-40"
+              >
+                {s.addPair}
+              </button>
+            </div>
+            {ignored.length > 0 && (
+              <ul className="flex flex-wrap gap-1">
+                {ignored.map((pair) => {
+                  const label = pair.replace("|", " × ");
+                  return (
+                    <li key={pair} className="flex items-center gap-1 rounded bg-white/10 py-0.5 pl-2 pr-0.5 text-[11px]">
+                      {label}
+                      <button
+                        type="button"
+                        aria-label={s.removePair(label)}
+                        onClick={() => setRules({ ignoredTypePairs: ignored.filter((p) => p !== pair) })}
+                        className="grid size-5 place-items-center rounded hover:bg-white/10"
+                      >
+                        <X className="size-3" />
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </div>
         </fieldset>
         {running ? (
           <button type="button" onClick={onCancel} className="flex min-h-9 w-full items-center justify-center gap-2 rounded-lg border border-white/15 hover:bg-white/5">
@@ -235,34 +347,83 @@ export function BimClashPanel({
             <Play className="size-4" /> {s.run}
           </button>
         )}
+        {runs.length > 0 && (
+          <details className="rounded-lg border border-white/10">
+            <summary className="cursor-pointer px-2 py-1 font-bold">
+              {s.runs} ({runs.length})
+            </summary>
+            <ol className="max-h-32 space-y-1 overflow-y-auto px-2 pb-2 text-[11px] text-slate-300">
+              {[...runs].reverse().map((run) => (
+                <li key={run.at}>
+                  <span className="text-slate-500">{time(run.at)}</span> · {run.label}
+                  <br />
+                  {s.runLine(run.total, run.added, run.active, run.resolved)}
+                </li>
+              ))}
+            </ol>
+          </details>
+        )}
       </section>
 
       {clashes.length ? (
         <section className="space-y-2">
           <div className="grid grid-cols-3 gap-1.5">
-            <select className={field} aria-label={s.severity} value={severity} onChange={(e) => setSeverity(e.target.value as Severity | "all")}>
+            <select className={field} aria-label={s.filterBy(s.severity)} value={severity} onChange={(e) => setSeverity(e.target.value as Severity | "all")}>
               <option value="all">{s.severity}: {s.all}</option>
               {(["high", "medium", "low"] as const).map((v) => (
                 <option key={v} value={v}>{s.severities[v]}</option>
               ))}
             </select>
-            <select className={field} aria-label={s.status} value={status} onChange={(e) => setStatus(e.target.value as Status | "all")}>
+            <select className={field} aria-label={s.filterBy(s.status)} value={status} onChange={(e) => setStatus(e.target.value as Status | "all")}>
               <option value="all">{s.status}: {s.all}</option>
-              {(["open", "in_review", "resolved"] as const).map((v) => (
+              {CLASH_STATUSES.map((v) => (
                 <option key={v} value={v}>{s.statuses[v]}</option>
               ))}
             </select>
-            <select className={field} aria-label={s.model} value={model} onChange={(e) => setModel(e.target.value)}>
+            <select className={field} aria-label={s.filterBy(s.model)} value={model} onChange={(e) => setModel(e.target.value)}>
               <option value="all">{s.model}: {s.all}</option>
               {models.map((m) => (
                 <option key={m.key} value={m.key}>{m.name}</option>
               ))}
             </select>
           </div>
+          <div className="grid grid-cols-[1fr_auto] gap-1.5">
+            <select className={field} aria-label={s.groupBy} value={groupBy} onChange={(e) => setGroupBy(e.target.value as ClashGroupBy)}>
+              {(["elementA", "level", "typePair", "proximity"] as const).map((g) => (
+                <option key={g} value={g}>
+                  {s.groupBy}: {s.groupings[g]}
+                </option>
+              ))}
+            </select>
+            {groupBy === "proximity" && (
+              <input
+                type="number"
+                min={0.5}
+                step={0.5}
+                aria-label={s.proximityRadius}
+                title={s.proximityRadius}
+                className={`${field} w-20`}
+                value={radius}
+                onChange={(e) => setRadius(Math.max(0.5, Number(e.target.value) || 3))}
+              />
+            )}
+          </div>
           <input className={field} placeholder={s.search} aria-label={s.search} value={query} onChange={(e) => setQuery(e.target.value)} />
-          <div className="flex items-center justify-between gap-2 text-slate-400">
+          <label className="flex items-center gap-2">
+            <span className="shrink-0 text-slate-400">{s.reviewer}</span>
+            <input className={field} placeholder={s.reviewerPlaceholder} value={reviewer} onChange={(e) => onReviewer(e.target.value)} />
+          </label>
+          <div className="flex flex-wrap items-center justify-between gap-2 text-slate-400">
             <span>{s.results(filtered.length, clashes.length)}</span>
-            <label className="flex items-center gap-1.5">
+            <div className="ml-auto flex gap-1">
+              <button type="button" onClick={exportReport} className="flex min-h-7 items-center gap-1 rounded border border-white/15 px-2 hover:bg-white/10">
+                <Download className="size-3.5" /> {s.reportCsv}
+              </button>
+              <button type="button" onClick={onExportBcf} className="min-h-7 rounded border border-white/15 px-2 hover:bg-white/10">
+                {s.exportBcf}
+              </button>
+            </div>
+            <label className="flex w-full items-center gap-1.5">
               <input type="checkbox" className="size-3.5 accent-teal-400" checked={sectionAround} onChange={(e) => onSectionAround(e.target.checked)} />
               {s.sectionAround}
             </label>
@@ -279,44 +440,101 @@ export function BimClashPanel({
           {!filtered.length && <p className="text-slate-400">{s.noMatch}</p>}
           <ul className="space-y-2">
             {shown.map((group) => (
-              <li key={group[0].elementA} className="rounded-lg border border-white/10">
-                <p className="truncate border-b border-white/10 px-2 py-1 font-semibold text-red-200" title={group[0].title.split(" × ")[0]}>
-                  {group[0].title.split(" × ")[0]} <span className="font-normal text-slate-500">· {group.length}</span>
+              <li key={group.key} className="rounded-lg border border-white/10">
+                <p className="truncate border-b border-white/10 px-2 py-1 font-semibold text-red-200" title={group.label}>
+                  {groupBy === "proximity" ? s.area(group.label) : group.label}{" "}
+                  <span className="font-normal text-slate-500">· {groups.find((g) => g.key === group.key)?.clashes.length}</span>
                 </p>
                 <ul>
-                  {group.map((c) => {
+                  {group.clashes.map((c) => {
                     const active = c.id === activeClashId;
+                    const entry = review[c.id];
+                    const open = expanded === c.id;
                     return (
-                      <li key={c.id} className={`flex items-center gap-1.5 px-2 py-1.5 ${active ? "bg-teal-500/15" : ""}`}>
-                        <button type="button" onClick={() => onFocus(c)} aria-pressed={active} className="flex min-w-0 flex-1 items-center gap-1.5 text-left">
-                          <Crosshair className={`size-3.5 shrink-0 ${active ? "text-teal-300" : "text-slate-500"}`} />
-                          <span className={`shrink-0 rounded px-1 text-[10px] ${SEVERITY_TONE[c.severity]}`}>{s.severities[c.severity]}</span>
-                          <span className="min-w-0 flex-1 truncate text-green-200" title={c.description}>
-                            {c.title.split(" × ")[1] ?? c.title}
-                          </span>
-                          {c.kind === "clearance" && c.distance !== undefined && (
-                            <span className="shrink-0 font-mono text-slate-400">
-                              {s.gap} {mm(c.distance)} mm
+                      <li key={c.id} className={active ? "bg-teal-500/15" : ""}>
+                        <div className="flex items-center gap-1.5 px-2 py-1.5">
+                          <button
+                            type="button"
+                            aria-expanded={open}
+                            aria-label={s.history}
+                            onClick={() => setExpanded(open ? null : c.id)}
+                            className="grid size-5 shrink-0 place-items-center rounded hover:bg-white/10"
+                          >
+                            {open ? <ChevronDown className="size-3.5" /> : <ChevronRight className="size-3.5" />}
+                          </button>
+                          <button type="button" onClick={() => onFocus(c)} aria-pressed={active} className="flex min-w-0 flex-1 items-center gap-1.5 text-left">
+                            <Crosshair className={`size-3.5 shrink-0 ${active ? "text-teal-300" : "text-slate-500"}`} />
+                            <span className={`shrink-0 rounded px-1 text-[10px] ${SEVERITY_TONE[c.severity]}`}>{s.severities[c.severity]}</span>
+                            {newIds.has(c.id) && (
+                              <span className="shrink-0 rounded bg-fuchsia-500/25 px-1 text-[10px] text-fuchsia-100">{s.newBadge}</span>
+                            )}
+                            <span className="min-w-0 flex-1 truncate text-green-200" title={c.description}>
+                              {groupBy === "elementA" ? (c.title.split(" × ")[1] ?? c.title) : c.title}
                             </span>
-                          )}
-                        </button>
-                        <select
-                          aria-label={s.status}
-                          value={c.status}
-                          onChange={(e) => onStatus(c.id, e.target.value as Status)}
-                          className="h-7 shrink-0 rounded border border-white/15 bg-slate-900 px-1 text-[11px]"
-                        >
-                          {(["open", "in_review", "resolved"] as const).map((v) => (
-                            <option key={v} value={v}>{s.statuses[v]}</option>
-                          ))}
-                        </select>
+                            {entry?.assignee && <span className="max-w-20 shrink-0 truncate text-[10px] text-sky-200">@{entry.assignee}</span>}
+                            {c.kind === "clearance" && c.distance !== undefined && (
+                              <span className="shrink-0 font-mono text-slate-400">
+                                {s.gap} {mm(c.distance)} mm
+                              </span>
+                            )}
+                          </button>
+                          <select
+                            aria-label={s.status}
+                            value={c.status}
+                            onChange={(e) => onStatus(c.id, e.target.value as Status)}
+                            className="h-7 shrink-0 rounded border border-white/15 bg-slate-900 px-1 text-[11px]"
+                          >
+                            {CLASH_STATUSES.map((v) => (
+                              <option key={v} value={v}>{s.statuses[v]}</option>
+                            ))}
+                          </select>
+                        </div>
+                        {open && (
+                          <div className="space-y-1.5 border-t border-white/5 px-2 py-2">
+                            <label className="flex items-center gap-2">
+                              <span className="w-16 shrink-0 text-slate-400">{s.assignee}</span>
+                              <input
+                                className={field}
+                                defaultValue={entry?.assignee ?? ""}
+                                onBlur={(e) => {
+                                  if (e.target.value !== (entry?.assignee ?? "")) onReview(c.id, { assignee: e.target.value });
+                                }}
+                              />
+                            </label>
+                            <label className="block">
+                              <span className="text-slate-400">{s.note}</span>
+                              <textarea
+                                rows={2}
+                                className="mt-0.5 w-full rounded-md border border-white/15 bg-slate-900 p-2 outline-none focus:border-teal-400"
+                                defaultValue={entry?.note ?? ""}
+                                onBlur={(e) => {
+                                  if (e.target.value !== (entry?.note ?? "")) onReview(c.id, { note: e.target.value });
+                                }}
+                              />
+                            </label>
+                            {entry?.history.length ? (
+                              <ol className="max-h-28 space-y-0.5 overflow-y-auto text-[10px] text-slate-400" aria-label={s.history}>
+                                {[...entry.history].reverse().map((h, i) => (
+                                  <li key={i}>
+                                    {time(h.at)}
+                                    {h.by && ` · ${h.by}`}
+                                    {h.status && ` · ${s.statuses[h.status]}`}
+                                    {h.auto && ` (${s.autoResolved})`}
+                                    {h.assignee !== undefined && ` · ${s.assignee}: ${h.assignee || "—"}`}
+                                    {h.note !== undefined && ` · ${s.note}: ${h.note || "—"}`}
+                                  </li>
+                                ))}
+                              </ol>
+                            ) : null}
+                          </div>
+                        )}
                       </li>
                     );
                   })}
                 </ul>
-                {models.length > 1 && (
+                {models.length > 1 && groupBy === "elementA" && (
                   <p className="border-t border-white/5 px-2 py-0.5 text-[10px] text-slate-500">
-                    {nameOf(group[0].modelA)} × {nameOf(group[0].modelB)}
+                    {nameOf(group.clashes[0].modelA)} × {nameOf(group.clashes[0].modelB)}
                   </p>
                 )}
               </li>
@@ -329,7 +547,7 @@ export function BimClashPanel({
           )}
         </section>
       ) : (
-        <p className="text-slate-400">{s.noResults}</p>
+        <p className={checked ? "text-emerald-300" : "text-slate-400"}>{checked ? s.noClashesFound : s.noResults}</p>
       )}
     </div>
   );

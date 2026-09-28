@@ -1,7 +1,19 @@
 "use client";
-import { triangleMetrics } from "./measurement-math";
+import {
+  accumulateSegments,
+  arcThrough,
+  formatMeasure,
+  isOpenEnded,
+  LOCK_SYMBOLS,
+  MEASURE_POINTS,
+  multipointDistances,
+  polygonMetrics,
+  polylineLength,
+  triangleMetrics,
+  UNIT_METRES,
+} from "./measurement-math";
 import React from "react";
-import { ArrowLeftRight, Crosshair, Download, MousePointerClick, RotateCcw, Scan, Trash2, X } from "lucide-react";
+import { ArrowLeftRight, Crosshair, Download, MessageSquarePlus, MousePointerClick, PenLine, Redo2, RotateCcw, Scan, Trash2, Undo2, Upload, X } from "lucide-react";
 import { useLanguage } from "@/lib/i18n/context";
 import { defaultClip } from "./viewer-geometry";
 import {
@@ -28,14 +40,22 @@ import type {
   BimDiscipline,
   BimMapConversion,
   BimTool,
+  MeasureLock,
   MeasureMode,
   MeasurePoint,
+  MeasureUnits,
   Measurement,
   SnapSettings,
   BimSavedView,
   BimLocalIssue,
+  BimSelectionSet,
   BimViewPreset,
 } from "./types";
+
+/** Measure tools in the order of the Navisworks Measure menu, then the extras. */
+const MEASURE_MODES: MeasureMode[] = ["distance", "multipoint", "polyline", "accumulate", "angle", "polygon", "point", "shortest", "arc", "triangle"];
+const measurementsFilename = () => `BIM4C-measurements-${Date.now()}.csv`;
+const MEASURE_LOCKS: NonNullable<MeasureLock>[] = ["x", "y", "z", "perpendicular", "parallel"];
 
 import { ui } from "@/lib/i18n/ui";
 interface Props {
@@ -57,8 +77,24 @@ interface Props {
   onSnapSettings: (settings: SnapSettings) => void;
   measurements: Measurement[];
   pendingPoint: MeasurePoint | null;
+  /** Points placed so far in the measurement being drawn. */
+  pendingCount: number;
+  /** Completes an open-ended polyline/polygon (same as Enter). */
+  onFinishMeasurement: () => boolean;
   onRemoveMeasurement: (id: string) => void;
   onClearMeasurements: () => void;
+  /** Draws the measurements as markup on the current view (Navisworks' convert to redline). */
+  onRedlineMeasurements: () => void;
+  /** Raises an issue (exportable as BCF) with the measurements and a snapshot. */
+  onMeasurementIssue: () => void;
+  measureLock: MeasureLock;
+  onMeasureLock: (lock: MeasureLock) => void;
+  measureUnits: MeasureUnits;
+  onMeasureUnits: (units: MeasureUnits) => void;
+  canUndoMeasurement: boolean;
+  canRedoMeasurement: boolean;
+  onUndoMeasurement: () => void;
+  onRedoMeasurement: () => void;
   explodeFactor: number;
   onChangeExplodeFactor: (value: number) => void;
   visibleLayers: Record<BimDiscipline, boolean>;
@@ -76,6 +112,16 @@ interface Props {
   onAddIssue: (title: string, description: string) => void;
   onToggleIssue: (id: string) => void;
   onDeleteIssue: (id: string) => void;
+  /** Select the issue's elements and restore the view it was raised in. */
+  onGoToIssue: (issue: BimLocalIssue) => void;
+  onExportIssuesBcf: () => void;
+  onImportBcf: (file: File) => void;
+  /** Issue id -> snapshot data URL (current visit only). */
+  issueSnapshots: Record<string, string>;
+  selectionSets: BimSelectionSet[];
+  onSaveSelectionSet: (name: string) => void;
+  onApplySelectionSet: (set: BimSelectionSet) => void;
+  onDeleteSelectionSet: (id: string) => void;
 }
 
 /**
@@ -127,11 +173,19 @@ function downloadCsv(filename: string, rows: (string | number)[][]) {
 export function BimControlsOverlay(p: Props) {
   const { t, locale } = useLanguage();
   const [viewName, setViewName] = React.useState("");
+  const [setName, setSetName] = React.useState("");
   const [issueTitle, setIssueTitle] = React.useState("");
   const [issueDescription, setIssueDescription] = React.useState("");
   const v = t.bimViewerPage;
-  if (p.activeTool === "orbit" || p.activeTool === "models" || p.activeTool === "display" || p.activeTool === "compare" || p.activeTool === "walk" || p.activeTool === "markup" || p.activeTool === "quantities" || p.activeTool === "levels") return null;
+  if (p.activeTool === "orbit" || p.activeTool === "models" || p.activeTool === "display" || p.activeTool === "compare" || p.activeTool === "walk" || p.activeTool === "markup" || p.activeTool === "quantities" || p.activeTool === "levels" || p.activeTool === "appearance") return null;
   const fmt = (n: number) => formatLength(n, locale);
+  const o = ui(locale).bimControlsOverlay;
+  const len = (metres: number) => formatMeasure(metres, 1, p.measureUnits, locale);
+  const area = (metres: number) => formatMeasure(metres, 2, p.measureUnits, locale);
+  // Accumulate finishes on whole segments: an unpaired last point does not count.
+  const finishable =
+    isOpenEnded(p.measureMode) &&
+    (p.measureMode === "accumulate" ? p.pendingCount - (p.pendingCount % 2) : p.pendingCount) >= MEASURE_POINTS[p.measureMode];
   const title =
     p.activeTool === "section"
       ? ui(locale).bimControlsOverlay.t3DSectionBox
@@ -144,13 +198,14 @@ export function BimControlsOverlay(p: Props) {
   const snapLabel: Record<MeasurePoint["snap"], string> =
     ui(locale).formats.snap;
 
+  // CSV values stay in metres whatever the display unit, so sheets add up.
   const exportMeasurements = () => {
     const rows: (string | number)[][] = [
       [
-        ui(locale).bimControlsOverlay.no,
-        ui(locale).bimControlsOverlay.type,
+        o.no,
+        o.type,
         "L (m)",
-        ui(locale).bimControlsOverlay.planM,
+        o.planM,
         "ΔX",
         "ΔY",
         "ΔZ",
@@ -160,44 +215,60 @@ export function BimControlsOverlay(p: Props) {
         "X2",
         "Y2",
         "Z2",
-        "X3", "Y3", "Z3", "Angle (deg)", "Area (m2)",
+        "X3", "Y3", "Z3", "Angle (deg)", "Area (m2)", "Perimeter (m)", "Plan area (m2)", "Points (X Y Z; …)", "Radius (m)", "Arc length (m)",
       ],
     ];
+    const pointList = (points: MeasurePoint[]) =>
+      points.map((pt) => world(pt).map((n) => n.toFixed(4)).join(" ")).join("; ");
+    const segmentRow = (no: string | number, type: string, a: MeasurePoint, b: MeasurePoint) => {
+      const s = distanceSummary(a, b);
+      return [
+        no,
+        type,
+        s.distance.toFixed(4),
+        s.horizontal.toFixed(4),
+        s.dx.toFixed(4),
+        s.dy.toFixed(4),
+        s.dz.toFixed(4),
+        ...world(a).map((n) => n.toFixed(4)),
+        ...world(b).map((n) => n.toFixed(4)),
+      ];
+    };
     p.measurements.forEach((m, i) => {
-      const [a, b] = m.points.map(world);
-      if (m.mode === "distance" && b) {
-        const s = distanceSummary(m.points[0], m.points[1]);
-        rows.push([
-          i + 1,
-          ui(locale).bimControlsOverlay.distance,
-          s.distance.toFixed(4),
-          s.horizontal.toFixed(4),
-          s.dx.toFixed(4),
-          s.dy.toFixed(4),
-          s.dz.toFixed(4),
-          ...a.map((n) => n.toFixed(4)),
-          ...b.map((n) => n.toFixed(4)),
-        ]);
+      const type = o.modes[m.mode];
+      if (m.mode === "polyline" || m.mode === "polygon" || m.mode === "accumulate") {
+        // Outlines of any length: totals in the usual columns, vertices in the last.
+        const polygon = m.mode === "polygon" ? polygonMetrics(m.points) : null;
+        const row: (string | number)[] = [i + 1, type];
+        row[2] =
+          m.mode === "polyline" ? polylineLength(m.points).toFixed(4)
+          : m.mode === "accumulate" ? accumulateSegments(m.points).total.toFixed(4)
+          : "";
+        row[17] = polygon ? polygon.area.toFixed(4) : "";
+        row[18] = polygon ? polygon.perimeter.toFixed(4) : "";
+        row[19] = polygon ? polygon.planArea.toFixed(4) : "";
+        row[20] = pointList(m.points);
+        rows.push(Array.from(row, (c) => c ?? ""));
+      } else if (m.mode === "multipoint") {
+        // One row per target, numbered 3.1, 3.2, …
+        m.points.slice(1).forEach((target, k) => rows.push(segmentRow(`${i + 1}.${k + 1}`, type, m.points[0], target)));
+      } else if ((m.mode === "distance" || m.mode === "shortest") && m.points[1]) {
+        rows.push(segmentRow(i + 1, type, m.points[0], m.points[1]));
+      } else if (m.mode === "arc") {
+        const arc = arcThrough(m.points);
+        const row: (string | number)[] = [i + 1, type, "", "", "", "", "", ...m.points.flatMap((pt) => world(pt).map((n) => n.toFixed(4)))];
+        row[16] = arc ? arc.angle.toFixed(4) : "";
+        row[21] = arc ? arc.radius.toFixed(4) : "";
+        row[22] = arc ? arc.length.toFixed(4) : "";
+        rows.push(Array.from(row, (c) => c ?? ""));
       } else if (m.mode === "angle" || m.mode === "triangle") {
         const metrics = triangleMetrics(m.points);
-        rows.push([i + 1, ui(locale).bimControlsOverlay[m.mode], "", "", "", "", "", ...m.points.flatMap((pt) => world(pt).map((n) => n.toFixed(4))), m.mode === "angle" && metrics ? metrics.angle.toFixed(4) : "", m.mode === "triangle" && metrics ? metrics.area.toFixed(4) : ""]);
+        rows.push([i + 1, type, "", "", "", "", "", ...m.points.flatMap((pt) => world(pt).map((n) => n.toFixed(4))), m.mode === "angle" && metrics ? metrics.angle.toFixed(4) : "", m.mode === "triangle" && metrics ? metrics.area.toFixed(4) : ""]);
       } else
-        rows.push([
-          i + 1,
-          ui(locale).bimControlsOverlay.point,
-          "",
-          "",
-          "",
-          "",
-          "",
-          ...a.map((n) => n.toFixed(4)),
-          "",
-          "",
-          "",
-        ]);
+        rows.push([i + 1, type, "", "", "", "", "", ...world(m.points[0]).map((n) => n.toFixed(4))]);
     });
     for (const row of rows) while (row.length < rows[0].length) row.push("");
-    downloadCsv(`BIM4C-measurements-${Date.now()}.csv`, rows);
+    downloadCsv(measurementsFilename(), rows);
   };
 
   return (
@@ -442,46 +513,49 @@ export function BimControlsOverlay(p: Props) {
           <div
             className="grid grid-cols-2 gap-1"
             role="radiogroup"
-            aria-label={ui(locale).bimControlsOverlay.measureType}
+            aria-label={o.measureType}
           >
-            {(
-              [
-                ["distance", ui(locale).bimControlsOverlay.distance],
-                ["point", ui(locale).bimControlsOverlay.pointCoordinates],
-                ["angle", ui(locale).bimControlsOverlay.angle],
-                ["triangle", ui(locale).bimControlsOverlay.triangle],
-              ] as const
-            ).map(([mode, label]) => (
+            {MEASURE_MODES.map((mode) => (
               <button
                 key={mode}
                 type="button"
                 role="radio"
                 aria-checked={p.measureMode === mode}
                 onClick={() => p.onMeasureMode(mode)}
-                className={`min-h-9 rounded-lg border px-2 ${p.measureMode === mode ? "border-teal-400 bg-teal-500/15 text-teal-200" : "border-white/10"}`}
+                className={`min-h-9 rounded-lg border px-2 text-left leading-tight ${p.measureMode === mode ? "border-teal-400 bg-teal-500/15 text-teal-200" : "border-white/10"}`}
               >
-                {label}
+                {o.modes[mode]}
               </button>
             ))}
           </div>
+          <p className="leading-relaxed text-slate-400">{o.modeHelp[p.measureMode]}</p>
+          {p.pendingCount > 0 && (
+            <div role="status" className="space-y-2 rounded-lg border border-teal-400/30 bg-teal-500/10 p-2 text-teal-100">
+              <p className="flex items-center gap-2">
+                <Crosshair className="size-4" />
+                {o.pointsPlaced(p.pendingCount)}
+              </p>
+              {isOpenEnded(p.measureMode) && (
+                <button
+                  type="button"
+                  disabled={!finishable}
+                  onClick={() => p.onFinishMeasurement()}
+                  className="flex min-h-9 w-full items-center justify-center rounded-lg bg-teal-400 px-3 font-semibold text-slate-950 disabled:opacity-40"
+                >
+                  {o.finishMeasurement}
+                </button>
+              )}
+            </div>
+          )}
           <fieldset className="rounded-lg border border-white/10 p-2">
-            <legend className="px-1 font-bold">
-              {ui(locale).bimControlsOverlay.snapping}
-            </legend>
+            <legend className="px-1 font-bold">{o.snapping}</legend>
             <div className="flex flex-wrap gap-x-3 gap-y-1">
               {(
                 [
-                  [
-                    "vertex",
-                    ui(locale).bimControlsOverlay.vertex,
-                    "bg-amber-500",
-                  ],
-                  [
-                    "midpoint",
-                    ui(locale).bimControlsOverlay.midpoint,
-                    "bg-purple-500",
-                  ],
-                  ["edge", ui(locale).bimControlsOverlay.edge, "bg-cyan-500"],
+                  ["vertex", o.vertex, "bg-amber-500"],
+                  ["midpoint", o.midpoint, "bg-purple-500"],
+                  ["edge", o.edge, "bg-cyan-500"],
+                  ["center", o.centre, "bg-pink-500"],
                 ] as const
               ).map(([key, label, swatch]) => (
                 <label key={key} className="flex min-h-8 items-center gap-1.5">
@@ -505,40 +579,148 @@ export function BimControlsOverlay(p: Props) {
               ))}
             </div>
           </fieldset>
-          <p className="leading-relaxed text-slate-400">
-            {p.measureMode === "angle" || p.measureMode === "triangle" ? ui(locale).bimControlsOverlay.threePointHelp : p.measureMode === "distance"
-              ? ui(locale).bimControlsOverlay.hoverToPreviewTheSnapped
-              : ui(locale).bimControlsOverlay.clickTheModelToRead}
-          </p>
-          {p.pendingPoint && (
-            <p role="status" className="flex items-center gap-2 text-teal-200">
-              <Crosshair className="size-4" />
-              {p.measureMode === "angle" || p.measureMode === "triangle" ? ui(locale).bimControlsOverlay.threePointHelp : ui(locale).bimControlsOverlay.point1SetSelectPoint}
-            </p>
-          )}
+          <fieldset className="rounded-lg border border-white/10 p-2">
+            <legend className="px-1 font-bold">{o.lock}</legend>
+            <div className="flex flex-wrap gap-1">
+              {MEASURE_LOCKS.map((lock) => (
+                <button
+                  key={lock}
+                  type="button"
+                  aria-pressed={p.measureLock === lock}
+                  title={o.lockNames[lock]}
+                  aria-label={o.lockNames[lock]}
+                  onClick={() => p.onMeasureLock(p.measureLock === lock ? null : lock)}
+                  className={`min-h-8 min-w-9 rounded-lg border px-2 font-mono ${p.measureLock === lock ? "border-amber-400 bg-amber-500/15 text-amber-200" : "border-white/10"}`}
+                >
+                  {LOCK_SYMBOLS[lock]}
+                </button>
+              ))}
+            </div>
+            <p className="mt-1 text-[10px] leading-relaxed text-slate-500">{o.lockHelp}</p>
+          </fieldset>
+          <div className="grid grid-cols-2 gap-2">
+            <label className="block">
+              <span className="text-slate-400">{o.units}</span>
+              <select
+                value={p.measureUnits.unit}
+                onChange={(e) => p.onMeasureUnits({ ...p.measureUnits, unit: e.target.value as MeasureUnits["unit"] })}
+                className="mt-1 min-h-9 w-full rounded-lg border border-white/15 bg-slate-900 px-2"
+              >
+                {(Object.keys(UNIT_METRES) as MeasureUnits["unit"][]).map((unit) => (
+                  <option key={unit} value={unit}>{unit}</option>
+                ))}
+              </select>
+            </label>
+            <label className="block">
+              <span className="text-slate-400">{o.precision}</span>
+              <select
+                value={p.measureUnits.precision}
+                onChange={(e) => p.onMeasureUnits({ ...p.measureUnits, precision: Number(e.target.value) })}
+                className="mt-1 min-h-9 w-full rounded-lg border border-white/15 bg-slate-900 px-2"
+              >
+                {[0, 1, 2, 3, 4].map((digits) => (
+                  <option key={digits} value={digits}>{(0).toFixed(digits)}</option>
+                ))}
+              </select>
+            </label>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <button type="button" className={button} disabled={!p.canUndoMeasurement} onClick={p.onUndoMeasurement}>
+              <Undo2 className="size-4" />
+              {o.undo}
+            </button>
+            <button type="button" className={button} disabled={!p.canRedoMeasurement} onClick={p.onRedoMeasurement}>
+              <Redo2 className="size-4" />
+              {o.redo}
+            </button>
+          </div>
           {p.measurements.length > 0 && (
             <ol className="space-y-2">
               {p.measurements.map((m, i) => {
                 const metrics = triangleMetrics(m.points);
                 const coords = m.points.map(world);
                 const s =
-                  m.mode === "distance" && m.points[1]
+                  (m.mode === "distance" || m.mode === "shortest") && m.points[1]
                     ? distanceSummary(m.points[0], m.points[1])
                     : null;
+                const row = (term: React.ReactNode, value: React.ReactNode, key?: React.Key, strong = false) => (
+                  <React.Fragment key={key}>
+                    <dt className="text-slate-400">{term}</dt>
+                    <dd className={`text-right ${strong ? "text-teal-200" : ""}`}>{value}</dd>
+                  </React.Fragment>
+                );
+                let details: React.ReactNode;
+                if (s) {
+                  details = (
+                    <>
+                      {row(m.mode === "shortest" ? "min" : "L", len(s.distance), undefined, true)}
+                      {row(o.plan, len(s.horizontal))}
+                      {row("ΔX · ΔY · ΔZ", `${len(s.dx)} · ${len(s.dy)} · ${len(s.dz)}`)}
+                    </>
+                  );
+                } else if (m.mode === "multipoint") {
+                  details = multipointDistances(m.points).map((d, k) => row(`→ ${k + 1}`, len(d), k, true));
+                } else if (m.mode === "accumulate") {
+                  const { segments, total } = accumulateSegments(m.points);
+                  details = (
+                    <>
+                      {row("Σ L", len(total), undefined, true)}
+                      {row(o.segments, segments.length)}
+                    </>
+                  );
+                } else if (m.mode === "polyline") {
+                  details = (
+                    <>
+                      {row("Σ L", len(polylineLength(m.points)), undefined, true)}
+                      {row(o.vertices, m.points.length)}
+                    </>
+                  );
+                } else if (m.mode === "polygon") {
+                  const polygon = polygonMetrics(m.points);
+                  details = polygon && (
+                    <>
+                      {row("A", area(polygon.area), undefined, true)}
+                      {row(o.plan, area(polygon.planArea))}
+                      {row(o.perimeter, len(polygon.perimeter))}
+                    </>
+                  );
+                } else if (m.mode === "arc") {
+                  const arc = arcThrough(m.points);
+                  details = arc ? (
+                    <>
+                      {row("R", len(arc.radius), undefined, true)}
+                      {row("Ø", len(arc.radius * 2))}
+                      {row(o.arcLength, len(arc.length))}
+                      {row(o.modes.angle, `${fmt(arc.angle)}°`)}
+                    </>
+                  ) : (
+                    row("R", "—")
+                  );
+                } else if (m.mode === "angle" || m.mode === "triangle") {
+                  details = row(
+                    o.modes[m.mode],
+                    metrics ? (m.mode === "angle" ? `${fmt(metrics.angle)}°` : area(metrics.area)) : "—",
+                    undefined,
+                    true,
+                  );
+                } else {
+                  details = (
+                    <>
+                      {(["X", "Y", "Z"] as const).map((axis, k) => row(`${axis} (m)`, fmt(coords[0][k]), axis))}
+                      {p.mapConversion &&
+                        row("E · N · H", worldToMap(coords[0], p.mapConversion).map(fmt).join(" · "))}
+                    </>
+                  );
+                }
                 return (
-                  <li key={m.id} className="rounded-lg bg-teal-500/10 p-2">
+                  <li key={m.id} className={`rounded-lg p-2 ${m.mode === "shortest" ? "bg-amber-500/10" : "bg-teal-500/10"}`}>
                     <div className="mb-1 flex items-center justify-between">
                       <span className="font-semibold">
-                        #{i + 1} ·{" "}
-                        {m.mode === "angle" || m.mode === "triangle" ? ui(locale).bimControlsOverlay[m.mode] : s
-                          ? ui(locale).bimControlsOverlay.distance
-                          : ui(locale).bimControlsOverlay.point}
+                        #{i + 1} · {o.modes[m.mode]}
                       </span>
                       <button
                         type="button"
-                        aria-label={
-                          ui(locale).bimControlsOverlay.deleteMeasurement
-                        }
+                        aria-label={o.deleteMeasurement}
                         onClick={() => p.onRemoveMeasurement(m.id)}
                         className="grid size-7 place-items-center rounded hover:bg-white/10"
                       >
@@ -546,42 +728,10 @@ export function BimControlsOverlay(p: Props) {
                       </button>
                     </div>
                     <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5 font-mono text-[11px]">
-                      {m.mode === "angle" || m.mode === "triangle" ? <><dt>{ui(locale).bimControlsOverlay[m.mode]}</dt><dd className="text-right">{metrics ? `${fmt(m.mode === "angle" ? metrics.angle : metrics.area)} ${m.mode === "angle" ? "°" : "m²"}` : "—"}</dd></> : s ? (
-                        <>
-                          <dt className="text-slate-400">L</dt>
-                          <dd className="text-right text-teal-200">
-                            {fmt(s.distance)} m
-                          </dd>
-                          <dt className="text-slate-400">
-                            {ui(locale).bimControlsOverlay.plan}
-                          </dt>
-                          <dd className="text-right">{fmt(s.horizontal)} m</dd>
-                          <dt className="text-slate-400">ΔX · ΔY · ΔZ</dt>
-                          <dd className="text-right">
-                            {fmt(s.dx)} · {fmt(s.dy)} · {fmt(s.dz)}
-                          </dd>
-                        </>
-                      ) : (
-                        (["X", "Y", "Z"] as const).map((axis, k) => (
-                          <React.Fragment key={axis}>
-                            <dt className="text-slate-400">{axis}</dt>
-                            <dd className="text-right">{fmt(coords[0][k])}</dd>
-                          </React.Fragment>
-                        ))
-                      )}
-                      {m.mode === "point" && p.mapConversion && (
-                        <>
-                          <dt className="text-slate-400">E · N · H</dt>
-                          <dd className="text-right">
-                            {worldToMap(coords[0], p.mapConversion)
-                              .map(fmt)
-                              .join(" · ")}
-                          </dd>
-                        </>
-                      )}
+                      {details}
                     </dl>
                     <p className="mt-1 text-[10px] text-slate-500">
-                      {ui(locale).bimControlsOverlay.snap}:{" "}
+                      {o.snap}:{" "}
                       {m.points.map((pt) => snapLabel[pt.snap]).join(" → ")}
                     </p>
                   </li>
@@ -606,6 +756,14 @@ export function BimControlsOverlay(p: Props) {
               >
                 <Trash2 className="size-4" />
                 {v.measure.clear}
+              </button>
+              <button type="button" className={button} onClick={p.onRedlineMeasurements}>
+                <PenLine className="size-4" />
+                {o.toMarkup}
+              </button>
+              <button type="button" className={button} onClick={p.onMeasurementIssue}>
+                <MessageSquarePlus className="size-4" />
+                {o.toIssue}
               </button>
             </div>
           )}
@@ -637,6 +795,11 @@ export function BimControlsOverlay(p: Props) {
           >
             {ui(locale).bimControlsOverlay.collapseModel}
           </button>
+          {p.explodeFactor > 0 && p.measurements.length > 0 && (
+            <p role="status" className="leading-relaxed text-amber-200">
+              {o.measurementsHiddenWhileExploded(p.measurements.length)}
+            </p>
+          )}
         </div>
       )}
 
@@ -692,33 +855,72 @@ export function BimControlsOverlay(p: Props) {
               {ui(locale).bimClash.issues.add}
             </button>
           </div>
-          {p.issues.map((issue) => (
-            <div
-              key={issue.id}
-              className="rounded-lg border border-white/10 p-2"
-            >
-              <div className="flex items-start gap-2">
-                <button
-                  type="button"
-                  className="min-w-0 flex-1 text-left"
-                  onClick={() => p.onToggleIssue(issue.id)}
-                >
-                  <span className="block font-semibold">{issue.title}</span>
-                  <span className="block text-[10px] text-slate-400">
-                    {issue.status} · {issue.description || ui(locale).bimClash.issues.noDescription}
-                  </span>
-                </button>
-                <button
-                  type="button"
-                  className="text-red-300"
-                  onClick={() => p.onDeleteIssue(issue.id)}
-                  aria-label={`${ui(locale).bimClash.issues.remove}: ${issue.title}`}
-                >
-                  ×
-                </button>
+          <div className="flex gap-2">
+            <button type="button" className={button} disabled={!p.issues.length} onClick={p.onExportIssuesBcf}>
+              <Download className="size-3.5" />
+              {ui(locale).bimClash.issues.exportBcf}
+            </button>
+            <label className={`${button} cursor-pointer`}>
+              <Upload className="size-3.5" />
+              {ui(locale).bimClash.issues.importBcf}
+              <input
+                type="file"
+                accept=".bcfzip,.bcf,application/zip"
+                className="sr-only"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  e.target.value = "";
+                  if (file) p.onImportBcf(file);
+                }}
+              />
+            </label>
+          </div>
+          <p className="text-[10px] leading-relaxed text-slate-500">{ui(locale).bimClash.issues.bcfHint}</p>
+          {p.issues.map((issue) => {
+            const s = ui(locale).bimClash.issues;
+            const snapshot = p.issueSnapshots[issue.id];
+            return (
+              <div key={issue.id} className="rounded-lg border border-white/10 p-2">
+                <div className="flex items-start gap-2">
+                  <button
+                    type="button"
+                    className="min-w-0 flex-1 text-left"
+                    onClick={() => p.onGoToIssue(issue)}
+                    title={s.goTo}
+                  >
+                    {snapshot && (
+                      // eslint-disable-next-line @next/next/no-img-element -- in-memory data URL
+                      <img src={snapshot} alt="" className="mb-1.5 aspect-video w-full rounded object-cover" />
+                    )}
+                    <span className="block font-semibold">{issue.title}</span>
+                    <span className="block text-[10px] text-slate-400">
+                      <span className={issue.status === "resolved" ? "text-emerald-300" : "text-amber-300"}>
+                        {s.status[issue.status]}
+                      </span>
+                      {issue.type ? ` · ${issue.type}` : ""} · {issue.description || s.noDescription}
+                    </span>
+                  </button>
+                  <button
+                    type="button"
+                    className="grid size-7 shrink-0 place-items-center rounded text-red-300 hover:bg-white/10"
+                    onClick={() => p.onDeleteIssue(issue.id)}
+                    aria-label={`${s.remove}: ${issue.title}`}
+                  >
+                    <Trash2 className="size-3.5" />
+                  </button>
+                </div>
+                <div className="mt-2 flex gap-2">
+                  <button type="button" className={`${button} min-h-8`} onClick={() => p.onGoToIssue(issue)}>
+                    <Crosshair className="size-3.5" />
+                    {s.goTo}
+                  </button>
+                  <button type="button" className={`${button} min-h-8`} onClick={() => p.onToggleIssue(issue.id)}>
+                    {issue.status === "resolved" ? s.reopen : s.markResolved}
+                  </button>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
@@ -773,6 +975,53 @@ export function BimControlsOverlay(p: Props) {
               </button>
             </div>
           ))}
+
+          <div className="space-y-2 border-t border-white/10 pt-3">
+            <p className="font-semibold text-teal-200">{ui(locale).bimControlsOverlay.selectionSets}</p>
+            <div className="flex gap-2">
+              <input
+                value={setName}
+                onChange={(e) => setSetName(e.target.value)}
+                placeholder={ui(locale).bimControlsOverlay.selectionSetName}
+                aria-label={ui(locale).bimControlsOverlay.selectionSetName}
+                className="min-h-10 min-w-0 flex-1 rounded-lg border border-white/15 bg-slate-900 px-2"
+              />
+              <button
+                type="button"
+                disabled={!p.selectedElementIds.size}
+                className="min-h-10 rounded-lg border border-teal-500/40 px-3 text-teal-200 disabled:opacity-40"
+                onClick={() => {
+                  p.onSaveSelectionSet(
+                    setName.trim() || ui(locale).bimControlsOverlay.defaultSelectionSetName(p.selectionSets.length + 1),
+                  );
+                  setSetName("");
+                }}
+              >
+                {ui(locale).bimControlsOverlay.saveSelection(p.selectedElementIds.size)}
+              </button>
+            </div>
+            <p className="text-slate-400">{ui(locale).bimControlsOverlay.selectionSetHelp}</p>
+            {p.selectionSets.map((set) => (
+              <div key={set.id} className="flex items-center gap-2 rounded-lg border border-white/10 p-2">
+                <button
+                  type="button"
+                  className="min-w-0 flex-1 truncate text-left text-teal-200"
+                  onClick={() => p.onApplySelectionSet(set)}
+                >
+                  {set.name}
+                  <span className="ml-2 text-[10px] text-slate-400">{ui(locale).bimControlsOverlay.elementCount(set.guids.length)}</span>
+                </button>
+                <button
+                  type="button"
+                  className="rounded px-2 text-red-300 hover:bg-white/10"
+                  onClick={() => p.onDeleteSelectionSet(set.id)}
+                  aria-label={ui(locale).bimControlsOverlay.deleteView(set.name)}
+                >
+                  ×
+                </button>
+              </div>
+            ))}
+          </div>
         </div>
       )}
     </section>

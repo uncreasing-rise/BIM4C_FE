@@ -1,7 +1,7 @@
 "use client";
 import React, { useMemo, useState } from "react";
 import { ChevronsDownUp, ChevronsUpDown, Copy, Info, Search, X } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "./toast";
 import { useLanguage } from "@/lib/i18n/context";
 import { formatLength } from "./federation";
 import type { BimElementData } from "./types";

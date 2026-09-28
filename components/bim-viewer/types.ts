@@ -16,6 +16,7 @@ export type BimTool =
   | "walk"
   | "markup"
   | "quantities"
+  | "appearance"
   | "levels";
 
 export type BimViewPreset =
@@ -81,7 +82,8 @@ export interface BimClashItem {
   disciplineB: string;
   elementB: string;
   point: [number, number, number];
-  status: "open" | "resolved" | "in_review";
+  /** Navisworks' lifecycle: active, reviewed, approved (accepted as is), resolved. */
+  status: "open" | "in_review" | "approved" | "resolved";
   /** Local checks: which test found it and between which files and types. */
   kind?: "hard" | "clearance";
   /** Clearance tests: gap between the two elements (m), 0 when they touch. */
@@ -95,6 +97,14 @@ export interface BimClashItem {
 export interface BimModelDefinition {
   source?: "ifc";
   filename?: string;
+  /** SHA-256 of the file bytes: the file’s identity for saved sessions. */
+  contentHash?: string;
+  /**
+   * The model as ThatOpen Fragments (see fragments-engine.ts). When present,
+   * elements carry no geometryData from the parser: Fragments draws, and
+   * triangles are fetched from it on demand (picking, clashes, quantities).
+   */
+  fragments?: Uint8Array;
   schema?: string;
   diagnostics?: {
     missingGeometry: number;
@@ -196,21 +206,52 @@ export interface ModelPlacement {
   rotationY: number;
 }
 
-export type SnapKind = "vertex" | "midpoint" | "edge" | "face";
+export type SnapKind = "vertex" | "center" | "midpoint" | "edge" | "face";
 
 export interface MeasurePoint extends MeasurementPoint {
   modelKey?: string;
   guid?: string;
   localPoint?: [number, number, number];
   snap: SnapKind;
+  /** Surface normal where the point was picked (scene axes), for perpendicular/parallel locks. */
+  normal?: [number, number, number];
 }
 
-export type MeasureMode = "distance" | "point" | "angle" | "triangle";
+/**
+ * Measure tools, as in Navisworks: point to point (distance), point to
+ * multiple points, point line (polyline), accumulate, angle, area (polygon),
+ * single point and shortest distance between two objects; plus a 3-point
+ * triangle area.
+ */
+export type MeasureMode =
+  | "distance"
+  | "multipoint"
+  | "polyline"
+  | "accumulate"
+  | "angle"
+  | "polygon"
+  | "point"
+  | "triangle"
+  | "shortest"
+  | "arc";
+
+/** Constrains the next point: along an IFC axis, or along / across the previous point's surface normal. */
+export type MeasureLock = "x" | "y" | "z" | "perpendicular" | "parallel" | null;
+
+export interface MeasureUnits {
+  unit: "m" | "cm" | "mm" | "ft" | "in";
+  /** Decimal places. */
+  precision: number;
+}
 
 export interface Measurement {
   id: string;
   mode: MeasureMode;
-  /** Scene metres: one point, two distance endpoints, or three angle/triangle vertices. */
+  /**
+   * Scene metres: one point, two distance/shortest endpoints, three
+   * angle/triangle vertices, a polyline/polygon outline, a base followed by
+   * its targets (multipoint), or consecutive segment pairs (accumulate).
+   */
   points: MeasurePoint[];
 }
 
@@ -224,11 +265,24 @@ export interface BimSavedView {
   markup?: import("./markup").MarkupShape[];
   layers?: Record<BimDiscipline, boolean>;
   explode?: number;
+  projection?: "perspective" | "orthographic";
+  /** Per-file visibility and placement, restored for files still open. */
+  models?: Pick<FederatedModel, "key" | "visible" | "alignment" | "offset">[];
   id: string;
   name: string;
   preset: BimViewPreset;
   modelKey?: string;
   elementIds: string[];
+}
+
+/**
+ * A named, explicit selection. Stored by IFC GlobalId, which survives
+ * reloading files in another order (element ids do not).
+ */
+export interface BimSelectionSet {
+  id: string;
+  name: string;
+  guids: string[];
 }
 
 export interface BimLocalIssue {
@@ -239,10 +293,20 @@ export interface BimLocalIssue {
   clashId?: string;
   status: "open" | "resolved";
   createdAt: string;
+  /** Viewpoint captured when the issue was raised (or imported from BCF). */
+  camera?: BimSavedView["camera"];
+  clip?: BimClipPlanes;
+  /** BCF topic identity, kept so a re-export updates the same topic. */
+  bcfGuid?: string;
+  /** BCF topic type ("Issue", "Clash", …). */
+  type?: string;
+  author?: string;
 }
 
 export interface SnapSettings {
   vertex: boolean;
+  /** Centres of circular edges (pipe ends, holes, round columns). */
+  center: boolean;
   midpoint: boolean;
   edge: boolean;
 }

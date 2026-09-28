@@ -59,6 +59,11 @@ export function computeLevels(models: LevelSource[]): BimLevel[] {
  * lowest one, which is usually the slab soffit below the floor.
  */
 export function planCutHeight(level: BimLevel, elements: Map<string, BimElementData>, lift = 0): number {
+  return planHeights(level, elements, lift).cut;
+}
+
+/** The level's floor (scene y) and its plan cut height (see planCutHeight). */
+export function planHeights(level: BimLevel, elements: Map<string, BimElementData>, lift = 0) {
   const bottoms = level.ids
     .map((id) => elements.get(id))
     .filter((e): e is BimElementData => Boolean(e))
@@ -68,5 +73,5 @@ export function planCutHeight(level: BimLevel, elements: Map<string, BimElementD
   const counts = new Map<number, number>();
   for (const b of bottoms) counts.set(Math.round(b * 10) / 10, (counts.get(Math.round(b * 10) / 10) ?? 0) + 1);
   const floor = [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0] - b[0])[0]?.[0] ?? level.bottom;
-  return Math.min(floor + 1.2, level.top - 0.05);
+  return { floor, cut: Math.min(floor + 1.2, level.top - 0.05) };
 }

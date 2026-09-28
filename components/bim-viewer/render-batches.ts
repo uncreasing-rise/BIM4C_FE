@@ -15,6 +15,13 @@ export interface BatchSlot {
   color: THREE.Color;
   /** Element-local → model frame, before any explode offset. */
   base: THREE.Matrix4;
+  /** Shown by the viewer's own state (layers, hiding, isolation); detail culling only ever hides more. */
+  visible: boolean;
+  /** Bounding sphere in the model frame, following the explode offset (for detail culling). */
+  center: THREE.Vector3;
+  radius: number;
+  /** The sphere centre before any explode offset. */
+  baseCenter: THREE.Vector3;
 }
 
 export interface ElementBatches {
@@ -176,6 +183,8 @@ export async function buildElementBatches(
     const batch = batches.get(part.key)!;
     const geometry = compactPart(part);
     const geometryId = batch.addGeometry(geometry);
+    geometry.computeBoundingSphere();
+    const sphere = geometry.boundingSphere!.clone().applyMatrix4(part.base);
     geometry.dispose();
     const instance = batch.addInstance(geometryId);
     batch.setMatrixAt(instance, part.base);
@@ -184,7 +193,16 @@ export async function buildElementBatches(
     const color = new THREE.Color(part.color);
     batch.setColorAt(instance, color);
     const list = slots.get(part.element.id) ?? [];
-    list.push({ batch, instance, color, base: part.base });
+    list.push({
+      batch,
+      instance,
+      color,
+      base: part.base,
+      visible: true,
+      center: sphere.center.clone(),
+      radius: sphere.radius,
+      baseCenter: sphere.center,
+    });
     slots.set(part.element.id, list);
     if (await shouldYield()) {
       for (const b of batches.values()) b.dispose();
@@ -216,7 +234,9 @@ export function applySlotState(
   if (!slots) return;
   offsetMatrix.makeTranslation(offset);
   for (const slot of slots) {
+    slot.visible = visible;
     slot.batch.setVisibleAt(slot.instance, visible);
+    slot.center.addVectors(slot.baseCenter, offset);
     if (!visible) continue;
     const base = override ?? slot.color;
     slot.batch.setColorAt(slot.instance, selected ? tint.copy(base).lerp(SELECTED, 0.65) : base);

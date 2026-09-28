@@ -1,7 +1,9 @@
 "use client";
 
-import { Eye, EyeOff, Focus, Search, Trash2, X } from "lucide-react";
-import { useMemo, useState } from "react";
+import { Download, Eye, EyeOff, Focus, Search, Trash2, X } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { cachedModelsSize, clearCachedModels } from "./fragments-cache";
+import { toast } from "./toast";
 import { useLanguage } from "@/lib/i18n/context";
 import {
   distanceBetween,
@@ -28,6 +30,8 @@ interface Props {
   onAlignment: (key: string, alignment: ModelAlignment) => void;
   onOffset: (key: string, offset: FederatedModel["offset"]) => void;
   onAddFiles: () => void;
+  /** Saves a converted model as a .bim4c package. */
+  onDownloadPackage: (key: string) => void;
   selectedElementId: string | null;
   onSelectElement: (
     element: FederatedModel["model"]["elements"][number],
@@ -302,6 +306,17 @@ export function BimModelsPanel(p: Props) {
                 >
                   <Focus className="size-4" />
                 </button>
+                {m.model.fragments && (
+                  <button
+                    type="button"
+                    aria-label={ui(locale).bimModelsPanel.downloadPackage}
+                    title={ui(locale).bimModelsPanel.downloadPackage}
+                    onClick={() => p.onDownloadPackage(m.key)}
+                    className="grid size-8 place-items-center rounded-lg hover:bg-white/10"
+                  >
+                    <Download className="size-4" />
+                  </button>
+                )}
                 <button
                   type="button"
                   aria-label={ui(locale).bimModelsPanel.removeModel}
@@ -422,6 +437,38 @@ export function BimModelsPanel(p: Props) {
       >
         {ui(locale).bimModelsPanel.addIFCFilesToThe}
       </button>
+      <CacheLine />
     </section>
+  );
+}
+
+/** How much this browser keeps of converted models, with a way to free it. */
+function CacheLine() {
+  const { locale } = useLanguage();
+  const s = ui(locale).bimModelsPanel;
+  const [size, setSize] = useState<{ count: number; bytes: number } | null>(null);
+  useEffect(() => {
+    let alive = true;
+    void cachedModelsSize().then((next) => alive && setSize(next));
+    return () => {
+      alive = false;
+    };
+  }, []);
+  if (!size?.count) return null;
+  return (
+    <p className="mt-3 flex items-start gap-2 text-[10px] leading-relaxed text-slate-400">
+      <span className="flex-1">{s.cacheLine(size.count, Math.max(1, Math.round(size.bytes / 1048576)))}</span>
+      <button
+        type="button"
+        className="shrink-0 rounded px-2 py-1 text-slate-300 hover:bg-white/10"
+        onClick={async () => {
+          await clearCachedModels();
+          setSize({ count: 0, bytes: 0 });
+          toast.success(s.cacheCleared);
+        }}
+      >
+        {s.clearCache}
+      </button>
+    </p>
   );
 }

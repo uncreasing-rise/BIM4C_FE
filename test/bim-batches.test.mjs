@@ -204,6 +204,58 @@ test("hiding, selecting and exploding one element only touches its own instances
   assert.equal(color.getHex(), 0xff0000);
 });
 
+test("navigation culling drops only small parts, adapts to frame time and never shows what the viewer hides", async () => {
+  const { DetailCuller, MAX_CULL_PX } = load("components/bim-viewer/detail-culling");
+  const elements = [twoMaterialElement("a", 0), twoMaterialElement("b", 5), twoMaterialElement("c", 10)];
+  const { slots } = await b.buildElementBatches(elements, () => new THREE.MeshStandardMaterial());
+  const [aSlot] = slots.get("a");
+  assert.ok(aSlot.radius > 0 && aSlot.center.x >= 0 && aSlot.center.x <= 1, "bounding sphere in the model frame");
+  b.applySlotState(slots.get("c"), false, false, new THREE.Vector3()); // hidden by the user
+  const culler = new DetailCuller();
+  // Fast frames: nothing is culled.
+  for (let i = 0; i < 10; i++) culler.adapt(16);
+  assert.equal(culler.cull(slots.values(), () => 5), 0);
+  // Slow frames raise the threshold, never past the cap; a pause mid-drag is ignored.
+  culler.adapt(1000);
+  assert.equal(culler.thresholdPx, 0);
+  for (let i = 0; i < 40; i++) culler.adapt(80);
+  assert.equal(culler.thresholdPx, MAX_CULL_PX);
+  // At 5 px per metre these ~1.5 m parts span < 24 px: all shown parts are culled.
+  assert.equal(culler.cull(slots.values(), () => 5), 4);
+  for (const slot of slots.get("a")) assert.equal(slot.batch.getVisibleAt(slot.instance), false);
+  // Zoomed in (100 px per metre) they are large on screen: nothing culled.
+  assert.equal(culler.cull(slots.values(), () => 100), 0);
+  culler.cull(slots.values(), () => 5);
+  culler.restore();
+  for (const slot of slots.get("a")) assert.equal(slot.batch.getVisibleAt(slot.instance), true);
+  for (const slot of slots.get("c")) assert.equal(slot.batch.getVisibleAt(slot.instance), false, "user-hidden stays hidden");
+  // Explode moves the culling sphere with the instance.
+  b.applySlotState(slots.get("a"), true, false, new THREE.Vector3(0, 3, 0));
+  assert.ok(Math.abs(aSlot.center.y - aSlot.baseCenter.y - 3) < 1e-9);
+});
+
+test("near/far planes hug the scene, so distant coplanar floors do not fight in depth", () => {
+  const { fitClipPlanes } = load("components/bim-viewer/camera-motion");
+  const box = { min: [-150, 0, -150], max: [150, 60, 150] };
+  // Plan view from 400 m up: near sits just above the roof, far past the lowest corner.
+  const top = fitClipPlanes([0, 400, 0], box, 400);
+  assert.ok(Math.abs(top.near - 340 * 0.9) < 1e-9);
+  const lowCorner = Math.hypot(150, 400, 150);
+  assert.ok(top.far > lowCorner && top.far < lowCorner * 1.05);
+  // Depth resolution at the floor (d ≈ 400 m): d² / (near · 2²⁴) is well under a millimetre.
+  assert.ok((400 * 400) / (top.near * 2 ** 24) < 1e-3);
+  // Inside the building (walking, looking 2 m ahead): a centimetre-scale near plane.
+  const inside = fitClipPlanes([0, 1.7, 0], box, 2);
+  assert.ok(inside.near <= 0.01 && inside.near > 0);
+  // Two files 550 km apart, orbiting one of them 100 m away: nothing nearby is
+  // clipped (a far/near ratio cap would put near at ~28 m), and 100 m still
+  // resolves to about a millimetre.
+  const federation = { min: [-50, 0, -50], max: [550000, 60, 50] };
+  const sparse = fitClipPlanes([0, 30, 40], federation, 100);
+  assert.ok(sparse.near < 1 && sparse.far > 550000);
+  assert.ok((100 * 100) / (sparse.near * 2 ** 24) < 2e-3);
+});
+
 test("clash review statuses are kept in the session and validated", () => {
   const { sessionSchema } = load("components/bim-viewer/session-schema");
   const ok = sessionSchema.safeParse({ clashStatus: { "local-m1/ifc-1-m2/ifc-9": "resolved" } });

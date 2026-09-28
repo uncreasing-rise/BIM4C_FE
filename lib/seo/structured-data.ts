@@ -99,6 +99,32 @@ export function breadcrumbSchema(
   };
 }
 
+/** A free, browser-based tool published by the organisation (e.g. the IFC viewer). */
+export function webApplicationSchema(input: {
+  name: string;
+  description: string;
+  path: string;
+  language: string;
+  features: string[];
+}): Schema {
+  return {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "@id": `${absoluteUrl(input.path)}#app`,
+    name: input.name,
+    description: input.description,
+    url: absoluteUrl(input.path),
+    inLanguage: input.language,
+    applicationCategory: "DesignApplication",
+    operatingSystem: "Any (modern web browser with WebGL)",
+    browserRequirements: "Requires JavaScript, WebGL and WebAssembly",
+    isAccessibleForFree: true,
+    offers: { "@type": "Offer", price: "0", priceCurrency: "VND" },
+    featureList: input.features,
+    publisher: { "@id": organizationId },
+  };
+}
+
 export function faqPageSchema(
   faqs: { question: string; answer: string }[],
 ): Schema {

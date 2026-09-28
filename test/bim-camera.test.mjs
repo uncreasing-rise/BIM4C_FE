@@ -168,6 +168,31 @@ test("quantity take-off sums file quantities, net before gross, and flags elemen
   assert.match(csv, /"IfcWall","2","6","m3"/);
 });
 
+test("take-off falls back to the exact volume of a closed mesh, never of an open one", () => {
+  const q = load("components/bim-viewer/quantities");
+  // Unit cube, 12 outward triangles; 2 × 3 × 0.5 box by scaling.
+  const cube = (sx = 1, sy = 1, sz = 1) => {
+    const v = [[0,0,0],[1,0,0],[1,1,0],[0,1,0],[0,0,1],[1,0,1],[1,1,1],[0,1,1]].flatMap(([x,y,z]) => [x*sx - 0.5, y*sy, z*sz]);
+    const f = [0,2,1, 0,3,2, 4,5,6, 4,6,7, 0,1,5, 0,5,4, 1,2,6, 1,6,5, 2,3,7, 2,7,6, 3,0,4, 3,4,7];
+    return { positions: new Float32Array(v), indices: new Uint32Array(f) };
+  };
+  assert.ok(Math.abs(q.meshVolume(cube()) - 1) < 1e-6);
+  assert.ok(Math.abs(q.meshVolume(cube(2, 3, 0.5)) - 3) < 1e-6);
+  const open = cube(); open.indices = open.indices.slice(0, -6); // drop one face
+  assert.equal(q.meshVolume(open), null);
+  assert.equal(q.meshVolume(undefined), null);
+
+  const el = (id, props, geometryData) => ({ id, ifcType: "IfcColumn", storey: "L1", material: "C40", psets: [{ name: "Qto", properties: props }], geometryData });
+  const rows = q.quantityTakeoff([
+    el("c1", [{ name: "NetVolume", value: 5, unit: "m³" }], cube()), // file wins over mesh
+    el("c2", [], cube(2, 3, 0.5)), // mesh fallback
+    el("c3", [], open), // open mesh: nothing
+  ], "type");
+  assert.equal(rows[0].volume, 8);
+  assert.equal(rows[0].volumeFromGeometry, 1);
+  assert.equal(rows[0].withoutQuantities, 2, "c2 and c3 have no quantities in the file");
+});
+
 test("markups are resolution-independent vectors with escaped text", () => {
   const mk = load("components/bim-viewer/markup");
   const [l, r] = mk.arrowHead([0, 0], [100, 0], 10);

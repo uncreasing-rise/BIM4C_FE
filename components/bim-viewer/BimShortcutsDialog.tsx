@@ -34,6 +34,10 @@ export function BimShortcutsDialog({ open, onClose }: { open: boolean; onClose: 
     ["U", s.keyShowAll],
     ["Home", s.keyHome],
     ["Esc", s.keyEscape],
+    ["Enter", s.keyFinishMeasure],
+    ["Backspace", s.keyUndoPoint],
+    ["Ctrl+Z / Ctrl+Y", s.keyUndoMeasure],
+    ["X Y Z P L", s.keyMeasureLocks],
   ];
 
   return (

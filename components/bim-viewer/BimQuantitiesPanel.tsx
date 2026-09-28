@@ -15,8 +15,11 @@ export function BimQuantitiesPanel({
   selectedIds,
   onSelect,
   onClose,
+  geometryRevision = 0,
 }: {
   elements: BimElementData[];
+  /** Bumped when element triangles arrive (converted models): mesh volumes may now exist. */
+  geometryRevision?: number;
   hiddenIds: ReadonlySet<string>;
   selectedIds: ReadonlySet<string>;
   onSelect: (ids: string[]) => void;
@@ -33,7 +36,8 @@ export function BimQuantitiesPanel({
       ),
     [elements, hiddenIds, scope, selectedIds],
   );
-  const rows = useMemo(() => quantityTakeoff(scoped, group), [scoped, group]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- geometryRevision: triangles changed in place
+  const rows = useMemo(() => quantityTakeoff(scoped, group), [scoped, group, geometryRevision]);
   const total = rows.reduce(
     (t, r) => ({
       count: t.count + r.count,
@@ -41,8 +45,10 @@ export function BimQuantitiesPanel({
       area: t.area + r.area,
       length: t.length + r.length,
       missing: t.missing + r.withoutQuantities,
+      fromGeometry: t.fromGeometry + r.volumeFromGeometry,
+      unquantified: t.unquantified + r.unquantified,
     }),
-    { count: 0, volume: 0, area: 0, length: 0, missing: 0 },
+    { count: 0, volume: 0, area: 0, length: 0, missing: 0, fromGeometry: 0, unquantified: 0 },
   );
   // The total gets a unit only when every contributing row agrees on it.
   const totalUnit = (kind: "volume" | "area" | "length") => {
@@ -52,7 +58,7 @@ export function BimQuantitiesPanel({
   const num = (v: number) =>
     v ? v.toLocaleString(locale === "vi" ? "vi-VN" : "en-US", { maximumFractionDigits: 2 }) : "—";
   const exportCsv = () => {
-    const csv = takeoffCsv(rows, [s.groups[group], s.count, s.volume, s.unit, s.area, s.unit, s.length, s.unit, s.missing]);
+    const csv = takeoffCsv(rows, [s.groups[group], s.count, s.volume, s.unit, s.area, s.unit, s.length, s.unit, s.missing, s.volumeFromGeometry]);
     const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
     const a = document.createElement("a");
     a.href = url;
@@ -125,7 +131,7 @@ export function BimQuantitiesPanel({
               >
                 <td className="max-w-40 truncate py-1.5 pr-2 font-sans text-slate-100">{r.key}</td>
                 <td className="px-1 text-right">{r.count}</td>
-                <td className="px-1 text-right">{num(r.volume)} {r.volume ? r.units.volume : ""}</td>
+                <td className="px-1 text-right" title={r.volumeFromGeometry ? s.fromGeometryTitle(r.volumeFromGeometry) : undefined}>{r.volumeFromGeometry ? "≈ " : ""}{num(r.volume)} {r.volume ? r.units.volume : ""}</td>
                 <td className="px-1 text-right">{num(r.area)} {r.area ? r.units.area : ""}</td>
                 <td className="pl-1 text-right">{num(r.length)} {r.length ? r.units.length : ""}</td>
               </tr>
@@ -135,7 +141,7 @@ export function BimQuantitiesPanel({
             <tr className="border-t border-white/20">
               <td className="py-2 pr-2 font-sans">{s.total}</td>
               <td className="px-1 text-right">{total.count}</td>
-              <td className="px-1 text-right">{num(total.volume)} {total.volume ? totalUnit("volume") : ""}</td>
+              <td className="px-1 text-right">{total.fromGeometry ? "≈ " : ""}{num(total.volume)} {total.volume ? totalUnit("volume") : ""}</td>
               <td className="px-1 text-right">{num(total.area)} {total.area ? totalUnit("area") : ""}</td>
               <td className="pl-1 text-right">{num(total.length)} {total.length ? totalUnit("length") : ""}</td>
             </tr>
@@ -144,7 +150,8 @@ export function BimQuantitiesPanel({
       </div>
       <div className="shrink-0 space-y-2 border-t border-white/10 p-3">
         <p className="text-[11px] leading-snug text-slate-400">
-          {total.missing ? s.missingNote(total.missing) : s.sourceNote}
+          {total.unquantified ? s.missingNote(total.unquantified) : s.sourceNote}
+          {total.fromGeometry > 0 && <> {s.geometryNote(total.fromGeometry)}</>}
         </p>
         <button
           type="button"

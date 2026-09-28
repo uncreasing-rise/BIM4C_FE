@@ -27,6 +27,10 @@ export interface DisplaySettings {
   grid: boolean;
   /** Fill cut solids where a section plane passes through them. */
   sectionCaps: boolean;
+  /** The files' own column grids (IfcGrid), with axis bubbles. */
+  ifcGrids: boolean;
+  /** Plan overview in a corner, with the camera; click to go there. */
+  minimap: boolean;
 }
 
 // The default is the original look: flat background, direct lights, no effects.
@@ -37,6 +41,8 @@ export const DEFAULT_DISPLAY: DisplaySettings = {
   environment: "classic",
   grid: true,
   sectionCaps: true,
+  ifcGrids: true,
+  minimap: false,
 };
 
 export const ENVIRONMENTS: Record<

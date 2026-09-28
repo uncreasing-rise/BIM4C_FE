@@ -5,11 +5,13 @@ import {
   Bookmark,
   Boxes,
   Camera,
+  Columns2,
   Keyboard,
   GitCompareArrows,
   Footprints,
   PenLine,
   Calculator,
+  Palette,
   Building2,
   Layers,
   Maximize2,
@@ -34,6 +36,9 @@ interface Props {
   isFullscreen: boolean;
   onToggleFullscreen: () => void;
   clashesCount: number;
+  /** The 2D sheet beside the 3D view. */
+  sheetOpen: boolean;
+  onToggleSheet: () => void;
 }
 export function BimToolbar(p: Props) {
   const { t, locale } = useLanguage();
@@ -50,6 +55,7 @@ export function BimToolbar(p: Props) {
     { id: "compare", icon: GitCompareArrows },
     { id: "clashes", icon: AlertTriangle },
     { id: "quantities", icon: Calculator },
+    { id: "appearance", icon: Palette },
     { id: "markup", icon: PenLine },
     { id: "views", icon: Bookmark },
     { id: "display", icon: SlidersHorizontal },
@@ -61,7 +67,7 @@ export function BimToolbar(p: Props) {
       aria-label={ui(locale).bimToolbar.modelControls}
     >
       <div className="flex min-w-0 flex-wrap items-center gap-2 lg:flex-1 lg:flex-nowrap">
-        <span className="min-h-10 min-w-0 flex-1 content-center truncate rounded-lg border border-white/15 bg-slate-900 px-2 text-xs lg:max-w-64">
+        <span className="min-h-10 min-w-0 flex-1 content-center truncate rounded-lg border border-white/15 bg-slate-900 px-2 text-xs lg:hidden xl:block xl:max-w-64">
           {p.modelCount
             ? ui(locale).formats.modelsInScene(p.modelCount)
             : ui(locale).bimToolbar.noIFCLoaded}
@@ -73,7 +79,7 @@ export function BimToolbar(p: Props) {
             if (e.target.value)
               p.onSelectViewPreset(e.target.value as BimViewPreset);
           }}
-          className="min-h-10 min-w-0 max-w-[45%] rounded-lg border border-white/15 bg-slate-900 px-2 text-xs"
+          className="min-h-10 min-w-0 max-w-[45%] rounded-lg border border-white/15 bg-slate-900 px-2 text-xs lg:max-w-none"
         >
           <option value="" disabled>
             {ui(locale).bimToolbar.viewPreset}
@@ -85,8 +91,9 @@ export function BimToolbar(p: Props) {
           ))}
         </select>
       </div>
-      <div className="flex flex-wrap items-center justify-between gap-1 sm:justify-start lg:shrink-0 lg:flex-nowrap">
-        <div className="flex flex-wrap items-center gap-1 lg:flex-nowrap">
+      {/* One row everywhere: it scrolls sideways on phones instead of wrapping into three. */}
+      <div className="flex min-w-0 items-center gap-1 overflow-x-auto [scrollbar-width:none] lg:shrink-0 lg:overflow-visible">
+        <div className="flex shrink-0 items-center gap-1">
           {tools.map(({ id, icon: Icon }) => (
             <button
               key={id}
@@ -118,7 +125,7 @@ export function BimToolbar(p: Props) {
             </button>
           ))}
         </div>
-        <div className="flex items-center gap-1 border-l border-white/15 pl-1">
+        <div className="flex shrink-0 items-center gap-1 border-l border-white/15 pl-1">
           <button
             type="button"
             data-action="fit"
@@ -128,6 +135,16 @@ export function BimToolbar(p: Props) {
             className="grid min-h-10 min-w-10 place-items-center rounded-lg hover:bg-white/10"
           >
             <RotateCcw className="size-4" />
+          </button>
+          <button
+            type="button"
+            onClick={p.onToggleSheet}
+            aria-pressed={p.sheetOpen}
+            aria-label={ui(locale).bimSheets.toggle}
+            title={ui(locale).bimSheets.toggle}
+            className={`grid min-h-10 min-w-10 place-items-center rounded-lg ${p.sheetOpen ? "bg-teal-400 text-slate-950" : "hover:bg-white/10"}`}
+          >
+            <Columns2 className="size-4" />
           </button>
           <button
             type="button"

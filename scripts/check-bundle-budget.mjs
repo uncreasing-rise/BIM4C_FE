@@ -26,7 +26,13 @@ for (const [route, budgetKB] of Object.entries(budgets)) {
     const marker = "/_next/static/";
     if (!source.startsWith(marker)) continue;
     const file = resolve(".next/static", source.slice(marker.length));
-    gzipBytes += gzipSync(await readFile(file)).byteLength;
+    const bytes = await readFile(file).catch(() => {
+      // Typically `next dev` answering instead of `next start` on this build.
+      throw new Error(
+        `${source} is not in .next/static: ${baseUrl} must serve this production build (npm run build && npm start, or set BUNDLE_BASE_URL).`,
+      );
+    });
+    gzipBytes += gzipSync(bytes).byteLength;
   }
   const gzipKB = Number((gzipBytes / 1024).toFixed(1));
   const pass = gzipKB <= budgetKB;

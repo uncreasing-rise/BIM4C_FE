@@ -5,5 +5,6 @@ import nextTs from "eslint-config-next/typescript";
 export default defineConfig([
   ...nextVitals,
   ...nextTs,
-  globalIgnores([".next/**", ".qa/**", "stitch_bim4c_corporate_web_redesign/**"]),
+  // public/fragments: the ThatOpen worker, copied minified from node_modules.
+  globalIgnores([".next/**", ".qa/**", "stitch_bim4c_corporate_web_redesign/**", "public/fragments/**"]),
 ]);

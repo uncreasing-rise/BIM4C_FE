@@ -321,6 +321,7 @@ export interface Dictionary {
       walk: string;
       markup: string;
       quantities: string;
+      appearance: string;
       levels: string;
       snapshot: string;
     };

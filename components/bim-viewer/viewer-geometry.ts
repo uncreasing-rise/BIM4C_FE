@@ -107,6 +107,7 @@ export function createElementMesh(
   e: BimElementData,
   pool: Map<string, THREE.MeshStandardMaterial>,
   geometries: Map<string, THREE.BufferGeometry>,
+  options: { lazyNormals?: boolean } = {},
 ) {
   const material = (color: string, opacity = 1) => {
     const key = `${color}:${opacity}`;
@@ -157,7 +158,8 @@ export function createElementMesh(
           3,
         ),
       );
-    else geometry.computeVertexNormals();
+    // Pick-only meshes (Fragments draws) get normals when first drawn.
+    else if (!options.lazyNormals) geometry.computeVertexNormals();
     if (data.groups?.length) {
       materials = data.groups.map((g, i) => {
         geometry.addGroup(g.start, g.count, i);

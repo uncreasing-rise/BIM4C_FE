@@ -377,6 +377,7 @@ export const viDictionary: Dictionary = {
             walk: "Đi bộ",
             markup: "Ghi chú",
             quantities: "Khối lượng",
+            appearance: "Màu sắc",
             levels: "Tầng",
             reset: "Vừa khung nhìn",
             fullscreen: "Toàn màn hình",

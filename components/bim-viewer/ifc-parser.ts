@@ -139,13 +139,64 @@ function readMapConversion(
   };
 }
 
-/** Runs in a dedicated worker. No model data leaves the browser. */
+/** One single-material piece of an element, in the model frame. */
+export interface GeometryPart {
+  positions: Float32Array;
+  normals?: Float32Array;
+  indices: Uint32Array;
+  color: string;
+  opacity: number;
+}
+
+/**
+ * An element's parts as one indexed mesh around `center` (the element's
+ * position), one group per part. The BVH is optional: the Fragments path
+ * builds it lazily, only for elements actually picked.
+ */
+export function mergeParts(parts: GeometryPart[], center: Vector3, withBvh: boolean): BimGeometryData {
+  const positions = new Float32Array(parts.reduce((n, p) => n + p.positions.length, 0));
+  const normals = parts.every((p) => p.normals) ? new Float32Array(positions.length) : undefined;
+  const indices = new Uint32Array(parts.reduce((n, p) => n + p.indices.length, 0));
+  const groups: NonNullable<BimGeometryData["groups"]> = [];
+  let vOffset = 0,
+    iOffset = 0;
+  for (const part of parts) {
+    for (let i = 0; i < part.positions.length; i += 3) {
+      positions[vOffset + i] = part.positions[i] - center.x;
+      positions[vOffset + i + 1] = part.positions[i + 1] - center.y;
+      positions[vOffset + i + 2] = part.positions[i + 2] - center.z;
+    }
+    normals?.set(part.normals!, vOffset);
+    for (let i = 0; i < part.indices.length; i++) indices[iOffset + i] = part.indices[i] + vOffset / 3;
+    groups.push({ start: iOffset, count: part.indices.length, color: part.color, opacity: part.opacity });
+    vOffset += part.positions.length;
+    iOffset += part.indices.length;
+  }
+  if (!withBvh) return { positions, ...(normals && { normals }), indices, groups };
+  const accelerationGeometry = new BufferGeometry();
+  accelerationGeometry.setAttribute("position", new BufferAttribute(positions, 3));
+  accelerationGeometry.setIndex(new BufferAttribute(indices, 1));
+  groups.forEach((g, i) => accelerationGeometry.addGroup(g.start, g.count, i));
+  const bvh = MeshBVH.serialize(new MeshBVH(accelerationGeometry), { cloneBuffers: false });
+  accelerationGeometry.dispose();
+  return { positions, ...(normals && { normals }), indices, groups, bvh };
+}
+
+/**
+ * Runs in a dedicated worker. No model data leaves the browser.
+ *
+ * With `geometry: "bounds"` only each element's box and colour are kept: the
+ * triangles are drawn and picked from the Fragments model instead (see
+ * fragments-engine.ts), so the worker does not ship them to the page.
+ */
 export function parseIfcData(
   api: IFC.IfcAPI,
   data: Uint8Array,
   filename: string,
   progress: (n: number) => void = () => {},
+  options: { geometry?: "full" | "bounds" } = {},
 ): BimModelDefinition {
+  const keepGeometry = options.geometry !== "bounds";
   if (!data.length) throw new Error("IFC_FILE_EMPTY");
   const decoder = new TextDecoder();
   if (
@@ -408,47 +459,7 @@ export function parseIfcData(
       if (!parts.length) return;
       const center = bounds.getCenter(new Vector3());
       const size = bounds.getSize(new Vector3());
-      const positions = new Float32Array(
-        parts.reduce((n, p) => n + p.positions.length, 0),
-      );
-      const normals = new Float32Array(positions.length);
-      const indices = new Uint32Array(
-        parts.reduce((n, p) => n + p.indices.length, 0),
-      );
-      const groups: NonNullable<BimGeometryData["groups"]> = [];
-      let vOffset = 0,
-        iOffset = 0;
-      for (const part of parts) {
-        for (let i = 0; i < part.positions.length; i += 3) {
-          positions[vOffset + i] = part.positions[i] - center.x;
-          positions[vOffset + i + 1] = part.positions[i + 1] - center.y;
-          positions[vOffset + i + 2] = part.positions[i + 2] - center.z;
-        }
-        normals.set(part.normals, vOffset);
-        for (let i = 0; i < part.indices.length; i++)
-          indices[iOffset + i] = part.indices[i] + vOffset / 3;
-        groups.push({
-          start: iOffset,
-          count: part.indices.length,
-          color: part.color,
-          opacity: part.opacity,
-        });
-        vOffset += part.positions.length;
-        iOffset += part.indices.length;
-      }
-      const accelerationGeometry = new BufferGeometry();
-      accelerationGeometry.setAttribute(
-        "position",
-        new BufferAttribute(positions, 3),
-      );
-      accelerationGeometry.setIndex(new BufferAttribute(indices, 1));
-      groups.forEach((g, i) =>
-        accelerationGeometry.addGroup(g.start, g.count, i),
-      );
-      const bvh = MeshBVH.serialize(new MeshBVH(accelerationGeometry), {
-        cloneBuffers: false,
-      });
-      accelerationGeometry.dispose();
+      const geometryData = keepGeometry ? mergeParts(parts, center, true) : undefined;
       const p = read(expressID);
       const ifcType = typeName(p);
       const spatialPath: NonNullable<BimElementData["spatialPath"]> = [];
@@ -508,7 +519,7 @@ export function parseIfcData(
         position: center.toArray(),
         size: size.toArray(),
         geometryType: "custom",
-        geometryData: { positions, normals, indices, groups, bvh },
+        ...(geometryData && { geometryData }),
         psets: [
           {
             name: "IFC",

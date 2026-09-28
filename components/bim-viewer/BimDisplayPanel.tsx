@@ -70,6 +70,8 @@ export function BimDisplayPanel({
       <Switch label={s.ambientOcclusion} hint={s.ambientOcclusionHint} checked={settings.ambientOcclusion} onChange={(v) => set("ambientOcclusion", v)} />
       <Switch label={s.grid} hint={s.gridHint} checked={settings.grid} onChange={(v) => set("grid", v)} />
       <Switch label={s.sectionCaps} hint={s.sectionCapsHint} checked={settings.sectionCaps} onChange={(v) => set("sectionCaps", v)} />
+      <Switch label={s.ifcGrids} hint={s.ifcGridsHint} checked={settings.ifcGrids} onChange={(v) => set("ifcGrids", v)} />
+      <Switch label={s.minimap} hint={s.minimapHint} checked={settings.minimap} onChange={(v) => set("minimap", v)} />
 
       <h3 className="mb-2 mt-4 px-2 text-[11px] font-semibold uppercase tracking-wider text-teal-300">{s.projection}</h3>
       <div className="grid grid-cols-2 gap-1 px-2" role="radiogroup" aria-label={s.projection}>
