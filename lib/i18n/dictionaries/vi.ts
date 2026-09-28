@@ -361,7 +361,7 @@ export const viDictionary: Dictionary = {
         subtitle:
             "Tải mô hình IFC, kiểm tra thuộc tính gốc, đo đạc bề mặt hiển thị và khám phá mặt cắt.",
         selectModel: "Chọn mô hình",
-        uploadIfc: "Tải lên tệp .IFC của bạn",
+        uploadIfc: "Tải lên tệp IFC",
         uploadIfcNotice:
             "Tệp IFC được xử lý cục bộ ngay trên trình duyệt của bạn và không được tải lên máy chủ.",
         tools: {

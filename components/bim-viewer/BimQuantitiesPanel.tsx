@@ -44,6 +44,11 @@ export function BimQuantitiesPanel({
     }),
     { count: 0, volume: 0, area: 0, length: 0, missing: 0 },
   );
+  // The total gets a unit only when every contributing row agrees on it.
+  const totalUnit = (kind: "volume" | "area" | "length") => {
+    const units = new Set(rows.filter((r) => r[kind]).map((r) => r.units[kind]));
+    return units.size === 1 ? ([...units][0] ?? "") : "";
+  };
   const num = (v: number) =>
     v ? v.toLocaleString(locale === "vi" ? "vi-VN" : "en-US", { maximumFractionDigits: 2 }) : "—";
   const exportCsv = () => {
@@ -130,9 +135,9 @@ export function BimQuantitiesPanel({
             <tr className="border-t border-white/20">
               <td className="py-2 pr-2 font-sans">{s.total}</td>
               <td className="px-1 text-right">{total.count}</td>
-              <td className="px-1 text-right">{num(total.volume)}</td>
-              <td className="px-1 text-right">{num(total.area)}</td>
-              <td className="pl-1 text-right">{num(total.length)}</td>
+              <td className="px-1 text-right">{num(total.volume)} {total.volume ? totalUnit("volume") : ""}</td>
+              <td className="px-1 text-right">{num(total.area)} {total.area ? totalUnit("area") : ""}</td>
+              <td className="pl-1 text-right">{num(total.length)} {total.length ? totalUnit("length") : ""}</td>
             </tr>
           </tfoot>
         </table>

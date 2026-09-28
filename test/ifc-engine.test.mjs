@@ -120,7 +120,7 @@ test("demo reads actual storeys, materials, inherited MEP types, Psets and quant
     .flatMap((p) => p.properties)
     .find((p) => p.name === "NetVolume");
   assert.ok(Math.abs(quantity.value - 13.2) < 1e-5);
-  assert.equal(quantity.unit, "CUBIC_METRE");
+  assert.equal(quantity.unit, "m³");
   assert.equal(
     demo.elements.filter(
       (e) =>

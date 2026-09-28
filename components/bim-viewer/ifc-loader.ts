@@ -53,9 +53,10 @@ export async function parseIfcFromUrl(
   url: string,
   filename = "bim4c-commercial-tower.ifc",
   signal?: AbortSignal,
+  onProgress?: (percent: number) => void,
 ): Promise<BimModelDefinition> {
   const response = await fetch(url, { signal });
   if (!response.ok) throw new Error(`IFC_HTTP_${response.status}`);
   const blob = await response.blob();
-  return parseIfcFileToBimModel(new File([blob], filename), undefined, signal);
+  return parseIfcFileToBimModel(new File([blob], filename), onProgress, signal);
 }

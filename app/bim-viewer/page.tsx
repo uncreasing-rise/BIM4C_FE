@@ -5,36 +5,25 @@ import { organizationSchema, websiteSchema } from "@/lib/seo/structured-data";
 import { getSiteSettings } from "@/features/settings/queries";
 import { getPageContent } from "@/features/page-content/queries";
 import { getRequestLocale } from "@/lib/i18n/request";
-import { getAlternateLanguages, localizedPath } from "@/lib/seo/site";
+import { pageMetadata } from "@/lib/seo/listing";
+
+const META = {
+  vi: {
+    title: "Trình xem mô hình BIM 3D trực tuyến (IFC)",
+    description:
+      "Xem mô hình IFC ngay trên trình duyệt: tra cứu thuộc tính gốc, đo đạc 3D, mặt cắt, kiểm tra xung đột và bóc tách khối lượng.",
+  },
+  en: {
+    title: "OpenBIM 3D Web Viewer (IFC)",
+    description:
+      "View IFC models in your browser: inspect source properties, measure in 3D, cut sections, check clashes and take off quantities.",
+  },
+} as const;
 
 export async function generateMetadata(): Promise<Metadata> {
-  const locale = await getRequestLocale();
-  const canonical = localizedPath("/bim-viewer", locale);
-  return {
-    title: "OpenBIM 3D Web Viewer | BIM4C",
-    description:
-      "Xem mô hình IFC trên trình duyệt, tra cứu thuộc tính gốc, đo bề mặt và khám phá hộp cắt 3D.",
-    alternates: {
-      canonical,
-      languages: getAlternateLanguages("/bim-viewer"),
-    },
-    openGraph: {
-      title: "OpenBIM 3D Web Viewer | BIM4C",
-      description:
-        "Browser-based IFC viewer using Three.js and Web-IFC, with source properties, surface measurements and section cuts.",
-      url: canonical,
-      locale: locale === "vi" ? "vi_VN" : "en_US",
-      alternateLocale: [locale === "vi" ? "en_US" : "vi_VN"],
-      images: ["/images/news-digital-twin.webp"],
-    },
-    twitter: {
-      card: "summary_large_image",
-      title: "OpenBIM 3D Web Viewer | BIM4C",
-      description:
-        "Browser-based IFC viewer using Three.js and Web-IFC, with source properties, surface measurements and section cuts.",
-      images: ["/images/news-digital-twin.webp"],
-    },
-  };
+  const { title, description } = META[await getRequestLocale()];
+  // No brand suffix here: the root layout's title template adds " | BIM4C".
+  return pageMetadata(title, description, "/bim-viewer", "/images/news-digital-twin.webp");
 }
 
 export default async function BimViewerRoute() {

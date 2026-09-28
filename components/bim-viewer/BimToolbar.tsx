@@ -60,7 +60,7 @@ export function BimToolbar(p: Props) {
       className="z-20 flex shrink-0 flex-col gap-2 border-b border-white/10 bg-slate-950/95 p-2 lg:flex-row lg:items-center lg:justify-between"
       aria-label={ui(locale).bimToolbar.modelControls}
     >
-      <div className="flex min-w-0 flex-wrap items-center gap-2">
+      <div className="flex min-w-0 flex-wrap items-center gap-2 lg:flex-1 lg:flex-nowrap">
         <span className="min-h-10 min-w-0 flex-1 content-center truncate rounded-lg border border-white/15 bg-slate-900 px-2 text-xs lg:max-w-64">
           {p.modelCount
             ? ui(locale).formats.modelsInScene(p.modelCount)
@@ -85,8 +85,8 @@ export function BimToolbar(p: Props) {
           ))}
         </select>
       </div>
-      <div className="flex flex-wrap items-center justify-between gap-1 sm:justify-start">
-        <div className="flex flex-wrap items-center gap-1">
+      <div className="flex flex-wrap items-center justify-between gap-1 sm:justify-start lg:shrink-0 lg:flex-nowrap">
+        <div className="flex flex-wrap items-center gap-1 lg:flex-nowrap">
           {tools.map(({ id, icon: Icon }) => (
             <button
               key={id}
@@ -99,7 +99,10 @@ export function BimToolbar(p: Props) {
               className={`relative flex min-h-10 min-w-10 items-center justify-center gap-1 rounded-lg px-2 text-xs ${p.activeTool === id ? "bg-teal-400 text-slate-950" : "text-slate-300 hover:bg-white/10"}`}
             >
               <Icon className="size-4" />
-              <span className="hidden xl:inline">
+              {/* All fourteen labels need ~1800px; below that only the active one shows. */}
+              <span
+                className={`hidden whitespace-nowrap min-[1800px]:inline ${p.activeTool === id ? "xl:inline" : ""}`}
+              >
                 {id === "views" ? ui(locale).bimToolbar.views : v.tools[id]}
               </span>
               {id === "models" && p.modelCount > 0 && (

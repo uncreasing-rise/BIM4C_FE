@@ -784,6 +784,15 @@ export function BimViewerPage() {
           "/models/bim4c-commercial-tower.ifc",
           "bim4c-commercial-tower.ifc",
           controller.signal,
+          (percent) => {
+            if (!controller.signal.aborted)
+              setLoading({
+                name: "bim4c-commercial-tower.ifc",
+                percent,
+                index: 1,
+                total: 1,
+              });
+          },
         );
         if (controller.signal.aborted || modelsRef.current.length) return;
         const key = `m${++keyCounter.current}`;
@@ -1078,11 +1087,7 @@ export function BimViewerPage() {
             className="flex min-h-10 items-center gap-1 rounded-lg border border-teal-500/30 bg-teal-500/10 px-2 text-xs text-teal-300"
           >
             <Upload className="size-4" />
-            <span className="hidden sm:inline">
-              {models.length
-                ? ui(locale).bimViewerPage.addIFCFiles
-                : v.uploadIfc}
-            </span>
+            <span className="hidden sm:inline">{v.uploadIfc}</span>
           </button>
           <button
             type="button"
@@ -1118,26 +1123,6 @@ export function BimViewerPage() {
           </button>
         </div>
       </header>
-      {loading && (
-        <div
-          role="status"
-          className="flex shrink-0 items-center gap-3 bg-teal-950 px-3 py-2 text-xs"
-        >
-          <span className="min-w-0 flex-1 truncate">
-            {ui(locale).bimViewerPage.reading}
-            {loading.total > 1
-              ? ` (${loading.index}/${loading.total})`
-              : ""}: {loading.name} ({loading.percent}%)
-          </span>
-          <button
-            type="button"
-            onClick={cancelLoad}
-            className="shrink-0 rounded border px-3 py-1"
-          >
-            {ui(locale).bimViewerPage.cancel}
-          </button>
-        </div>
-      )}
       {hasWarnings && (
         <div
           role="status"
@@ -1198,6 +1183,35 @@ export function BimViewerPage() {
           clashesCount={allClashes.length}
         />
         <div className="relative flex min-h-0 flex-1">
+          {/* Floats over the viewport so starting a load does not shift the toolbar. */}
+          {loading && (
+            <div
+              role="status"
+              className="absolute left-1/2 top-3 z-30 w-[min(28rem,calc(100%-1.5rem))] -translate-x-1/2 overflow-hidden rounded-lg border border-teal-400/30 bg-teal-950/95 text-xs shadow-lg"
+            >
+              <div className="flex items-center gap-3 px-3 py-2">
+                <span className="min-w-0 flex-1 truncate">
+                  {ui(locale).bimViewerPage.reading}
+                  {loading.total > 1
+                    ? ` (${loading.index}/${loading.total})`
+                    : ""}: {loading.name} ({loading.percent}%)
+                </span>
+                <button
+                  type="button"
+                  onClick={cancelLoad}
+                  className="shrink-0 rounded border px-3 py-1"
+                >
+                  {ui(locale).bimViewerPage.cancel}
+                </button>
+              </div>
+              <div className="h-0.5 bg-teal-900">
+                <div
+                  className="h-full bg-teal-400 transition-[width]"
+                  style={{ width: `${loading.percent}%` }}
+                />
+              </div>
+            </div>
+          )}
           {!models.length && !loading && (
             <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center">
               <button

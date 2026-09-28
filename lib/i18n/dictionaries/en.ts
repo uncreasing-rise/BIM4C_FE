@@ -361,7 +361,7 @@ export const enDictionary: Dictionary = {
     subtitle:
       "Load IFC models, inspect native properties, measure surface geometry, and explore cross-sections.",
     selectModel: "Select Model",
-    uploadIfc: "Upload your .IFC file",
+    uploadIfc: "Upload IFC files",
     uploadIfcNotice:
       "IFC files are processed locally in your browser and never uploaded to our servers.",
     tools: {

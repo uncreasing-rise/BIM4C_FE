@@ -125,7 +125,6 @@ export const uiVi: UiStrings = {
     fullscreenIsUnavailableInThis:
       "Trình duyệt chưa hỗ trợ toàn màn hình tại đây.",
     addOneOrMoreIFC: "Thêm một hoặc nhiều tệp IFC vào cảnh",
-    addIFCFiles: "Thêm tệp IFC",
     reading: "Đang đọc",
     cancel: "Hủy",
     chooseOneOrMoreIFC: "Chọn một hoặc nhiều tệp IFC",

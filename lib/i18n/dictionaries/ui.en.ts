@@ -125,7 +125,6 @@ export const uiEn = {
     t3DImageExported: "3D image exported.",
     fullscreenIsUnavailableInThis: "Fullscreen is unavailable in this browser.",
     addOneOrMoreIFC: "Add one or more IFC files to the scene",
-    addIFCFiles: "Add IFC files",
     reading: "Reading",
     cancel: "Cancel",
     chooseOneOrMoreIFC: "Choose one or more IFC files",

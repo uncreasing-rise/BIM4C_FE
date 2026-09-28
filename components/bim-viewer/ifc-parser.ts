@@ -37,6 +37,66 @@ const SI_PREFIX: Record<string, number> = {
   MICRO: 1e-6,
 };
 
+const SI_PREFIX_SYMBOL: Record<string, string> = {
+  KILO: "k",
+  HECTO: "h",
+  DECA: "da",
+  DECI: "d",
+  CENTI: "c",
+  MILLI: "m",
+  MICRO: "µ",
+};
+
+// IfcSIUnitName → symbol; the prefix goes before the base, so "MILLI
+// SQUARE_METRE" reads mm².
+const SI_SYMBOL: Record<string, [base: string, power?: string]> = {
+  METRE: ["m"],
+  SQUARE_METRE: ["m", "²"],
+  CUBIC_METRE: ["m", "³"],
+  GRAM: ["g"],
+  SECOND: ["s"],
+  RADIAN: ["rad"],
+  STERADIAN: ["sr"],
+  DEGREE_CELSIUS: ["°C"],
+  KELVIN: ["K"],
+  AMPERE: ["A"],
+  VOLT: ["V"],
+  WATT: ["W"],
+  JOULE: ["J"],
+  NEWTON: ["N"],
+  PASCAL: ["Pa"],
+  HERTZ: ["Hz"],
+  LUMEN: ["lm"],
+  LUX: ["lx"],
+  CANDELA: ["cd"],
+  MOLE: ["mol"],
+  OHM: ["Ω"],
+  COULOMB: ["C"],
+  FARAD: ["F"],
+  SIEMENS: ["S"],
+  WEBER: ["Wb"],
+  TESLA: ["T"],
+  HENRY: ["H"],
+  BECQUEREL: ["Bq"],
+  GRAY: ["Gy"],
+  SIEVERT: ["Sv"],
+};
+
+const SUPERSCRIPT: Record<string, string> = { "-": "⁻", "1": "¹", "2": "²", "3": "³", "4": "⁴" };
+
+/** Readable symbol for an IfcSIUnit ("CUBIC_METRE" → "m³"); other names unchanged. */
+export function siUnitSymbol(prefix: string, name: string): string {
+  const symbol = SI_SYMBOL[name];
+  if (!symbol) return [prefix, name].filter(Boolean).join(" ");
+  return `${SI_PREFIX_SYMBOL[prefix] ?? ""}${symbol[0]}${symbol[1] ?? ""}`;
+}
+
+/** Exponent of a derived-unit element as superscript ("-1" → "⁻¹"). */
+export function superscript(exponent: string): string {
+  const chars = [...exponent];
+  return chars.every((c) => c in SUPERSCRIPT) ? chars.map((c) => SUPERSCRIPT[c]).join("") : `^${exponent}`;
+}
+
 /** Metres per unit for an IfcSIUnit or IfcConversionBasedUnit length unit. */
 function metresPerUnit(read: (id: number) => Line, unitId: number, depth = 0): number {
   if (!unitId || depth > 4) return 1;
@@ -153,15 +213,16 @@ export function parseIfcData(
       if (seen.has(id)) return "";
       seen.add(id);
       const u = read(id);
-      if (u.Name)
-        return [string(u.Prefix), string(u.Name)].filter(Boolean).join(" ");
+      if (u.Name) return siUnitSymbol(string(u.Prefix), string(u.Name));
       if (u.Elements)
         return refs(u.Elements)
           .map((e) => {
             const n = read(e);
-            return `${unitLabel(refs(n.Unit)[0], seen)}^${string(n.Exponent)}`;
+            const exponent = string(n.Exponent);
+            const base = unitLabel(refs(n.Unit)[0], seen);
+            return exponent === "1" ? base : `${base}${superscript(exponent)}`;
           })
-          .join(" · ");
+          .join("·");
       return string(u.UnitType);
     };
     const defaultUnits = new Map<string, string>();
