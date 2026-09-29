@@ -12,6 +12,7 @@ import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
 import { GTAOPass } from "three/examples/jsm/postprocessing/GTAOPass.js";
 import { ShaderPass } from "three/examples/jsm/postprocessing/ShaderPass.js";
 import { OutputPass } from "three/examples/jsm/postprocessing/OutputPass.js";
+import { FXAAShader } from "three/examples/jsm/shaders/FXAAShader.js";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 import { Pass } from "three/examples/jsm/postprocessing/Pass.js";
 import { orthoHalfHeight } from "./camera-motion";
@@ -127,7 +128,11 @@ const EdgeShader = {
       if (d0 >= 0.99999) { gl_FragColor = color; return; }
       vec3 n0 = unpackRGBToNormal(texture2D(tNormal, vUv).rgb);
       vec2 px = 1.0 / resolution;
-      float edge = max(axisEdge(vec2(px.x, 0.0), d0, n0), axisEdge(vec2(0.0, px.y), d0, n0));
+      float eX = axisEdge(vec2(px.x, 0.0), d0, n0);
+      float eY = axisEdge(vec2(0.0, px.y), d0, n0);
+      float eD1 = axisEdge(vec2(px.x * 0.7071, px.y * 0.7071), d0, n0);
+      float eD2 = axisEdge(vec2(px.x * 0.7071, -px.y * 0.7071), d0, n0);
+      float edge = max(max(eX, eY), max(eD1, eD2));
       color.rgb = mix(color.rgb, edgeColor, edge * strength);
       gl_FragColor = color;
     }`,
@@ -169,6 +174,7 @@ export class ViewerPipeline {
   private readonly renderPass: RenderPass;
   private readonly aoPass: GTAOPass;
   private readonly edgePass: ShaderPass;
+  private readonly fxaaPass: ShaderPass;
   private readonly gbuffer: THREE.WebGLRenderTarget;
   private readonly normalMaterial = new THREE.MeshNormalMaterial({ side: THREE.DoubleSide });
   private readonly environmentMap: THREE.Texture;
@@ -207,7 +213,7 @@ export class ViewerPipeline {
     this.caps = new SectionCaps(scene, excludeFromGBuffer);
     // MSAA on the main image keeps geometry edges smooth under the effects;
     // the stencil is for section caps.
-    const target = new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType, samples: 4, stencilBuffer: true });
+    const target = new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType, samples: 8, stencilBuffer: true });
     this.composer = new EffectComposer(renderer, target);
     this.renderPass = new RenderPass(scene, perspective);
     this.aoPass = new GTAOPass(scene, perspective, 1, 1);
@@ -224,6 +230,8 @@ export class ViewerPipeline {
     this.composer.addPass(this.aoPass);
     this.composer.addPass(this.edgePass);
     this.composer.addPass(new OutputPass());
+    this.fxaaPass = new ShaderPass(FXAAShader);
+    this.composer.addPass(this.fxaaPass);
     this.apply(this.settings);
   }
 
@@ -308,6 +316,7 @@ export class ViewerPipeline {
     this.gbuffer.setSize(w, h);
     this.aoPass.setSize(w, h);
     (this.edgePass.uniforms.resolution.value as THREE.Vector2).set(w, h);
+    (this.fxaaPass.uniforms.resolution.value as THREE.Vector2).set(1 / w, 1 / h);
   }
 
   private renderGBuffer(camera: THREE.Camera, clippingPlanes: THREE.Plane[]) {

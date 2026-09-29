@@ -62,6 +62,12 @@ export interface BimElementData {
     area?: number;
     volume?: number;
   };
+  orientedDimensions?: {
+    length: number;
+    width: number;
+    height: number;
+    rotationAngleDeg: number;
+  };
   psets: IfcPropertySet[];
   position: [number, number, number];
   size: [number, number, number];

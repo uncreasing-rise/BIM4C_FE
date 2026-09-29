@@ -219,3 +219,105 @@ export function disposeObject(root: THREE.Object3D) {
   materials.forEach((m) => m.dispose());
   root.clear();
 }
+
+/**
+ * Clean floating-point/tessellation noise within ±5mm of standard round decimal increments (e.g. 11.997m -> 12.000m).
+ */
+export function cleanTessellationNoise(val: number, tolerance = 0.005): number {
+  if (!Number.isFinite(val)) return val;
+  const round1m = Math.round(val);
+  if (Math.abs(val - round1m) <= tolerance) return round1m;
+  const round10cm = Math.round(val * 10) / 10;
+  if (Math.abs(val - round10cm) <= tolerance) return round10cm;
+  const round1cm = Math.round(val * 100) / 100;
+  if (Math.abs(val - round1cm) <= tolerance) return round1cm;
+  return Math.round(val * 1000) / 1000;
+}
+
+/**
+ * Compute the tightest Oriented Bounding Box (OBB) in the horizontal plane (X-Z)
+ * along with vertical height (Y), removing orientation artifacts for rotated buildings and infrastructure.
+ */
+export function computeOrientedBounds(positions: ArrayLike<number>): {
+  length: number;
+  width: number;
+  height: number;
+  rotationAngleDeg: number;
+} | null {
+  if (!positions || positions.length < 9) return null;
+  const count = positions.length / 3;
+  let minY = Infinity, maxY = -Infinity;
+  let sumX = 0, sumZ = 0;
+
+  for (let i = 0; i < positions.length; i += 3) {
+    const x = positions[i], y = positions[i + 1], z = positions[i + 2];
+    if (y < minY) minY = y;
+    if (y > maxY) maxY = y;
+    sumX += x;
+    sumZ += z;
+  }
+  const meanX = sumX / count;
+  const meanZ = sumZ / count;
+  const rawHeight = Math.max(0, maxY - minY);
+
+  // 2D Covariance in X-Z
+  let cxx = 0, czz = 0, cxz = 0;
+  for (let i = 0; i < positions.length; i += 3) {
+    const dx = positions[i] - meanX;
+    const dz = positions[i + 2] - meanZ;
+    cxx += dx * dx;
+    czz += dz * dz;
+    cxz += dx * dz;
+  }
+
+  // Principal component angle
+  const baseAngle = 0.5 * Math.atan2(2 * cxz, cxx - czz);
+
+  // Sample angles around principal angle and cardinal directions to find minimum area bounding box
+  let bestArea = Infinity;
+  let bestDim: [number, number] = [0, 0];
+  let bestAngle = 0;
+
+  const testAngles = [baseAngle, baseAngle + Math.PI / 4, 0, Math.PI / 6, Math.PI / 3, Math.PI / 4];
+  for (let a = 0; a < 36; a++) {
+    testAngles.push((a * Math.PI) / 36);
+  }
+
+  for (const angle of testAngles) {
+    const cos = Math.cos(angle);
+    const sin = Math.sin(angle);
+    let minU = Infinity, maxU = -Infinity;
+    let minV = Infinity, maxV = -Infinity;
+
+    for (let i = 0; i < positions.length; i += 3) {
+      const dx = positions[i] - meanX;
+      const dz = positions[i + 2] - meanZ;
+      const u = dx * cos + dz * sin;
+      const v = -dx * sin + dz * cos;
+      if (u < minU) minU = u;
+      if (u > maxU) maxU = u;
+      if (v < minV) minV = v;
+      if (v > maxV) maxV = v;
+    }
+
+    const du = maxU - minU;
+    const dv = maxV - minV;
+    const area = du * dv;
+    if (area < bestArea) {
+      bestArea = area;
+      bestDim = [du, dv];
+      bestAngle = angle;
+    }
+  }
+
+  const rawLength = Math.max(bestDim[0], bestDim[1]);
+  const rawWidth = Math.min(bestDim[0], bestDim[1]);
+  const rotDeg = Math.round((Math.abs(bestAngle) * 180) / Math.PI) % 90;
+
+  return {
+    length: cleanTessellationNoise(rawLength),
+    width: cleanTessellationNoise(rawWidth),
+    height: cleanTessellationNoise(rawHeight),
+    rotationAngleDeg: rotDeg,
+  };
+}

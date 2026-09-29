@@ -278,9 +278,21 @@ export function describeMeasurement(
 export const UNIT_METRES: Record<MeasureUnits["unit"], number> = { m: 1, cm: 0.01, mm: 0.001, ft: 0.3048, in: 0.0254 };
 export const DEFAULT_MEASURE_UNITS: MeasureUnits = { unit: "m", precision: 3 };
 
+function cleanTessellation(val: number, tolerance = 0.005): number {
+  if (!Number.isFinite(val)) return val;
+  const round1m = Math.round(val);
+  if (Math.abs(val - round1m) <= tolerance) return round1m;
+  const round10cm = Math.round(val * 10) / 10;
+  if (Math.abs(val - round10cm) <= tolerance) return round10cm;
+  const round1cm = Math.round(val * 100) / 100;
+  if (Math.abs(val - round1cm) <= tolerance) return round1cm;
+  return val;
+}
+
 /** A length (dimension 1) or area (dimension 2) given in metres, in the chosen unit with its symbol. */
 export function formatMeasure(metres: number, dimension: 1 | 2, units: MeasureUnits, locale: string): string {
-  const value = metres / UNIT_METRES[units.unit] ** dimension;
+  const cleaned = dimension === 1 ? cleanTessellation(metres) : metres;
+  const value = cleaned / UNIT_METRES[units.unit] ** dimension;
   const digits = Math.min(6, Math.max(0, Math.round(units.precision)));
   const text = (value === 0 ? 0 : value).toLocaleString(locale === "vi" ? "vi-VN" : "en-US", {
     minimumFractionDigits: digits,

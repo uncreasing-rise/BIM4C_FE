@@ -9,6 +9,7 @@ import {
   Vector3,
 } from "three";
 import { MeshBVH } from "three-mesh-bvh";
+import { computeOrientedBounds } from "./viewer-geometry";
 import type {
   BimElementData,
   BimGeometryData,
@@ -519,6 +520,7 @@ export function parseIfcData(
         color: parts[0].color,
         dimensionsSource: "bounds",
         dimensions: { length: size.x, height: size.y, width: size.z },
+        ...(geometryData?.positions ? { orientedDimensions: computeOrientedBounds(geometryData.positions) ?? undefined } : {}),
         position: center.toArray(),
         size: size.toArray(),
         geometryType: "custom",

@@ -160,7 +160,13 @@ export const uiEn = {
     centreAndElevationsComeFrom:
       "Centre and elevations come from the element's bounding box.",
     axisAlignedBoundingDimensionsEstimate:
-      "Axis-aligned bounding dimensions (estimate)",
+      "Axis-aligned bounding footprint (AABB)",
+    orientedDimensions: "True geometric dimensions (OBB)",
+    orientedLength: "Length (L)",
+    orientedWidth: "Width (W)",
+    orientedHeight: "Height (H)",
+    rotationAngle: "Rotation",
+    orientedDimensionsHint: "Actual principal dimensions along element axes (rotation-invariant).",
     sampleDimensions: "Sample dimensions",
     alongX: "Along X",
     alongY: "Along Y",

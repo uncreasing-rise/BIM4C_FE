@@ -4,6 +4,7 @@ import { ChevronsDownUp, ChevronsUpDown, Copy, Info, Search, X } from "lucide-re
 import { toast } from "./toast";
 import { useLanguage } from "@/lib/i18n/context";
 import { formatLength } from "./federation";
+import { computeOrientedBounds } from "./viewer-geometry";
 import type { BimElementData } from "./types";
 
 import { ui } from "@/lib/i18n/ui";
@@ -67,6 +68,11 @@ export function BimPropertyInspector({
       }))
       .filter((pset) => !q || pset.properties.length);
   }, [e, filter]);
+  const oriented = useMemo(() => {
+    if (e?.orientedDimensions) return e.orientedDimensions;
+    if (e?.geometryData?.positions) return computeOrientedBounds(e.geometryData.positions);
+    return null;
+  }, [e]);
   const copy = (text: string) => {
     void navigator.clipboard
       ?.writeText(text)
@@ -262,36 +268,66 @@ export function BimPropertyInspector({
                   <ChevronsDownUp className="size-4" />
                 </button>
               </div>
+              {oriented && !filter && (
+                <div className="mb-3 rounded-lg border border-teal-500/30 bg-teal-950/25 p-3">
+                  <div className="mb-2 flex items-center justify-between">
+                    <h4 className="font-semibold text-teal-300">
+                      {s.orientedDimensions}
+                    </h4>
+                    {oriented.rotationAngleDeg > 0 && (
+                      <span className="rounded bg-teal-500/20 px-1.5 py-0.5 text-[10px] font-medium text-teal-300">
+                        {s.rotationAngle}: {oriented.rotationAngleDeg}°
+                      </span>
+                    )}
+                  </div>
+                  <dl className="grid grid-cols-3 gap-1.5 text-center">
+                    <div className="rounded bg-black/40 p-2">
+                      <dt className="text-[10px] text-slate-400">{s.orientedLength}</dt>
+                      <dd className="font-mono font-bold text-teal-200 text-sm">
+                        {oriented.length.toLocaleString(locale, { maximumFractionDigits: 3 })} m
+                      </dd>
+                    </div>
+                    <div className="rounded bg-black/40 p-2">
+                      <dt className="text-[10px] text-slate-400">{s.orientedWidth}</dt>
+                      <dd className="font-mono font-bold text-teal-200 text-sm">
+                        {oriented.width.toLocaleString(locale, { maximumFractionDigits: 3 })} m
+                      </dd>
+                    </div>
+                    <div className="rounded bg-black/40 p-2">
+                      <dt className="text-[10px] text-slate-400">{s.orientedHeight}</dt>
+                      <dd className="font-mono font-bold text-teal-200 text-sm">
+                        {oriented.height.toLocaleString(locale, { maximumFractionDigits: 3 })} m
+                      </dd>
+                    </div>
+                  </dl>
+                  <p className="mt-2 text-[10px] text-teal-200/70">
+                    {s.orientedDimensionsHint}
+                  </p>
+                </div>
+              )}
               {e.dimensions && !filter && (
-                <div className="rounded-lg border border-white/10 p-3">
-                  <h4 className="mb-2 font-semibold">
+                <div className="rounded-lg border border-white/10 bg-white/[0.02] p-3">
+                  <h4 className="mb-2 font-semibold text-slate-300">
                     {e.dimensionsSource === "bounds"
-                      ? ui(locale).bimPropertyInspector
-                          .axisAlignedBoundingDimensionsEstimate
-                      : ui(locale).bimPropertyInspector.sampleDimensions}
+                      ? s.axisAlignedBoundingDimensionsEstimate
+                      : s.sampleDimensions}
                   </h4>
-                  <dl className="grid grid-cols-2 gap-2">
+                  <dl className="grid grid-cols-3 gap-2">
                     {(
                       [
-                        ["length", ui(locale).bimPropertyInspector.alongX, "m"],
-                        ["width", ui(locale).bimPropertyInspector.alongY, "m"],
+                        ["length", s.alongX, "m"],
+                        ["width", s.alongY, "m"],
                         [
                           "height",
-                          ui(locale).bimPropertyInspector.heightZ,
+                          s.heightZ,
                           "m",
-                        ],
-                        ["area", ui(locale).bimPropertyInspector.area, "m²"],
-                        [
-                          "volume",
-                          ui(locale).bimPropertyInspector.volume,
-                          "m³",
                         ],
                       ] as const
                     ).map(([key, label, unit]) =>
                       e.dimensions?.[key] !== undefined ? (
-                        <div key={key} className="rounded bg-white/5 p-2">
-                          <dt className="text-slate-400">{label}</dt>
-                          <dd className="font-mono">
+                        <div key={key} className="rounded bg-white/5 p-2 text-center">
+                          <dt className="text-[10px] text-slate-400">{label}</dt>
+                          <dd className="font-mono text-xs">
                             {e.dimensions[key]!.toLocaleString(locale, {
                               maximumFractionDigits: 3,
                             })}{" "}
@@ -302,11 +338,8 @@ export function BimPropertyInspector({
                     )}
                   </dl>
                   {e.dimensionsSource === "bounds" && (
-                    <p className="mt-2 text-[11px] text-slate-400">
-                      {
-                        ui(locale).bimPropertyInspector
-                          .boundingDimensionsAreNotQuantities
-                      }
+                    <p className="mt-2 text-[10px] text-slate-400">
+                      {s.boundingDimensionsAreNotQuantities}
                     </p>
                   )}
                 </div>

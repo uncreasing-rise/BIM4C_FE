@@ -699,6 +699,16 @@ export function BimCanvas(props: BimCanvasProps) {
       const started = performance.now();
       if (started < fragmentsSettleUntil) requestRender();
       stepFlight();
+      if (orbitInertia) {
+        rotateAround(orbitInertia.pivot, orbitInertia.vx, orbitInertia.vy);
+        orbitInertia.vx *= 0.92;
+        orbitInertia.vy *= 0.92;
+        if (Math.hypot(orbitInertia.vx, orbitInertia.vy) < 0.08) {
+          orbitInertia = null;
+        } else {
+          requestRender();
+        }
+      }
       if (controls.update()) requestRender();
       if (cubeRef.current) {
         cubeRef.current.style.transform = cubeCssMatrix(camera.quaternion);
@@ -1726,6 +1736,8 @@ export function BimCanvas(props: BimCanvasProps) {
     pivotMarker.visible = false;
     scene.add(pivotMarker);
     const WORLD_UP = new THREE.Vector3(0, 1, 0);
+    let orbitInertia: { pivot: THREE.Vector3; vx: number; vy: number } | null = null;
+    let orbitVelocity = { vx: 0, vy: 0 };
     let orbit: {
       pointerId: number;
       x: number;
@@ -1755,6 +1767,9 @@ export function BimCanvas(props: BimCanvasProps) {
         renderer.domElement.releasePointerCapture(orbit.pointerId);
       if (orbit.moved) {
         pivotMarker.visible = false;
+        if (Math.hypot(orbitVelocity.vx, orbitVelocity.vy) > 0.8) {
+          orbitInertia = { pivot: orbit.pivot.clone(), vx: orbitVelocity.vx, vy: orbitVelocity.vy };
+        }
         setQuality(maxPixelRatio);
         requestRender();
       }
@@ -1962,6 +1977,8 @@ export function BimCanvas(props: BimCanvasProps) {
       }
       if (e.pointerType !== "touch" && down.size === 1) {
         flight = null;
+        orbitInertia = null;
+        orbitVelocity = { vx: 0, vy: 0 };
         const hit = pick(e.clientX, e.clientY, false);
         const pivot = hit ? hit.point.clone() : controls.target.clone();
         // Move the orbit target to the pivot's depth on the line of sight:
@@ -2008,11 +2025,13 @@ export function BimCanvas(props: BimCanvasProps) {
           orbit.moved = true;
           pivotMarker.position.copy(orbit.pivot);
           pivotMarker.visible = true;
-          setQuality(Math.min(maxPixelRatio, 1));
+          setQuality(maxPixelRatio);
           hideHover();
         }
         orbit.x = e.clientX;
         orbit.y = e.clientY;
+        orbitVelocity.vx = orbitVelocity.vx * 0.3 + dx * 0.7;
+        orbitVelocity.vy = orbitVelocity.vy * 0.3 + dy * 0.7;
         rotateAround(orbit.pivot, dx, dy);
         pivotMarker.scale.setScalar(screenScale(orbit.pivot) * 0.006);
         requestRender();
@@ -2701,7 +2720,7 @@ export function BimCanvas(props: BimCanvasProps) {
       applyLighting(current.display.environment);
       controls = new OrbitControls(camera, renderer.domElement);
       controls.enableDamping = true;
-      controls.dampingFactor = 0.055;
+      controls.dampingFactor = 0.045;
       // Left button orbits about the picked point (see rotateAround); middle
       // and right drag pan; the wheel zooms towards the cursor.
       controls.mouseButtons = {
@@ -2714,10 +2733,9 @@ export function BimCanvas(props: BimCanvasProps) {
         markInteraction();
         requestRender();
       });
-      // Lower raster resolution while orbiting to keep 4K screens responsive.
       controls.addEventListener("start", () => {
         flight = null;
-        setQuality(Math.min(maxPixelRatio, 1));
+        setQuality(maxPixelRatio);
         requestRender();
       });
       controls.addEventListener("end", () => {
