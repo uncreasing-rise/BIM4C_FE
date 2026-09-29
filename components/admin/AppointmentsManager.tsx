@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { CalendarClock, ExternalLink, Loader2 } from "lucide-react";
+import { CalendarClock, ExternalLink, Loader2, Video } from "lucide-react";
 import { toast } from "sonner";
 import { adminRequest } from "@/features/admin/api/http-client";
 import { Button } from "@/components/ui/button";
@@ -87,6 +87,8 @@ export function AppointmentsManager() {
   const [search, setSearch] = useState("");
   const [busyId, setBusyId] = useState<string | null>(null);
   const [confirming, setConfirming] = useState<string | null>(null);
+  const [googleConnected, setGoogleConnected] = useState<boolean | null>(null);
+  const [connectingGoogle, setConnectingGoogle] = useState(false);
 
   const fetchAll = useCallback(
     () =>
@@ -96,12 +98,59 @@ export function AppointmentsManager() {
       }),
     [],
   );
+
+  const checkGoogleStatus = useCallback(() => {
+    adminRequest<{ data?: { connected?: boolean } }>("appointments/google/status")
+      .then((res) => {
+        setGoogleConnected(Boolean(res?.data?.connected));
+      })
+      .catch(() => {
+        setGoogleConnected(false);
+      });
+  }, []);
+
   useEffect(() => {
     fetchAll().catch(() => {
       toast.error("Không thể tải lịch tư vấn.");
       setLoaded(true);
     });
-  }, [fetchAll]);
+    checkGoogleStatus();
+  }, [fetchAll, checkGoogleStatus]);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("google_connected") === "true") {
+        toast.success(
+          "Kết nối Google Calendar thành công! Các lịch hẹn xác nhận tiếp theo sẽ tự động sinh link Google Meet.",
+        );
+        window.history.replaceState({}, document.title, window.location.pathname);
+        checkGoogleStatus();
+      }
+    }
+  }, [checkGoogleStatus]);
+
+  async function handleConnectGoogle() {
+    setConnectingGoogle(true);
+    try {
+      const res = await adminRequest<{ data?: { url?: string } }>(
+        "appointments/google/auth-url",
+      );
+      if (res?.data?.url) {
+        window.location.href = res.data.url;
+      } else {
+        toast.error("Không nhận được đường dẫn xác thực từ máy chủ.");
+      }
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Không thể lấy link kết nối Google.",
+      );
+    } finally {
+      setConnectingGoogle(false);
+    }
+  }
 
   const counts = useMemo(() => {
     const c: Record<string, number> = { ALL: appointments.length };
@@ -166,6 +215,37 @@ export function AppointmentsManager() {
         description="Khách tự đề xuất ngày, giờ và thời lượng. Kiểm tra yêu cầu rồi xác nhận để tạo lịch họp; email gửi theo ngôn ngữ khách đã chọn."
         icon={CalendarClock}
         bodyClassName="p-0"
+        actions={
+          <div className="flex items-center gap-2">
+            {googleConnected === true ? (
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700 ring-1 ring-inset ring-emerald-600/20">
+                <span className="size-1.5 rounded-full bg-emerald-500" />
+                Google Calendar: Đã kết nối
+              </span>
+            ) : googleConnected === false ? (
+              <div className="flex items-center gap-2">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-3 py-1 text-xs font-medium text-amber-800 ring-1 ring-inset ring-amber-600/20">
+                  <span className="size-1.5 rounded-full bg-amber-500" />
+                  Google Calendar: Chưa kết nối
+                </span>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="gap-1.5 border-teal-600 text-teal-700 hover:bg-teal-50"
+                  disabled={connectingGoogle}
+                  onClick={handleConnectGoogle}
+                >
+                  {connectingGoogle ? (
+                    <Loader2 className="size-3.5 animate-spin" />
+                  ) : (
+                    <Video className="size-3.5" />
+                  )}
+                  Kết nối Google Calendar
+                </Button>
+              </div>
+            ) : null}
+          </div>
+        }
       >
         <div className="px-3 pt-3">
           <SearchBox
