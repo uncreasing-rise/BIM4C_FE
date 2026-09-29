@@ -366,12 +366,15 @@ export function BimCanvas(props: BimCanvasProps) {
     /** Classic keeps the original lights and colours; the others use IBL. */
     const applyLighting = (environment: DisplaySettings["environment"]) => {
       const classic = environment === "classic";
-      ambient.intensity = classic ? 0.48 : 0;
+      ambient.intensity = classic ? 0.48 : 0.06;
       hemisphere.color.set(classic ? 0xffffff : 0xf8fafc);
       hemisphere.groundColor.set(classic ? 0x64748b : 0x7c8594);
-      hemisphere.intensity = classic ? 0.28 : 0.55;
-      sun.intensity = classic ? 0.82 : 1.35;
-      if (renderer) renderer.toneMapping = classic ? THREE.NoToneMapping : THREE.NeutralToneMapping;
+      hemisphere.intensity = classic ? 0.28 : 0.6;
+      sun.intensity = classic ? 0.82 : 1.4;
+      if (renderer) {
+        renderer.toneMapping = classic ? THREE.NoToneMapping : THREE.ACESFilmicToneMapping;
+        renderer.toneMappingExposure = classic ? 1.0 : 1.08;
+      }
     };
     let grid: THREE.GridHelper | null = null;
 
@@ -2698,7 +2701,7 @@ export function BimCanvas(props: BimCanvasProps) {
       applyLighting(current.display.environment);
       controls = new OrbitControls(camera, renderer.domElement);
       controls.enableDamping = true;
-      controls.dampingFactor = 0.08;
+      controls.dampingFactor = 0.055;
       // Left button orbits about the picked point (see rotateAround); middle
       // and right drag pan; the wheel zooms towards the cursor.
       controls.mouseButtons = {

@@ -35,8 +35,8 @@ export interface DisplaySettings {
 
 // The default is the original look: flat background, direct lights, no effects.
 export const DEFAULT_DISPLAY: DisplaySettings = {
-  edges: false,
-  ambientOcclusion: false,
+  edges: true,
+  ambientOcclusion: true,
   projection: "perspective",
   environment: "light",
   grid: true,
@@ -50,7 +50,7 @@ export const ENVIRONMENTS: Record<
   { top: string; bottom: string; grid: [number, number]; edge: number; ibl: number }
 > = {
   classic: { top: "#e1e8f0", bottom: "#e1e8f0", grid: [0x64748b, 0xcbd5e1], edge: 0x1e293b, ibl: 0 },
-  light: { top: "#f8fafc", bottom: "#cbd5e1", grid: [0x94a3b8, 0xd8dee7], edge: 0x1e293b, ibl: 0.45 },
+  light: { top: "#f8fafc", bottom: "#cbd5e1", grid: [0x94a3b8, 0xd8dee7], edge: 0x1e293b, ibl: 0.6 },
   neutral: { top: "#e5e7eb", bottom: "#9ca3af", grid: [0x6b7280, 0xc4c8ce], edge: 0x111827, ibl: 0.4 },
   dark: { top: "#1e293b", bottom: "#020617", grid: [0x475569, 0x1e293b], edge: 0x020617, ibl: 0.35 },
 };
@@ -71,7 +71,7 @@ const EdgeShader = {
     cameraNear: { value: 0.1 },
     cameraFar: { value: 1000 },
     edgeColor: { value: new THREE.Color(0x1e293b) },
-    strength: { value: 0.6 },
+    strength: { value: 0.65 },
   },
   vertexShader: /* glsl */ `
     varying vec2 vUv;
@@ -212,9 +212,9 @@ export class ViewerPipeline {
     this.renderPass = new RenderPass(scene, perspective);
     this.aoPass = new GTAOPass(scene, perspective, 1, 1);
     this.aoPass.setGBuffer(depthTexture, this.gbuffer.texture);
-    this.aoPass.blendIntensity = 0.85;
-    this.aoPass.updateGtaoMaterial({ radius: 0.6, distanceExponent: 1.5, thickness: 1.5, scale: 1, samples: 16 });
-    this.aoPass.updatePdMaterial({ lumaPhi: 10, depthPhi: 2, normalPhi: 3, radius: 6, rings: 2, samples: 16 });
+    this.aoPass.blendIntensity = 0.9;
+    this.aoPass.updateGtaoMaterial({ radius: 0.75, distanceExponent: 1.5, thickness: 2.0, scale: 1, samples: 16 });
+    this.aoPass.updatePdMaterial({ lumaPhi: 10, depthPhi: 2, normalPhi: 3, radius: 8, rings: 2, samples: 16 });
     this.edgePass = new ShaderPass(EdgeShader);
     this.edgePass.uniforms.tNormal.value = this.gbuffer.texture;
     this.edgePass.uniforms.tDepth.value = depthTexture;
