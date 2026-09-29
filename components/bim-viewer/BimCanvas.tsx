@@ -1145,10 +1145,10 @@ export function BimCanvas(props: BimCanvasProps) {
       node.dataset.anchor = `${anchor.x},${anchor.y},${anchor.z}`;
       // Results win a place over point coordinates when labels would overlap.
       node.dataset.priority = tone === "result" ? "1" : "0";
-      node.className = `pointer-events-none absolute left-0 top-0 whitespace-pre rounded-md px-2 py-1 font-mono text-[11px] font-semibold shadow ${
+      node.className = `pointer-events-none absolute left-0 top-0 whitespace-pre rounded-md px-2 py-1 font-mono text-xs font-semibold shadow-lg ring-1 ${
         tone === "result"
-          ? "bg-slate-950/90 text-teal-200"
-          : "bg-white/95 text-slate-900"
+          ? "bg-slate-950 text-teal-100 ring-white/20"
+          : "bg-white text-slate-900 ring-slate-900/25"
       }`;
       node.textContent = text;
       labels.appendChild(node);
@@ -2866,14 +2866,14 @@ export function BimCanvas(props: BimCanvasProps) {
       <div
         ref={tooltipRef}
         hidden
-        className="pointer-events-none absolute left-0 top-0 z-20 rounded bg-slate-950/90 px-2 py-1 font-mono text-[11px] text-white"
+        className="pointer-events-none absolute left-0 top-0 z-20 rounded-md border border-white/20 bg-slate-950 px-2 py-1 font-mono text-xs font-semibold text-white shadow-lg"
         aria-hidden="true"
       />
       <div
         ref={readoutRef}
         role="status"
         aria-live="off"
-        className="pointer-events-none absolute bottom-2 left-1/2 z-20 max-w-[calc(100%-1rem)] -translate-x-1/2 whitespace-pre rounded-lg bg-slate-950/85 px-3 py-2 font-mono text-[11px] leading-5 text-slate-100 shadow-lg data-[empty=true]:font-sans data-[empty=true]:text-slate-300"
+        className="pointer-events-none absolute bottom-2 left-1/2 z-20 max-w-[calc(100%-1rem)] -translate-x-1/2 whitespace-pre rounded-lg border border-white/20 bg-slate-950 px-3 py-2 font-mono text-[13px] font-semibold leading-5 text-white shadow-lg data-[empty=true]:font-sans data-[empty=true]:text-xs data-[empty=true]:font-normal data-[empty=true]:text-slate-200"
       />
       {building > 0 && !error && (
         <div

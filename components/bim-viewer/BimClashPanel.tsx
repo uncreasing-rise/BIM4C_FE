@@ -213,7 +213,7 @@ export function BimClashPanel({
                   }}
                 />
                 <span className="min-w-0 flex-1 truncate">{type}</span>
-                <span className="text-slate-500">{count}</span>
+                <span className="text-slate-400">{count}</span>
               </label>
             ))}
           </div>
@@ -355,7 +355,7 @@ export function BimClashPanel({
             <ol className="max-h-32 space-y-1 overflow-y-auto px-2 pb-2 text-[11px] text-slate-300">
               {[...runs].reverse().map((run) => (
                 <li key={run.at}>
-                  <span className="text-slate-500">{time(run.at)}</span> · {run.label}
+                  <span className="text-slate-400">{time(run.at)}</span> · {run.label}
                   <br />
                   {s.runLine(run.total, run.added, run.active, run.resolved)}
                 </li>
@@ -436,14 +436,14 @@ export function BimClashPanel({
               </button>
             </div>
           )}
-          <p className="text-[11px] text-slate-500">{s.keys}</p>
+          <p className="text-[11px] text-slate-400">{s.keys}</p>
           {!filtered.length && <p className="text-slate-400">{s.noMatch}</p>}
           <ul className="space-y-2">
             {shown.map((group) => (
               <li key={group.key} className="rounded-lg border border-white/10">
                 <p className="truncate border-b border-white/10 px-2 py-1 font-semibold text-red-200" title={group.label}>
                   {groupBy === "proximity" ? s.area(group.label) : group.label}{" "}
-                  <span className="font-normal text-slate-500">· {groups.find((g) => g.key === group.key)?.clashes.length}</span>
+                  <span className="font-normal text-slate-400">· {groups.find((g) => g.key === group.key)?.clashes.length}</span>
                 </p>
                 <ul>
                   {group.clashes.map((c) => {
@@ -463,15 +463,15 @@ export function BimClashPanel({
                             {open ? <ChevronDown className="size-3.5" /> : <ChevronRight className="size-3.5" />}
                           </button>
                           <button type="button" onClick={() => onFocus(c)} aria-pressed={active} className="flex min-w-0 flex-1 items-center gap-1.5 text-left">
-                            <Crosshair className={`size-3.5 shrink-0 ${active ? "text-teal-300" : "text-slate-500"}`} />
-                            <span className={`shrink-0 rounded px-1 text-[10px] ${SEVERITY_TONE[c.severity]}`}>{s.severities[c.severity]}</span>
+                            <Crosshair className={`size-3.5 shrink-0 ${active ? "text-teal-300" : "text-slate-400"}`} />
+                            <span className={`shrink-0 rounded px-1 text-[11px] ${SEVERITY_TONE[c.severity]}`}>{s.severities[c.severity]}</span>
                             {newIds.has(c.id) && (
-                              <span className="shrink-0 rounded bg-fuchsia-500/25 px-1 text-[10px] text-fuchsia-100">{s.newBadge}</span>
+                              <span className="shrink-0 rounded bg-fuchsia-500/25 px-1 text-[11px] text-fuchsia-100">{s.newBadge}</span>
                             )}
                             <span className="min-w-0 flex-1 truncate text-green-200" title={c.description}>
                               {groupBy === "elementA" ? (c.title.split(" × ")[1] ?? c.title) : c.title}
                             </span>
-                            {entry?.assignee && <span className="max-w-20 shrink-0 truncate text-[10px] text-sky-200">@{entry.assignee}</span>}
+                            {entry?.assignee && <span className="max-w-20 shrink-0 truncate text-[11px] text-sky-200">@{entry.assignee}</span>}
                             {c.kind === "clearance" && c.distance !== undefined && (
                               <span className="shrink-0 font-mono text-slate-400">
                                 {s.gap} {mm(c.distance)} mm
@@ -513,7 +513,7 @@ export function BimClashPanel({
                               />
                             </label>
                             {entry?.history.length ? (
-                              <ol className="max-h-28 space-y-0.5 overflow-y-auto text-[10px] text-slate-400" aria-label={s.history}>
+                              <ol className="max-h-28 space-y-0.5 overflow-y-auto text-[11px] text-slate-400" aria-label={s.history}>
                                 {[...entry.history].reverse().map((h, i) => (
                                   <li key={i}>
                                     {time(h.at)}
@@ -533,7 +533,7 @@ export function BimClashPanel({
                   })}
                 </ul>
                 {models.length > 1 && groupBy === "elementA" && (
-                  <p className="border-t border-white/5 px-2 py-0.5 text-[10px] text-slate-500">
+                  <p className="border-t border-white/5 px-2 py-0.5 text-[11px] text-slate-400">
                     {nameOf(group.clashes[0].modelA)} × {nameOf(group.clashes[0].modelB)}
                   </p>
                 )}

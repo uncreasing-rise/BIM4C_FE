@@ -73,7 +73,7 @@ export function BimShortcutsDialog({ open, onClose }: { open: boolean; onClose: 
                 <div key={input} className="flex items-start justify-between gap-3">
                   <dt className="text-slate-300">{action}</dt>
                   <dd>
-                    <kbd className="whitespace-nowrap rounded border border-white/20 bg-white/5 px-1.5 py-0.5 font-mono text-[10px]">
+                    <kbd className="whitespace-nowrap rounded border border-white/20 bg-white/5 px-1.5 py-0.5 font-mono text-[11px]">
                       {input}
                     </kbd>
                   </dd>

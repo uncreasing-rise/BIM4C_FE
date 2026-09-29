@@ -112,7 +112,7 @@ export function BimQuantitiesPanel({
       </div>
       <div className="min-h-0 flex-1 overflow-auto px-3">
         <table className="w-full border-collapse text-left">
-          <thead className="sticky top-0 bg-slate-950 text-[10px] uppercase tracking-wider text-slate-400">
+          <thead className="sticky top-0 bg-slate-950 text-[11px] uppercase tracking-wider text-slate-400">
             <tr>
               <th className="py-2 pr-2 font-semibold">{s.groups[group]}</th>
               <th className="px-1 py-2 text-right font-semibold">{s.count}</th>

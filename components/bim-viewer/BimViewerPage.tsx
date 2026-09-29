@@ -2203,7 +2203,7 @@ export function BimViewerPage() {
           )}
         </div>
       </main>
-      <footer className="flex shrink-0 flex-wrap items-center justify-between gap-x-3 gap-y-1 border-t border-white/10 px-3 py-2 text-[10px] text-slate-400">
+      <footer className="flex shrink-0 flex-wrap items-center justify-between gap-x-3 gap-y-1 border-t border-white/10 px-3 py-2 text-[11px] text-slate-400">
         <span>
           {elementCount} {v.performance.elements}
           <span className="hidden sm:inline">

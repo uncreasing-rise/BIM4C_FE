@@ -65,7 +65,7 @@ export function BimLevelsPanel({
               >
                 <button type="button" onClick={() => onPlan(level)} className="min-w-0 flex-1 text-left" title={s.plan}>
                   <span className={`block truncate font-semibold ${active ? "text-teal-200" : "text-slate-100"}`}>{level.name}</span>
-                  <span className="block truncate font-mono text-[10px] text-slate-400">
+                  <span className="block truncate font-mono text-[11px] text-slate-400">
                     {s.elevation} {formatLength(level.bottom + elevationOffset, locale, 2)} m · {level.ids.length} {s.elements}
                     {multipleModels ? ` · ${level.modelName}` : ""}
                   </span>

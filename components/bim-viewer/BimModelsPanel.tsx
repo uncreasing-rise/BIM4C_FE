@@ -111,7 +111,7 @@ export function BimModelsPanel(p: Props) {
           onChange={(e) => { setQuery(e.target.value); setResultLimit(100); }}
           placeholder={ui(locale).bimTree.searchPlaceholder}
           aria-label={ui(locale).bimTree.searchLabel}
-          className="min-w-0 flex-1 bg-transparent text-xs outline-none placeholder:text-slate-500"
+          className="min-w-0 flex-1 bg-transparent text-xs outline-none placeholder:text-slate-400"
         />
       </label>
       <div className="mb-3 grid grid-cols-2 gap-2">
@@ -208,7 +208,7 @@ export function BimModelsPanel(p: Props) {
                   type="button"
                   onClick={() => p.onDeleteSearchSet(set.id)}
                   aria-label={`${ui(locale).bimSearchSets.remove} ${set.name}`}
-                  className="grid size-7 place-items-center rounded text-slate-500 opacity-0 hover:text-red-300 group-hover:opacity-100 focus-visible:opacity-100"
+                  className="grid size-7 place-items-center rounded text-slate-400 opacity-0 hover:text-red-300 group-hover:opacity-100 focus-visible:opacity-100"
                 >
                   <X className="size-3.5" />
                 </button>
@@ -216,7 +216,7 @@ export function BimModelsPanel(p: Props) {
             ))}
           </ul>
         ) : (
-          <p className="text-[11px] text-slate-500">{ui(locale).bimSearchSets.empty}</p>
+          <p className="text-[11px] text-slate-400">{ui(locale).bimSearchSets.empty}</p>
         )}
       </div>
       {(query || discipline !== "all" || storey !== "all") && (
@@ -235,7 +235,7 @@ export function BimModelsPanel(p: Props) {
                 <span className="block truncate font-semibold">
                   {element.name || element.ifcType}
                 </span>
-                <span className="block truncate text-[10px] text-slate-400">
+                <span className="block truncate text-[11px] text-slate-400">
                   {element.ifcType} · {element.storey || "No storey"} ·{" "}
                   {model.model.filename}
                 </span>
@@ -264,13 +264,13 @@ export function BimModelsPanel(p: Props) {
                     title={m.model.filename}
                   >
                     {index === 0 && (
-                      <span className="mr-1 rounded bg-teal-500/20 px-1 text-[10px] text-teal-300">
+                      <span className="mr-1 rounded bg-teal-500/20 px-1 text-[11px] text-teal-300">
                         {ui(locale).bimModelsPanel.base}
                       </span>
                     )}
                     {m.model.filename}
                   </p>
-                  <p className="text-[10px] text-slate-400">
+                  <p className="text-[11px] text-slate-400">
                     {m.model.schema} · {m.model.elements.length}{" "}
                     {ui(locale).bimModelsPanel.elements}
                   </p>
@@ -294,7 +294,7 @@ export function BimModelsPanel(p: Props) {
                   {m.visible ? (
                     <Eye className="size-4 text-teal-300" />
                   ) : (
-                    <EyeOff className="size-4 text-slate-500" />
+                    <EyeOff className="size-4 text-slate-400" />
                   )}
                 </button>
                 <button
@@ -327,9 +327,9 @@ export function BimModelsPanel(p: Props) {
                   <Trash2 className="size-4" />
                 </button>
               </div>
-              <dl className="mt-2 space-y-1 font-mono text-[10px] text-slate-300">
+              <dl className="mt-2 space-y-1 font-mono text-[11px] text-slate-300">
                 <div>
-                  <dt className="inline text-slate-500">
+                  <dt className="inline text-slate-400">
                     {ui(locale).bimModelsPanel.fileOrigin}
                   </dt>
                   <dd className="inline">
@@ -338,7 +338,7 @@ export function BimModelsPanel(p: Props) {
                 </div>
                 {m.model.mapConversion && (
                   <div>
-                    <dt className="inline text-slate-500">
+                    <dt className="inline text-slate-400">
                       {ui(locale).bimModelsPanel.georeference}
                     </dt>
                     <dd className="inline">
@@ -385,7 +385,7 @@ export function BimModelsPanel(p: Props) {
                         </button>
                       ))}
                     </div>
-                    <p className="text-[10px] text-slate-500">
+                    <p className="text-[11px] text-slate-400">
                       {ui(locale).bimModelsPanel.extraMoveAlongIFCAxes}
                     </p>
                     <div className="grid grid-cols-4 gap-1">
@@ -398,7 +398,7 @@ export function BimModelsPanel(p: Props) {
                         ] as const
                       ).map(([field, label]) => (
                         <label key={field} className="grid gap-0.5">
-                          <span className="text-[10px] text-slate-400">
+                          <span className="text-[11px] text-slate-400">
                             {label}
                           </span>
                           <input
@@ -456,7 +456,7 @@ function CacheLine() {
   }, []);
   if (!size?.count) return null;
   return (
-    <p className="mt-3 flex items-start gap-2 text-[10px] leading-relaxed text-slate-400">
+    <p className="mt-3 flex items-start gap-2 text-[11px] leading-relaxed text-slate-400">
       <span className="flex-1">{s.cacheLine(size.count, Math.max(1, Math.round(size.bytes / 1048576)))}</span>
       <button
         type="button"

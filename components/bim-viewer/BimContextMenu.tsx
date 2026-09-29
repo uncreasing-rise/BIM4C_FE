@@ -123,7 +123,7 @@ export function BimContextMenu({ x, y, element, selectionCount, canShowAll, onAc
           <Crosshair className="size-3.5 shrink-0 text-teal-300" />
           <div className="min-w-0">
             <p className="truncate font-semibold">{element.name}</p>
-            <p className="truncate font-mono text-[10px] text-slate-400">
+            <p className="truncate font-mono text-[11px] text-slate-400">
               {element.ifcType}
               {selectionCount > 1 ? ` · +${selectionCount - 1}` : ""}
             </p>
@@ -144,7 +144,7 @@ export function BimContextMenu({ x, y, element, selectionCount, canShowAll, onAc
           >
             <Icon className="size-3.5 shrink-0 text-slate-400" />
             <span className="flex-1">{label}</span>
-            {key && <kbd className="rounded border border-white/15 px-1 font-mono text-[10px] text-slate-400">{key}</kbd>}
+            {key && <kbd className="rounded border border-white/15 px-1 font-mono text-[11px] text-slate-400">{key}</kbd>}
           </button>
         </div>
       ))}

@@ -596,7 +596,7 @@ export function BimControlsOverlay(p: Props) {
                 </button>
               ))}
             </div>
-            <p className="mt-1 text-[10px] leading-relaxed text-slate-500">{o.lockHelp}</p>
+            <p className="mt-1 text-[11px] leading-relaxed text-slate-400">{o.lockHelp}</p>
           </fieldset>
           <div className="grid grid-cols-2 gap-2">
             <label className="block">
@@ -727,10 +727,10 @@ export function BimControlsOverlay(p: Props) {
                         <Trash2 className="size-3.5" />
                       </button>
                     </div>
-                    <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5 font-mono text-[11px]">
+                    <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5 font-mono text-xs text-slate-100">
                       {details}
                     </dl>
-                    <p className="mt-1 text-[10px] text-slate-500">
+                    <p className="mt-1 text-[11px] text-slate-400">
                       {o.snap}:{" "}
                       {m.points.map((pt) => snapLabel[pt.snap]).join(" → ")}
                     </p>
@@ -875,7 +875,7 @@ export function BimControlsOverlay(p: Props) {
               />
             </label>
           </div>
-          <p className="text-[10px] leading-relaxed text-slate-500">{ui(locale).bimClash.issues.bcfHint}</p>
+          <p className="text-[11px] leading-relaxed text-slate-400">{ui(locale).bimClash.issues.bcfHint}</p>
           {p.issues.map((issue) => {
             const s = ui(locale).bimClash.issues;
             const snapshot = p.issueSnapshots[issue.id];
@@ -893,7 +893,7 @@ export function BimControlsOverlay(p: Props) {
                       <img src={snapshot} alt="" className="mb-1.5 aspect-video w-full rounded object-cover" />
                     )}
                     <span className="block font-semibold">{issue.title}</span>
-                    <span className="block text-[10px] text-slate-400">
+                    <span className="block text-[11px] text-slate-400">
                       <span className={issue.status === "resolved" ? "text-emerald-300" : "text-amber-300"}>
                         {s.status[issue.status]}
                       </span>
@@ -1009,7 +1009,7 @@ export function BimControlsOverlay(p: Props) {
                   onClick={() => p.onApplySelectionSet(set)}
                 >
                   {set.name}
-                  <span className="ml-2 text-[10px] text-slate-400">{ui(locale).bimControlsOverlay.elementCount(set.guids.length)}</span>
+                  <span className="ml-2 text-[11px] text-slate-400">{ui(locale).bimControlsOverlay.elementCount(set.guids.length)}</span>
                 </button>
                 <button
                   type="button"

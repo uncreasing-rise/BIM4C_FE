@@ -56,11 +56,11 @@ export function BimSpatialTree(props: Props) {
       <summary
         className={`group flex cursor-pointer list-none items-center gap-1 rounded px-1 py-1 hover:bg-white/5 [&::-webkit-details-marker]:hidden ${allHidden ? "opacity-50" : ""}`}
       >
-        <ChevronRight className={`size-3.5 shrink-0 text-slate-500 transition-transform ${open ? "rotate-90" : ""}`} />
+        <ChevronRight className={`size-3.5 shrink-0 text-slate-400 transition-transform ${open ? "rotate-90" : ""}`} />
         <span className="min-w-0 flex-1 truncate text-slate-200" title={node.name}>
           {node.name}
         </span>
-        <span className="shrink-0 font-mono text-[10px] text-slate-500">{node.count}</span>
+        <span className="shrink-0 font-mono text-[11px] text-slate-400">{node.count}</span>
         <span className="flex shrink-0 opacity-60 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
           <RowAction label={`${s.selectBranch} ${node.name}`} onClick={() => onSelectMany(node.ids)}>
             <MousePointerClick className="size-3.5" />
@@ -100,7 +100,7 @@ export function BimSpatialTree(props: Props) {
                   <span className={`block truncate ${selectedId === element.id ? "text-teal-200" : ""}`}>
                     {element.name || element.ifcType}
                   </span>
-                  <span className="block truncate text-[10px] text-slate-500">{element.ifcType}</span>
+                  <span className="block truncate text-[11px] text-slate-400">{element.ifcType}</span>
                 </button>
                 <span className={`transition-opacity group-hover:opacity-100 group-focus-within:opacity-100 ${isHidden ? "" : "opacity-0"}`}>
                   <RowAction

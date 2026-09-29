@@ -51,7 +51,7 @@ export function BimVisibilityBar({
         onClick={onShowAll}
         className="shrink-0 rounded-full border border-white/20 px-2.5 py-1 hover:bg-white/10"
       >
-        {s.showAll} <kbd className="ml-1 font-mono text-[10px] text-slate-400">U</kbd>
+        {s.showAll} <kbd className="ml-1 font-mono text-[11px] text-slate-400">U</kbd>
       </button>
     </div>
   );

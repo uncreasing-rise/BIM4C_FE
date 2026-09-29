@@ -108,13 +108,13 @@ export function BimPropertyInspector({
                 type="button"
                 onClick={() => copy(e.guid)}
                 title={s.copyValue}
-                className="group flex max-w-full items-center gap-1 font-mono text-[10px] text-slate-300 hover:text-white"
+                className="group flex max-w-full items-center gap-1 font-mono text-[11px] text-slate-300 hover:text-white"
               >
                 <span className="truncate">{e.guid}</span>
                 <Copy className="size-3 shrink-0 opacity-0 group-hover:opacity-100" />
               </button>
             ) : (
-              <p className="font-mono text-[10px]">{unknown}</p>
+              <p className="font-mono text-[11px]">{unknown}</p>
             )}
             <p>
               {v.storey}: {e.storey || unknown}
@@ -168,12 +168,12 @@ export function BimPropertyInspector({
                 {ui(locale).bimPropertyInspector.coordinatesIFCM}
               </h4>
               <p
-                className="mb-2 truncate text-[10px] text-slate-400"
+                className="mb-2 truncate text-[11px] text-slate-400"
                 title={coordinates.modelName}
               >
                 {ui(locale).bimPropertyInspector.model}: {coordinates.modelName}
               </p>
-              <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5 font-mono text-[11px]">
+              <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5 font-mono text-xs text-slate-100">
                 {(["X", "Y", "Z"] as const).map((axis, i) => (
                   <React.Fragment key={axis}>
                     <dt className="text-slate-400">
@@ -207,7 +207,7 @@ export function BimPropertyInspector({
                   </>
                 )}
               </dl>
-              <p className="mt-2 text-[10px] text-slate-500">
+              <p className="mt-2 text-[11px] text-slate-400">
                 {ui(locale).bimPropertyInspector.centreAndElevationsComeFrom}
               </p>
             </div>
@@ -235,7 +235,7 @@ export function BimPropertyInspector({
                     onChange={(event) => setFilter(event.target.value)}
                     placeholder={s.searchProperties}
                     aria-label={s.searchProperties}
-                    className="min-w-0 flex-1 bg-transparent outline-none placeholder:text-slate-500"
+                    className="min-w-0 flex-1 bg-transparent outline-none placeholder:text-slate-400"
                   />
                   {filter && (
                     <button type="button" onClick={() => setFilter("")} aria-label={ui(locale).bimShortcuts.close}>
@@ -302,7 +302,7 @@ export function BimPropertyInspector({
                     )}
                   </dl>
                   {e.dimensionsSource === "bounds" && (
-                    <p className="mt-2 text-[10px] text-slate-400">
+                    <p className="mt-2 text-[11px] text-slate-400">
                       {
                         ui(locale).bimPropertyInspector
                           .boundingDimensionsAreNotQuantities
