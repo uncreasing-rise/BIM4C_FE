@@ -187,7 +187,7 @@ export function arcThrough(points: MeasurementPoint[]) {
   const n = cross3(ab, ac);
   const n2 = n[0] * n[0] + n[1] * n[1] + n[2] * n[2];
   const scale = Math.max(dot3(ab, ab), dot3(ac, ac));
-  if (n2 < 1e-12 * scale * scale) return null;
+  if (!Number.isFinite(n2) || scale < 1e-18 || n2 < 1e-12 * scale * scale) return null;
   // Circumcentre: A + (|AC|² (n × AB) + |AB|² (AC × n)) / (2 |n|²).
   const p = cross3(n, ab), q = cross3(ac, n);
   const lac = dot3(ac, ac), lab = dot3(ab, ab);

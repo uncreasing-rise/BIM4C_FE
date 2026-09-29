@@ -1146,6 +1146,14 @@ export function BimViewerPage() {
     () => (appearance.hidden.size ? new Set([...hiddenElements, ...appearance.hidden]) : hiddenElements),
     [appearance.hidden, hiddenElements],
   );
+  const quantityHidden = useMemo(() => {
+    const hidden = new Set(canvasHidden);
+    for (const model of models)
+      for (const element of model.model.elements)
+        if (!model.visible || !layers[element.discipline] ||
+          (isolated && !isolated.has(element.id) && !selectedElementIds.has(element.id))) hidden.add(element.id);
+    return hidden;
+  }, [canvasHidden, models, layers, isolated, selectedElementIds]);
   const colorOverrides = useMemo(() => {
     if (clashColors && activeTool === "clashes") return clashColors;
     if (!comparison) return appearance.colors.size ? appearance.colors : null;
@@ -1421,6 +1429,9 @@ export function BimViewerPage() {
   };
 
   const onMeasurePoint = (point: MeasurePoint) => {
+    const previous = pendingPoints.at(-1);
+    const startsSegment = measureMode === "accumulate" && pendingPoints.length % 2 === 0;
+    if (previous && !startsSegment && Math.hypot(point.x - previous.x, point.y - previous.y, point.z - previous.z) < 1e-7) return;
     const points = [...pendingPoints, point];
     const open = isOpenEnded(measureMode);
     // Open-ended modes keep taking points until finished (Enter), up to the
@@ -1968,7 +1979,7 @@ export function BimViewerPage() {
             <BimQuantitiesPanel
               elements={allElements}
               geometryRevision={geometryRevision}
-              hiddenIds={hiddenElements}
+              hiddenIds={quantityHidden}
               selectedIds={selectedElementIds}
               onSelect={(ids) => {
                 selectIds(ids);

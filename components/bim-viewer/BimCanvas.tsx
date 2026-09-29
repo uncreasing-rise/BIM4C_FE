@@ -51,6 +51,7 @@ import {
   type Vec3,
 } from "./federation";
 import { buildFeatureEdges, edgeKey, snapPoint, type SnapResult } from "./snapping";
+import { placeElementMesh, syncPickingRoot } from "./model-meshes";
 import { findCircles, type CircleFeature } from "./circles";
 import type { MarkupShape } from "./markup";
 import { addGridBubbles, declutterGridBubbles, gridKey, showOneCopyPerAxis } from "./grid-bubbles";
@@ -232,6 +233,7 @@ const FLIGHT_MS = 480;
 interface ModelEntry {
   source: CanvasModel;
   group: THREE.Group;
+  picking: THREE.Group;
   markers: THREE.Group;
   /** Per-element meshes: always used for picking, drawn only when isolated. */
   meshes: Map<string, THREE.Mesh>;
@@ -506,17 +508,19 @@ export function BimCanvas(props: BimCanvasProps) {
         // Sizes are measured once: reading layout every frame would be slow.
         if (!node.dataset.size) node.dataset.size = `${node.offsetWidth},${node.offsetHeight}`;
         const [w, h] = node.dataset.size.split(",").map(Number);
+        const labelX = Math.max(w / 2 + 4, Math.min(viewport.width - w / 2 - 4, sx));
         let lift = 0;
         let spot: [number, number, number, number] | null = null;
         for (let step = 0; step < 4 && !spot; step++, lift += h + 3) {
-          const box: [number, number, number, number] = [sx - w / 2, sy - 1.3 * h - lift, sx + w / 2, sy - 0.3 * h - lift];
+          const top = Math.max(4, Math.min(viewport.height - h - 4, sy - 1.3 * h - lift));
+          const box: [number, number, number, number] = [labelX - w / 2, top, labelX + w / 2, top + h];
           if (!placed.some((p) => box[0] < p[2] && box[2] > p[0] && box[1] < p[3] && box[3] > p[1])) spot = box;
         }
         node.style.visibility = spot ? "visible" : "hidden";
         if (!spot) continue;
         placed.push(spot);
         // The box's bottom is 0.3 h above the anchor when not lifted.
-        node.style.transform = `translate(${sx}px, ${spot[3] + 0.3 * h}px) translate(-50%, -130%)`;
+        node.style.transform = `translate(${labelX}px, ${spot[3] + 0.3 * h}px) translate(-50%, -130%)`;
       }
     }
     // ---- Camera flights -------------------------------------------------
@@ -839,6 +843,7 @@ export function BimCanvas(props: BimCanvasProps) {
       entry.fragments = null;
       entry.meshes.clear();
       entry.group.clear();
+      entry.picking.clear();
       // Axes this file hid as duplicates show again from the remaining files.
       if (entry.ifcGrids) {
         entry.ifcGrids = undefined;
@@ -849,7 +854,7 @@ export function BimCanvas(props: BimCanvasProps) {
       const mesh = createElementMesh(element, materials, primitiveGeometries, { lazyNormals: pickOnly });
       for (const m of Array.isArray(mesh.material) ? mesh.material : [mesh.material]) m.clippingPlanes = activePlanes;
       if (pickOnly) mesh.layers.mask = PICK_ONLY;
-      entry.group.add(mesh);
+      placeElementMesh(mesh, entry.group, entry.picking, !pickOnly);
       entry.meshes.set(element.id, mesh);
       return mesh;
     };
@@ -947,7 +952,10 @@ export function BimCanvas(props: BimCanvasProps) {
         setBuilding((n) => n - 1);
       }
     };
+    let reconciledModels: CanvasModel[] | null = null;
     const reconcileModels = (models: CanvasModel[]) => {
+      if (models === reconciledModels) return;
+      reconciledModels = models;
       const keys = new Set(models.map((m) => m.key));
       for (const [key, entry] of entries)
         if (
@@ -968,7 +976,7 @@ export function BimCanvas(props: BimCanvasProps) {
           group.add(markers);
           group.name = source.key;
           federation.add(group);
-          entry = { source, group, markers, meshes: new Map(), batches: null, fragments: null, hydrated: false, ready: false };
+          entry = { source, group, picking: new THREE.Group(), markers, meshes: new Map(), batches: null, fragments: null, hydrated: false, ready: false };
           entries.set(source.key, entry);
           void buildEntry(entry).catch(() => {
             if (!disposed) setError(true);
@@ -985,6 +993,7 @@ export function BimCanvas(props: BimCanvasProps) {
         entry.group.visible = source.visible;
         entry.group.position.set(...source.placement.position);
         entry.group.rotation.set(0, source.placement.rotationY, 0);
+        syncPickingRoot(entry.group, entry.picking);
       }
       federation.updateMatrixWorld(true);
       invalidatePicking();
@@ -1071,6 +1080,7 @@ export function BimCanvas(props: BimCanvasProps) {
           // Fragments cannot move single elements: exploded, the element meshes draw instead.
           const drawn = entry.fragments ? next.explodeFactor > 0 : promoted || !batched;
           mesh.layers.mask = drawn ? DRAWN_AND_PICKABLE : PICK_ONLY;
+          placeElementMesh(mesh, entry.group, entry.picking, drawn);
           if (drawn && !mesh.geometry.getAttribute("normal")) mesh.geometry.computeVertexNormals();
           const overrideHex = next.colorOverrides?.get(id);
           const original = (overrideHex
@@ -1139,6 +1149,7 @@ export function BimCanvas(props: BimCanvasProps) {
         }
         entry.markers.visible =
           next.visibleLayers.clash && next.explodeFactor === 0;
+        syncPickingRoot(entry.group, entry.picking);
       }
       minimapDirty = true;
       federation.updateMatrixWorld(true);
@@ -1399,9 +1410,12 @@ export function BimCanvas(props: BimCanvasProps) {
         featureEdges: [isFeature(0), isFeature(1), isFeature(2)],
         hitPoint: hit.point.toArray() as Vec3,
         project: (p) => {
-          const [x, y] = toScreen(new THREE.Vector3(...p));
-          return [x, y];
+          const [x, y, visible] = toScreen(new THREE.Vector3(...p));
+          return visible ? [x, y] : [Infinity, Infinity];
         },
+        depth: (p) => view() instanceof THREE.PerspectiveCamera
+          ? -new THREE.Vector3(...p).applyMatrix4(view().matrixWorldInverse).z
+          : 1,
         pointer,
         tolerancePx: SNAP_TOLERANCE_PX,
         settings: current.snapSettings,
@@ -1422,6 +1436,17 @@ export function BimCanvas(props: BimCanvasProps) {
     };
 
     /** Surface hit under the pointer, snapped when measuring. */
+    const snapVisibilityRay = new THREE.Raycaster();
+    const snapVisible = (result: SnapResult) => {
+      const point = new THREE.Vector3(...result.point);
+      if (activePlanes.some((plane) => plane.distanceToPoint(point) < -1e-7)) return false;
+      const [x, y, onScreen] = toScreen(point);
+      if (!onScreen) return false;
+      snapVisibilityRay.setFromCamera(new THREE.Vector2(x / viewport.width * 2 - 1, 1 - y / viewport.height * 2), view());
+      const obstruction = pickTree().firstHit(snapVisibilityRay, activePlanes, isPickable);
+      const distance = point.distanceTo(snapVisibilityRay.ray.origin);
+      return !obstruction || obstruction.distance >= distance - Math.max(1e-5, distance * 1e-6);
+    };
     const pick = (clientX: number, clientY: number, snap: boolean) => {
       const pointer = castFrom(clientX, clientY);
       const started = performance.now();
@@ -1435,7 +1460,9 @@ export function BimCanvas(props: BimCanvasProps) {
           edge: undefined,
         };
       let best: { hit: Hit; result: SnapResult } | null = hit?.face ? { hit, result: snapHit(hit, pointer) } : null;
-      if (best?.result.kind !== "vertex") {
+      if (best && best.result.kind !== "face" && !snapVisible(best.result))
+        best.result = { point: best.hit.point.toArray() as Vec3, kind: "face", distance: Infinity };
+      {
         // Probe around the pointer: a corner or edge is found from just outside
         // the silhouette, or on a neighbouring element, as in Autodesk viewers.
         for (const [dx, dy] of SNAP_PROBES) {
@@ -1445,9 +1472,10 @@ export function BimCanvas(props: BimCanvasProps) {
           const result = snapHit(near, pointer);
           if (result.kind === "face") continue;
           if (
-            !best ||
+            (!best ||
             SNAP_PRIORITY[result.kind] < SNAP_PRIORITY[best.result.kind] ||
-            (result.kind === best.result.kind && result.distance < best.result.distance)
+            (result.kind === best.result.kind && result.distance < best.result.distance)) &&
+            snapVisible(result)
           )
             best = { hit: near, result };
         }
@@ -1456,16 +1484,6 @@ export function BimCanvas(props: BimCanvasProps) {
       if (!best)
         return hit && { hit, point: hit.point.clone(), kind: "face" as SnapKind, edge: undefined };
       const { result } = best;
-      if (result.kind === "edge" && result.edge) {
-        const closest = new THREE.Vector3();
-        ray.ray.distanceSqToSegment(
-          new THREE.Vector3(...result.edge[0]),
-          new THREE.Vector3(...result.edge[1]),
-          undefined,
-          closest,
-        );
-        result.point = closest.toArray() as Vec3;
-      }
       if (
         activePlanes.some(
           (plane) =>
@@ -1495,7 +1513,7 @@ export function BimCanvas(props: BimCanvasProps) {
     const measureTarget = (clientX: number, clientY: number) => {
       const picked = pick(clientX, clientY, current.measureMode !== "shortest");
       const normal = picked?.hit.face
-        ? (picked.hit.face.normal.clone().transformDirection(picked.hit.object.matrixWorld).toArray() as Vec3)
+        ? (picked.hit.face.normal.clone().applyNormalMatrix(new THREE.Matrix3().getNormalMatrix(picked.hit.object.matrixWorld)).toArray() as Vec3)
         : undefined;
       const anchor = rubberBandAnchor(current.measureMode, current.pendingPoints);
       const constraint = anchor && lockConstraint(current.measureLock, anchor.normal);
@@ -1983,7 +2001,7 @@ export function BimCanvas(props: BimCanvasProps) {
         const dx = e.clientX - orbit.x;
         const dy = e.clientY - orbit.y;
         if (!orbit.moved) {
-          if (Math.hypot(dx, dy) < 2) return;
+          if (Math.hypot(dx, dy) <= CLICK_TOLERANCE_PX) return;
           orbit.moved = true;
           pivotMarker.position.copy(orbit.pivot);
           pivotMarker.visible = true;
@@ -2091,6 +2109,7 @@ export function BimCanvas(props: BimCanvasProps) {
         current.onClipPlanesChange(clip);
         return;
       }
+      const draggedOrbit = orbit?.pointerId === e.pointerId && orbit.moved;
       if (orbit && e.pointerId === orbit.pointerId) endOrbit();
       const start = down.get(e.pointerId);
       down.delete(e.pointerId);
@@ -2098,6 +2117,7 @@ export function BimCanvas(props: BimCanvasProps) {
       if (!down.size) gesture = false;
       if (
         !start ||
+        draggedOrbit ||
         multi ||
         e.button !== 0 ||
         Math.hypot(e.clientX - start.x, e.clientY - start.y) >
@@ -2487,7 +2507,12 @@ export function BimCanvas(props: BimCanvasProps) {
       renderer.setRenderTarget(minimapTarget);
       renderer.setClearColor(0x0f172a, 1);
       renderer.clear();
-      renderer.render(scene, minimapCamera);
+      // Tool meshes are detached during normal rendering. The minimap is the
+      // one pass that needs them all, independently of Fragments' camera LOD.
+      const pickingRoots = [...entries.values()].map((entry) => entry.picking);
+      scene.add(...pickingRoots);
+      try { renderer.render(scene, minimapCamera); }
+      finally { for (const root of pickingRoots) root.removeFromParent(); }
       const pixels = new Uint8Array(MINIMAP_TEXELS * MINIMAP_TEXELS * 4);
       renderer.readRenderTargetPixels(minimapTarget, 0, 0, MINIMAP_TEXELS, MINIMAP_TEXELS, pixels);
       renderer.setRenderTarget(null);

@@ -76,6 +76,8 @@ export interface SnapInput {
   hitPoint: Vec3;
   /** Scene point → screen pixels. */
   project: (point: Vec3) => Vec2;
+  /** Positive clip W (camera depth); enables perspective-correct edge interpolation. */
+  depth?: (point: Vec3) => number;
   pointer: Vec2;
   tolerancePx: number;
   settings: SnapSettings;
@@ -109,7 +111,7 @@ export function snapPoint(input: SnapInput): SnapResult {
       const corner = triangle[i];
       const isFeature = featureEdges[i] || featureEdges[(i + 2) % 3];
       const d = screenDistance(project(corner), pointer);
-      if (d <= tolerancePx) {
+      if (isFeature && d <= tolerancePx) {
         if (!best || (isFeature && !best.isFeature) || (isFeature === best.isFeature && d < best.d)) {
           best = { point: corner, d, isFeature };
         }
@@ -139,10 +141,12 @@ export function snapPoint(input: SnapInput): SnapResult {
         ? Math.min(1, Math.max(0, ((pointer[0] - a[0]) * abx + (pointer[1] - a[1]) * aby) / lengthSq))
         : 0;
       const d = screenDistance([a[0] + abx * t, a[1] + aby * t], pointer);
-      // Screen-space t is a close approximation along the edge; the snapped
-      // point is always exactly on the 3D edge line.
+      const wa = input.depth?.(edge[0]) ?? 1;
+      const wb = input.depth?.(edge[1]) ?? 1;
+      if (wa <= 0 || wb <= 0) continue;
+      const worldT = t * wa / ((1 - t) * wb + t * wa);
       if (d <= tolerancePx && (!best || d < best.d))
-        best = { point: lerp(edge[0], edge[1], t), edge, d };
+        best = { point: lerp(edge[0], edge[1], worldT), edge, d };
     }
     if (best) return { point: best.point, kind: "edge", edge: best.edge, distance: best.d };
   }

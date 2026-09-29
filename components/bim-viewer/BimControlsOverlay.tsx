@@ -174,6 +174,8 @@ function downloadCsv(filename: string, rows: (string | number)[][]) {
 export function BimControlsOverlay(p: Props) {
   const { t, locale } = useLanguage();
   const [viewName, setViewName] = React.useState("");
+  const [advancedMeasure, setAdvancedMeasure] = React.useState(false);
+  const [measureCollapsed, setMeasureCollapsed] = React.useState(false);
   const [setName, setSetName] = React.useState("");
   const [issueTitle, setIssueTitle] = React.useState("");
   const [issueDescription, setIssueDescription] = React.useState("");
@@ -282,6 +284,9 @@ export function BimControlsOverlay(p: Props) {
     >
       <div className="mb-3 flex items-center justify-between gap-2 border-b border-white/10 pb-2">
         <h2 className="font-bold">{title}</h2>
+        {p.activeTool === "measure" && <button type="button" aria-expanded={!measureCollapsed} onClick={() => setMeasureCollapsed(!measureCollapsed)} className="ml-auto min-h-9 rounded-lg px-2 text-teal-200 hover:bg-white/10">
+          {measureCollapsed ? o.expandMeasure : o.collapseMeasure}
+        </button>}
         <button
           type="button"
           aria-label={ui(locale).bimControlsOverlay.closeTool}
@@ -291,6 +296,15 @@ export function BimControlsOverlay(p: Props) {
           <X className="size-4" />
         </button>
       </div>
+
+      {p.activeTool === "measure" && measureCollapsed && (
+        <div className="space-y-2" role="status">
+          <p>{o.modes[p.measureMode]} · {o.pointsPlaced(p.pendingCount)}</p>
+          <p className="text-slate-400">{o.modeHelp[p.measureMode]}</p>
+          {p.pendingCount > 0 && <button type="button" className={button} onClick={p.onUndoMeasurement}>{o.removeLastPoint}</button>}
+          {finishable && <button type="button" className={button} onClick={p.onFinishMeasurement}>{o.finishMeasurement}</button>}
+        </div>
+      )}
 
       {p.activeTool === "section" && (() => {
         const s = ui(locale).bimSection;
@@ -509,14 +523,14 @@ export function BimControlsOverlay(p: Props) {
         );
       })()}
 
-      {p.activeTool === "measure" && (
+      {p.activeTool === "measure" && !measureCollapsed && (
         <div className="space-y-3">
           <div
             className="grid grid-cols-2 gap-1"
             role="radiogroup"
             aria-label={o.measureType}
           >
-            {MEASURE_MODES.map((mode) => (
+            {MEASURE_MODES.filter((mode) => advancedMeasure || ["distance", "polyline", "angle", "polygon", p.measureMode].includes(mode)).map((mode) => (
               <button
                 key={mode}
                 type="button"
@@ -529,13 +543,22 @@ export function BimControlsOverlay(p: Props) {
               </button>
             ))}
           </div>
+          <button type="button" aria-expanded={advancedMeasure} onClick={() => setAdvancedMeasure(!advancedMeasure)} className="min-h-9 w-full rounded-lg border border-white/10 px-2 text-teal-200">
+            {advancedMeasure ? o.fewerMeasureModes : o.moreMeasureModes}
+          </button>
           <p className="leading-relaxed text-slate-400">{o.modeHelp[p.measureMode]}</p>
+          <p className="rounded-lg bg-white/5 p-2 leading-relaxed text-slate-300">
+            {o.measureGestures}
+          </p>
           {p.pendingCount > 0 && (
             <div role="status" className="space-y-2 rounded-lg border border-teal-400/30 bg-teal-500/10 p-2 text-teal-100">
               <p className="flex items-center gap-2">
                 <Crosshair className="size-4" />
                 {o.pointsPlaced(p.pendingCount)}
               </p>
+              <button type="button" onClick={p.onUndoMeasurement} className="min-h-9 w-full rounded-lg border border-white/20 px-2">
+                {o.removeLastPoint}
+              </button>
               {isOpenEnded(p.measureMode) && (
                 <button
                   type="button"

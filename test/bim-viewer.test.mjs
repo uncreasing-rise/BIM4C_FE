@@ -12,6 +12,106 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const require = createRequire(import.meta.url);
 const cache = new Map();
 
+test("tool-only meshes stay outside rendering while picking and promotion preserve federation transforms", () => {
+  const { placeElementMesh, syncPickingRoot } = load("components/bim-viewer/model-meshes");
+  const { PickIndex } = load("components/bim-viewer/pick-index");
+  const scene = new THREE.Scene(), rendered = new THREE.Group(), picking = new THREE.Group();
+  scene.add(rendered);
+  rendered.position.set(10, 2, -3); rendered.rotation.y = Math.PI / 2;
+  const mesh = new THREE.Mesh(new THREE.BoxGeometry(2, 2, 2), new THREE.MeshBasicMaterial());
+  mesh.position.set(3, 0, 0);
+  placeElementMesh(mesh, rendered, picking, false);
+  syncPickingRoot(rendered, picking);
+  const expected = mesh.getWorldPosition(new THREE.Vector3());
+  const drawn = []; scene.traverse(o => drawn.push(o));
+  assert.ok(!drawn.includes(mesh));
+  const index = new PickIndex(); index.build([mesh]);
+  const ray = new THREE.Raycaster(expected.clone().add(new THREE.Vector3(0, 0, 10)), new THREE.Vector3(0, 0, -1));
+  assert.equal(index.firstHit(ray, []).object, mesh);
+  placeElementMesh(mesh, rendered, picking, true); scene.updateMatrixWorld(true);
+  assert.ok(mesh.getWorldPosition(new THREE.Vector3()).distanceTo(expected) < 1e-10);
+  placeElementMesh(mesh, rendered, picking, false);
+  rendered.position.x += 5; rendered.visible = false;
+  syncPickingRoot(rendered, picking);
+  assert.equal(mesh.parent.visible, false);
+  assert.ok(mesh.getWorldPosition(new THREE.Vector3()).distanceTo(expected.add(new THREE.Vector3(5, 0, 0))) < 1e-10);
+  mesh.geometry.dispose(); mesh.material.dispose();
+});
+
+test("sliced quantity calculation matches totals and stops when its scope is cancelled", async () => {
+  const { quantityTakeoff, quantityTakeoffAsync } = load("components/bim-viewer/quantities");
+  const elements = Array.from({ length: 500 }, (_, i) => ({ id: String(i), ifcType: i % 2 ? "IfcWall" : "IfcSlab", psets: [{ name: "Qto", properties: [{ name: "NetVolume", value: i, unit: "m³" }] }] }));
+  let yields = 0;
+  const controller = new AbortController();
+  const rows = await quantityTakeoffAsync(elements, "type", controller.signal, async () => { yields++; });
+  assert.deepEqual(rows, quantityTakeoff(elements, "type"));
+  assert.ok(yields >= 4);
+  let visits = 0;
+  await assert.rejects(quantityTakeoffAsync(elements, "type", controller.signal, async () => {
+    if (++visits === 2) controller.abort();
+  }), { name: "AbortError" });
+  assert.equal(visits, 2);
+});
+
+test("takeoff normalizes mixed units, preserves zero and rejects ambiguous dimensions", () => {
+  const { quantityInSI, quantityTakeoff, elementQuantities, takeoffCsv } = load("components/bim-viewer/quantities");
+  assert.deepEqual(quantityInSI(1e9, "mm³", 3), { value: 1, unit: "m³" });
+  assert.deepEqual(quantityInSI(10000, "cm2", 2), { value: 1, unit: "m²" });
+  assert.ok(Math.abs(quantityInSI(1, "cubic foot", 3).value - .028316846592) < 1e-12);
+  for (const unit of [undefined, "unknown", "m2", "kg"]) assert.equal(quantityInSI(12, unit, 3), null);
+  assert.equal(quantityInSI(-1, "m³", 3), null);
+  const element = (id, properties) => ({ id, ifcType: "IfcWall", psets: [{ name: "Qto_WallBaseQuantities", properties }] });
+  const a = element("a", [{ name: "NetVolume", value: 1e9, unit: "mm³" }, { name: "Height", value: 3000, unit: "mm" }]);
+  const b = element("b", [{ name: "NetVolume", value: 2, unit: "m3" }]);
+  const c = element("c", [{ name: "NetVolume", value: 0, unit: "m³" }, { name: "GrossVolume", value: 7, unit: "m³" }]);
+  const row = quantityTakeoff([a, b, c], "type")[0];
+  assert.equal(row.volume, 3);
+  assert.equal(row.coverage.volume, 3);
+  assert.equal(row.coverage.length, 0);
+  assert.equal(elementQuantities(a).length, null);
+  assert.equal(elementQuantities(element("area", [{ name: "GrossArea", value: 20, unit: "m²" }, { name: "NetSideArea", value: 12, unit: "m²" }])).area.value, 12);
+  assert.match(takeoffCsv(quantityTakeoff([c], "type"), []), /"0","m³"/);
+});
+
+test("mesh volume rejects opposite open faces, wrong winding and invalid indices", () => {
+  const { meshVolume } = load("components/bim-viewer/quantities");
+  const box = new THREE.BoxGeometry(2, 3, 4);
+  const positions = box.attributes.position.array;
+  const indices = box.index.array;
+  assert.ok(Math.abs(meshVolume({ positions, indices }) - 24) < 1e-9, "split face vertices still close");
+  const open = [];
+  for (let t = 0; t < indices.length; t += 3) {
+    if (Math.abs(box.attributes.normal.getY(indices[t])) < .5) open.push(...indices.slice(t, t + 3));
+  }
+  assert.equal(meshVolume({ positions, indices: open }), null, "opposite holes cannot cancel the closure check");
+  const reversed = [...indices]; [reversed[0], reversed[1]] = [reversed[1], reversed[0]];
+  assert.equal(meshVolume({ positions, indices: reversed }), null);
+  assert.equal(meshVolume({ positions, indices: [0, 1, 999] }), null);
+  box.dispose();
+});
+
+test("edge snapping projects back to the cursor under strong perspective", () => {
+  const { snapPoint } = load("components/bim-viewer/snapping");
+  const project = ([x, y, z]) => [100 * x / z, 100 * y / z];
+  const input = {
+    triangle: [[0, 0, 1], [10, 0, 10], [0, 10, 10]],
+    featureEdges: [true, false, false], hitPoint: [0, 0, 1],
+    project, depth: (p) => p[2], pointer: [50, 0], tolerancePx: 16,
+    settings: { vertex: false, midpoint: false, edge: true, center: false },
+  };
+  const result = snapPoint(input);
+  assert.equal(result.kind, "edge");
+  assert.ok(Math.abs(project(result.point)[0] - 50) < 1e-10);
+  assert.ok(Math.abs(result.point[0] - 10 / 11) < 1e-10);
+  assert.equal(snapPoint({ ...input, featureEdges: [false, false, false], pointer: [0, 0], settings: { ...input.settings, vertex: true } }).kind, "face", "interior tessellation vertices are not corners");
+});
+
+test("an arc with three coincident points has no finite circle", () => {
+  const { arcThrough } = load("components/bim-viewer/measurement-math");
+  const point = { x: 1, y: 2, z: 3 };
+  assert.equal(arcThrough([point, point, point]), null);
+});
+
 test("stored display preferences reject invalid render environments and projections", () => {
   const { displaySettingsSchema } = load("components/bim-viewer/session-schema");
   assert.equal(displaySettingsSchema.safeParse({ environment: "broken" }).success, false);

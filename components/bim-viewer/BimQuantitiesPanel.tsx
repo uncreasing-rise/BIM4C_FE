@@ -1,10 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Calculator, Download, X } from "lucide-react";
 import { useLanguage } from "@/lib/i18n/context";
 import { ui } from "@/lib/i18n/ui";
-import { quantityTakeoff, takeoffCsv, type TakeoffGroup } from "./quantities";
+import { quantityTakeoffAsync, takeoffCsv, type TakeoffGroup, type TakeoffRow } from "./quantities";
 import type { BimElementData } from "./types";
 
 type Scope = "all" | "visible" | "selection";
@@ -36,8 +36,18 @@ export function BimQuantitiesPanel({
       ),
     [elements, hiddenIds, scope, selectedIds],
   );
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- geometryRevision: triangles changed in place
-  const rows = useMemo(() => quantityTakeoff(scoped, group), [scoped, group, geometryRevision]);
+  const [result, setResult] = useState<{ scoped: BimElementData[]; group: TakeoffGroup; revision: number; rows: TakeoffRow[]; failed?: boolean } | null>(null);
+  useEffect(() => {
+    const controller = new AbortController();
+    void quantityTakeoffAsync(scoped, group, controller.signal).then((rows) => {
+      if (!controller.signal.aborted) setResult({ scoped, group, revision: geometryRevision, rows });
+    }).catch(() => {
+      if (!controller.signal.aborted) setResult({ scoped, group, revision: geometryRevision, rows: [], failed: true });
+    });
+    return () => controller.abort();
+  }, [scoped, group, geometryRevision]);
+  const busy = result?.scoped !== scoped || result.group !== group || result.revision !== geometryRevision;
+  const rows = !busy && result ? result.rows : [];
   const total = rows.reduce(
     (t, r) => ({
       count: t.count + r.count,
@@ -47,16 +57,17 @@ export function BimQuantitiesPanel({
       missing: t.missing + r.withoutQuantities,
       fromGeometry: t.fromGeometry + r.volumeFromGeometry,
       unquantified: t.unquantified + r.unquantified,
+      coverage: { volume: t.coverage.volume + r.coverage.volume, area: t.coverage.area + r.coverage.area, length: t.coverage.length + r.coverage.length },
     }),
-    { count: 0, volume: 0, area: 0, length: 0, missing: 0, fromGeometry: 0, unquantified: 0 },
+    { count: 0, volume: 0, area: 0, length: 0, missing: 0, fromGeometry: 0, unquantified: 0, coverage: { volume: 0, area: 0, length: 0 } },
   );
   // The total gets a unit only when every contributing row agrees on it.
   const totalUnit = (kind: "volume" | "area" | "length") => {
-    const units = new Set(rows.filter((r) => r[kind]).map((r) => r.units[kind]));
+    const units = new Set(rows.filter((r) => r.coverage[kind]).map((r) => r.units[kind]));
     return units.size === 1 ? ([...units][0] ?? "") : "";
   };
-  const num = (v: number) =>
-    v ? v.toLocaleString(locale === "vi" ? "vi-VN" : "en-US", { maximumFractionDigits: 2 }) : "—";
+  const num = (v: number, coverage: number) =>
+    coverage ? v.toLocaleString(locale === "vi" ? "vi-VN" : "en-US", { maximumFractionDigits: 4 }) : "—";
   const exportCsv = () => {
     const csv = takeoffCsv(rows, [s.groups[group], s.count, s.volume, s.unit, s.area, s.unit, s.length, s.unit, s.missing, s.volumeFromGeometry]);
     const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
@@ -72,6 +83,7 @@ export function BimQuantitiesPanel({
   return (
     <section
       aria-label={s.title}
+      aria-busy={busy}
       onKeyDown={(e) => {
         if (e.key === "Escape") onClose();
       }}
@@ -110,7 +122,9 @@ export function BimQuantitiesPanel({
           ))}
         </div>
       </div>
-      <div className="min-h-0 flex-1 overflow-auto px-3">
+      {busy && <p role="status" className="px-3 pb-3 text-teal-200">{s.calculating}</p>}
+      {!busy && result?.failed && <p role="alert" className="px-3 pb-3 text-amber-200">{s.calculationFailed}</p>}
+      <div hidden={busy || result?.failed} className="min-h-0 flex-1 overflow-auto px-3">
         <table className="w-full border-collapse text-left">
           <thead className="sticky top-0 bg-slate-950 text-[11px] uppercase tracking-wider text-slate-400">
             <tr>
@@ -131,9 +145,9 @@ export function BimQuantitiesPanel({
               >
                 <td className="max-w-40 truncate py-1.5 pr-2 font-sans text-slate-100">{r.key}</td>
                 <td className="px-1 text-right">{r.count}</td>
-                <td className="px-1 text-right" title={r.volumeFromGeometry ? s.fromGeometryTitle(r.volumeFromGeometry) : undefined}>{r.volumeFromGeometry ? "≈ " : ""}{num(r.volume)} {r.volume ? r.units.volume : ""}</td>
-                <td className="px-1 text-right">{num(r.area)} {r.area ? r.units.area : ""}</td>
-                <td className="pl-1 text-right">{num(r.length)} {r.length ? r.units.length : ""}</td>
+                <td className="px-1 text-right" title={r.volumeFromGeometry ? s.fromGeometryTitle(r.volumeFromGeometry) : undefined}>{r.volumeFromGeometry ? "≈ " : ""}{num(r.volume, r.coverage.volume)} {r.units.volume}</td>
+                <td className="px-1 text-right">{num(r.area, r.coverage.area)} {r.units.area}</td>
+                <td className="pl-1 text-right">{num(r.length, r.coverage.length)} {r.units.length}</td>
               </tr>
             ))}
           </tbody>
@@ -141,18 +155,23 @@ export function BimQuantitiesPanel({
             <tr className="border-t border-white/20">
               <td className="py-2 pr-2 font-sans">{s.total}</td>
               <td className="px-1 text-right">{total.count}</td>
-              <td className="px-1 text-right">{total.fromGeometry ? "≈ " : ""}{num(total.volume)} {total.volume ? totalUnit("volume") : ""}</td>
-              <td className="px-1 text-right">{num(total.area)} {total.area ? totalUnit("area") : ""}</td>
-              <td className="pl-1 text-right">{num(total.length)} {total.length ? totalUnit("length") : ""}</td>
+              <td className="px-1 text-right">{total.fromGeometry ? "≈ " : ""}{num(total.volume, total.coverage.volume)} {totalUnit("volume")}</td>
+              <td className="px-1 text-right">{num(total.area, total.coverage.area)} {totalUnit("area")}</td>
+              <td className="pl-1 text-right">{num(total.length, total.coverage.length)} {totalUnit("length")}</td>
             </tr>
           </tfoot>
         </table>
       </div>
-      <div className="shrink-0 space-y-2 border-t border-white/10 p-3">
+      <div hidden={busy || result?.failed} className="shrink-0 space-y-2 border-t border-white/10 p-3">
+        <p className="text-[11px] text-amber-200" role="status">
+          {s.coverage}: {s.volume} {total.coverage.volume}/{total.count} · {s.area} {total.coverage.area}/{total.count} · {s.length} {total.coverage.length}/{total.count}.
+        </p>
         <p className="text-[11px] leading-snug text-slate-400">
-          {total.unquantified ? s.missingNote(total.unquantified) : s.sourceNote}
+          {s.sourceNote}
+          {total.unquantified > 0 && <> {s.missingNote(total.unquantified)}</>}
           {total.fromGeometry > 0 && <> {s.geometryNote(total.fromGeometry)}</>}
         </p>
+        {scope === "visible" && <p className="text-[11px] leading-snug text-slate-400">{s.scopeNote}</p>}
         <button
           type="button"
           onClick={exportCsv}

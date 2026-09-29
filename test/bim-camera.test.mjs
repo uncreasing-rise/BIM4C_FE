@@ -160,12 +160,12 @@ test("quantity take-off sums file quantities, net before gross, and flags elemen
   const wall = byType.find((r) => r.key === "IfcWall");
   assert.equal(wall.volume, 6, "net 2 (not gross 3) + gross fallback 4");
   assert.equal(wall.length, 5);
-  assert.equal(wall.units.volume, "m3");
+  assert.equal(wall.units.volume, "m³");
   assert.equal(byType.find((r) => r.key === "IfcDoor").withoutQuantities, 1);
   assert.deepEqual(q.quantityTakeoff(elements, "storey").map((r) => [r.key, r.count]), [["L1", 3], ["L2", 1]]);
   const csv = q.takeoffCsv(byType, ["Group", "Count", "V", "Vu", "A", "Au", "L", "Lu", "Missing"]);
   assert.ok(csv.startsWith("﻿"));
-  assert.match(csv, /"IfcWall","2","6","m3"/);
+  assert.match(csv, /"IfcWall","2","6","m³"/);
 });
 
 test("take-off falls back to the exact volume of a closed mesh, never of an open one", () => {

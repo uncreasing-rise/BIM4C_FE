@@ -347,7 +347,7 @@ export class ViewerPipeline {
     const edges = this.settings.edges;
     this.aoPass.enabled = ao;
     this.edgePass.enabled = edges;
-    if (!ao && !edges && this.settings.environment === "classic") {
+    if (!ao && !edges) {
       // No effects: draw straight to the screen, exactly as before.
       this.renderer.render(this.scene, camera);
       if (capPlanes.length) this.caps.render(this.renderer, camera, capPlanes, sceneSize * 4);
