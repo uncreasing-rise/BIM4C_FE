@@ -294,7 +294,9 @@ const material = (look: ElementLook): MaterialDefinition => {
 interface Hydration {
   done: Promise<void>;
   resolve: () => void;
+  reject: (reason: unknown) => void;
   started: boolean;
+  failed: boolean;
 }
 const hydrations = new WeakMap<BimModelDefinition, Hydration>();
 const HYDRATE_BATCH = 300;
@@ -303,8 +305,12 @@ const hydration = (model: BimModelDefinition) => {
   let entry = hydrations.get(model);
   if (!entry) {
     let resolve!: () => void;
-    const done = new Promise<void>((r) => (resolve = r));
-    entry = { done, resolve, started: false };
+    let reject!: (reason: unknown) => void;
+    const done = new Promise<void>((r, j) => { resolve = r; reject = j; });
+    // A model may fail before a tool subscribes. Keep the rejection available
+    // to future callers without producing an unhandled rejection meanwhile.
+    void done.catch(() => {});
+    entry = { done, resolve, reject, started: false, failed: false };
     hydrations.set(model, entry);
   }
   return entry;
@@ -323,6 +329,7 @@ export function hydrateElements(
   onBatch: (elements: BimElementData[]) => void,
   isCancelled: () => boolean,
 ): Promise<void> {
+  if (hydrations.get(model)?.failed) hydrations.delete(model);
   const entry = hydration(model);
   if (entry.started) return entry.done;
   entry.started = true;
@@ -331,18 +338,24 @@ export function hydrateElements(
     for (let i = 0; i < pending.length; i += HYDRATE_BATCH) {
       if (isCancelled()) {
         // Stopped with the model's removal: a later load starts again.
-        entry.started = false;
-        return;
+        throw new DOMException("Cancelled", "AbortError");
       }
       const batch = pending.slice(i, i + HYDRATE_BATCH);
-      const done = await hydrateBatch(engine, key, batch);
+      let timer: ReturnType<typeof setTimeout> | undefined;
+      const done = await Promise.race([
+        hydrateBatch(engine, key, batch),
+        new Promise<never>((_, reject) => { timer = setTimeout(() => reject(new Error("GEOMETRY_TIMEOUT")), 60_000); }),
+      ]).finally(() => clearTimeout(timer));
+      if (isCancelled()) throw new DOMException("Cancelled", "AbortError");
       onBatch(done);
       // Let the page breathe between batches.
       await new Promise((resolve) => setTimeout(resolve, 0));
     }
     entry.resolve();
-  })().catch(() => {
+  })().catch((error: unknown) => {
     entry.started = false;
+    entry.failed = true;
+    entry.reject(error);
   });
   return entry.done;
 }
@@ -373,6 +386,21 @@ export async function hydrateNow(engine: FragmentsEngine, key: string, elements:
 }
 
 /** Resolves once the model's elements carry their triangles (immediately for parser models). */
-export function hydrated(model: BimModelDefinition): Promise<void> {
-  return model.fragments ? hydration(model).done : Promise.resolve();
+export function cancelHydration(model: BimModelDefinition) {
+  const entry = hydrations.get(model);
+  if (entry) {
+    entry.failed = true;
+    entry.reject(new DOMException("Cancelled", "AbortError"));
+  }
+}
+
+export function hydrated(model: BimModelDefinition, signal?: AbortSignal): Promise<void> {
+  signal?.throwIfAborted();
+  const done = model.fragments ? hydration(model).done : Promise.resolve();
+  if (!signal) return done;
+  return new Promise<void>((resolve, reject) => {
+    const abort = () => reject(signal.reason ?? new DOMException("Cancelled", "AbortError"));
+    signal.addEventListener("abort", abort, { once: true });
+    done.then(resolve, reject).finally(() => signal.removeEventListener("abort", abort));
+  });
 }

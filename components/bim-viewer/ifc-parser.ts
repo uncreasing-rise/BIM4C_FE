@@ -409,6 +409,9 @@ export function parseIfcData(
               geometry.GetIndexData(),
               geometry.GetIndexDataSize(),
             );
+            // Some IFC exports include an empty representation beside a
+            // valid body (e.g. window/door symbols). Keep the other parts.
+            if (!raw.length && !indices.length) continue;
             if (
               !raw.length ||
               !indices.length ||

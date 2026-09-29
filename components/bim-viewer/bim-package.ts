@@ -9,15 +9,36 @@
  * metadata) · Fragments bytes. Little-endian. Runs in browsers and Node 18+.
  */
 import type { BimModelDefinition } from "./types";
+import { packageModelSchema } from "./model-schema";
 
 const MAGIC = "BIM4CPKG";
 export const PACKAGE_VERSION = 1;
 export const PACKAGE_EXTENSION = ".bim4c";
+export const MAX_PACKAGE_BYTES = 512 * 1024 ** 2;
+const MAX_METADATA_BYTES = 256 * 1024 ** 2;
 
 async function gzip(bytes: Uint8Array, mode: "compress" | "decompress") {
   const stream =
     mode === "compress" ? new CompressionStream("gzip") : new DecompressionStream("gzip");
   const out = new Blob([bytes as BlobPart]).stream().pipeThrough(stream);
+  if (mode === "decompress") {
+    const reader = out.getReader();
+    const chunks: Uint8Array[] = [];
+    let length = 0;
+    try {
+      while (true) {
+        const item = await reader.read();
+        if (item.done) break;
+        length += item.value.byteLength;
+        if (length > MAX_METADATA_BYTES) throw new Error("PACKAGE_TOO_LARGE");
+        chunks.push(item.value);
+      }
+    } finally { await reader.cancel(); reader.releaseLock(); }
+    const result = new Uint8Array(length);
+    let offset = 0;
+    for (const chunk of chunks) { result.set(chunk, offset); offset += chunk.length; }
+    return result;
+  }
   return new Uint8Array(await new Response(out).arrayBuffer());
 }
 
@@ -57,13 +78,16 @@ export function isPackage(bytes: Uint8Array) {
 }
 
 export async function decodePackage(bytes: Uint8Array): Promise<BimModelDefinition> {
+  if (bytes.length > MAX_PACKAGE_BYTES) throw new Error("PACKAGE_TOO_LARGE");
   if (!isPackage(bytes)) throw new Error("PACKAGE_INVALID");
   const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
   const version = view.getUint32(8, true);
   if (version > PACKAGE_VERSION) throw new Error("PACKAGE_TOO_NEW");
+  if (version !== PACKAGE_VERSION) throw new Error("PACKAGE_INVALID");
   const length = view.getUint32(12, true);
-  if (16 + length > bytes.length) throw new Error("PACKAGE_INVALID");
+  if (!length || 16 + length >= bytes.length) throw new Error("PACKAGE_INVALID");
   const meta = JSON.parse(new TextDecoder().decode(await gzip(bytes.subarray(16, 16 + length), "decompress")));
-  if (!meta || !Array.isArray(meta.elements)) throw new Error("PACKAGE_INVALID");
-  return { ...(meta as BimModelDefinition), fragments: bytes.slice(16 + length) };
+  const parsed = packageModelSchema.safeParse(meta);
+  if (!parsed.success) throw new Error("PACKAGE_INVALID");
+  return { ...parsed.data, fragments: bytes.slice(16 + length) };
 }

@@ -17,7 +17,7 @@ function load(path) {
     compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, esModuleInterop: true },
   }).outputText;
   const cjs = { exports: {} };
-  new Function("require", "module", "exports", source)((name) => (name === "three" ? THREE : require(name)), cjs, cjs.exports);
+  new Function("require", "module", "exports", source)((name) => (name === "three" ? THREE : name.startsWith(".") ? load(resolve(dirname(filename), name)) : require(name)), cjs, cjs.exports);
   return cjs.exports;
 }
 
@@ -238,7 +238,7 @@ test("version comparison matches GlobalIds and tells geometry from property chan
   const { compareModels } = load("components/bim-viewer/compare");
   const el = (key, guid, x, props = [{ name: "FireRating", value: "EI60" }]) => ({
     id: `${key}/${guid}`, guid, name: guid, ifcType: "IfcWall", material: "C30", storey: "L1",
-    position: [x, 0, 0], size: [1, 3, 0.2], geometryData: { indices: new Uint32Array(36) },
+    position: [x, 0, 0], size: [1, 3, 0.2], geometryData: { positions: new Float32Array([0,0,0, 1,0,0, 0,3,0.2]), indices: new Uint32Array([0,1,2]) },
     psets: [{ name: "IFC", properties: [{ name: "ExpressID", value: key === "a" ? 10 : 99 }] }, { name: "Pset_WallCommon (#5)", properties: props }],
   });
   const oldModel = [el("a", "same", 0), el("a", "moved", 1), el("a", "prop", 2), el("a", "gone", 3)];

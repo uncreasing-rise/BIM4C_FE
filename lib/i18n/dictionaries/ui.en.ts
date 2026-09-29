@@ -187,6 +187,8 @@ export const uiEn = {
     onlyIfcFilesAreAccepted:
       "Only .ifc and .bim4c files are accepted — others were skipped.",
     unableToReadIFCCheck: "Unable to read IFC. Check the file and retry.",
+    snapshotStorageFailed: "Issue images could not be saved on this device. Export BCF before closing the page.",
+    geometryFailed: "Geometry could not be loaded. Remove the model and open it again to retry.",
     unableToCaptureThe3D: "Unable to capture the 3D view.",
     t3DImageExported: "3D image exported.",
     fullscreenIsUnavailableInThis: "Fullscreen is unavailable in this browser.",

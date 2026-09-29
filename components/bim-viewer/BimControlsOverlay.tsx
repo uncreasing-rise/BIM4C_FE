@@ -71,6 +71,7 @@ interface Props {
   bounds: BimBounds;
   sceneOrigin: Vec3;
   mapConversion?: BimMapConversion;
+  modelMapConversions: ReadonlyMap<string, BimMapConversion | undefined>;
   measureMode: MeasureMode;
   onMeasureMode: (mode: MeasureMode) => void;
   snapSettings: SnapSettings;
@@ -116,7 +117,7 @@ interface Props {
   onGoToIssue: (issue: BimLocalIssue) => void;
   onExportIssuesBcf: () => void;
   onImportBcf: (file: File) => void;
-  /** Issue id -> snapshot data URL (current visit only). */
+  /** Issue id -> snapshot data URL (persisted on this device). */
   issueSnapshots: Record<string, string>;
   selectionSets: BimSelectionSet[];
   onSaveSelectionSet: (name: string) => void;
@@ -274,7 +275,7 @@ export function BimControlsOverlay(p: Props) {
   return (
     <section
       aria-label={title}
-      className="absolute left-2 top-2 z-30 max-h-[calc(100%-1rem)] w-[calc(100%-1rem)] overflow-y-auto rounded-xl border border-white/15 bg-slate-950/95 p-4 text-xs text-slate-200 shadow-xl sm:left-4 sm:top-4 sm:max-h-[calc(100%-2rem)] sm:w-80"
+      className="absolute left-2 bottom-2 z-30 max-h-[55%] sm:bottom-auto w-[calc(100%-1rem)] overflow-y-auto rounded-xl border border-white/15 bg-slate-950/95 p-4 text-xs text-slate-200 shadow-xl sm:left-4 sm:top-4 sm:max-h-[calc(100%-2rem)] sm:w-80"
       onKeyDown={(e) => {
         if (e.key === "Escape") p.onCloseTool();
       }}
@@ -639,6 +640,7 @@ export function BimControlsOverlay(p: Props) {
               {p.measurements.map((m, i) => {
                 const metrics = triangleMetrics(m.points);
                 const coords = m.points.map(world);
+                const map = m.points[0].modelKey ? p.modelMapConversions.get(m.points[0].modelKey) : p.mapConversion;
                 const s =
                   (m.mode === "distance" || m.mode === "shortest") && m.points[1]
                     ? distanceSummary(m.points[0], m.points[1])
@@ -707,8 +709,8 @@ export function BimControlsOverlay(p: Props) {
                   details = (
                     <>
                       {(["X", "Y", "Z"] as const).map((axis, k) => row(`${axis} (m)`, fmt(coords[0][k]), axis))}
-                      {p.mapConversion &&
-                        row("E · N · H", worldToMap(coords[0], p.mapConversion).map(fmt).join(" · "))}
+                      {map &&
+                        row("E · N · H", worldToMap(coords[0], map).map(fmt).join(" · "))}
                     </>
                   );
                 }

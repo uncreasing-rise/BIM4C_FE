@@ -186,6 +186,8 @@ export const uiVi: UiStrings = {
   bimViewerPage: {
     onlyIfcFilesAreAccepted: "Chỉ nhận tệp .ifc và .bim4c — đã bỏ qua các tệp khác.",
     unableToReadIFCCheck: "Không đọc được IFC. Kiểm tra tệp và thử lại.",
+    snapshotStorageFailed: "Không lưu được ảnh vấn đề trên thiết bị. Hãy xuất BCF trước khi đóng trang.",
+    geometryFailed: "Không tải được hình học. Hãy gỡ mô hình rồi mở lại để thử lại.",
     unableToCaptureThe3D: "Không thể chụp ảnh 3D.",
     t3DImageExported: "Đã xuất ảnh 3D.",
     fullscreenIsUnavailableInThis:

@@ -345,12 +345,14 @@ test(".bim4c packages round-trip element data and Fragments bytes, with file ids
   const fragments = new Uint8Array([1, 2, 3, 250, 251]);
   const model = {
     filename: "tower.ifc",
-    contentHash: "ab12",
+    id: "tower", description: "", defaultCamera: { position: [10,10,10], target: [0,0,0] },
+    contentHash: "ab".repeat(32),
     fragments,
     elementsCount: 1,
-    clashes: [{ id: "m3/c1" }],
+    clashes: [{ id: "m3/c1", title: "Clash", description: "", severity: "low", disciplineA: "mep", disciplineB: "architecture", elementA: "ifc-42", elementB: "ifc-42", point: [0,0,0], status: "open" }],
     elements: [{
       id: "m3/ifc-42", modelKey: "m3", guid: "g", name: "Wall", ifcType: "IfcWall", psets: [{ name: "Pset", properties: [{ name: "Fire", value: "EI60" }] }],
+      discipline: "architecture", storey: "L1", material: "Concrete", color: "#ffffff",
       position: [1, 2, 3], size: [1, 1, 1], geometryData: { positions: new Float32Array(9), indices: new Uint32Array(3) },
     }],
   };
@@ -358,7 +360,7 @@ test(".bim4c packages round-trip element data and Fragments bytes, with file ids
   assert.equal(isPackage(bytes), true);
   const back = await decodePackage(bytes);
   assert.deepEqual([...back.fragments], [...fragments]);
-  assert.equal(back.contentHash, "ab12");
+  assert.equal(back.contentHash, "ab".repeat(32));
   assert.equal(back.elements[0].id, "ifc-42", "the file's own id, not the viewer's namespaced one");
   assert.equal(back.elements[0].modelKey, undefined);
   assert.equal(back.elements[0].geometryData, undefined, "Fragments holds the triangles");
@@ -368,6 +370,12 @@ test(".bim4c packages round-trip element data and Fragments bytes, with file ids
   const future = bytes.slice();
   new DataView(future.buffer).setUint32(8, 99, true);
   await assert.rejects(decodePackage(future), /PACKAGE_TOO_NEW/);
+  await assert.rejects(decodePackage(await encodePackage({ ...model, defaultCamera: undefined })), /PACKAGE_INVALID/);
+  await assert.rejects(decodePackage(await encodePackage({ ...model, elementsCount: 2, elements: [model.elements[0], model.elements[0]] })), /PACKAGE_INVALID/);
+  const invalidVersion = bytes.slice();
+  new DataView(invalidVersion.buffer).setUint32(8, 0, true);
+  await assert.rejects(decodePackage(invalidVersion), /PACKAGE_INVALID/);
+  await assert.rejects(decodePackage(bytes.slice(0, bytes.length - fragments.length)), /PACKAGE_INVALID/);
   await assert.rejects(encodePackage({ ...model, fragments: undefined }), /PACKAGE_NO_FRAGMENTS/);
 });
 
@@ -377,6 +385,38 @@ test("Fragments element ids map to IFC express ids, including federated (namespa
   assert.equal(localIdOf("m2/ifc-3076"), 3076);
   assert.equal(localIdOf("h:9617a45c/ifc-12"), 12);
   assert.equal(localIdOf("demo-slab"), null);
+});
+
+test("geometry worker failures and cancellation release waiting tools; reopening can retry", async () => {
+  const { hydrateElements, hydrated, cancelHydration } = load("components/bim-viewer/fragments-engine");
+  const model = { fragments: new Uint8Array([1]), elements: [{ id: "ifc-1" }] };
+  const engine = { geometry: async () => { throw new Error("worker failed"); } };
+  const waiter = hydrated(model);
+  const run = hydrateElements(engine, "m1", model, () => {}, () => false);
+  await assert.rejects(run, /worker failed/);
+  await assert.rejects(waiter, /worker failed/);
+  model.elements = [];
+  await hydrateElements(engine, "m1", model, () => {}, () => false);
+  await hydrated(model);
+  const removed = { fragments: new Uint8Array([1]), elements: [] };
+  const waiting = hydrated(removed);
+  cancelHydration(removed);
+  await assert.rejects(waiting, { name: "AbortError" });
+  const pending = { fragments: new Uint8Array([1]), elements: [] };
+  const controller = new AbortController();
+  const cancelled = hydrated(pending, controller.signal);
+  controller.abort();
+  await assert.rejects(cancelled, { name: "AbortError" });
+});
+
+test("version comparison detects shape changes with identical bounds and triangle counts", async () => {
+  const { compareModels, compareModelsAsync } = load("components/bim-viewer/compare");
+  const element = { id: "old", guid: "G", name: "Mesh", ifcType: "IfcWall", material: "", storey: "", psets: [], position: [0,0,0], size: [1,1,1], geometryData: { positions: [0,0,0, 1,0,0, 0,1,0], indices: [0,1,2] } };
+  const next = { ...element, id: "new", geometryData: { positions: [0,0,0, 1,0,0, 0,0.5,0], indices: [0,1,2] } };
+  assert.deepEqual(compareModels([element], [next]).geometry, ["new"]);
+  const renumbered = { ...element, id: "new", geometryData: { positions: [0,1,0, 0,0,0, 1,0,0], indices: [0,2,1] } };
+  assert.deepEqual(compareModels([element], [renumbered]).unchanged, ["new"]);
+  assert.deepEqual(await compareModelsAsync([element], [next]), compareModels([element], [next]));
 });
 
 test("appearance profiler colours by field or property, in values or numeric bands, with a no-value entry", () => {
@@ -579,6 +619,27 @@ test("floor plans: a horizontal cut of a wall gives its outline in sheet coordin
   assert.doesNotMatch(sectionSvg, />N<\/text>/, "no north arrow on a section");
 });
 
+test("grids repeated on every level and in every file show each axis once, at its lowest copy", () => {
+  const g = load("components/bim-viewer/grid-bubbles");
+  assert.equal(g.gridKey("Y1", [0, 0], [10, 0]), g.gridKey("Y1", [10, 0.01], [0, 0]), "either direction, decimetre tolerance");
+  assert.notEqual(g.gridKey("Y1", [0, 0], [10, 0]), g.gridKey("Y2", [0, 0], [10, 0]));
+  const axis = (tag, y, x = 0) => {
+    const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(x, y, -5), new THREE.Vector3(x, y, 5)]));
+    line.userData.tag = tag;
+    return line;
+  };
+  // Two files × three levels of the same Y1/Y2 axes.
+  const files = [0, 1].map(() => {
+    const root = new THREE.Group();
+    for (const level of [9, 0, 4.5]) root.add(axis("Y1", level, 0), axis("Y2", level, 6));
+    return root;
+  });
+  assert.equal(g.showOneCopyPerAxis(files), 2);
+  const shown = [];
+  for (const root of files) root.traverse((o) => { if (o.isLine && o.visible) shown.push([o.userData.tag, o.geometry.getAttribute("position").getY(0)]); });
+  assert.deepEqual(shown.sort(), [["Y1", 0], ["Y2", 0]], "the lowest copy of each axis");
+});
+
 function load(path) {
   let filename = resolve(root, path);
   if (!existsSync(filename)) filename += ".ts";
@@ -636,8 +697,8 @@ test("viewer loads the public IFC demo and exposes selection workflow", () => {
     resolve(root, "components/bim-viewer/BimModelsPanel.tsx"),
     "utf8",
   );
-  assert.match(page, /parseIfcFromUrl/);
-  assert.match(page, /\/models\/bim4c-commercial-tower\.ifc/);
+  assert.match(page, /loadDemoModel/);
+  assert.match(readFileSync(resolve(root, "components/bim-viewer/demo-models.ts"), "utf8"), /SGDN_ARC_Model/);
   assert.match(page, /selectedElementIds/);
   assert.match(canvas, /selectedElementIds\.has/);
   assert.match(canvas, /elementIds\?\.length/);

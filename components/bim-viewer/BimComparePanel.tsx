@@ -23,7 +23,7 @@ export function BimComparePanel({
 }: {
   models: FederatedModel[];
   comparison: ComparisonState | null;
-  onCompare: (oldKey: string, newKey: string) => void;
+  onCompare: (oldKey: string, newKey: string) => void | Promise<void>;
   onExit: () => void;
   onSelect: (ids: string[]) => void;
   onClose: () => void;
@@ -32,6 +32,7 @@ export function BimComparePanel({
   const s = ui(locale).bimCompare;
   const [oldKey, setOldKey] = useState(comparison?.oldKey ?? models[0]?.key ?? "");
   const [newKey, setNewKey] = useState(comparison?.newKey ?? models[1]?.key ?? "");
+  const [busy, setBusy] = useState(false);
   const name = (key: string) => models.find((m) => m.key === key)?.model.filename ?? key;
   const select = "min-h-9 w-full rounded-lg border border-white/15 bg-slate-900 px-2";
   const groups = comparison
@@ -49,7 +50,7 @@ export function BimComparePanel({
       onKeyDown={(e) => {
         if (e.key === "Escape") onClose();
       }}
-      className="absolute left-2 top-2 z-30 max-h-[calc(100%-1rem)] w-[calc(100%-1rem)] overflow-y-auto rounded-xl border border-white/15 bg-slate-950/95 p-4 text-xs text-slate-200 shadow-xl sm:left-4 sm:top-4 sm:max-h-[calc(100%-2rem)] sm:w-80"
+      className="absolute left-2 bottom-2 z-30 max-h-[55%] sm:bottom-auto w-[calc(100%-1rem)] overflow-y-auto rounded-xl border border-white/15 bg-slate-950/95 p-4 text-xs text-slate-200 shadow-xl sm:left-4 sm:top-4 sm:max-h-[calc(100%-2rem)] sm:w-80"
     >
       <div className="mb-3 flex items-center justify-between gap-2 border-b border-white/10 pb-2">
         <h2 className="flex items-center gap-2 font-bold">
@@ -82,11 +83,12 @@ export function BimComparePanel({
           </label>
           <button
             type="button"
-            disabled={!oldKey || !newKey || oldKey === newKey}
-            onClick={() => onCompare(oldKey, newKey)}
+            disabled={busy || !models.some((m) => m.key === oldKey) || !models.some((m) => m.key === newKey) || oldKey === newKey}
+            aria-busy={busy}
+            onClick={async () => { setBusy(true); try { await onCompare(oldKey, newKey); } finally { setBusy(false); } }}
             className="min-h-9 w-full rounded-lg bg-teal-400 font-semibold text-slate-950 hover:bg-teal-300 disabled:opacity-40"
           >
-            {s.run}
+            {busy ? ui(locale).bimClash.preparingGeometry : s.run}
           </button>
           <p className="text-[11px] leading-snug text-slate-400">{s.help}</p>
           {comparison && (

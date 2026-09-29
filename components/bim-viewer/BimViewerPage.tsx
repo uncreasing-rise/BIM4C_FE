@@ -34,7 +34,7 @@ import { BimQuantitiesPanel } from "./BimQuantitiesPanel";
 import { BimAppearancePanel } from "./BimAppearancePanel";
 import { BimMarkupLayer } from "./BimMarkupLayer";
 import { BimComparePanel, type ComparisonState } from "./BimComparePanel";
-import { compareModels, DIFF_COLORS } from "./compare";
+import { compareModelsAsync, DIFF_COLORS } from "./compare";
 import { elementMatches, type SearchSet } from "./search-sets";
 import { markupSvg, type MarkupShape } from "./markup";
 import { computeLevels, planCutHeight, planHeights, type BimLevel } from "./levels";
@@ -51,6 +51,8 @@ import {
 } from "./BimPropertyInspector";
 import { BimToolbar } from "./BimToolbar";
 import { CLASH_RESULT_LIMIT, DEFAULT_CLASH_RULES, detectClashes } from "./clash-detection";
+import { DEMO_MODELS } from "./demo-models";
+import { readIssueSnapshots, writeIssueSnapshots } from "./issue-snapshots";
 import { hydrated } from "./fragments-engine";
 import { buildLegend, resolveAppearance, type AppearanceProfile, type ManualLook } from "./appearance";
 import { compareRuns, reviewChange, RUNS_LIMIT, type ClashReviewEntry, type ClashRun } from "./clash-review";
@@ -77,6 +79,7 @@ import type {
   BimDiscipline,
   BimElementData,
   BimModelDefinition,
+  BimMapConversion,
   BimSavedView,
   BimTool,
   BimViewPreset,
@@ -334,7 +337,7 @@ export function BimViewerPage() {
   const [clashSection, setClashSection] = useState(false);
   const [savedViews, setSavedViews] = useState<BimSavedView[]>([]);
   const [issues, setIssues] = useState<BimLocalIssue[]>([]);
-  /** Issue id -> JPEG data URL. In memory only: localStorage is too small for images. */
+  /** Issue images are persisted separately in IndexedDB. */
   const [issueSnapshots, setIssueSnapshots] = useState<Record<string, string>>({});
   const [fullscreen, setFullscreen] = useState(false);
   const [dragging, setDragging] = useState(false);
@@ -438,6 +441,28 @@ export function BimViewerPage() {
     }
   }, [appearanceProfile, clashLastIds, clashNew, clashReview, clashRuns, clashStatus, explode, hiddenElements, issues, layers, manualLooks, measurements, savedViews, searchSets, selectionSets, sessionKey, sessionSignature, tokens]);
 
+  const [snapshotStorageKey, setSnapshotStorageKey] = useState<string | null>(null);
+  useEffect(() => {
+    let alive = true;
+    void readIssueSnapshots(sessionKey).then((stored) => {
+      if (!alive) return;
+      setIssueSnapshots(stored);
+      setSnapshotStorageKey(sessionKey);
+    });
+    return () => { alive = false; };
+  }, [sessionKey]);
+  useEffect(() => {
+    if (!sessionSignature || snapshotStorageKey !== sessionKey) return;
+    const ids = new Set(issues.map((issue) => issue.id));
+    const images = Object.fromEntries(Object.entries(issueSnapshots).filter(([id]) => ids.has(id)));
+    const timer = window.setTimeout(() => {
+      void writeIssueSnapshots(sessionKey, images).then((ok) => {
+        if (!ok) toast.error(ui(locale).bimViewerPage.snapshotStorageFailed);
+      });
+    }, 400);
+    return () => window.clearTimeout(timer);
+  }, [issueSnapshots, issues, sessionKey, sessionSignature, snapshotStorageKey, locale]);
+
   const canvasModels = useMemo<CanvasModel[]>(
     () =>
       models.map((m) => ({
@@ -457,7 +482,7 @@ export function BimViewerPage() {
       if (m.model.fragments)
         void hydrated(m.model).then(() => {
           if (alive) setGeometryRevision((n) => n + 1);
-        });
+        }).catch(() => { /* The canvas reports geometry failures. */ });
     return () => {
       alive = false;
     };
@@ -472,9 +497,14 @@ export function BimViewerPage() {
     [canvasModels],
   );
   const mapConversion = useMemo(
-    () => models.find((m) => m.model.mapConversion)?.model.mapConversion,
+    () => {
+      const maps = models.map((m) => m.model.mapConversion);
+      const first = maps[0];
+      return first && maps.every((map) => JSON.stringify(map) === JSON.stringify(first)) ? first : undefined;
+    },
     [models],
   );
+  const modelMapConversions = useMemo(() => new Map<string, BimMapConversion | undefined>(models.map((m) => [m.key, m.model.mapConversion])), [models]);
   // While the section box is off it always spans every loaded model, so
   // enabling it never hides a file that was added later.
   const effectiveClip = useMemo(
@@ -546,10 +576,10 @@ export function BimViewerPage() {
     },
     [models],
   );
-  const clashTaskRef = useRef<{ cancelled: boolean } | null>(null);
+  const clashTaskRef = useRef<{ cancelled: boolean; controller: AbortController } | null>(null);
   const runLocalClashCheck = useCallback(async () => {
     if (clashTaskRef.current || !activeClashTest) return;
-    const task = { cancelled: false };
+    const task = { cancelled: false, controller: new AbortController() };
     clashTaskRef.current = task;
     const s = ui(locale).bimClash;
     const toastId = toast.loading(s.checking(0, 0));
@@ -560,7 +590,7 @@ export function BimViewerPage() {
       // Converted models deliver their triangles in the background; the test needs them all.
       if (canvasModels.some((m) => m.model.fragments)) {
         toast.loading(s.preparingGeometry, { id: toastId });
-        await Promise.all(canvasModels.map((m) => hydrated(m.model)));
+        await Promise.all(canvasModels.map((m) => hydrated(m.model, task.controller.signal)));
         if (task.cancelled) return toast.dismiss(toastId);
       }
       const clashes = await detectClashes(canvasModels, {
@@ -603,6 +633,9 @@ export function BimViewerPage() {
       setClashCheckedFor(activeClashTest);
       setActiveTool("clashes");
       toast.success(ui(locale).bimViewerPage.localClashes(clashes.length), { id: toastId });
+    } catch {
+      toast.dismiss(toastId);
+      if (!task.cancelled) toast.error(ui(locale).bimViewerPage.geometryFailed);
     } finally {
       if (clashTaskRef.current === task) {
         clashTaskRef.current = null;
@@ -611,11 +644,17 @@ export function BimViewerPage() {
     }
   }, [activeClashTest, canvasModels, clashLastIds, clashRuns, clashTestLabel, locale]);
   const cancelClashCheck = () => {
-    if (clashTaskRef.current) clashTaskRef.current.cancelled = true;
+    if (clashTaskRef.current) {
+      clashTaskRef.current.cancelled = true;
+      clashTaskRef.current.controller.abort();
+    }
   };
   // A new file set makes a running check meaningless.
   useEffect(() => () => {
-    if (clashTaskRef.current) clashTaskRef.current.cancelled = true;
+    if (clashTaskRef.current) {
+      clashTaskRef.current.cancelled = true;
+      clashTaskRef.current.controller.abort();
+    }
   }, [canvasModels]);
 
   const saveView = useCallback(
@@ -1066,7 +1105,13 @@ export function BimViewerPage() {
     setPlanDrawing(null);
     setPlanBusy(true);
     // The cut uses element triangles: converted models must have delivered them.
-    await Promise.all(models.map((m) => hydrated(m.model)));
+    try {
+      await Promise.all(models.map((m) => hydrated(m.model)));
+    } catch {
+      setPlanBusy(false);
+      toast.error(ui(locale).bimViewerPage.geometryFailed);
+      return;
+    }
     const level = levels.find((l) => l.id === levelId);
     const s = ui(locale).bimSheets;
     const target = cameraRef.current?.target ?? [0, 0, 0];
@@ -1111,12 +1156,19 @@ export function BimViewerPage() {
     for (const id of comparison.diff.properties) map.set(id, DIFF_COLORS.properties);
     return map;
   }, [activeTool, appearance.colors, clashColors, comparison]);
+  const comparisonVisibility = useRef<{ hidden: Set<string>; isolated: Set<string> | null } | null>(null);
   const runComparison = async (oldKey: string, newKey: string) => {
     const older = canvasModels.find((m) => m.key === oldKey);
     const newer = canvasModels.find((m) => m.key === newKey);
     if (!older || !newer) return;
     // Shapes are compared by their triangles, which converted models load in the background.
-    await Promise.all([hydrated(older.model), hydrated(newer.model)]);
+    try {
+      await Promise.all([hydrated(older.model), hydrated(newer.model)]);
+    } catch {
+      toast.error(ui(locale).bimViewerPage.geometryFailed);
+      return;
+    }
+    if (!modelsRef.current.some((m) => m.key === oldKey) || !modelsRef.current.some((m) => m.key === newKey)) return;
     // Old positions → world → new model frame, so a moved file is not "all changed".
     const c = Math.cos(newer.placement.rotationY);
     const sn = Math.sin(newer.placement.rotationY);
@@ -1125,7 +1177,9 @@ export function BimViewerPage() {
       const [dx, dy, dz] = [wx - newer.placement.position[0], wy - newer.placement.position[1], wz - newer.placement.position[2]];
       return [dx * c - dz * sn, dy, dx * sn + dz * c];
     };
-    const diff = compareModels(older.model.elements, newer.model.elements, toNew);
+    const diff = await compareModelsAsync(older.model.elements, newer.model.elements, toNew);
+    if (!modelsRef.current.some((m) => m.key === oldKey) || !modelsRef.current.some((m) => m.key === newKey)) return;
+    comparisonVisibility.current ??= { hidden: hiddenElements, isolated };
     setComparison({ oldKey, newKey, diff });
     // The old file overlaps the new one: only its removed elements stay visible.
     setHiddenElements(new Set(diff.matchedOld));
@@ -1135,8 +1189,9 @@ export function BimViewerPage() {
   };
   const exitComparison = () => {
     setComparison(null);
-    setHiddenElements(new Set());
-    setIsolated(null);
+    setHiddenElements(comparisonVisibility.current?.hidden ?? new Set());
+    setIsolated(comparisonVisibility.current?.isolated ?? null);
+    comparisonVisibility.current = null;
   };
   const showPlan = (level: BimLevel) => {
     const lift = canvasModels.find((m) => m.key === level.modelKey)?.placement.position[1] ?? 0;
@@ -1191,6 +1246,7 @@ export function BimViewerPage() {
     setMarkupShapes([]);
     setSavedViews([]);
     setIssues([]);
+    setIssueSnapshots({});
     setSearchSets([]);
     setSelectionSets([]);
     setLayers(ALL_LAYERS);
@@ -1200,7 +1256,7 @@ export function BimViewerPage() {
   };
 
   const loadFiles = async (files: File[]) => {
-    const ifc = files.filter((f) => /.(ifc|bim4c)$/i.test(f.name));
+    const ifc = files.filter((f) => /\.(ifc|bim4c)$/i.test(f.name));
     if (ifc.length < files.length)
       toast.error(ui(locale).bimViewerPage.onlyIfcFilesAreAccepted);
     if (!ifc.length) return;
@@ -1278,8 +1334,7 @@ export function BimViewerPage() {
     if (!controller.signal.aborted && modelsRef.current.length) requestView("perspective");
   };
 
-  // The public demo is a real IFC file, so the viewer is useful immediately
-  // after opening the route while still allowing users to add their own files.
+  // Commit the federation together: session identity and camera frame use both files.
   useEffect(() => {
     if (demoLoadedRef.current || modelsRef.current.length) return;
     demoLoadedRef.current = true;
@@ -1287,63 +1342,27 @@ export function BimViewerPage() {
     taskRef.current = controller;
     void (async () => {
       try {
-        setLoading({
-          name: "bim4c-commercial-tower.ifc",
-          percent: 0,
-          index: 1,
-          total: 1,
-        });
-        const { parseIfcFromUrl } = await import("./ifc-loader");
-        const parsed = await parseIfcFromUrl(
-          "/models/bim4c-commercial-tower.ifc",
-          "bim4c-commercial-tower.ifc",
-          controller.signal,
-          (percent) => {
-            if (!controller.signal.aborted)
-              setLoading({
-                name: "bim4c-commercial-tower.ifc",
-                percent,
-                index: 1,
-                total: 1,
-              });
-          },
-        );
+        const { loadDemoModel } = await import("./ifc-loader");
+        const loaded: FederatedModel[] = [];
+        for (const [index, demo] of DEMO_MODELS.entries()) {
+          controller.signal.throwIfAborted();
+          setLoading({ name: demo.name, percent: 0, index: index + 1, total: DEMO_MODELS.length });
+          const parsed = await loadDemoModel(demo.url, demo.hash, controller.signal);
+          const key = `m${++keyCounter.current}`;
+          loaded.push({ key, model: namespaced(key, parsed), visible: true, alignment: "shared", offset: { x: 0, y: 0, z: 0, rotationDeg: 0 } });
+        }
         if (controller.signal.aborted || modelsRef.current.length) return;
-        const key = `m${++keyCounter.current}`;
-        const model: FederatedModel = {
-          key,
-          model: namespaced(key, parsed),
-          visible: true,
-          alignment: "shared",
-          offset: { x: 0, y: 0, z: 0, rotationDeg: 0 },
-        };
-        modelsRef.current = [model];
-        setSceneOrigin(modelOrigin(parsed));
-        setModels(modelsRef.current);
+        modelsRef.current = loaded;
+        setSceneOrigin(modelOrigin(loaded[0].model));
+        setModels(loaded);
         requestView("perspective");
-        toast.success(
-          ui(locale).formats.modelAdded(
-            parsed.filename ?? "bim4c-commercial-tower.ifc",
-            parsed.elements.length,
-          ),
-        );
       } catch {
-        if (!controller.signal.aborted) {
-          toast.error(ui(locale).bimViewerPage.unableToReadIFCCheck, {
-            duration: 7000,
-          });
-        }
+        if (!controller.signal.aborted) toast.error(ui(locale).bimViewerPage.unableToReadIFCCheck, { duration: 7000 });
       } finally {
-        if (taskRef.current === controller) {
-          taskRef.current = null;
-          setLoading(null);
-        }
+        if (taskRef.current === controller) { taskRef.current = null; setLoading(null); }
       }
     })();
-    return () => {
-      controller.abort();
-      demoLoadedRef.current = false;
-    };
+    return () => { controller.abort(); demoLoadedRef.current = false; };
   }, [locale, requestView]);
 
   const commitModels = (next: FederatedModel[]) => {
@@ -2057,6 +2076,7 @@ export function BimViewerPage() {
             bounds={sceneBounds}
             sceneOrigin={sceneOrigin}
             mapConversion={mapConversion}
+            modelMapConversions={modelMapConversions}
             measureMode={measureMode}
             onMeasureMode={(mode) => {
               setMeasureMode(mode);

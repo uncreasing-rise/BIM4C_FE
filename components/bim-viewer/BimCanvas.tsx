@@ -30,7 +30,7 @@ import { BimViewCube } from "./BimViewCube";
 import { timeSlicer } from "./yield";
 import { PickIndex } from "./pick-index";
 import { DetailCuller } from "./detail-culling";
-import { FragmentsEngine, hydrateElements, localIdOf, type ElementLook } from "./fragments-engine";
+import { FragmentsEngine, hydrateElements, cancelHydration, localIdOf, type ElementLook } from "./fragments-engine";
 import { entryPose, walkStep as stepWalk, type WalkWorld } from "./walk-physics";
 import { boxMode, boxPicked, rectFrom } from "./box-select";
 import {
@@ -53,7 +53,7 @@ import {
 import { buildFeatureEdges, edgeKey, snapPoint, type SnapResult } from "./snapping";
 import { findCircles, type CircleFeature } from "./circles";
 import type { MarkupShape } from "./markup";
-import { addGridBubbles } from "./grid-bubbles";
+import { addGridBubbles, declutterGridBubbles, gridKey, showOneCopyPerAxis } from "./grid-bubbles";
 import { cutMeshPlane, drawingBounds, PLAN_CUT, sectionCut, type PlanDrawing, type PlanElementLines, type SheetCut } from "./plan-drawing";
 import {
   accumulateSegments,
@@ -353,6 +353,7 @@ export function BimCanvas(props: BimCanvasProps) {
       requestRender();
     });
     let fragmentsSettleUntil = 0;
+    (window as unknown as { __debugFragments: unknown }).__debugFragments = { fragmentsEngine, entries }; // TEMP-DEBUG
     const camera = new THREE.PerspectiveCamera(45, 1, 0.01, 1000);
     // The room environment (see ViewerPipeline) provides soft fill light;
     // a sky/ground hemisphere and a key light give the model form.
@@ -705,11 +706,14 @@ export function BimCanvas(props: BimCanvasProps) {
       streamFragments();
       cullDetail();
       sizeScreenMarkers();
+      if (current.display.ifcGrids)
+        declutterGridBubbles([...entries.values()].flatMap((entry) => entry.ifcGrids ? [entry.ifcGrids] : []), view(), viewport.width, viewport.height);
       renderer.info.reset();
       pipeline.render(interacting, activePlanes, span);
       drawMinimap();
       // Read by performance checks (draw calls for the last frame, all passes).
       renderer.domElement.dataset.drawCalls = String(renderer.info.render.calls);
+      renderer.domElement.dataset.drawTriangles = String(renderer.info.render.triangles);
       reportPerf(performance.now() - started);
       current.onCameraChange({ position: camera.position.toArray(), target: controls.target.toArray(), up: camera.up.toArray(), fov: camera.fov });
       positionLabels();
@@ -717,11 +721,12 @@ export function BimCanvas(props: BimCanvasProps) {
 
     // ---- Coordinates ---------------------------------------------------
     const fmt = (n: number) => formatLength(n, localeRef.current);
-    const coordinateText = (p: Vec3) => {
+    const coordinateText = (p: Vec3, modelKey?: string) => {
       const [x, y, z] = sceneToWorld(p, current.sceneOrigin);
       let text = `X ${fmt(x)}   Y ${fmt(y)}   Z ${fmt(z)}   (m)`;
-      if (current.mapConversion) {
-        const [e, n, h] = worldToMap([x, y, z], current.mapConversion);
+      const map = modelKey ? entries.get(modelKey)?.source.model.mapConversion : current.mapConversion;
+      if (map) {
+        const [e, n, h] = worldToMap([x, y, z], map);
         text += `\nE ${fmt(e)}   N ${fmt(n)}   H ${fmt(h)}   (m)`;
       }
       return text;
@@ -816,6 +821,7 @@ export function BimCanvas(props: BimCanvasProps) {
       if (pipeline) pipeline.heavy = triangles > 1_500_000;
     };
     const removeEntry = (entry: ModelEntry) => {
+      cancelHydration(entry.source.model);
       culler.restore();
       federation.remove(entry.group);
       for (const marker of entry.markers.children) screenMarkers.delete(marker);
@@ -833,6 +839,11 @@ export function BimCanvas(props: BimCanvasProps) {
       entry.fragments = null;
       entry.meshes.clear();
       entry.group.clear();
+      // Axes this file hid as duplicates show again from the remaining files.
+      if (entry.ifcGrids) {
+        entry.ifcGrids = undefined;
+        showOneCopyPerAxis([...entries.values()].flatMap((e) => (e !== entry && e.ifcGrids ? [e.ifcGrids] : [])));
+      }
     };
     const addElementMesh = (entry: ModelEntry, element: BimElementData, pickOnly: boolean) => {
       const mesh = createElementMesh(element, materials, primitiveGeometries, { lazyNormals: pickOnly });
@@ -890,6 +901,8 @@ export function BimCanvas(props: BimCanvasProps) {
         () => !isCurrent(),
       ).then(() => {
         if (isCurrent()) entry.hydrated = true;
+      }).catch((error: unknown) => {
+        if (isCurrent() && !(error instanceof DOMException && error.name === "AbortError")) setError(true);
       });
     };
     const buildEntry = async (entry: ModelEntry) => {
@@ -1281,7 +1294,7 @@ export function BimCanvas(props: BimCanvasProps) {
         } else if (m.mode === "point" && m.points[0]) {
           addLabel(
             vec(m.points[0]),
-            coordinateText([m.points[0].x, m.points[0].y, m.points[0].z]),
+            coordinateText([m.points[0].x, m.points[0].y, m.points[0].z], m.points[0].modelKey),
             "point",
           );
         }
@@ -1576,7 +1589,7 @@ export function BimCanvas(props: BimCanvasProps) {
       if (!result) return hideHover();
       const p = result.point.toArray() as Vec3;
       readout.dataset.empty = "false";
-      readout.textContent = coordinateText(p);
+      readout.textContent = coordinateText(p, (result.hit?.object.userData.element as BimElementData | undefined)?.modelKey);
       if (!measuring) {
         // Only the coordinate readout changes: no need to redraw the scene.
         tooltip.hidden = true;
@@ -2215,16 +2228,22 @@ export function BimCanvas(props: BimCanvasProps) {
       }
       // Grid axes belong on plans.
       const grids: PlanDrawing["grids"] = [];
+      const gridKeys = new Set<string>();
       const a = new THREE.Vector3(), b = new THREE.Vector3();
       if (kind === "plan")
         for (const entry of entries.values())
           entry.ifcGrids?.traverse((object) => {
             const line = object as THREE.Line;
-            const position = line.isLine ? line.geometry.getAttribute("position") : null;
+            const position = line.isLine && line.visible ? line.geometry.getAttribute("position") : null;
             if (!position || position.count < 2) return;
             a.fromBufferAttribute(position, 0).applyMatrix4(line.matrixWorld);
             b.fromBufferAttribute(position, position.count - 1).applyMatrix4(line.matrixWorld);
-            grids.push({ tag: String(line.userData.tag ?? line.parent?.userData.tag ?? ""), x1: a.x, y1: a.z, x2: b.x, y2: b.z });
+            const tag = String(line.userData.tag ?? line.parent?.userData.tag ?? "");
+            // Each axis once, whatever the number of levels and files repeating it.
+            const key = gridKey(tag, [a.x, a.z], [b.x, b.z]);
+            if (gridKeys.has(key)) return;
+            gridKeys.add(key);
+            grids.push({ tag, x1: a.x, y1: a.z, x2: b.x, y2: b.z });
           });
       return { name: request.name, kind, height, floor, elements, grids, bounds: drawingBounds(elements, grids) };
     };
@@ -2302,7 +2321,9 @@ export function BimCanvas(props: BimCanvasProps) {
             new THREE.Vector3(...next.sceneBounds.min),
             new THREE.Vector3(...next.sceneBounds.max),
           );
-          const box = visible.isEmpty() ? fallback : visible;
+          // During hydration the mesh subset does not represent the scene extent.
+          const incomplete = [...entries.values()].some((entry) => !entry.hydrated);
+          const box = visible.isEmpty() || (incomplete && !selection.length && !target) ? fallback : visible;
           const radius = Math.max(0.01, box.getSize(new THREE.Vector3()).length() / 2);
           const viewOffset = camera.position.clone().sub(controls.target);
           const direction: [number, number, number] =
@@ -2549,6 +2570,8 @@ export function BimCanvas(props: BimCanvasProps) {
             const floor = entry.group.localToWorld(new THREE.Vector3(0, base, 0)).y;
             if (Number.isFinite(lines.min.y)) entry.ifcGrids.position.y += floor - lines.min.y;
           }
+          // One copy of each axis across levels and files.
+          showOneCopyPerAxis([...entries.values()].flatMap((e) => (e.ifcGrids ? [e.ifcGrids] : [])));
           requestRender();
         });
       }

@@ -108,7 +108,7 @@ export function BimToolbar(p: Props) {
               <Icon className="size-4" />
               {/* All fourteen labels need ~1800px; below that only the active one shows. */}
               <span
-                className={`hidden whitespace-nowrap min-[1800px]:inline ${p.activeTool === id ? "xl:inline" : ""}`}
+                className={`hidden whitespace-nowrap min-[1800px]:inline ${p.activeTool === id ? "inline" : ""}`}
               >
                 {id === "views" ? ui(locale).bimToolbar.views : v.tools[id]}
               </span>

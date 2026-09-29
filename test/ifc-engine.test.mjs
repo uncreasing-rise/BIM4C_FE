@@ -84,6 +84,27 @@ test("every part of a multipart IFC element is retained and locally centered", (
   assert.equal(model.diagnostics.missingGeometry, 18);
   disposeObject(scene);
 });
+
+test("an empty representation beside a valid IFC body does not discard the element", () => {
+  const originalStream = api.StreamAllMeshes;
+  const originalGeometry = api.GetGeometry;
+  api.StreamAllMeshes = (model, callback) => originalStream.call(api, model, (flat, index, total) => {
+    const parts = flat.geometries;
+    callback({ expressID: flat.expressID, geometries: {
+      size: () => parts.size() + 1,
+      get: (i) => i === 0 ? { geometryExpressID: -1 } : parts.get(i - 1),
+    } }, index, total);
+  });
+  api.GetGeometry = (model, id) => id === -1 ? {
+    GetVertexData: () => 0, GetVertexDataSize: () => 0,
+    GetIndexData: () => 0, GetIndexDataSize: () => 0, delete: () => {},
+  } : originalGeometry.call(api, model, id);
+  try {
+    const model = parse(generateDemoIfc());
+    assert.equal(model.elements.length, 27);
+    assert.equal(model.diagnostics.failedGeometry, 0);
+  } finally { api.StreamAllMeshes = originalStream; api.GetGeometry = originalGeometry; }
+});
 test("demo reads actual storeys, materials, inherited MEP types, Psets and quantities", () => {
   demo = parse(generateDemoIfc());
   assert.equal(demo.elements.length, 27);

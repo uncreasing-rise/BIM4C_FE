@@ -39,7 +39,7 @@ export function BimLevelsPanel({
       onKeyDown={(e) => {
         if (e.key === "Escape") onClose();
       }}
-      className="absolute left-2 top-2 z-30 flex max-h-[calc(100%-1rem)] w-[calc(100%-1rem)] flex-col rounded-xl border border-white/15 bg-slate-950/95 text-xs text-slate-200 shadow-xl sm:left-4 sm:top-4 sm:max-h-[calc(100%-2rem)] sm:w-80"
+      className="absolute left-2 bottom-2 z-30 flex max-h-[55%] sm:bottom-auto w-[calc(100%-1rem)] flex-col rounded-xl border border-white/15 bg-slate-950/95 text-xs text-slate-200 shadow-xl sm:left-4 sm:top-4 sm:max-h-[calc(100%-2rem)] sm:w-80"
     >
       <div className="flex shrink-0 items-center justify-between gap-2 border-b border-white/10 px-4 py-2">
         <h2 className="flex items-center gap-2 font-bold">

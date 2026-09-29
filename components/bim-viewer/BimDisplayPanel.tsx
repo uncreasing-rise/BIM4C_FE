@@ -56,7 +56,7 @@ export function BimDisplayPanel({
       onKeyDown={(e) => {
         if (e.key === "Escape") onClose();
       }}
-      className="absolute left-2 top-2 z-30 max-h-[calc(100%-1rem)] w-[calc(100%-1rem)] overflow-y-auto rounded-xl border border-white/15 bg-slate-950/95 p-4 text-xs text-slate-200 shadow-xl sm:left-4 sm:top-4 sm:max-h-[calc(100%-2rem)] sm:w-80"
+      className="absolute left-2 bottom-2 z-30 max-h-[55%] sm:bottom-auto w-[calc(100%-1rem)] overflow-y-auto rounded-xl border border-white/15 bg-slate-950/95 p-4 text-xs text-slate-200 shadow-xl sm:left-4 sm:top-4 sm:max-h-[calc(100%-2rem)] sm:w-80"
     >
       <div className="mb-3 flex items-center justify-between gap-2 border-b border-white/10 pb-2">
         <h2 className="font-bold">{s.title}</h2>

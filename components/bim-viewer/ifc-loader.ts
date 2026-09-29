@@ -1,7 +1,7 @@
 import type { BimModelDefinition } from "./types";
 import { contentHash } from "./session-ids";
 import { readCachedModel, writeCachedModel } from "./fragments-cache";
-import { decodePackage, PACKAGE_EXTENSION } from "./bim-package";
+import { decodePackage, MAX_PACKAGE_BYTES, PACKAGE_EXTENSION } from "./bim-package";
 
 const wasmPath = () => new URL("/wasm/", location.href).href;
 
@@ -117,12 +117,28 @@ export async function loadModelFile(
 ): Promise<BimModelDefinition> {
   if (!file.name.toLowerCase().endsWith(PACKAGE_EXTENSION))
     return parseIfcFileToBimModel(file, onProgress, signal, options);
+  signal?.throwIfAborted();
+  if (file.size > MAX_PACKAGE_BYTES) throw new Error("PACKAGE_TOO_LARGE");
   const model = await decodePackage(new Uint8Array(await file.arrayBuffer()));
   signal?.throwIfAborted();
   onProgress?.(100);
   // Its IFC opens instantly from now on, too.
   if (model.contentHash) void writeCachedModel(model.contentHash, model);
   return { ...model, filename: model.filename ?? file.name };
+}
+
+/** Load a preconverted public demo, reusing its content-addressed cache. */
+export async function loadDemoModel(url: string, hash: string, signal: AbortSignal): Promise<BimModelDefinition> {
+  const cached = await readCachedModel(hash);
+  signal.throwIfAborted();
+  if (cached) return cached;
+  const response = await fetch(url, { signal });
+  if (!response.ok) throw new Error(`IFC_HTTP_${response.status}`);
+  const model = await decodePackage(new Uint8Array(await response.arrayBuffer()));
+  signal.throwIfAborted();
+  if (model.contentHash !== hash) throw new Error("PACKAGE_INVALID");
+  void writeCachedModel(hash, model);
+  return model;
 }
 
 export async function parseIfcFromUrl(

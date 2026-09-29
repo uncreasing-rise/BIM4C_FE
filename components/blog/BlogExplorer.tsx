@@ -181,9 +181,9 @@ export function BlogExplorer({
               </article>
             )}
 
-            {/* Sub-articles column (Spans 5 cols on desktop) */}
-            <div className="flex flex-col gap-6 lg:col-span-5">
-              {visible.slice(1).map((item) => (
+            {/* Side column: four rows sharing the featured story's height. */}
+            <div className="grid gap-6 lg:col-span-5 lg:grid-rows-4">
+              {visible.slice(1, 5).map((item) => (
                 <article
                   className="group relative flex flex-col sm:flex-row gap-4 overflow-hidden rounded-2xl border border-border/70 bg-card p-4 shadow-sm transition-all duration-300 hover:shadow-xl hover:border-primary/40 hover:-translate-y-1 cursor-pointer"
                   data-motion="tile"

@@ -48,20 +48,21 @@ export function Partners({ compact = false, customPartners }: PartnersProps) {
           </p>
         </header>
 
-        <div className="partner-grid grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-3.5 sm:gap-4">
+        {/* Cells of a fixed size, centred: a short partner list stays balanced. */}
+        <div className="partner-grid grid grid-cols-2 justify-center gap-4 sm:grid-cols-[repeat(auto-fit,minmax(200px,240px))] sm:gap-5">
           {partners.map((partner) => (
             <div
               key={partner.name}
-              className="partner-cell group relative flex flex-col items-center justify-center min-h-[96px] sm:min-h-[110px] rounded-2xl border border-border/80 bg-white dark:bg-card p-4 shadow-xs transition-all duration-300 hover:border-primary/50 hover:shadow-md hover:shadow-primary/5 hover:-translate-y-1"
+              className="partner-cell group relative flex flex-col items-center justify-center min-h-[130px] sm:min-h-[160px] rounded-2xl border border-border/80 bg-white dark:bg-card p-4 shadow-xs transition-all duration-300 hover:border-primary/50 hover:shadow-md hover:shadow-primary/5 hover:-translate-y-1"
               data-motion="tile"
               title={partner.name}
             >
-              <div className="relative h-11 w-full max-w-[120px] flex items-center justify-center">
+              <div className="relative h-20 w-full max-w-[170px] flex items-center justify-center sm:h-24 sm:max-w-[210px]">
                 <Image
                   src={partner.src}
                   alt={partner.name}
                   fill
-                  sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 14vw"
+                  sizes="(max-width: 640px) 45vw, 210px"
                   className="object-contain brightness-100 opacity-100 transition-all duration-300 group-hover:scale-110 dark:brightness-110"
                 />
               </div>

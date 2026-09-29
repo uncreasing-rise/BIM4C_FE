@@ -38,10 +38,10 @@ export const DEFAULT_DISPLAY: DisplaySettings = {
   edges: false,
   ambientOcclusion: false,
   projection: "perspective",
-  environment: "classic",
+  environment: "light",
   grid: true,
   sectionCaps: true,
-  ifcGrids: true,
+  ifcGrids: false,
   minimap: false,
 };
 

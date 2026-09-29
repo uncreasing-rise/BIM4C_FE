@@ -36,7 +36,8 @@ export default async function BlogPage({
   const [postsPage, categories] = await Promise.all([
     getPostsPage({
       page: parsePage(params.page),
-      limit: 6,
+      // One featured story plus four in the side column (BlogExplorer).
+      limit: 5,
       search: filterParam(params.q),
       category:
         filterParam(params.category),
