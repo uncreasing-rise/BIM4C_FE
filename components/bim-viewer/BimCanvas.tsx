@@ -208,7 +208,7 @@ const SNAP_COLORS: Record<SnapKind, number> = {
   edge: 0x06b6d4,
   face: 0x14b8a6,
 };
-const SNAP_TOLERANCE_PX = 12;
+const SNAP_TOLERANCE_PX = 16;
 /** Measurement lines; shortest distances stand out in amber. */
 const MEASURE_COLOR = 0x0f766e;
 const SHORTEST_COLOR = 0xd97706;
@@ -226,7 +226,7 @@ const SELECTED_LOOK: ElementLook = { visible: true, color: "#06b6d4" };
 const GHOST_LOOK: ElementLook = { visible: true, color: "#cbd5e1", opacity: 0.14 };
 const HIDDEN_LOOK: ElementLook = { visible: false };
 const DEFAULT_LOOK: ElementLook = { visible: true };
-const CLICK_TOLERANCE_PX = 6;
+const CLICK_TOLERANCE_PX = 10;
 const FLIGHT_MS = 480;
 
 interface ModelEntry {
@@ -1325,7 +1325,7 @@ export function BimCanvas(props: BimCanvasProps) {
       new THREE.MeshBasicMaterial({ color: SNAP_COLORS.face, depthTest: false, side: THREE.DoubleSide }),
     );
     hoverMarker.renderOrder = 7;
-    hoverMarker.userData.px = 5;
+    hoverMarker.userData.px = 7;
     screenMarkers.add(hoverMarker);
     const hoverEdge = fatLine([new THREE.Vector3(), new THREE.Vector3(1, 0, 0)], SNAP_COLORS.edge, 3);
     hoverEdge.renderOrder = 7;
@@ -1634,7 +1634,10 @@ export function BimCanvas(props: BimCanvasProps) {
         dashed(rubberBand, vec(pending), result.point);
         const cursor = { x: p[0], y: p[1], z: p[2] };
         const s = distanceSummary(pending, cursor);
-        text += ` · ${length(s.distance)}`;
+        text += ` · L ${length(s.distance)}`;
+        if (mode === "distance" && Math.abs(s.distance - s.horizontal) > 1e-4) {
+          text += ` (Plan ${length(s.horizontal)})`;
+        }
         if (mode === "polyline" && points.length > 1)
           text += ` · Σ ${length(polylineLength(points) + s.distance)}`;
         if (mode === "accumulate" && points.length > 1)

@@ -104,12 +104,16 @@ export function snapPoint(input: SnapInput): SnapResult {
     .map((i) => [triangle[i], triangle[(i + 1) % 3]] as [Vec3, Vec3]);
 
   if (settings.vertex) {
-    // Only corners that lie on a real edge; interior fan vertices are not corners.
-    const corners = triangle.filter((_, i) => featureEdges[i] || featureEdges[(i + 2) % 3]);
-    let best: { point: Vec3; d: number } | null = null;
-    for (const corner of corners) {
+    let best: { point: Vec3; d: number; isFeature: boolean } | null = null;
+    for (let i = 0; i < 3; i++) {
+      const corner = triangle[i];
+      const isFeature = featureEdges[i] || featureEdges[(i + 2) % 3];
       const d = screenDistance(project(corner), pointer);
-      if (d <= tolerancePx && (!best || d < best.d)) best = { point: corner, d };
+      if (d <= tolerancePx) {
+        if (!best || (isFeature && !best.isFeature) || (isFeature === best.isFeature && d < best.d)) {
+          best = { point: corner, d, isFeature };
+        }
+      }
     }
     if (best) return { point: best.point, kind: "vertex", distance: best.d };
   }

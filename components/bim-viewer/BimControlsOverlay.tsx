@@ -583,19 +583,23 @@ export function BimControlsOverlay(p: Props) {
           <fieldset className="rounded-lg border border-white/10 p-2">
             <legend className="px-1 font-bold">{o.lock}</legend>
             <div className="flex flex-wrap gap-1">
-              {MEASURE_LOCKS.map((lock) => (
-                <button
-                  key={lock}
-                  type="button"
-                  aria-pressed={p.measureLock === lock}
-                  title={o.lockNames[lock]}
-                  aria-label={o.lockNames[lock]}
-                  onClick={() => p.onMeasureLock(p.measureLock === lock ? null : lock)}
-                  className={`min-h-8 min-w-9 rounded-lg border px-2 font-mono ${p.measureLock === lock ? "border-amber-400 bg-amber-500/15 text-amber-200" : "border-white/10"}`}
-                >
-                  {LOCK_SYMBOLS[lock]}
-                </button>
-              ))}
+              {MEASURE_LOCKS.map((lock) => {
+                const shortcut = lock === "x" ? "X" : lock === "y" ? "Y" : lock === "z" ? "Z" : lock === "perpendicular" ? "P" : "L";
+                return (
+                  <button
+                    key={lock}
+                    type="button"
+                    aria-pressed={p.measureLock === lock}
+                    title={`${o.lockNames[lock]} [${shortcut}]`}
+                    aria-label={`${o.lockNames[lock]} [${shortcut}]`}
+                    onClick={() => p.onMeasureLock(p.measureLock === lock ? null : lock)}
+                    className={`min-h-8 min-w-9 rounded-lg border px-2 font-mono flex items-center gap-1 text-xs ${p.measureLock === lock ? "border-amber-400 bg-amber-500/15 text-amber-200" : "border-white/10"}`}
+                  >
+                    <span>{LOCK_SYMBOLS[lock]}</span>
+                    <kbd className="text-[10px] text-slate-400 font-sans opacity-70">[{shortcut}]</kbd>
+                  </button>
+                );
+              })}
             </div>
             <p className="mt-1 text-[11px] leading-relaxed text-slate-400">{o.lockHelp}</p>
           </fieldset>

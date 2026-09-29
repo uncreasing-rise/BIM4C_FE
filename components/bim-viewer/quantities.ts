@@ -26,9 +26,9 @@ export interface TakeoffRow {
 }
 
 // Preference order: the net figure first, gross as a fallback.
-const VOLUME = ["NetVolume", "GrossVolume", "Volume"];
-const AREA = ["NetArea", "GrossArea", "NetSideArea", "GrossSideArea", "NetFootprintArea", "GrossFootprintArea", "Area"];
-const LENGTH = ["Length", "NetLength", "GrossLength"];
+const VOLUME = ["NetVolume", "GrossVolume", "Volume", "TotalVolume", "VolumeNet", "VolumeGross"];
+const AREA = ["NetArea", "GrossArea", "NetSideArea", "GrossSideArea", "NetFootprintArea", "GrossFootprintArea", "Area", "TotalArea", "CrossSectionArea", "GrossFloorArea", "NetFloorArea", "OuterSurfaceArea"];
+const LENGTH = ["Length", "NetLength", "GrossLength", "TotalLength", "NominalLength", "Height", "Width"];
 
 type Found = { value: number; unit?: string } | null;
 

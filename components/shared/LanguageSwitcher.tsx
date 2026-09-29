@@ -14,6 +14,29 @@ interface LanguageSwitcherProps {
   isOverHero?: boolean;
 }
 
+export function LocaleFlag({ loc, className }: { loc: (typeof SUPPORTED_LOCALES)[number]; className?: string }) {
+  if (loc === "vi") {
+    return (
+      <svg viewBox="0 0 640 480" className={cn("inline-block shrink-0 rounded-xs shadow-xs object-cover", className)} aria-hidden="true">
+        <rect width="640" height="480" fill="#da251d" />
+        <polygon
+          points="320,80 357,194 477,194 380,265 417,379 320,309 223,379 260,265 163,194 283,194"
+          fill="#ffff00"
+        />
+      </svg>
+    );
+  }
+  return (
+    <svg viewBox="0 0 640 480" className={cn("inline-block shrink-0 rounded-xs shadow-xs object-cover", className)} aria-hidden="true">
+      <path fill="#012169" d="M0 0h640v480H0z" />
+      <path fill="#fff" d="m75 0 245 180L565 0h75v60L435 240l205 180v60h-75L320 300 75 480H0v-60l205-180L0 60V0z" />
+      <path fill="#c8102e" d="m425 285 215 160v35h-35L390 310zM195 195 0 45V0h35l215 160zM425 195 640 35V0h-35L390 170zM195 285 0 435v45h35l215-160z" />
+      <path fill="#fff" d="M260 0h120v480H260zM0 180h640v120H0z" />
+      <path fill="#c8102e" d="M280 0h80v480H280zM0 200h640v80H0z" />
+    </svg>
+  );
+}
+
 export function LanguageSwitcher({
   variant = "pill",
   className,
@@ -65,7 +88,7 @@ export function LanguageSwitcher({
               aria-current={isActive ? "page" : undefined}
               aria-label={`Switch language to ${info.label}`}
               className={cn(
-                "relative inline-flex h-7 items-center justify-center gap-1 rounded-full px-2.5 text-xs font-bold uppercase tracking-wider transition-all duration-200 ease-out select-none",
+                "relative inline-flex h-7 items-center justify-center gap-1.5 rounded-full px-2.5 text-xs font-bold uppercase tracking-wider transition-all duration-200 ease-out select-none",
                 isActive
                   ? isOverHero
                     ? "bg-white text-slate-950 shadow-sm"
@@ -75,9 +98,7 @@ export function LanguageSwitcher({
                     : "text-slate-600 hover:bg-white/60 hover:text-slate-950",
               )}
             >
-              <span className="text-[11px] leading-none" role="img" aria-hidden="true">
-                {info.flag}
-              </span>
+              <LocaleFlag loc={loc} className="h-3 w-4" />
               <span>{info.code}</span>
             </a>
           );
@@ -116,10 +137,8 @@ export function LanguageSwitcher({
                 : "text-slate-600 hover:bg-white/70 hover:text-slate-950",
             )}
           >
-            <div className="flex items-center gap-2">
-              <span className="text-base" role="img" aria-hidden="true">
-                {info.flag}
-              </span>
+            <div className="flex items-center gap-2.5">
+              <LocaleFlag loc={loc} className="h-3.5 w-5" />
               <div className="flex flex-col text-left leading-tight">
                 <span className="font-bold text-xs">{info.code}</span>
                 <span className={cn("text-[11px]", isActive ? "text-teal-600/90" : "text-muted-foreground")}>
