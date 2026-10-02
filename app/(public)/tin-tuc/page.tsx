@@ -98,7 +98,6 @@ export default async function NewsPage({
         posts={postsPage.items}
         meta={postsPage.meta}
         categoryItems={categories}
-        detailRoute={ROUTES.news}
         catalogueEyebrow={content.catalogueEyebrow}
         catalogueTitle={content.catalogueTitle}
         catalogueDesc={content.catalogueDesc}

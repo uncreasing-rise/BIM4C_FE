@@ -28,7 +28,7 @@ export interface ContentEntryDto {
   eyebrow: string;
   eyebrow_vi?: string | null;
   eyebrow_en?: string | null;
-  category?: string | { name?: string | null } | null;
+  category?: string | { name?: string | null; slug?: string | null } | null;
   meta?: string | null;
   meta_vi?: string | null;
   meta_en?: string | null;

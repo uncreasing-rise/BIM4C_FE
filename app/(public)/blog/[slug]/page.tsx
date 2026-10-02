@@ -1,35 +1,32 @@
-import type { Metadata } from "next";
-import { notFound } from "next/navigation";
-import { BlogDetailView } from "@/components/blog/BlogDetailView";
+import { notFound, permanentRedirect } from "next/navigation";
 import { PublicDataFallback } from "@/components/shared/PublicDataFallback";
-import { ROUTES } from "@/constants/routes";
-import { getPostBySlug, getPosts } from "@/features/blog/api/queries";
-import { getContentMetadata } from "@/features/shared/seo/content-metadata";
-import { selectRelatedContent } from "@/features/shared/selectors/related-content";
-import { pageMetadata } from "@/lib/seo/listing";
+import { getPostBySlug } from "@/features/blog/api/queries";
+import { postPath } from "@/features/blog/post-group";
+import { getRequestLocale } from "@/lib/i18n/request";
+import { localizedPath } from "@/lib/seo/site";
 
 export function generateStaticParams() {
   return [];
 }
-export async function generateMetadata({
-  params,
-}: {
-  params: Promise<{ slug: string }>;
-}): Promise<Metadata> {
+
+/** Redirected here, before streaming, so it is a real 308 (see the news page). */
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   let entry;
   try {
     entry = await getPostBySlug(slug);
   } catch {
-    return await pageMetadata(
-      "Bài viết BIM & công nghệ xây dựng | BIM4C",
-      "Góc nhìn chuyên môn về BIM, dữ liệu xây dựng và chuyển đổi số từ BIM4C.",
-      ROUTES.blogDetail(slug),
-    );
+    return {};
   }
   if (!entry) notFound();
-  return await getContentMetadata(entry, ROUTES.blogDetail(slug));
+  permanentRedirect(localizedPath(postPath(entry), await getRequestLocale()));
 }
+
+/**
+ * An older address for posts. Each post has one public URL, under news or
+ * technical by its category (see postGroup); this one moves there for good,
+ * so links and search results that still use it keep working.
+ */
 export default async function BlogDetail({
   params,
 }: {
@@ -43,16 +40,5 @@ export default async function BlogDetail({
     return <PublicDataFallback title="Bài viết BIM & công nghệ xây dựng" description="Nội dung bài viết đang được cập nhật. Vui lòng thử lại sau." />;
   }
   if (!entry) notFound();
-  const posts = await getPosts({ limit: 6 }).catch(() => []);
-  const candidates = posts.filter((post) => post.slug !== slug);
-  const related = selectRelatedContent(entry, candidates);
-  return (
-    <main>
-      <BlogDetailView
-        entry={entry}
-        related={related}
-        backHref={ROUTES.blog}
-      />
-    </main>
-  );
+  permanentRedirect(localizedPath(postPath(entry), await getRequestLocale()));
 }

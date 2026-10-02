@@ -440,7 +440,7 @@ export const uiEn = {
     close: "Close",
     visualStyle: "Visual style",
     edges: "Edges",
-    edgesHint: "Outline silhouettes and sharp creases, like a drawing.",
+    edgesHint: "Outline silhouettes and sharp creases, like a drawing. Paused while you move the view.",
     ambientOcclusion: "Ambient occlusion",
     ambientOcclusionHint: "Soft contact shadows in corners and joints. Paused while you move the view.",
     grid: "Ground grid",

@@ -7,6 +7,9 @@ export const DEFAULT_TITLE =
   "BIM4C — Tư vấn BIM, Chuyển đổi số & Công nghệ Xây dựng";
 export const DEFAULT_DESCRIPTION =
   "BIM4C cung cấp giải pháp tư vấn BIM 3D–7D, Scan-to-BIM, Laser Scanning, đào tạo chuyên sâu và quản trị dữ liệu CDE cho dự án xây dựng và quản lý tài sản.";
+export const DEFAULT_TITLE_EN = "BIM4C — BIM, Design & Training";
+export const DEFAULT_DESCRIPTION_EN =
+  "Laser scanning, BIM 3D–7D, design, construction consulting and training.";
 
 export const DEFAULT_KEYWORDS = [
   "BIM4C",

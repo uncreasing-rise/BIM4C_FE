@@ -440,7 +440,7 @@ export const uiVi: UiStrings = {
     close: "Đóng",
     visualStyle: "Kiểu hiển thị",
     edges: "Đường cạnh",
-    edgesHint: "Viền bao và các cạnh gãy của cấu kiện, rõ nét như bản vẽ.",
+    edgesHint: "Viền bao và các cạnh gãy của cấu kiện, rõ nét như bản vẽ. Tạm tắt khi đang xoay để luôn mượt.",
     ambientOcclusion: "Bóng đổ tiếp xúc (AO)",
     ambientOcclusionHint: "Bóng mềm ở góc và chỗ tiếp giáp. Tạm tắt khi đang xoay để luôn mượt.",
     grid: "Lưới nền",

@@ -23,6 +23,7 @@ import {
 } from "@/features/page-content/context";
 
 import { ui } from "@/lib/i18n/ui";
+import { postPath } from "@/features/blog/post-group";
 interface HomeViewProps {
   rawProjects: Project[];
   rawServices: ContentEntry[];
@@ -416,7 +417,7 @@ export function HomeView({
                 {/* Full-card link for reliable click */}
                 <Link
                   className="absolute inset-0 z-20 rounded-3xl focus:outline-none"
-                  href={ROUTES.blogDetail(post.slug)}
+                  href={postPath(post)}
                   aria-label={post.title}
                 />
 

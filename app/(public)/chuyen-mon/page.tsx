@@ -98,7 +98,6 @@ export default async function TechnicalKnowledgePage({
         posts={postsPage.items}
         meta={postsPage.meta}
         categoryItems={categories}
-        detailRoute={ROUTES.technical}
         catalogueEyebrow={content.catalogueEyebrow}
         catalogueTitle={content.catalogueTitle}
         catalogueDesc={content.catalogueDesc}

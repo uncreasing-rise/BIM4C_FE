@@ -7,20 +7,22 @@ import {
   parsePage,
   type ListingSearchParams,
 } from "@/lib/seo/listing";
+import { pageMeta } from "@/lib/seo/page-meta";
+import { getRequestLocale } from "@/lib/i18n/request";
 import { ROUTES } from "@/constants/routes";
 import { PROJECT_PAGE_SIZE } from "@/features/projects/constants";
 import { ProjectsPageView } from "@/components/projects/ProjectsPageView";
 import { getProjectFilters, getProjectsPage } from "@/features/projects/api/queries";
 
-const description = "Explore BIM4C construction and digital delivery projects.";
 
 export async function generateMetadata({
   searchParams,
 }: {
   searchParams: Promise<ListingSearchParams>;
 }): Promise<Metadata> {
+  const { title, description } = pageMeta("projects", await getRequestLocale());
   return await listingMetadata(
-    "Projects",
+    title,
     description,
     ROUTES.projects,
     await searchParams,

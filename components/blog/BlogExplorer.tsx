@@ -10,7 +10,6 @@ import {
   CatalogSearch,
 } from "@/components/shared/CatalogControls";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { ROUTES } from "@/constants/routes";
 import type { ContentEntry } from "@/types/content";
 import { toLocalizedLabel } from "@/lib/utils/public-labels";
 import type { PageMeta } from "@/features/shared/types/pagination";
@@ -21,11 +20,11 @@ import { resolveCoverImage } from "@/lib/content/cover-images";
 import type { PostCategoryItem } from "@/features/blog/api/queries";
 
 import { ui } from "@/lib/i18n/ui";
+import { postPath } from "@/features/blog/post-group";
 export function BlogExplorer({
   posts: rawPosts,
   meta,
   categoryItems = [],
-  detailRoute = ROUTES.technical,
   catalogueEyebrow,
   catalogueTitle,
   catalogueDesc,
@@ -35,7 +34,6 @@ export function BlogExplorer({
   posts: ContentEntry[];
   meta: PageMeta;
   categoryItems?: PostCategoryItem[];
-  detailRoute?: string;
   catalogueEyebrow?: string;
   catalogueTitle?: string;
   catalogueDesc?: string;
@@ -67,7 +65,8 @@ export function BlogExplorer({
   const pages = meta.totalPages;
   const page = meta.page;
   const visible = posts;
-  const detailHref = (slug: string) => `${detailRoute}/${slug}`;
+  // Each post's own URL (news or technical), whichever listing shows it.
+  const detailHref = (post: { slug: string; categorySlug?: string }) => postPath(post);
 
   const formatFilterLabel = (val: string) =>
     val === ALL
@@ -127,7 +126,7 @@ export function BlogExplorer({
               >
                 <Link
                   className="absolute inset-0 z-20 rounded-3xl focus:outline-none"
-                  href={detailHref(visible[0].slug)}
+                  href={detailHref(visible[0])}
                   aria-label={
                     (ui(locale).blogExplorer.viewArticle) +
                     visible[0].title
@@ -191,7 +190,7 @@ export function BlogExplorer({
                 >
                   <Link
                     className="absolute inset-0 z-20 rounded-2xl focus:outline-none"
-                    href={detailHref(item.slug)}
+                    href={detailHref(item)}
                     aria-label={
                       (ui(locale).blogExplorer.viewArticle) +
                       item.title

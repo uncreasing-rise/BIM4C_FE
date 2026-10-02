@@ -55,6 +55,8 @@ export interface ContentEntry {
   createdAt?: string;
   updatedAt?: string;
   category?: string;
+  /** The category's slug (posts): decides news vs technical, see postGroup. */
+  categorySlug?: string;
   category_en?: string | null;
   duration?: string;
   duration_vi?: string | null;

@@ -4,9 +4,11 @@ import { localizedPath } from "@/lib/seo/site";
 import { env } from "@/lib/config/env";
 import {
   DEFAULT_DESCRIPTION,
+  DEFAULT_DESCRIPTION_EN,
   DEFAULT_KEYWORDS,
   DEFAULT_SOCIAL_IMAGE,
   DEFAULT_TITLE,
+  DEFAULT_TITLE_EN,
   getAlternateLanguages,
   SITE_NAME,
 } from "@/lib/seo/site";
@@ -33,10 +35,12 @@ export const dynamic = "force-dynamic";
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await getRequestLocale();
   const canonical = localizedPath("/", locale);
-  // Admin-managed SEO copy wins; the brand constants only keep a title when settings are unavailable.
+  // The admin's SEO settings hold one language, English: they set the English
+  // title and description; Vietnamese pages use the Vietnamese brand copy
+  // (they showed the English settings before).
   const settings = await getSiteSettings();
-  const title = settings?.defaultSeoTitle || DEFAULT_TITLE;
-  const description = settings?.defaultSeoDescription || DEFAULT_DESCRIPTION;
+  const title = locale === "vi" ? DEFAULT_TITLE : settings?.defaultSeoTitle || DEFAULT_TITLE_EN;
+  const description = locale === "vi" ? DEFAULT_DESCRIPTION : settings?.defaultSeoDescription || DEFAULT_DESCRIPTION_EN;
   const socialImage = settings?.defaultOgImage || DEFAULT_SOCIAL_IMAGE;
   return {
     metadataBase: new URL(env.appUrl),

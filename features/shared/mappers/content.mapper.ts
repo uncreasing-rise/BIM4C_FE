@@ -157,6 +157,8 @@ export function mapContentDto(dto: ContentEntryDto): ContentEntry {
       typeof dto.category === "string"
         ? dto.category
         : (dto.category?.name ?? undefined),
+    categorySlug:
+      typeof dto.category === "object" && dto.category?.slug ? dto.category.slug : undefined,
     meta: dto.meta ?? undefined,
     sections,
     contentBlocks:

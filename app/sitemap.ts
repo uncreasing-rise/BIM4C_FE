@@ -7,6 +7,7 @@ import { absoluteUrl, localizedPath } from "@/lib/seo/site";
 import type { Locale } from "@/lib/i18n/config";
 import type { ContentEntry } from "@/types/content";
 import type { MetadataRoute } from "next";
+import { postGroup } from "@/features/blog/post-group";
 
 interface StaticConfig {
   path: string;
@@ -111,8 +112,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       }),
     );
 
+  // Each post once, at its own group's URL (see postGroup).
   const dynamicTechnicalPosts: MetadataRoute.Sitemap = posts
-    .filter(published)
+    .filter((entry) => published(entry) && postGroup(entry) === "technical")
     .flatMap((entry) =>
       localizedEntries(`/chuyen-mon/${entry.slug}`, {
         lastModified: lastModified(entry) || new Date(),
@@ -122,7 +124,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     );
 
   const dynamicNewsPosts: MetadataRoute.Sitemap = posts
-    .filter(published)
+    .filter((entry) => published(entry) && postGroup(entry) === "news")
     .flatMap((entry) =>
       localizedEntries(`/tin-tuc/${entry.slug}`, {
         lastModified: lastModified(entry) || new Date(),

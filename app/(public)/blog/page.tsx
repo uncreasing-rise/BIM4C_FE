@@ -7,20 +7,21 @@ import {
   parsePage,
   type ListingSearchParams,
 } from "@/lib/seo/listing";
+import { pageMeta } from "@/lib/seo/page-meta";
+import { getRequestLocale } from "@/lib/i18n/request";
 import { ROUTES } from "@/constants/routes";
 import { getPostsPage, getPostCategories } from "@/features/blog/api/queries";
 import { BlogPageView } from "@/components/blog/BlogPageView";
 
-const description =
-  "Project news, expert perspectives and digital construction insights from BIM4C.";
 
 export async function generateMetadata({
   searchParams,
 }: {
   searchParams: Promise<ListingSearchParams>;
 }): Promise<Metadata> {
+  const { title, description } = pageMeta("blog", await getRequestLocale());
   return await listingMetadata(
-    "Insights",
+    title,
     description,
     ROUTES.blog,
     await searchParams,

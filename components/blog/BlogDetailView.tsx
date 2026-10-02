@@ -28,6 +28,7 @@ import { ROUTES } from "@/constants/routes";
 import { toast } from "sonner";
 
 import { ui } from "@/lib/i18n/ui";
+import { postPath } from "@/features/blog/post-group";
 interface BlogDetailViewProps {
   entry: ContentEntry;
   related?: ContentEntry[];
@@ -209,7 +210,7 @@ export function BlogDetailView({
                     </h3>
                     <Link
                       className="absolute inset-0"
-                      href={`${backHref}/${item.slug}`}
+                      href={postPath(item)}
                       aria-label={`View ${item.title}`}
                     />
                   </article>
