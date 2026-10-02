@@ -11,6 +11,7 @@ import { useLanguage } from "@/lib/i18n/context";
 import { toast } from "sonner";
 import { SubmissionReceipt } from "./SubmissionReceipt";
 import type { MutationResult } from "../types/mutations";
+import { HoneypotField, honeypotValue } from "./HoneypotField";
 
 type CourseField = "name" | "phone" | "email" | "consent";
 
@@ -50,6 +51,7 @@ export function CourseRegistrationForm({
         email: String(data.get("email") ?? ""),
         phone: String(data.get("phone") ?? ""),
         consent: data.get("consent") === "on",
+        website: honeypotValue(data),
       });
       form.reset();
       setReceipt({
@@ -113,6 +115,7 @@ export function CourseRegistrationForm({
       noValidate
       aria-busy={status === "sending"}
     >
+      <HoneypotField />
       <div>
         <h3 className="text-xl font-bold text-white">
           {t.detailPage.enquireProgramme}

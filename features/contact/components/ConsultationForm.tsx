@@ -13,6 +13,7 @@ import { SubmissionReceipt } from "./SubmissionReceipt";
 import type { MutationResult } from "../types/mutations";
 import { toast } from "sonner";
 import { useLanguage } from "@/lib/i18n/context";
+import { HoneypotField, honeypotValue } from "./HoneypotField";
 
 type ContactField =
   "name" | "phone" | "email" | "company" | "message" | "consent";
@@ -57,6 +58,7 @@ export function ConsultationForm({
       const result = await submitContactForm({
         ...input,
         locale,
+        website: honeypotValue(data),
         message: `${subject ? `${subject}\n\n` : ""}${input.message}`,
       });
       form.reset();
@@ -113,6 +115,7 @@ export function ConsultationForm({
       noValidate
       aria-busy={status === "sending"}
     >
+      <HoneypotField />
       <div
         className={`grid min-w-0 grid-cols-1 gap-4 ${compact ? "" : "sm:grid-cols-2"}`}
       >

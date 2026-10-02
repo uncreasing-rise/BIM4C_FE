@@ -13,6 +13,7 @@ import { subscribeNewsletter } from "../api/mutations";
 import { getZodFieldErrors, isValidationError } from "../utils/zod-errors";
 
 import { toast } from "sonner";
+import { HoneypotField, honeypotValue } from "./HoneypotField";
 
 type FormStatus = "idle" | "submitting" | "success" | "error";
 type NewsletterField = "email" | "consent";
@@ -45,7 +46,7 @@ export function NewsletterForm() {
     try {
       const consent = formData.get("consent") === "on";
       const result = await subscribeNewsletter(
-        { email: String(formData.get("email") ?? ""), consent, locale },
+        { email: String(formData.get("email") ?? ""), consent, locale, website: honeypotValue(formData) },
         abortController.current.signal,
       );
       setStatus("success");
@@ -88,6 +89,7 @@ export function NewsletterForm() {
       noValidate
       aria-busy={status === "submitting"}
     >
+      <HoneypotField />
       <Label
         className="mb-2 block text-xs"
         htmlFor={`${formId}-newsletter-email`}

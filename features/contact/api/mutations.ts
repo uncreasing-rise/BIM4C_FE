@@ -58,8 +58,12 @@ function parseMutationResult(
   );
 }
 
+/** The hidden anti-spam field (see HoneypotField), sent only when filled in. */
+type Honeypot = { website?: string };
+const honeypot = ({ website }: Honeypot) => (website ? { website } : {});
+
 export async function submitContactForm(
-  input: ContactFormInput,
+  input: ContactFormInput & Honeypot,
   signal?: AbortSignal,
 ): Promise<MutationResult> {
   const payload = contactSchema.parse(input);
@@ -71,6 +75,7 @@ export async function submitContactForm(
         locale: input.locale ?? "vi",
         privacyPolicyVersion: PRIVACY_POLICY_VERSION,
         attribution: visitAttribution(),
+        ...honeypot(input),
       },
       {
         signal,
@@ -83,7 +88,7 @@ export async function submitContactForm(
 }
 
 export async function registerCourse(
-  input: CourseRegistrationInput,
+  input: CourseRegistrationInput & Honeypot,
   signal?: AbortSignal,
 ): Promise<MutationResult> {
   const payload = courseRegistrationSchema.parse(input);
@@ -95,6 +100,7 @@ export async function registerCourse(
         locale: input.locale ?? "vi",
         privacyPolicyVersion: PRIVACY_POLICY_VERSION,
         attribution: visitAttribution(),
+        ...honeypot(input),
       },
       { signal, cache: "no-store", timeoutMs: 30000 },
     ),
@@ -103,7 +109,7 @@ export async function registerCourse(
 }
 
 export async function subscribeNewsletter(
-  input: NewsletterSubscriptionInput,
+  input: NewsletterSubscriptionInput & Honeypot,
   signal?: AbortSignal,
 ): Promise<MutationResult> {
   const payload = newsletterSchema.parse(input);
@@ -115,6 +121,7 @@ export async function subscribeNewsletter(
         locale: input.locale ?? "vi",
         privacyPolicyVersion: PRIVACY_POLICY_VERSION,
         attribution: visitAttribution(),
+        ...honeypot(input),
       },
       {
         signal,

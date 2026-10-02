@@ -26,6 +26,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { SubmissionReceipt } from "./SubmissionReceipt";
 import type { MutationResult } from "../types/mutations";
+import { HoneypotField, honeypotValue } from "./HoneypotField";
 
 function localDate(date: Date) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
@@ -118,6 +119,7 @@ export function AppointmentBooking({ projectSlug }: { projectSlug?: string }) {
           endAt: new Date(start.getTime() + duration * 60000).toISOString(),
           timezone,
           locale,
+          ...(honeypotValue(form) ? { website: honeypotValue(form) } : {}),
           consent: form.get("consent") === "on",
           privacyPolicyVersion: PRIVACY_POLICY_VERSION,
           attribution: visitAttribution(),
@@ -194,6 +196,7 @@ export function AppointmentBooking({ projectSlug }: { projectSlug?: string }) {
         </div>
       </div>
       <form className="grid gap-6" onSubmit={submit} aria-busy={sending}>
+        <HoneypotField />
         <fieldset
           disabled={sending}
           className="grid min-w-0 gap-5 rounded-2xl border border-white/10 bg-white/[.03] p-5"
