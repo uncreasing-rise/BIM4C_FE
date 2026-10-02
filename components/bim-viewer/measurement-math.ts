@@ -278,7 +278,11 @@ export function describeMeasurement(
 export const UNIT_METRES: Record<MeasureUnits["unit"], number> = { m: 1, cm: 0.01, mm: 0.001, ft: 0.3048, in: 0.0254 };
 export const DEFAULT_MEASURE_UNITS: MeasureUnits = { unit: "m", precision: 3 };
 
-function cleanTessellation(val: number, tolerance = 0.005): number {
+/**
+ * Snaps tessellation noise (2.9996 m → 3 m) to the round centimetre it
+ * misses. Half a millimetre: at 5 mm a real 1234.6 mm would read 1230 mm.
+ */
+function cleanTessellation(val: number, tolerance = 0.0005): number {
   if (!Number.isFinite(val)) return val;
   const round1m = Math.round(val);
   if (Math.abs(val - round1m) <= tolerance) return round1m;

@@ -18,7 +18,10 @@ import { Pass } from "three/examples/jsm/postprocessing/Pass.js";
 import { orthoHalfHeight } from "./camera-motion";
 import { SectionCaps } from "./section-caps";
 
-export type ViewerEnvironment = "classic" | "light" | "neutral" | "dark";
+/** Resolution cap of the G-buffer, AO and edges (see ViewerPipeline.setSize). */
+const EFFECTS_PIXEL_RATIO = 1;
+
+export type ViewerEnvironment ="classic" | "light" | "neutral" | "dark";
 
 export interface DisplaySettings {
   edges: boolean;
@@ -212,8 +215,9 @@ export class ViewerPipeline {
 
     this.caps = new SectionCaps(scene, excludeFromGBuffer);
     // MSAA on the main image keeps geometry edges smooth under the effects;
-    // the stencil is for section caps.
-    const target = new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType, samples: 8, stencilBuffer: true });
+    // the stencil is for section caps. 4 samples: 8 doubled the settle frame
+    // (the one drawn when the view stops) on integrated graphics.
+    const target = new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType, samples: 4, stencilBuffer: true });
     this.composer = new EffectComposer(renderer, target);
     this.renderPass = new RenderPass(scene, perspective);
     this.aoPass = new GTAOPass(scene, perspective, 1, 1);
@@ -313,9 +317,16 @@ export class ViewerPipeline {
     this.composer.setSize(width, height);
     const w = Math.max(1, Math.round(width * pixelRatio));
     const h = Math.max(1, Math.round(height * pixelRatio));
-    this.gbuffer.setSize(w, h);
-    this.aoPass.setSize(w, h);
-    (this.edgePass.uniforms.resolution.value as THREE.Vector2).set(w, h);
+    // Normals/depth, AO and edges at CSS resolution at most: on a 2× screen
+    // the full-size G-buffer redrew the scene at 4× the pixels and the frame
+    // drawn when the view stops took ~250 ms on integrated graphics. The
+    // image itself keeps the full resolution.
+    const effects = Math.min(pixelRatio, EFFECTS_PIXEL_RATIO);
+    const ew = Math.max(1, Math.round(width * effects));
+    const eh = Math.max(1, Math.round(height * effects));
+    this.gbuffer.setSize(ew, eh);
+    this.aoPass.setSize(ew, eh);
+    (this.edgePass.uniforms.resolution.value as THREE.Vector2).set(ew, eh);
     (this.fxaaPass.uniforms.resolution.value as THREE.Vector2).set(1 / w, 1 / h);
   }
 
@@ -343,8 +354,10 @@ export class ViewerPipeline {
   }
 
   /**
-   * One frame. While the user is moving the view, ambient occlusion is left
-   * out; the caller renders again with `interacting = false` once it settles.
+   * One frame. While the user is moving the view, ambient occlusion and edges
+   * are left out: both need the G-buffer, a second draw of the whole scene,
+   * which on integrated graphics cut orbiting from ~120 to ~15 fps. The
+   * caller renders again with `interacting = false` once it settles.
    */
   render(interacting: boolean, clippingPlanes: THREE.Plane[], sceneSize = 100) {
     const camera = this.camera;
@@ -353,7 +366,7 @@ export class ViewerPipeline {
     this.capsPass.size = sceneSize * 4;
     this.capsPass.enabled = capPlanes.length > 0;
     const ao = this.settings.ambientOcclusion && !interacting;
-    const edges = this.settings.edges;
+    const edges = this.settings.edges && !interacting;
     this.aoPass.enabled = ao;
     this.edgePass.enabled = edges;
     if (!ao && !edges) {

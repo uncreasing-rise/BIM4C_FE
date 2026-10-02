@@ -10,7 +10,9 @@ const DB = "bim4c-viewer";
 const STORE = "fragments";
 const META = "model-meta";
 /** Bump when the parser output or the Fragments format changes. */
-export const CACHE_VERSION = "frag-3.4.7/parser-2";
+// parser-3: entries never carry hydrated triangles (older ones may hold them
+// in the uncorrected Fragments frame, see FragmentsEngine.frameOffset).
+export const CACHE_VERSION = "frag-3.4.7/parser-3";
 /** Total size kept before the least recently used models are dropped. */
 const MAX_BYTES = 1.5 * 1024 ** 3;
 
@@ -113,7 +115,10 @@ export async function writeCachedModel(hash: string, model: BimModelDefinition):
       meta.delete(old.hash);
       total -= old.bytes;
     }
-    const entry: Entry = { hash, version: CACHE_VERSION, model, bytes, usedAt: Date.now() };
+    // Triangles hydrated meanwhile are not stored: Fragments has them, and
+    // they would double the entry.
+    const stored = { ...model, elements: model.elements.map(({ geometryData: _geometry, ...element }) => (void _geometry, element)) };
+    const entry: Entry = { hash, version: CACHE_VERSION, model: stored, bytes, usedAt: Date.now() };
     store.put(entry);
     meta.put({ hash, version: CACHE_VERSION, bytes, usedAt: entry.usedAt });
     await done(tx);

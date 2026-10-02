@@ -94,3 +94,13 @@ test("rayEnter: 0 from inside, entry distance from outside, -1 on a miss", () =>
   assert.equal(rayEnter(new THREE.Ray(new THREE.Vector3(-5, 3, 0), new THREE.Vector3(1, 0, 0)), box, 100), -1);
   assert.equal(rayEnter(new THREE.Ray(new THREE.Vector3(-5, 0, 0), new THREE.Vector3(1, 0, 0)), box, 3), -1);
 });
+
+test("a ray with NaN in it hits nothing and tests no element", () => {
+  const meshes = scene(50);
+  const index = new PickIndex();
+  index.build(meshes);
+  const ray = new THREE.Raycaster(new THREE.Vector3(NaN, NaN, NaN), new THREE.Vector3(0, 0, -1));
+  let tested = 0;
+  assert.equal(index.firstHit(ray, [], () => (tested++, true)), null);
+  assert.equal(tested, 0);
+});

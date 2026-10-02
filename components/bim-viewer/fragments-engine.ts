@@ -8,9 +8,13 @@
  * Fragments model in the background ("hydration", see hydrateElements) and
  * kept once, in the element's geometryData, without the old draw batches.
  *
- * Fragments local IDs are the IFC express IDs, and its coordinates are the
- * parser's (web-ifc COORDINATE_TO_ORIGIN) frame, so element `ifc-<id>` is
- * local ID `<id>` and a model needs no extra transform.
+ * Fragments local IDs are the IFC express IDs, so element `ifc-<id>` is local
+ * ID `<id>`. Its coordinates are NOT the parser's (web-ifc
+ * COORDINATE_TO_ORIGIN) frame: the IfcImporter recentres each file its own
+ * way, a constant shift that differs per file. The shift is measured on load
+ * (see frameOffset) and taken out of the drawing, triangles and grids, so
+ * everything shares the parser frame the element data, storeys and
+ * federation placement use.
  */
 import * as THREE from "three";
 import { FragmentsModels, RenderedFaces, type FragmentsModel, type MaterialDefinition, type RawMaterial } from "@thatopen/fragments";
@@ -45,6 +49,14 @@ interface ModelState {
   queue: Promise<void>;
   /** The model's material palette, read on the first geometry request. */
   materials?: Map<number, RawMaterial>;
+  /** Fragments frame minus parser frame (see frameOffset). */
+  offset: THREE.Vector3;
+}
+
+/** An element's bounding-box centre in the parser frame, to measure the frame shift with. */
+export interface FrameAnchor {
+  localId: number;
+  centre: [number, number, number];
 }
 
 export class FragmentsEngine {
@@ -84,7 +96,12 @@ export class FragmentsEngine {
     return this.states.get(key)?.model ?? null;
   }
 
-  async load(key: string, bytes: Uint8Array, camera: THREE.PerspectiveCamera | THREE.OrthographicCamera) {
+  async load(
+    key: string,
+    bytes: Uint8Array,
+    camera: THREE.PerspectiveCamera | THREE.OrthographicCamera,
+    anchors: FrameAnchor[] = [],
+  ) {
     this.camera = camera;
     // A copy: the worker takes ownership of what it is given, and the
     // original stays in the page's model (cache, reloading, exports).
@@ -92,7 +109,11 @@ export class FragmentsEngine {
     model.getClippingPlanesEvent = () => this.planes;
     for (const event of [model.tiles.onItemSet, model.tiles.onItemUpdated, model.tiles.onItemDeleted])
       (event as { add: (handler: () => void) => void }).add(this.onChange);
-    this.states.set(key, { model, applied: new Map(), queue: Promise.resolve() });
+    const state: ModelState = { model, applied: new Map(), queue: Promise.resolve(), offset: new THREE.Vector3() };
+    this.states.set(key, state);
+    // Measured while the offset is still zero, so geometry() reports the raw frame.
+    state.offset.copy(await this.frameOffset(key, anchors));
+    model.object.position.copy(state.offset).negate();
     await this.update(true);
     this.onChange();
     return model;
@@ -179,6 +200,35 @@ export class FragmentsEngine {
     return state.queue;
   }
 
+  /**
+   * The constant shift from the parser frame to this model's Fragments frame:
+   * per anchor, its Fragments bounding-box centre minus its parser one, then
+   * the median per axis (an element the two engines triangulate differently
+   * cannot skew it). Zero without anchors or geometry.
+   */
+  private async frameOffset(key: string, anchors: FrameAnchor[]) {
+    const offset = new THREE.Vector3();
+    if (!anchors.length) return offset;
+    const parts = await this.geometry(key, anchors.map((a) => a.localId)).catch(() => new Map<number, GeometryPart[]>());
+    const shifts: [number[], number[], number[]] = [[], [], []];
+    const box = new THREE.Box3();
+    const point = new THREE.Vector3();
+    for (const anchor of anchors) {
+      const list = parts.get(anchor.localId);
+      if (!list) continue;
+      box.makeEmpty();
+      for (const part of list)
+        for (let i = 0; i < part.positions.length; i += 3)
+          box.expandByPoint(point.fromArray(part.positions, i));
+      if (box.isEmpty()) continue;
+      box.getCenter(point);
+      for (let axis = 0; axis < 3; axis++) shifts[axis].push(point.getComponent(axis) - anchor.centre[axis]);
+    }
+    if (!shifts[0].length) return offset;
+    const median = (values: number[]) => values.sort((a, b) => a - b)[values.length >> 1];
+    return offset.set(median(shifts[0]), median(shifts[1]), median(shifts[2]));
+  }
+
   /** Hides or shows the whole model (the models panel's eye). */
   setModelVisible(key: string, visible: boolean) {
     const state = this.states.get(key);
@@ -186,7 +236,7 @@ export class FragmentsEngine {
   }
 
   /**
-   * Triangles of the given elements in the model frame, one part per
+   * Triangles of the given elements in the model (parser) frame, one part per
    * Fragments sample, missing ids left out.
    */
   async geometry(key: string, localIds: number[]): Promise<Map<number, GeometryPart[]>> {
@@ -215,7 +265,7 @@ export class FragmentsEngine {
         const transform = new THREE.Matrix4().fromArray((mesh.transform as { elements: number[] }).elements);
         const positions = new Float32Array(mesh.positions.length);
         for (let v = 0; v < positions.length; v += 3) {
-          point.set(mesh.positions[v], mesh.positions[v + 1], mesh.positions[v + 2]).applyMatrix4(transform);
+          point.set(mesh.positions[v], mesh.positions[v + 1], mesh.positions[v + 2]).applyMatrix4(transform).sub(state.offset);
           positions[v] = point.x;
           positions[v + 1] = point.y;
           positions[v + 2] = point.z;
@@ -241,6 +291,8 @@ export class FragmentsEngine {
     if (!state) return null;
     try {
       const group = await state.model.getGrids();
+      // Drawn in the Fragments frame: shift into the parser frame like the model.
+      group.position.copy(state.offset).negate();
       // A drawing's grid grey, readable on light and dark backgrounds.
       state.model.getGridMaterial().color.set(0x64748b);
       let lines = 0;

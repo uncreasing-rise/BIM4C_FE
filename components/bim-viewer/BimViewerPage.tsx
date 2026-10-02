@@ -784,9 +784,10 @@ export function BimViewerPage() {
     (ids: string[]) => {
       if (!ids.length) return;
       setHiddenElements((hidden) => new Set([...hidden, ...ids]));
+      const removed = new Set(ids);
       setIsolated((current) => {
         if (!current) return current;
-        const kept = [...current].filter((id) => !ids.includes(id));
+        const kept = [...current].filter((id) => !removed.has(id));
         return kept.length ? new Set(kept) : null;
       });
       clearSelection();
@@ -1354,17 +1355,28 @@ export function BimViewerPage() {
         const loaded: FederatedModel[] = [];
         for (const [index, demo] of DEMO_MODELS.entries()) {
           controller.signal.throwIfAborted();
-          setLoading({ name: demo.name, percent: 0, index: index + 1, total: DEMO_MODELS.length });
-          const parsed = await loadDemoModel(demo.url, demo.hash, controller.signal);
-          const key = `m${++keyCounter.current}`;
-          loaded.push({ key, model: namespaced(key, parsed), visible: true, alignment: "shared", offset: { x: 0, y: 0, z: 0, rotationDeg: 0 } });
+          const progress = (percent: number) => {
+            if (!controller.signal.aborted)
+              setLoading({ name: demo.name, percent, index: index + 1, total: DEMO_MODELS.length });
+          };
+          progress(0);
+          // One file failing still shows the others.
+          try {
+            const parsed = await loadDemoModel(demo.url, demo.hash, controller.signal, progress);
+            const key = `m${++keyCounter.current}`;
+            loaded.push({ key, model: namespaced(key, parsed), visible: true, alignment: "shared", offset: { x: 0, y: 0, z: 0, rotationDeg: 0 } });
+          } catch (error) {
+            if (controller.signal.aborted) throw error;
+            toast.error(`${demo.name}: ${ui(locale).bimViewerPage.unableToReadIFCCheck}`, { duration: 7000 });
+          }
         }
-        if (controller.signal.aborted || modelsRef.current.length) return;
+        if (controller.signal.aborted || modelsRef.current.length || !loaded.length) return;
         modelsRef.current = loaded;
         setSceneOrigin(modelOrigin(loaded[0].model));
         setModels(loaded);
         requestView("perspective");
       } catch {
+        // Only cancellation (or the loader failing to import) gets here; files report above.
         if (!controller.signal.aborted) toast.error(ui(locale).bimViewerPage.unableToReadIFCCheck, { duration: 7000 });
       } finally {
         if (taskRef.current === controller) { taskRef.current = null; setLoading(null); }

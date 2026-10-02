@@ -82,6 +82,10 @@ export class PickIndex {
     if (!this.root) return null;
     const ray = raycaster.ray;
     const far = raycaster.far;
+    // NaN fails every comparison in rayEnter, so a broken ray would "enter"
+    // every box and test (and build a BVH for) every element.
+    const { origin, direction } = ray;
+    if (!Number.isFinite(origin.x + origin.y + origin.z + direction.x + direction.y + direction.z)) return null;
     const candidates: { t: number; i: number }[] = [];
     const stack: Node[] = [this.root];
     while (stack.length) {

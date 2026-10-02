@@ -127,17 +127,52 @@ export async function loadModelFile(
   return { ...model, filename: model.filename ?? file.name };
 }
 
+/** The body as bytes, reporting 0–95 % as it downloads (decoding is the rest). */
+async function readWithProgress(response: Response, onProgress?: (percent: number) => void) {
+  // Content-Length is the compressed size when the server gzips: capped, not exact.
+  const total = Number(response.headers.get("content-length")) || 0;
+  if (!onProgress || !total || !response.body) return new Uint8Array(await response.arrayBuffer());
+  const reader = response.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let received = 0;
+  let reported = -1;
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    chunks.push(value);
+    received += value.length;
+    const percent = Math.min(95, Math.floor((received / total) * 95));
+    if (percent !== reported) onProgress((reported = percent));
+  }
+  const bytes = new Uint8Array(received);
+  let offset = 0;
+  for (const chunk of chunks) {
+    bytes.set(chunk, offset);
+    offset += chunk.length;
+  }
+  return bytes;
+}
+
 /** Load a preconverted public demo, reusing its content-addressed cache. */
-export async function loadDemoModel(url: string, hash: string, signal: AbortSignal): Promise<BimModelDefinition> {
+export async function loadDemoModel(
+  url: string,
+  hash: string,
+  signal: AbortSignal,
+  onProgress?: (percent: number) => void,
+): Promise<BimModelDefinition> {
   const cached = await readCachedModel(hash);
   signal.throwIfAborted();
-  if (cached) return cached;
+  if (cached) {
+    onProgress?.(100);
+    return cached;
+  }
   const response = await fetch(url, { signal });
   if (!response.ok) throw new Error(`IFC_HTTP_${response.status}`);
-  const model = await decodePackage(new Uint8Array(await response.arrayBuffer()));
+  const model = await decodePackage(await readWithProgress(response, onProgress));
   signal.throwIfAborted();
   if (model.contentHash !== hash) throw new Error("PACKAGE_INVALID");
   void writeCachedModel(hash, model);
+  onProgress?.(100);
   return model;
 }
 

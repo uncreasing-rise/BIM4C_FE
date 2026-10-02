@@ -30,7 +30,7 @@ import { BimViewCube } from "./BimViewCube";
 import { timeSlicer } from "./yield";
 import { PickIndex } from "./pick-index";
 import { DetailCuller } from "./detail-culling";
-import { FragmentsEngine, hydrateElements, cancelHydration, localIdOf, type ElementLook } from "./fragments-engine";
+import { FragmentsEngine, hydrateElements, cancelHydration, localIdOf, type ElementLook, type FrameAnchor } from "./fragments-engine";
 import { entryPose, walkStep as stepWalk, type WalkWorld } from "./walk-physics";
 import { boxMode, boxPicked, rectFrom } from "./box-select";
 import {
@@ -228,6 +228,12 @@ const GHOST_LOOK: ElementLook = { visible: true, color: "#cbd5e1", opacity: 0.14
 const HIDDEN_LOOK: ElementLook = { visible: false };
 const DEFAULT_LOOK: ElementLook = { visible: true };
 const CLICK_TOLERANCE_PX = 10;
+/** Elements sampled to measure a converted model's frame shift (see FragmentsEngine.frameOffset). */
+const FRAME_ANCHORS = 32;
+/** Canvas pixel ratio cap while the view moves (see matchPixelRatio). */
+const MOVING_PIXEL_RATIO = 1;
+/** How often Fragments re-tiles while the view is moving. */
+const FRAGMENTS_MOVING_MS = 300;
 const FLIGHT_MS = 480;
 
 interface ModelEntry {
@@ -355,7 +361,6 @@ export function BimCanvas(props: BimCanvasProps) {
       requestRender();
     });
     let fragmentsSettleUntil = 0;
-    (window as unknown as { __debugFragments: unknown }).__debugFragments = { fragmentsEngine, entries }; // TEMP-DEBUG
     const camera = new THREE.PerspectiveCamera(45, 1, 0.01, 1000);
     // The room environment (see ViewerPipeline) provides soft fill light;
     // a sky/ground hemisphere and a key light give the model form.
@@ -567,12 +572,14 @@ export function BimCanvas(props: BimCanvasProps) {
         requestRender();
       }, 180);
     };
-    let quality = maxPixelRatio;
-    const setQuality = (ratio: number) => {
-      if (ratio === quality) return;
-      quality = ratio;
-      renderer.setPixelRatio(ratio);
-      pipeline?.setSize(container.clientWidth, container.clientHeight, ratio);
+    // The effects (composer) always keep the full resolution; only the
+    // canvas drops to MOVING_PIXEL_RATIO while the view moves. Drawing time
+    // follows the pixel count: on a 2× screen, orbiting fills 4× fewer.
+    const quality = maxPixelRatio;
+    const movingRatio = Math.min(maxPixelRatio, MOVING_PIXEL_RATIO);
+    const matchPixelRatio = () => {
+      const ratio = interacting ? movingRatio : maxPixelRatio;
+      if (renderer.getPixelRatio() !== ratio) renderer.setPixelRatio(ratio);
     };
     const stepFlight = () => {
       if (!flight) return;
@@ -677,16 +684,24 @@ export function BimCanvas(props: BimCanvasProps) {
     // view changed, and once more, completely, when it comes to rest.
     const lastFragmentsView = new THREE.Matrix4();
     let viewSettled = true;
+    let lastStream = 0;
     const streamFragments = () => {
       if (!fragmentsEngine.size) return;
       const active = view();
       fragmentsEngine.useCamera(active);
       active.updateMatrixWorld();
       const moved = !lastFragmentsView.equals(active.matrixWorld);
-      if (moved) {
+      const now = performance.now();
+      // While the view moves, re-tile a few times a second rather than every
+      // 100 ms: each pass uploads new buffers on the main thread mid-orbit.
+      // The complete pass follows when the view comes to rest.
+      if (moved && (!interacting || now - lastStream > FRAGMENTS_MOVING_MS)) {
+        lastStream = now;
         lastFragmentsView.copy(active.matrixWorld);
         viewSettled = false;
         void fragmentsEngine.update();
+      } else if (moved) {
+        viewSettled = false;
       } else if (!interacting && !viewSettled) {
         viewSettled = true;
         void fragmentsEngine.update(true);
@@ -725,6 +740,7 @@ export function BimCanvas(props: BimCanvasProps) {
       sizeScreenMarkers();
       if (current.display.ifcGrids)
         declutterGridBubbles([...entries.values()].flatMap((entry) => entry.ifcGrids ? [entry.ifcGrids] : []), view(), viewport.width, viewport.height);
+      matchPixelRatio();
       renderer.info.reset();
       pipeline.render(interacting, activePlanes, span);
       drawMinimap();
@@ -817,6 +833,33 @@ export function BimCanvas(props: BimCanvasProps) {
         geometry.boundsTree = new MeshBVH(geometry, { indirect: true });
       return true;
     };
+    /**
+     * Ray trees for every pickable mesh, built while the page is idle: built
+     * on first use instead, a large element under the pointer cost a 100+ ms
+     * hitch the first time it was hovered or orbited about.
+     */
+    let treesQueued = false;
+    const prebuildPickTrees = () => {
+      if (treesQueued) return;
+      treesQueued = true;
+      const idle = window.requestIdleCallback ?? ((run: IdleRequestCallback) => window.setTimeout(() => run({ didTimeout: false, timeRemaining: () => 8 }), 50));
+      const pending = [...entries.values()].flatMap((entry) => [...entry.meshes.values()]);
+      let next = 0;
+      const step: IdleRequestCallback = (deadline) => {
+        if (disposed) return;
+        // The element index first (~100 ms for 38k elements), or the first
+        // press to orbit would build it.
+        if (indexDirty) pickTree();
+        while (next < pending.length && deadline.timeRemaining() > 2) {
+          const geometry = pending[next++].geometry;
+          if (!geometry.boundsTree && geometry.index && geometry.index.count > 96)
+            geometry.boundsTree = new MeshBVH(geometry, { indirect: true });
+        }
+        if (next < pending.length) idle(step);
+        else treesQueued = false;
+      };
+      idle(step);
+    };
     let lastPickMs = 0;
     const reportStats = () => {
       let bytes = 0;
@@ -836,6 +879,14 @@ export function BimCanvas(props: BimCanvasProps) {
       current.onStats({ bytes, triangles });
       // Big scenes skip section caps while the camera moves (see pipeline.render).
       if (pipeline) pipeline.heavy = triangles > 1_500_000;
+    };
+    /** reportStats at most twice a second (it walks every mesh). */
+    let statsTimer = 0;
+    const reportStatsSoon = () => {
+      statsTimer ||= window.setTimeout(() => {
+        statsTimer = 0;
+        if (!disposed) reportStats();
+      }, 500);
     };
     const removeEntry = (entry: ModelEntry) => {
       cancelHydration(entry.source.model);
@@ -887,7 +938,15 @@ export function BimCanvas(props: BimCanvasProps) {
       const key = entry.source.key;
       const model = entry.source.model;
       const isCurrent = () => !disposed && entries.get(key) === entry;
-      const object = (await fragmentsEngine.load(key, bytes, view())).object;
+      // Elements spread through the file, to measure its Fragments frame against.
+      const anchors: FrameAnchor[] = [];
+      const step = Math.max(1, Math.floor(model.elements.length / FRAME_ANCHORS));
+      for (let i = 0; i < model.elements.length && anchors.length < FRAME_ANCHORS; i += step) {
+        const element = model.elements[i];
+        const localId = localIdOf(element.id);
+        if (localId !== null && element.size.some((n) => n > 1e-3)) anchors.push({ localId, centre: element.position });
+      }
+      const object = (await fragmentsEngine.load(key, bytes, view(), anchors)).object;
       if (!isCurrent()) {
         void fragmentsEngine.remove(key);
         return;
@@ -909,16 +968,25 @@ export function BimCanvas(props: BimCanvasProps) {
         model,
         (done) => {
           if (!isCurrent()) return;
-          for (const element of done) if (!entry.meshes.has(element.id)) addElementMesh(entry, element, true);
+          // Only the new meshes take the current state: redoing every element
+          // per batch made hydration quadratic (and rebuilt Fragments' looks).
+          const localCenter = entry.group.worldToLocal(center.clone());
+          for (const element of done) {
+            if (entry.meshes.has(element.id)) continue;
+            const mesh = addElementMesh(entry, element, true);
+            applyElementState(entry, element.id, mesh, current, localCenter);
+            mesh.updateMatrixWorld();
+          }
           indexDirty = true;
           invalidatePicking();
-          meshStateKey = "";
-          update(current);
-          reportStats();
+          requestRender();
+          reportStatsSoon();
         },
         () => !isCurrent(),
       ).then(() => {
-        if (isCurrent()) entry.hydrated = true;
+        if (!isCurrent()) return;
+        entry.hydrated = true;
+        prebuildPickTrees();
       }).catch((error: unknown) => {
         if (isCurrent() && !(error instanceof DOMException && error.name === "AbortError")) setError(true);
       });
@@ -1052,6 +1120,68 @@ export function BimCanvas(props: BimCanvasProps) {
       }
       return copy;
     };
+    const slotOffset = new THREE.Vector3();
+    /** One element mesh's visibility, place, layers and material for these props. */
+    const applyElementState = (entry: ModelEntry, id: string, mesh: THREE.Mesh, next: BimCanvasProps, localCenter: THREE.Vector3) => {
+      const isolated = next.isolatedElementIds;
+      const batched = entry.batches;
+      const element = mesh.userData.element as BimElementData;
+      const visible =
+        next.visibleLayers[element.discipline] &&
+        !next.hiddenElementIds.has(element.id);
+      const selected = next.selectedElementIds.has(id);
+      mesh.visible = visible;
+      mesh.position.copy(
+        explodedPosition(element, localCenter, next.explodeFactor),
+      );
+      // While isolating, the isolated (and selected) elements are drawn
+      // solid by their own meshes over a ghosted batch.
+      // A transparency (appearance tool) needs a material of its own: the
+      // element leaves its batch and draws by its own mesh (parser models;
+      // Fragments applies it itself).
+      const opacity = entry.fragments ? undefined : next.opacityOverrides?.get(id);
+      const translucent = opacity !== undefined && opacity < 1;
+      const isolatedHere = Boolean(isolated && (isolated.has(id) || selected));
+      const promoted = isolatedHere || translucent;
+      const ghosted = Boolean(isolated) && !isolatedHere;
+      mesh.userData.ghost = ghosted;
+      // Fragments cannot move single elements: exploded, the element meshes draw instead.
+      const drawn = entry.fragments ? next.explodeFactor > 0 : promoted || !batched;
+      mesh.layers.mask = drawn ? DRAWN_AND_PICKABLE : PICK_ONLY;
+      placeElementMesh(mesh, entry.group, entry.picking, drawn);
+      if (drawn && !mesh.geometry.getAttribute("normal")) mesh.geometry.computeVertexNormals();
+      const overrideHex = next.colorOverrides?.get(id);
+      const original = (overrideHex
+        ? Array.isArray(mesh.userData.baseMaterial)
+          ? (mesh.userData.baseMaterial as THREE.Material[]).map(() => overrideMaterial(overrideHex))
+          : overrideMaterial(overrideHex)
+        : mesh.userData.baseMaterial) as THREE.Material | THREE.Material[];
+      const lit = ghosted && !batched
+        ? Array.isArray(original)
+          ? original.map(() => ghost)
+          : ghost
+        : selected
+          ? Array.isArray(original)
+            ? original.map(highlight)
+            : highlight(original)
+          : original;
+      mesh.material = translucent && !ghosted
+        ? Array.isArray(lit)
+          ? lit.map((m) => seeThrough(m, opacity))
+          : seeThrough(lit, opacity)
+        : lit;
+      if (batched)
+        applySlotState(
+          batched.slots.get(id),
+          visible && !promoted,
+          selected,
+          slotOffset.subVectors(mesh.position, new THREE.Vector3(...element.position)),
+          overrideHex
+            ? (overrideColors.get(overrideHex) ??
+                overrideColors.set(overrideHex, new THREE.Color(overrideHex)).get(overrideHex))
+            : undefined,
+        );
+    };
     const applyMeshState = (next: BimCanvasProps) => {
       const isolated = next.isolatedElementIds;
       const key = `${next.explodeFactor}|${JSON.stringify(next.visibleLayers)}|${[...next.selectedElementIds].join(",")}|${[...next.hiddenElementIds].join(",")}|${isolated ? [...isolated].join(",") : "-"}|${lastBoundsKey}`;
@@ -1063,70 +1193,12 @@ export function BimCanvas(props: BimCanvasProps) {
       meshStateKey = key;
       lastOverrides = next.colorOverrides;
       lastOpacities = next.opacityOverrides;
-      const offset = new THREE.Vector3();
       for (const entry of entries.values()) {
         if (!entry.ready) continue;
         const batched = entry.batches;
         // Explode about the federation centre, expressed in the model frame.
         const localCenter = entry.group.worldToLocal(center.clone());
-        for (const [id, mesh] of entry.meshes) {
-          const element = mesh.userData.element as BimElementData;
-          const visible =
-            next.visibleLayers[element.discipline] &&
-            !next.hiddenElementIds.has(element.id);
-          const selected = next.selectedElementIds.has(id);
-          mesh.visible = visible;
-          mesh.position.copy(
-            explodedPosition(element, localCenter, next.explodeFactor),
-          );
-          // While isolating, the isolated (and selected) elements are drawn
-          // solid by their own meshes over a ghosted batch.
-          // A transparency (appearance tool) needs a material of its own: the
-          // element leaves its batch and draws by its own mesh (parser models;
-          // Fragments applies it itself).
-          const opacity = entry.fragments ? undefined : next.opacityOverrides?.get(id);
-          const translucent = opacity !== undefined && opacity < 1;
-          const isolatedHere = Boolean(isolated && (isolated.has(id) || selected));
-          const promoted = isolatedHere || translucent;
-          const ghosted = Boolean(isolated) && !isolatedHere;
-          mesh.userData.ghost = ghosted;
-          // Fragments cannot move single elements: exploded, the element meshes draw instead.
-          const drawn = entry.fragments ? next.explodeFactor > 0 : promoted || !batched;
-          mesh.layers.mask = drawn ? DRAWN_AND_PICKABLE : PICK_ONLY;
-          placeElementMesh(mesh, entry.group, entry.picking, drawn);
-          if (drawn && !mesh.geometry.getAttribute("normal")) mesh.geometry.computeVertexNormals();
-          const overrideHex = next.colorOverrides?.get(id);
-          const original = (overrideHex
-            ? Array.isArray(mesh.userData.baseMaterial)
-              ? (mesh.userData.baseMaterial as THREE.Material[]).map(() => overrideMaterial(overrideHex))
-              : overrideMaterial(overrideHex)
-            : mesh.userData.baseMaterial) as THREE.Material | THREE.Material[];
-          const lit = ghosted && !batched
-            ? Array.isArray(original)
-              ? original.map(() => ghost)
-              : ghost
-            : selected
-              ? Array.isArray(original)
-                ? original.map(highlight)
-                : highlight(original)
-              : original;
-          mesh.material = translucent && !ghosted
-            ? Array.isArray(lit)
-              ? lit.map((m) => seeThrough(m, opacity))
-              : seeThrough(lit, opacity)
-            : lit;
-          if (batched)
-            applySlotState(
-              batched.slots.get(id),
-              visible && !promoted,
-              selected,
-              offset.subVectors(mesh.position, new THREE.Vector3(...element.position)),
-              overrideHex
-                ? (overrideColors.get(overrideHex) ??
-                    overrideColors.set(overrideHex, new THREE.Color(overrideHex)).get(overrideHex))
-                : undefined,
-            );
-        }
+        for (const [id, mesh] of entry.meshes) applyElementState(entry, id, mesh, next, localCenter);
         if (batched)
           for (const batch of batched.batches.values()) {
             batch.material = isolated ? ghostBatch : (batch.userData.solid as THREE.Material);
@@ -1770,7 +1842,6 @@ export function BimCanvas(props: BimCanvasProps) {
         if (Math.hypot(orbitVelocity.vx, orbitVelocity.vy) > 0.8) {
           orbitInertia = { pivot: orbit.pivot.clone(), vx: orbitVelocity.vx, vy: orbitVelocity.vy };
         }
-        setQuality(maxPixelRatio);
         requestRender();
       }
       orbit = null;
@@ -2025,7 +2096,6 @@ export function BimCanvas(props: BimCanvasProps) {
           orbit.moved = true;
           pivotMarker.position.copy(orbit.pivot);
           pivotMarker.visible = true;
-          setQuality(maxPixelRatio);
           hideHover();
         }
         orbit.x = e.clientX;
@@ -2735,11 +2805,9 @@ export function BimCanvas(props: BimCanvasProps) {
       });
       controls.addEventListener("start", () => {
         flight = null;
-        setQuality(maxPixelRatio);
         requestRender();
       });
       controls.addEventListener("end", () => {
-        setQuality(maxPixelRatio);
         requestRender();
       });
       resize();
@@ -2849,6 +2917,7 @@ export function BimCanvas(props: BimCanvasProps) {
       primitiveGeometries.forEach((g) => g.dispose());
       labels.replaceChildren();
       window.clearTimeout(settle);
+      window.clearTimeout(statsTimer);
       pipeline?.dispose();
       renderer?.dispose();
       renderer?.forceContextLoss();
