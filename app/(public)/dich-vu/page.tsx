@@ -12,6 +12,8 @@ import { getRequestLocale } from "@/lib/i18n/request";
 import { ROUTES } from "@/constants/routes";
 import { getServicesPage } from "@/features/services/api/queries";
 import { ServicesPageView } from "@/components/services/ServicesPageView";
+import { PAGE_SIZE } from "@/lib/seo/page-param";
+import { localizedPath } from "@/lib/seo/site";
 
 
 export async function generateMetadata({
@@ -36,17 +38,17 @@ export default async function ServicesPage({
   const params = await searchParams;
   const servicesPage = await getServicesPage({
     page: parsePage(params.page),
-    limit: 6,
+    limit: PAGE_SIZE.services,
     search: filterParam(params.q),
     category:
       filterParam(params.category),
   });
 
   const destination = normalizedPageRedirect(
-    ROUTES.services,
+    localizedPath(ROUTES.services, await getRequestLocale()),
     params,
     servicesPage.meta.total,
-    6,
+    PAGE_SIZE.services,
   );
   if (destination) redirect(destination);
 

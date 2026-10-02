@@ -755,6 +755,10 @@ export const uiEn = {
     previousPage: "Previous page",
     alreadyOnTheLastPage: "Already on the last page",
     nextPage: "Next page",
+    /** Result line shared by every listing (CatalogResultCount). */
+    showing: (range: string, total: number) => `Showing ${range} of ${total}`,
+    pageOf: (page: number, pages: number) => `page ${page} of ${pages}`,
+    noResults: "No results",
   },
   commandMenu: {
     t3DOpenBIMViewerInteractiveModel: "3D OpenBIM Viewer (Interactive Model)",

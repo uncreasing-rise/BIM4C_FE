@@ -12,6 +12,8 @@ import { getRequestLocale } from "@/lib/i18n/request";
 import { ROUTES } from "@/constants/routes";
 import { getPostsPage, getPostCategories } from "@/features/blog/api/queries";
 import { BlogPageView } from "@/components/blog/BlogPageView";
+import { PAGE_SIZE } from "@/lib/seo/page-param";
+import { localizedPath } from "@/lib/seo/site";
 
 
 export async function generateMetadata({
@@ -38,7 +40,7 @@ export default async function BlogPage({
     getPostsPage({
       page: parsePage(params.page),
       // One featured story plus four in the side column (BlogExplorer).
-      limit: 5,
+      limit: PAGE_SIZE.posts,
       search: filterParam(params.q),
       category:
         filterParam(params.category),
@@ -47,10 +49,10 @@ export default async function BlogPage({
   ]);
 
   const destination = normalizedPageRedirect(
-    ROUTES.blog,
+    localizedPath(ROUTES.blog, await getRequestLocale()),
     params,
     postsPage.meta.total,
-    6,
+    PAGE_SIZE.posts,
   );
   if (destination) redirect(destination);
 

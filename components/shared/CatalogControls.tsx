@@ -212,6 +212,35 @@ export function CatalogSelect({
   );
 }
 
+/**
+ * "Showing 7–12 of 13 · page 2 of 3": the same result line on every listing
+ * (they each had their own wording before).
+ */
+export function CatalogResultCount({
+  meta,
+  className,
+}: {
+  meta: { page: number; limit: number; total: number; totalPages?: number };
+  className?: string;
+}) {
+  const { locale } = useLanguage();
+  const s = ui(locale).catalogControls;
+  const pages = meta.totalPages || Math.max(1, Math.ceil(meta.total / Math.max(1, meta.limit)));
+  const page = Math.min(Math.max(1, meta.page), pages);
+  const from = (page - 1) * meta.limit + 1;
+  const to = Math.min(page * meta.limit, meta.total);
+  return (
+    <p
+      role="status"
+      aria-live="polite"
+      className={cn("text-sm text-muted-foreground", className)}
+    >
+      {meta.total > 0 ? s.showing(from === to ? `${from}` : `${from}–${to}`, meta.total) : s.noResults}
+      {pages > 1 && <span className="text-muted-foreground/70"> · {s.pageOf(page, pages)}</span>}
+    </p>
+  );
+}
+
 export function CatalogPagination({
   ariaLabel,
   page: rawPage,

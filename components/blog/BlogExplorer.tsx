@@ -7,6 +7,7 @@ import {
   CatalogCategories,
   CatalogFilterBar,
   CatalogPagination,
+  CatalogResultCount,
   CatalogSearch,
 } from "@/components/shared/CatalogControls";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -112,9 +113,7 @@ export function BlogExplorer({
             {t.common.clearFilters}
           </button>
         )}
-        <p role="status" className="mb-5 text-sm text-muted-foreground">
-          {t.blogPage.matchingCount(meta.total)}
-        </p>
+        <CatalogResultCount meta={meta} className="mb-5" />
         {visible.length ? (
           <div className="grid grid-cols-1 gap-8 border-t pt-8 lg:grid-cols-12">
             {/* Featured Hero Story (Spans 7 cols on desktop) */}

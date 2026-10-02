@@ -10,9 +10,10 @@ import {
 import { pageMeta } from "@/lib/seo/page-meta";
 import { getRequestLocale } from "@/lib/i18n/request";
 import { ROUTES } from "@/constants/routes";
-import { PROJECT_PAGE_SIZE } from "@/features/projects/constants";
 import { ProjectsPageView } from "@/components/projects/ProjectsPageView";
 import { getProjectFilters, getProjectsPage } from "@/features/projects/api/queries";
+import { PAGE_SIZE } from "@/lib/seo/page-param";
+import { localizedPath } from "@/lib/seo/site";
 
 
 export async function generateMetadata({
@@ -38,7 +39,7 @@ export default async function ProjectsPage({
   const [projectsPage, filters] = await Promise.all([
     getProjectsPage({
     page: parsePage(params.page),
-    limit: PROJECT_PAGE_SIZE,
+    limit: PAGE_SIZE.projects,
     search: filterParam(params.q),
     category:
       filterParam(params.category),
@@ -53,10 +54,10 @@ export default async function ProjectsPage({
   ]);
 
   const destination = normalizedPageRedirect(
-    ROUTES.projects,
+    localizedPath(ROUTES.projects, await getRequestLocale()),
     params,
     projectsPage.meta.total,
-    PROJECT_PAGE_SIZE,
+    PAGE_SIZE.projects,
   );
   if (destination) redirect(destination);
 

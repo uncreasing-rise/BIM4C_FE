@@ -6,6 +6,7 @@ import { ArrowUpRight, Clock3 } from "lucide-react";
 import {
   CatalogFilterBar,
   CatalogPagination,
+  CatalogResultCount,
   CatalogSearch,
 } from "@/components/shared/CatalogControls";
 import { useCatalogFilters } from "@/components/shared/useCatalogFilters";
@@ -67,9 +68,7 @@ export function CourseExplorer({
           />
         </CatalogFilterBar>
         <div className="mb-6 flex items-center justify-between gap-4">
-          <p role="status" className="text-sm text-muted-foreground">
-            {t.coursesPage.programmesCount(meta.total)}
-          </p>
+          <CatalogResultCount meta={meta} />
           {query && (
             <Button variant="ghost" onClick={reset}>
               {t.common.clearFilters}

@@ -7,6 +7,7 @@ import { useCatalogFilters } from "@/components/shared/useCatalogFilters";
 import {
   CatalogFilterBar,
   CatalogPagination,
+  CatalogResultCount,
   CatalogSearch,
 } from "@/components/shared/CatalogControls";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -16,8 +17,8 @@ import type { PageMeta } from "@/features/shared/types/pagination";
 import { useLanguage } from "@/lib/i18n/context";
 import { localizeContentList } from "@/lib/i18n/localize";
 import { resolveCoverImage } from "@/lib/content/cover-images";
+import { PAGE_SIZE } from "@/lib/seo/page-param";
 
-const pageSize = 6;
 
 export function ServiceExplorer({
   services: rawServices,
@@ -66,13 +67,7 @@ export function ServiceExplorer({
               {t.common.clearFilters}
             </button>
           )}
-          <p
-            className="mb-5 text-xs text-muted-foreground"
-            role="status"
-            aria-live="polite"
-          >
-            {t.servicesPage.matchingCount(meta.total)}
-          </p>
+          <CatalogResultCount meta={meta} className="mb-5" />
           {visible.length ? (
             <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
               {visible.map((service, index) => (
@@ -96,7 +91,7 @@ export function ServiceExplorer({
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-60" />
                     <span className="absolute left-4 top-4 rounded-full bg-brand-ink/80 px-3 py-1 text-xs font-mono font-semibold text-white backdrop-blur border border-white/10">
-                      {String((page - 1) * pageSize + index + 1).padStart(
+                      {String((page - 1) * (meta.limit || PAGE_SIZE.services) + index + 1).padStart(
                         2,
                         "0",
                       )}

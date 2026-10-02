@@ -72,7 +72,7 @@ export async function listingMetadata(
   const page = parsePage(params.page);
   const utilityParams = Object.keys(params).some((key) => key !== "page");
   const canonical = canonicalPath(localizedPath(pathname, locale), page);
-  const fullTitle = page > 1 ? `${title} – Trang ${page}` : title;
+  const fullTitle = page > 1 ? `${title} – ${locale === "vi" ? "Trang" : "Page"} ${page}` : title;
 
   return {
     title: fullTitle,
@@ -103,6 +103,12 @@ export async function listingMetadata(
   };
 }
 
+/**
+ * Where a listing page past the last one goes: the last page, filters kept.
+ * `pathname` must be the localized path (/vi/du-an), or the redirect lost
+ * the language and took a second hop. Malformed page values never get here:
+ * the proxy canonicalizes them first (see canonicalPageQuery).
+ */
 export function normalizedPageRedirect(
   pathname: string,
   params: ListingSearchParams,

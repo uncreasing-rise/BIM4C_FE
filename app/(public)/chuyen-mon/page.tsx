@@ -12,6 +12,8 @@ import { ROUTES } from "@/constants/routes";
 import { getPostsPage, getPostCategories } from "@/features/blog/api/queries";
 import { PageHero } from "@/components/shared/PageHero";
 import { BlogExplorer } from "@/components/blog/BlogExplorer";
+import { PAGE_SIZE } from "@/lib/seo/page-param";
+import { localizedPath } from "@/lib/seo/site";
 
 const copy = {
   en: {
@@ -73,7 +75,7 @@ export default async function TechnicalKnowledgePage({
     getPostsPage({
       page: parsePage(params.page),
       // One featured story plus four in the side column (BlogExplorer).
-      limit: 5,
+      limit: PAGE_SIZE.posts,
       search: filterParam(params.q),
       category:
         filterParam(params.category),
@@ -82,7 +84,12 @@ export default async function TechnicalKnowledgePage({
     getPostCategories("technical").catch(() => []),
   ]);
 
-  const destination = normalizedPageRedirect(ROUTES.technical, params, postsPage.meta.total, 6);
+  const destination = normalizedPageRedirect(
+    localizedPath(ROUTES.technical, await getRequestLocale()),
+    params,
+    postsPage.meta.total,
+    PAGE_SIZE.posts,
+  );
   if (destination) redirect(destination);
 
   return (

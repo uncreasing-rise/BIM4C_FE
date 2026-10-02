@@ -49,7 +49,8 @@ export function LanguageSwitcher({
   const switchTo = (nextLocale: (typeof SUPPORTED_LOCALES)[number]) => {
     if (nextLocale === locale) return;
     setLocale(nextLocale);
-    router.push(localePrefix(nextLocale, pathname.replace(/^\/(vi|en)(?=\/|$)/, "") || "/"));
+    // The same page in the other language, query kept (page number, filters).
+    router.push(`${localePrefix(nextLocale, pathname.replace(/^\/(vi|en)(?=\/|$)/, "") || "/")}${window.location.search}`);
   };
 
   if (variant === "compact") {

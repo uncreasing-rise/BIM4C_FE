@@ -753,6 +753,9 @@ export const uiVi: UiStrings = {
     previousPage: "Trang trước",
     alreadyOnTheLastPage: "Đang ở trang cuối",
     nextPage: "Trang sau",
+    showing: (range, total) => `Hiển thị ${range} / ${total} kết quả`,
+    pageOf: (page, pages) => `trang ${page}/${pages}`,
+    noResults: "Không có kết quả",
   },
   commandMenu: {
     t3DOpenBIMViewerInteractiveModel: "3D OpenBIM Viewer (Mô hình trực quan)",

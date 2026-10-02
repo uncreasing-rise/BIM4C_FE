@@ -7,13 +7,11 @@ import {
   CatalogCategories,
   CatalogFilterBar,
   CatalogPagination,
+  CatalogResultCount,
   CatalogSearch,
   CatalogSelect,
 } from "@/components/shared/CatalogControls";
-import {
-  ALL_PROJECT_FILTER,
-  PROJECT_PAGE_SIZE,
-} from "@/features/projects/constants";
+import { ALL_PROJECT_FILTER } from "@/features/projects/constants";
 import type { Project } from "@/features/projects/types/project";
 import type { ProjectFilters } from "@/features/projects/api/queries";
 import { toLocalizedLabel } from "@/lib/utils/public-labels";
@@ -122,20 +120,7 @@ export function ProjectExplorer({
           )}
         </CatalogFilterBar>
         <div className="mb-6 flex items-center justify-between gap-4">
-          <p
-            className="m-0 text-[12px] text-muted-foreground"
-            role="status"
-            aria-live="polite"
-          >
-            {meta.total ? (
-              t.projectsPage.showingText(
-                Math.min(page * (meta.limit || PROJECT_PAGE_SIZE), meta.total),
-                meta.total,
-              )
-            ) : (
-              t.projectsPage.matchingCount(0)
-            )}
-          </p>
+          <CatalogResultCount meta={meta} className="m-0" />
           <button
             className="min-h-11 rounded-md px-3 py-2 text-sm font-semibold text-primary transition hover:bg-primary/10 disabled:pointer-events-none disabled:opacity-40"
             type="button"

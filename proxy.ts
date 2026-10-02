@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { LOCALE_COOKIE_NAME, SUPPORTED_LOCALES, negotiateLocale, type Locale } from "@/lib/i18n/config";
 import { LOCALE_HEADER } from "@/lib/i18n/request";
+import { canonicalPageQuery } from "@/lib/seo/page-param";
 
 const PUBLIC_PREFIXES = [
   "",
@@ -37,6 +38,16 @@ export function proxy(request: NextRequest) {
   const requestedLocale = segments[0] as Locale;
   if (SUPPORTED_LOCALES.includes(requestedLocale)) {
     const internalPath = `/${segments.slice(1).join("/")}`.replace(/\/$/, "") || "/";
+    // Listing pages: ?page=1, ?page=abc, ?page=02 become their one canonical
+    // URL here, as a real permanent redirect, before the page streams.
+    if (isPublicPath(internalPath)) {
+      const canonical = canonicalPageQuery(request.nextUrl.searchParams);
+      if (canonical) {
+        const target = request.nextUrl.clone();
+        target.search = canonical.size ? `?${canonical}` : "";
+        return NextResponse.redirect(target, 308);
+      }
+    }
     const headers = new Headers(request.headers);
     headers.set(LOCALE_HEADER, requestedLocale);
     const rewriteUrl = request.nextUrl.clone();
