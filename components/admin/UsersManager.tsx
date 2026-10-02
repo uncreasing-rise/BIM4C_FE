@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useCallback, useState } from "react";
+import { FormEvent, useCallback, useEffect, useState } from "react";
 import { UserPlus, AlertCircle, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,6 +16,7 @@ import {
 } from "./list-controls";
 
 import { adminRequest } from "@/features/admin/api/http-client";
+import { currentAdmin } from "@/features/admin/auth";
 
 type UserItem = {
   id: string;
@@ -64,6 +65,16 @@ export function UsersManager() {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [show, setShow] = useState(false);
+  // Only a super admin may create or manage super admins (the API enforces it;
+  // this just hides what would be refused).
+  const [isSuper, setIsSuper] = useState(false);
+  useEffect(() => {
+    currentAdmin()
+      .then((admin) => setIsSuper(admin.roles.includes("SUPER_ADMIN")))
+      .catch(() => setIsSuper(false));
+  }, []);
+  const isSuperRow = (u: UserItem) =>
+    (u.roles ?? []).some((x) => (typeof x === "string" ? x : x.role) === "SUPER_ADMIN");
 
   const load = useCallback(async (signal?: AbortSignal) => {
     setLoading(true);
@@ -217,7 +228,9 @@ export function UsersManager() {
               >
                 <option value="EDITOR">{statusLabel("role", "EDITOR")} — sửa nội dung, xử lý liên hệ</option>
                 <option value="ADMIN">{statusLabel("role", "ADMIN")} — toàn quyền, trừ phân quyền cấp cao</option>
-                <option value="SUPER_ADMIN">{statusLabel("role", "SUPER_ADMIN")} — toàn quyền hệ thống</option>
+                {isSuper && (
+                  <option value="SUPER_ADMIN">{statusLabel("role", "SUPER_ADMIN")} — toàn quyền hệ thống</option>
+                )}
               </select>
             </div>
             <div className="md:col-span-2 flex justify-end gap-2 pt-2">
@@ -322,7 +335,8 @@ export function UsersManager() {
                     <Button
                       variant={u.status === "ACTIVE" ? "outline" : "default"}
                       size="sm"
-                      disabled={busy}
+                      disabled={busy || (!isSuper && isSuperRow(u))}
+                      title={!isSuper && isSuperRow(u) ? "Chỉ Super Admin mới quản lý được tài khoản Super Admin" : undefined}
                       onClick={() => void toggleStatus(u)}
                       className="text-xs h-8"
                     >
