@@ -83,7 +83,7 @@ export function AboutView({
     (item) => item.title || item.text,
   );
   const teamMembers = filled(about?.teamMembers).filter(
-    (member) => member.name,
+    (member) => member.role,
   );
 
   return (
@@ -412,60 +412,28 @@ export function AboutView({
             </div>
 
             <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-              {teamMembers.map((member) => (
+              {/* By role and expertise only: names and photos are kept private
+                  (the API and getPageContent leave them out). */}
+              {teamMembers.map((member, index) => (
                 <article
-                  key={member.name}
-                  className="group relative overflow-hidden rounded-2xl bg-slate-900 shadow-xl aspect-[3/4] cursor-pointer ring-1 ring-white/10 transition-shadow duration-300 hover:ring-primary/40 hover:shadow-2xl"
+                  key={`${member.role}-${index}`}
+                  className="group relative flex flex-col overflow-hidden rounded-2xl bg-gradient-to-br from-slate-800 via-slate-900 to-slate-950 p-6 shadow-xl ring-1 ring-white/10 transition-shadow duration-300 hover:ring-primary/40 hover:shadow-2xl"
                   data-motion="tile"
                 >
-                  {/* Full-card background image */}
-                  {member.image ? (
-                    <Image
-                      src={member.image}
-                      alt={member.name ?? ""}
-                      fill
-                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                      className="object-cover object-top transition-transform duration-700 ease-out group-hover:scale-105"
-                    />
-                  ) : (
-                    <div className="absolute inset-0 bg-gradient-to-br from-slate-700 via-slate-800 to-slate-900 flex items-center justify-center">
-                      <span className="text-7xl font-black text-white/[0.07] select-none tracking-tighter">
-                        {member.name?.split(" ").pop()?.charAt(0)}
-                      </span>
-                    </div>
-                  )}
-
-                  {/* Gradient overlay — deepens slightly on hover */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/25 to-transparent transition-all duration-500 group-hover:from-black/95 group-hover:via-black/45" />
-
                   {/* Subtle teal accent glow on hover */}
                   <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none bg-[radial-gradient(ellipse_at_bottom_left,_var(--tw-gradient-stops))] from-primary/15 via-transparent to-transparent" />
 
-                  {/* Info panel */}
-                  <div className="absolute inset-x-0 bottom-0">
-                    {/* Always visible: role pill + name */}
-                    <div className="px-5 pb-5 pt-3">
-                      {member.role && (
-                        <span className="inline-block mb-2 rounded-full bg-primary/15 border border-primary/30 backdrop-blur-md px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-widest text-primary">
-                          {member.role}
-                        </span>
-                      )}
-                      <h3 className="text-[1.05rem] font-bold text-white leading-snug">
-                        {member.name}
-                      </h3>
-                    </div>
-
-                    {/* Hover-revealed spec info — slides in via max-height */}
-                    {member.spec && (
-                      <div className="max-h-0 overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] group-hover:max-h-32">
-                        <div className="px-5 pb-5 border-t border-white/15 pt-3">
-                          <p className="text-[0.8rem] leading-relaxed text-white/70">
-                            {member.spec}
-                          </p>
-                        </div>
-                      </div>
-                    )}
-                  </div>
+                  <span className="relative grid size-11 place-items-center rounded-xl bg-primary/15 text-primary ring-1 ring-primary/30">
+                    <Users className="size-5" aria-hidden="true" />
+                  </span>
+                  <h3 className="relative mt-5 text-[1.05rem] font-bold leading-snug text-white">
+                    {member.role}
+                  </h3>
+                  {member.spec && (
+                    <p className="relative mt-3 border-t border-white/15 pt-3 text-[0.85rem] leading-relaxed text-white/70">
+                      {member.spec}
+                    </p>
+                  )}
                 </article>
               ))}
             </div>
