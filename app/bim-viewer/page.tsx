@@ -7,7 +7,6 @@ import {
   websiteSchema,
 } from "@/lib/seo/structured-data";
 import { getSiteSettings } from "@/features/settings/queries";
-import { getPageContent } from "@/features/page-content/queries";
 import { getRequestLocale } from "@/lib/i18n/request";
 import { pageMetadata } from "@/lib/seo/listing";
 import { localizedPath } from "@/lib/seo/site";
@@ -50,15 +49,12 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function BimViewerRoute() {
   const locale = await getRequestLocale();
   const meta = META[locale];
-  const [settings, content] = await Promise.all([
-    getSiteSettings(),
-    getPageContent(),
-  ]);
+  const settings = await getSiteSettings();
   return (
     <>
       <JsonLd
         data={[
-          organizationSchema(settings, content.company?.vi),
+          organizationSchema(settings),
           websiteSchema(),
           webApplicationSchema({
             name: meta.title,

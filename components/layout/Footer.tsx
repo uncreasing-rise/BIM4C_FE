@@ -18,8 +18,7 @@ export function Footer() {
   const { t, locale } = useLanguage();
   const settings = useSiteSettings();
   const company = usePageContent("company");
-  const companyName =
-    settings?.companyName || company?.enterpriseInfo?.companyName;
+  // Legal-entity details (registered name, copyright holder) are intentionally not shown.
   const address = settings?.address || company?.enterpriseInfo?.headquarters;
   const phoneHref = telHref(settings?.phone);
   const navigation = [
@@ -57,9 +56,6 @@ export function Footer() {
               </span>
             </div>
           </Link>
-          {companyName && (
-            <p className="mt-5 max-w-sm text-sm leading-7">{companyName}</p>
-          )}
           <div className="mt-6 grid gap-4 text-sm leading-6">
             {address && (
               <p className="flex gap-3">
@@ -134,7 +130,10 @@ export function Footer() {
       </div>
       <div className="border-t border-white/10">
         <div className="site-container flex flex-col justify-between gap-4 py-6 text-xs leading-6 text-slate-400 lg:flex-row">
-          <span>{company?.copyright}</span>
+          <span>
+            © {new Date().getFullYear()} BIM4C.{" "}
+            {ui(locale).footer.allRightsReserved}
+          </span>
           <div className="flex flex-wrap gap-x-6 gap-y-2">
             <Link
               href={ROUTES.legalDetail("dieu-khoan-su-dung")}

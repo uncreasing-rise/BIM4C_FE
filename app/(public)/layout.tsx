@@ -38,7 +38,7 @@ export default async function PublicLayout({
 
         <JsonLd
           data={[
-            organizationSchema(settings, content.company?.vi),
+            organizationSchema(settings),
             websiteSchema(),
           ]}
         />

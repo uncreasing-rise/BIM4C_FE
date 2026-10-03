@@ -10,7 +10,7 @@ export async function getPageContent(): Promise<PageContentMap> {
         next: { revalidate: 60, tags: ["page-content"] },
       },
     );
-    return withoutTeamIdentity(response?.data ?? {});
+    return withoutLegalEntity(withoutTeamIdentity(response?.data ?? {}));
   } catch {
     return {};
   }
@@ -37,4 +37,22 @@ export function withoutTeamIdentity(content: PageContentMap): PageContentMap {
         }
       : block;
   return { ...content, about: { vi: strip(about.vi), en: strip(about.en) } };
+}
+
+/**
+ * Legal-entity details (registered and international names, legal
+ * representative, copyright holder) are not published: only the headquarters
+ * address reaches pages, whatever the API sends.
+ */
+export function withoutLegalEntity(content: PageContentMap): PageContentMap {
+  const company = content.company;
+  if (!company) return content;
+  const strip = (block: typeof company.vi) => {
+    const headquarters = block?.enterpriseInfo?.headquarters;
+    return headquarters ? { enterpriseInfo: { headquarters } } : {};
+  };
+  return {
+    ...content,
+    company: { vi: strip(company.vi), en: strip(company.en) },
+  };
 }

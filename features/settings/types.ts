@@ -5,11 +5,9 @@ export interface CompanyMetric {
 }
 
 export interface SiteSettingsData {
-  companyName: string;
   email: string;
   phone?: string;
   address?: string;
-  brochureUrl?: string;
   metrics?: CompanyMetric[];
   socialLinks: Record<string, string>;
   defaultSeoTitle: string;

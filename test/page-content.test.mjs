@@ -52,3 +52,22 @@ test("the team reaches pages by role and expertise only", () => {
   assert.deepEqual(out["home.hero"], content["home.hero"]);
   assert.deepEqual(withoutTeamIdentity({}), {});
 });
+
+test("only the headquarters of the company block reaches pages", () => {
+  const { withoutLegalEntity } = load("features/page-content/queries");
+  const block = {
+    copyright: "© 2026 CÔNG TY CỔ PHẦN BIM4C",
+    enterpriseInfo: {
+      companyName: "Công ty Cổ phần BIM4C",
+      internationalName: "BIM4C JOINT STOCK COMPANY",
+      shortName: "BIM4C JSC",
+      headquarters: "20 Bắc Sơn, Đà Nẵng",
+      legalRepresentative: "NGUYỄN VĂN A",
+    },
+  };
+  const content = { company: { vi: block, en: { copyright: "©" } }, "home.hero": { vi: { title: "Xin chào" } } };
+  const out = withoutLegalEntity(content);
+  assert.deepEqual(out.company, { vi: { enterpriseInfo: { headquarters: "20 Bắc Sơn, Đà Nẵng" } }, en: {} });
+  assert.deepEqual(out["home.hero"], content["home.hero"]);
+  assert.deepEqual(withoutLegalEntity({}), {});
+});

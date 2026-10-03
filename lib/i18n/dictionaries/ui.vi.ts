@@ -610,6 +610,7 @@ export const uiVi: UiStrings = {
   },
   footer: {
     connectWithUs: "Kết nối mạng xã hội",
+    allRightsReserved: "Bảo lưu mọi quyền.",
     footerNavigation: "Điều hướng cuối trang",
   },
   header: {
@@ -655,7 +656,6 @@ export const uiVi: UiStrings = {
     bIMTechnologyIllustration: "Minh họa công nghệ BIM",
     standardizedCDEDataEnvironmentAnd:
       "Hệ thống dữ liệu CDE và mô hình thông tin chuẩn xác cho dự án xây dựng hiện đại",
-    downloadBrochurePDF: "Tải Hồ sơ năng lực (PDF)",
   },
   bimHero3DCanvas: {
     fullBIMViewer: "Xem BIM Đầy đủ",

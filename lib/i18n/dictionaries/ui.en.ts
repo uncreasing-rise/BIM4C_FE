@@ -611,6 +611,7 @@ export const uiEn = {
   },
   footer: {
     connectWithUs: "Connect with us",
+    allRightsReserved: "All rights reserved.",
     footerNavigation: "Footer navigation",
   },
   header: {
@@ -656,7 +657,6 @@ export const uiEn = {
     bIMTechnologyIllustration: "BIM technology illustration",
     standardizedCDEDataEnvironmentAnd:
       "Standardized CDE data environment and accurate information models for modern construction",
-    downloadBrochurePDF: "Download Brochure (PDF)",
   },
   bimHero3DCanvas: {
     fullBIMViewer: "Full BIM Viewer",

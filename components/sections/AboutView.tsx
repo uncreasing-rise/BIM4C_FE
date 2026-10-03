@@ -30,7 +30,6 @@ import {
   useSiteSettings,
 } from "@/features/page-content/context";
 import { filled } from "@/lib/utils/contact";
-import { Download } from "lucide-react";
 
 import { ui } from "@/lib/i18n/ui";
 
@@ -476,24 +475,6 @@ export function AboutView({
             )}
           </div>
           <div className="flex flex-wrap items-center gap-3.5">
-            {settings?.brochureUrl && (
-              <Button
-                asChild
-                variant="outline"
-                size="lg"
-                className="rounded-xl font-semibold shadow-xs"
-              >
-                <a
-                  href={settings.brochureUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="gap-2 inline-flex items-center"
-                >
-                  <Download className="size-4 text-primary" />
-                  <span>{ui(locale).aboutView.downloadBrochurePDF}</span>
-                </a>
-              </Button>
-            )}
             <Button
               asChild
               size="lg"

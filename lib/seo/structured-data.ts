@@ -1,7 +1,6 @@
 import type { ContentEntry } from "@/types/content";
 import { absoluteUrl, SITE_NAME, DEFAULT_DESCRIPTION } from "./site";
 import type { SiteSettingsData } from "@/features/settings/types";
-import type { PageContentBlock } from "@/features/page-content/types";
 
 type Schema = Record<string, unknown>;
 const organizationId = absoluteUrl("/#organization");
@@ -20,32 +19,25 @@ const compact = (value: Schema): Schema =>
 
 const imageUrl = (value?: string) => (value ? absoluteUrl(value) : undefined);
 
-/** Built from admin settings and the company block; empty fields are omitted. */
+/**
+ * Built from admin settings; empty fields are omitted. Legal-entity details
+ * (registered name, legal representative) are intentionally left out.
+ */
 export const organizationSchema = (
   settings?: SiteSettingsData | null,
-  company?: PageContentBlock<"company"> | null,
 ): Schema => {
-  const info = company?.enterpriseInfo;
-  const alternateName = [info?.shortName, info?.internationalName].filter(
-    Boolean,
-  );
   const sameAs = Object.values(settings?.socialLinks ?? {}).filter((url) =>
     url?.trim(),
   );
   return compact({
     "@context": "https://schema.org",
-    "@type": "Corporation",
+    "@type": "Organization",
     "@id": organizationId,
-    name: settings?.companyName || SITE_NAME,
-    legalName: info?.companyName,
-    alternateName: alternateName.length ? alternateName : undefined,
+    name: SITE_NAME,
     url: absoluteUrl("/"),
     logo: absoluteUrl("/images/logo.png"),
     image: imageUrl(settings?.defaultOgImage),
     description: settings?.defaultSeoDescription,
-    founder: info?.legalRepresentative
-      ? { "@type": "Person", name: info.legalRepresentative }
-      : undefined,
     address: settings?.address
       ? { "@type": "PostalAddress", streetAddress: settings.address }
       : undefined,

@@ -25,17 +25,12 @@ export function OfficeLocationMap() {
   const { t, locale } = useLanguage();
   const settings = useSiteSettings();
   const map = usePageContent("contact")?.map;
-  const info = usePageContent("company")?.enterpriseInfo;
   const address = settings?.address?.trim();
   if (!address) return null;
 
   const query = encodeURIComponent(address);
   const mapEmbedUrl = `https://maps.google.com/maps?q=${query}&output=embed`;
   const directionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${query}`;
-  const companyName =
-    (locale === "en" && info?.internationalName) ||
-    settings?.companyName ||
-    info?.companyName;
   const phoneHref = telHref(settings?.phone);
   const hasSocial = Object.values(settings?.socialLinks ?? {}).some((url) =>
     url?.trim(),
@@ -127,13 +122,7 @@ export function OfficeLocationMap() {
                   </span>
                 </div>
 
-                {companyName && (
-                  <p className="mt-2.5 text-sm font-bold leading-snug text-white">
-                    {companyName}
-                  </p>
-                )}
-
-                <p className="mt-1 flex items-start gap-2 text-xs text-slate-300 leading-relaxed">
+                <p className="mt-2.5 flex items-start gap-2 text-xs text-slate-300 leading-relaxed">
                   <MapPin className="size-4 shrink-0 text-teal-400 mt-0.5" />
                   <span>{address}</span>
                 </p>

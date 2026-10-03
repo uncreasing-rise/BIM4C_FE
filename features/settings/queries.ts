@@ -17,11 +17,9 @@ export async function getSiteSettings(): Promise<SiteSettingsData | null> {
     const data = response?.data;
     if (!data) return null;
     return {
-      companyName: data.companyName ?? "",
       email: data.email ?? "",
       phone: data.phone || undefined,
       address: data.address || undefined,
-      brochureUrl: data.brochureUrl || undefined,
       metrics: Array.isArray(data.metrics) ? data.metrics : [],
       socialLinks:
         data.socialLinks && typeof data.socialLinks === "object"
