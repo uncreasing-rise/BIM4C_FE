@@ -797,8 +797,8 @@ test("viewer loads the public IFC demo and exposes selection workflow", () => {
     resolve(root, "components/bim-viewer/BimModelsPanel.tsx"),
     "utf8",
   );
-  assert.match(page, /loadDemoModel/);
-  assert.match(readFileSync(resolve(root, "components/bim-viewer/demo-models.ts"), "utf8"), /SGDN_ARC_Model/);
+  // No preloaded demo: the viewer opens empty and asks for the visitor's own files.
+  assert.doesNotMatch(page, /DEMO_MODELS|loadDemoModel/);
   assert.match(page, /selectedElementIds/);
   assert.match(canvas, /selectedElementIds\.has/);
   assert.match(canvas, /elementIds\?\.length/);

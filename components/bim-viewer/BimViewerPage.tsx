@@ -51,7 +51,6 @@ import {
 } from "./BimPropertyInspector";
 import { BimToolbar } from "./BimToolbar";
 import { CLASH_RESULT_LIMIT, DEFAULT_CLASH_RULES, detectClashes } from "./clash-detection";
-import { DEMO_MODELS } from "./demo-models";
 import { readIssueSnapshots, writeIssueSnapshots } from "./issue-snapshots";
 import { hydrated } from "./fragments-engine";
 import { buildLegend, resolveAppearance, type AppearanceProfile, type ManualLook } from "./appearance";
@@ -348,7 +347,6 @@ export function BimViewerPage() {
     total: number;
   } | null>(null);
   const [stats, setStats] = useState({ bytes: 0, triangles: 0 });
-  const demoLoadedRef = useRef(false);
 
   const applySession = useCallback((session: z.infer<typeof sessionSchema>) => {
     if (Array.isArray(session.hiddenElements))
@@ -1342,48 +1340,6 @@ export function BimViewerPage() {
     // Frame everything once the batch is in, so newly added files are visible.
     if (!controller.signal.aborted && modelsRef.current.length) requestView("perspective");
   };
-
-  // Commit the federation together: session identity and camera frame use both files.
-  useEffect(() => {
-    if (demoLoadedRef.current || modelsRef.current.length) return;
-    demoLoadedRef.current = true;
-    const controller = new AbortController();
-    taskRef.current = controller;
-    void (async () => {
-      try {
-        const { loadDemoModel } = await import("./ifc-loader");
-        const loaded: FederatedModel[] = [];
-        for (const [index, demo] of DEMO_MODELS.entries()) {
-          controller.signal.throwIfAborted();
-          const progress = (percent: number) => {
-            if (!controller.signal.aborted)
-              setLoading({ name: demo.name, percent, index: index + 1, total: DEMO_MODELS.length });
-          };
-          progress(0);
-          // One file failing still shows the others.
-          try {
-            const parsed = await loadDemoModel(demo.url, demo.hash, controller.signal, progress);
-            const key = `m${++keyCounter.current}`;
-            loaded.push({ key, model: namespaced(key, parsed), visible: true, alignment: "shared", offset: { x: 0, y: 0, z: 0, rotationDeg: 0 } });
-          } catch (error) {
-            if (controller.signal.aborted) throw error;
-            toast.error(`${demo.name}: ${ui(locale).bimViewerPage.unableToReadIFCCheck}`, { duration: 7000 });
-          }
-        }
-        if (controller.signal.aborted || modelsRef.current.length || !loaded.length) return;
-        modelsRef.current = loaded;
-        setSceneOrigin(modelOrigin(loaded[0].model));
-        setModels(loaded);
-        requestView("perspective");
-      } catch {
-        // Only cancellation (or the loader failing to import) gets here; files report above.
-        if (!controller.signal.aborted) toast.error(ui(locale).bimViewerPage.unableToReadIFCCheck, { duration: 7000 });
-      } finally {
-        if (taskRef.current === controller) { taskRef.current = null; setLoading(null); }
-      }
-    })();
-    return () => { controller.abort(); demoLoadedRef.current = false; };
-  }, [locale, requestView]);
 
   const commitModels = (next: FederatedModel[]) => {
     modelsRef.current = next;

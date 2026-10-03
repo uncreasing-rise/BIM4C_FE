@@ -66,10 +66,10 @@ const nextConfig: NextConfig = {
     ];
     return [
       { source: "/(.*)", headers: securityHeaders },
-      // IFC engine WASM (~1.3 MB), the Fragments worker and the demo model:
+      // IFC engine WASM (~1.3 MB) and the Fragments worker:
       // unhashed names, so a day's cache plus background revalidation rather
       // than immutable.
-      ...["/wasm/:path*", "/fragments/:path*", "/models/:path*"].map((source) => ({
+      ...["/wasm/:path*", "/fragments/:path*"].map((source) => ({
         source,
         headers: [
           {
