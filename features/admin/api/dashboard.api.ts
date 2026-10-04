@@ -19,6 +19,7 @@ export interface RecentContent {
   id: string;
   type: "project" | "service" | "course" | "post";
   title: string;
+  title_vi?: string | null;
   slug: string;
   image: string;
   status: string;

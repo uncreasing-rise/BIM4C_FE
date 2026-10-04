@@ -28,9 +28,10 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       ROUTES.newsDetail(slug),
     );
   }
-  // Metadata blocks the response (next.config htmlLimitedBots), so these keep
-  // their HTTP status here: a real 404, and a 308 to the post's own URL. In
-  // the page body they come after streaming has started, as a 200.
+  // The (public) loading.tsx has already started streaming, so the status is
+  // committed as 200: notFound() renders the 404 page with a robots noindex
+  // tag, and the redirect is a meta refresh to the post's own URL. A real
+  // 404/308 status would need a slug check in proxy.ts before rendering.
   if (!entry) notFound();
   if (postGroup(entry) !== "news") permanentRedirect(localizedPath(postPath(entry), await getRequestLocale()));
   return getContentMetadata(entry, ROUTES.newsDetail(slug));

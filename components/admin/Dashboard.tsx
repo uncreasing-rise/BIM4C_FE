@@ -205,7 +205,7 @@ export function Dashboard() {
                           {item.image && <Image src={item.image} alt="" fill sizes="36px" className="object-cover" />}
                         </span>
                         <span className="min-w-0">
-                          <span className="block max-w-[420px] truncate font-medium text-slate-900">{item.title}</span>
+                          <span className="block max-w-[420px] truncate font-medium text-slate-900">{item.title_vi || item.title}</span>
                           <span className="block max-w-[420px] truncate text-xs text-slate-500">/{item.slug}</span>
                         </span>
                       </div>

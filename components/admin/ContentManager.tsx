@@ -1132,7 +1132,7 @@ export function ContentManager({
                   <td className="px-4 py-3.5">
                     <input
                       type="checkbox"
-                      aria-label={`Chọn ${item.title}`}
+                      aria-label={`Chọn ${item.title_vi || item.title}`}
                       checked={selected.includes(item.id)}
                       onChange={() =>
                         setSelected((old) =>
@@ -1165,7 +1165,8 @@ export function ContentManager({
                           onClick={() => void openEditor(item)}
                           className="font-bold text-foreground hover:text-primary transition-colors text-left line-clamp-1 block"
                         >
-                          {item.title}
+                          {/* The admin works in Vietnamese: show that title, English as fallback. */}
+                          {item.title_vi || item.title}
                         </button>
                         <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
                           <span className="font-mono text-[11px] truncate max-w-xs">{item.slug}</span>
@@ -1202,7 +1203,7 @@ export function ContentManager({
                         size="sm"
                         onClick={() => void openEditor(item)}
                         disabled={openingId === item.id}
-                        aria-label={`Sửa ${item.title}`}
+                        aria-label={`Sửa ${item.title_vi || item.title}`}
                         className="h-8 px-2.5 text-xs font-semibold gap-1"
                       >
                         <span>Sửa</span>
@@ -1215,7 +1216,7 @@ export function ContentManager({
                         onClick={() => void remove(item.id)}
                         className="h-8 w-8 p-0 text-destructive hover:bg-destructive/10"
                         title="Xóa"
-                        aria-label={`Xóa ${item.title}`}
+                        aria-label={`Xóa ${item.title_vi || item.title}`}
                       >
                         <Trash2 className="size-3.5" />
                       </Button>
