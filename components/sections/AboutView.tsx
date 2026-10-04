@@ -411,7 +411,7 @@ export function AboutView({
             </div>
 
             <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-              {/* By role and expertise only: names and photos are kept private
+              {/* Name, role and expertise; photos are kept private
                   (the API and getPageContent leave them out). */}
               {teamMembers.map((member, index) => (
                 <article
@@ -426,8 +426,13 @@ export function AboutView({
                     <Users className="size-5" aria-hidden="true" />
                   </span>
                   <h3 className="relative mt-5 text-[1.05rem] font-bold leading-snug text-white">
-                    {member.role}
+                    {member.name || member.role}
                   </h3>
+                  {member.name && (
+                    <p className="relative mt-1 text-sm font-medium text-teal-300">
+                      {member.role}
+                    </p>
+                  )}
                   {member.spec && (
                     <p className="relative mt-3 border-t border-white/15 pt-3 text-[0.85rem] leading-relaxed text-white/70">
                       {member.spec}

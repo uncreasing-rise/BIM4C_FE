@@ -38,19 +38,19 @@ function load(path) {
   return cjsModule.exports;
 }
 
-test("the team reaches pages by role and expertise only", () => {
-  const { withoutTeamIdentity } = load("features/page-content/queries");
+test("the team reaches pages by name, role and expertise, without photos", () => {
+  const { withoutTeamPhotos } = load("features/page-content/queries");
   const member = { name: "Nguyễn Văn A", role: "CEO", spec: "15 năm BIM", image: "/a.jpg" };
   const content = {
     about: { vi: { teamTitle: "Đội ngũ", teamMembers: [member] }, en: { teamMembers: [member] } },
     "home.hero": { vi: { title: "Xin chào" } },
   };
-  const out = withoutTeamIdentity(content);
-  assert.deepEqual(out.about.vi, { teamTitle: "Đội ngũ", teamMembers: [{ role: "CEO", spec: "15 năm BIM" }] });
-  assert.deepEqual(out.about.en.teamMembers, [{ role: "CEO", spec: "15 năm BIM" }]);
-  assert.equal(JSON.stringify(out).includes("Nguyễn Văn A"), false);
+  const out = withoutTeamPhotos(content);
+  assert.deepEqual(out.about.vi, { teamTitle: "Đội ngũ", teamMembers: [{ name: "Nguyễn Văn A", role: "CEO", spec: "15 năm BIM" }] });
+  assert.deepEqual(out.about.en.teamMembers, [{ name: "Nguyễn Văn A", role: "CEO", spec: "15 năm BIM" }]);
+  assert.equal(JSON.stringify(out).includes("/a.jpg"), false);
   assert.deepEqual(out["home.hero"], content["home.hero"]);
-  assert.deepEqual(withoutTeamIdentity({}), {});
+  assert.deepEqual(withoutTeamPhotos({}), {});
 });
 
 test("only the headquarters of the company block reaches pages", () => {

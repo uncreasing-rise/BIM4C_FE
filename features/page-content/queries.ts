@@ -10,18 +10,18 @@ export async function getPageContent(): Promise<PageContentMap> {
         next: { revalidate: 60, tags: ["page-content"] },
       },
     );
-    return withoutLegalEntity(withoutTeamIdentity(response?.data ?? {}));
+    return withoutLegalEntity(withoutTeamPhotos(response?.data ?? {}));
   } catch {
     return {};
   }
 }
 
 /**
- * The About page shows the team by role and expertise only. The API already
- * leaves names and photos out; this keeps them out of every page's source
- * whatever the API sends.
+ * The About page shows the team by name, role and expertise, without photos.
+ * The API already leaves photos out; this keeps them out of every page's
+ * source whatever the API sends.
  */
-export function withoutTeamIdentity(content: PageContentMap): PageContentMap {
+export function withoutTeamPhotos(content: PageContentMap): PageContentMap {
   const about = content.about;
   if (!about) return content;
   const strip = (block: typeof about.vi) =>
@@ -31,7 +31,7 @@ export function withoutTeamIdentity(content: PageContentMap): PageContentMap {
           teamMembers: block.teamMembers.map((member) => {
             if (!member) return member;
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            const { name, image, ...rest } = member;
+            const { image, ...rest } = member;
             return rest;
           }),
         }
