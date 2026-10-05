@@ -35,12 +35,17 @@ export const dynamic = "force-dynamic";
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await getRequestLocale();
   const canonical = localizedPath("/", locale);
-  // The admin's SEO settings hold one language, English: they set the English
-  // title and description; Vietnamese pages use the Vietnamese brand copy
-  // (they showed the English settings before).
+  // Admin SEO defaults are bilingual; an empty Vietnamese value falls back to
+  // the built-in Vietnamese brand copy, never to the English setting.
   const settings = await getSiteSettings();
-  const title = locale === "vi" ? DEFAULT_TITLE : settings?.defaultSeoTitle || DEFAULT_TITLE_EN;
-  const description = locale === "vi" ? DEFAULT_DESCRIPTION : settings?.defaultSeoDescription || DEFAULT_DESCRIPTION_EN;
+  const title =
+    locale === "vi"
+      ? settings?.defaultSeoTitle_vi || DEFAULT_TITLE
+      : settings?.defaultSeoTitle || DEFAULT_TITLE_EN;
+  const description =
+    locale === "vi"
+      ? settings?.defaultSeoDescription_vi || DEFAULT_DESCRIPTION
+      : settings?.defaultSeoDescription || DEFAULT_DESCRIPTION_EN;
   const socialImage = settings?.defaultOgImage || DEFAULT_SOCIAL_IMAGE;
   return {
     metadataBase: new URL(env.appUrl),

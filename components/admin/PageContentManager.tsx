@@ -1,19 +1,18 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { adminRequest } from "@/features/admin/api/http-client";
 import { revalidateCmsCache } from "@/features/admin/api/revalidate";
 import type { PageContentKey } from "@/features/page-content/types";
-import { Plus, Save, Trash2 } from "lucide-react";
+import { AlertTriangle, Plus, Save, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { SearchBox, matchesSearch } from "./list-controls";
+import { BilingualColumnsHeader, BilingualField } from "./bilingual";
+import { useConfirm } from "./ConfirmDialog";
 
 type Json = string | number | boolean | null | Json[] | { [key: string]: Json };
 type Block = { [key: string]: Json };
-type Locale = "vi" | "en";
 
 interface PageContentRow {
   key: PageContentKey;
@@ -164,74 +163,149 @@ function blank(value: Json): Json {
   return typeof value === "string" ? "" : value;
 }
 
-function FieldEditor({
+const LONG_FIELDS = ["text", "desc", "description", "answer", "intro", "spec", "heroDesc", "paragraphs", "preparation"];
+
+/** Number of text fields filled in one language but empty in the other. */
+function countGaps(vi: Json | undefined, en: Json | undefined): number {
+  if (typeof vi === "string" || typeof en === "string") {
+    const a = typeof vi === "string" && vi.trim() !== "";
+    const b = typeof en === "string" && en.trim() !== "";
+    return a !== b ? 1 : 0;
+  }
+  if (Array.isArray(vi) || Array.isArray(en)) {
+    const va = Array.isArray(vi) ? vi : [];
+    const ea = Array.isArray(en) ? en : [];
+    let total = 0;
+    for (let i = 0; i < Math.max(va.length, ea.length); i++) total += countGaps(va[i], ea[i]);
+    return total;
+  }
+  if (isObject(vi) || isObject(en)) {
+    const vo = isObject(vi) ? vi : {};
+    const eo = isObject(en) ? en : {};
+    let total = 0;
+    for (const key of new Set([...Object.keys(vo), ...Object.keys(eo)])) total += countGaps(vo[key], eo[key]);
+    return total;
+  }
+  return 0;
+}
+
+/**
+ * Edits the same field of both languages side by side: strings as a
+ * Vietnamese/English input pair, lists row by row, objects recursively.
+ */
+function PairEditor({
+  path,
   name,
-  value,
+  vi,
+  en,
   template,
   onChange,
 }: {
+  path: string;
   name: string;
-  value: Json;
+  vi: Json | undefined;
+  en: Json | undefined;
   template?: Json;
-  onChange: (value: Json) => void;
+  onChange: (vi: Json, en: Json) => void;
 }) {
-  if (typeof value === "string") {
-    const long = value.length > 90 || value.includes("\n") || ["text", "desc", "description", "answer", "intro", "spec"].includes(name);
+  const sample = vi ?? en ?? template;
+
+  if (typeof sample === "string") {
+    const a = typeof vi === "string" ? vi : "";
+    const b = typeof en === "string" ? en : "";
+    const long = a.length > 90 || b.length > 90 || a.includes("\n") || b.includes("\n") || LONG_FIELDS.includes(name);
     return (
-      <label className="block">
-        <span className="mb-1 block text-xs font-medium text-muted-foreground">{humanize(name)}</span>
-        {long ? (
-          <Textarea value={value} rows={3} onChange={(e) => onChange(e.target.value)} />
-        ) : (
-          <Input value={value} onChange={(e) => onChange(e.target.value)} />
-        )}
-      </label>
+      <BilingualField
+        id={path}
+        label={humanize(name)}
+        vi={a}
+        en={b}
+        multiline={long}
+        rows={3}
+        onChange={(lang, value) => onChange(lang === "vi" ? value : a, lang === "en" ? value : b)}
+      />
     );
   }
 
-  if (Array.isArray(value)) {
-    const itemTemplate = blank(value[0] ?? (Array.isArray(template) ? template[0] : "") ?? "");
+  if (Array.isArray(sample)) {
+    const va = Array.isArray(vi) ? vi : [];
+    const ea = Array.isArray(en) ? en : [];
+    const length = Math.max(va.length, ea.length);
+    const itemTemplate = blank(va[0] ?? ea[0] ?? (Array.isArray(template) ? template[0] : "") ?? "");
+    const itemLabel = humanize(name);
     return (
       <fieldset className="space-y-3 rounded-xl border p-4">
-        <legend className="px-1 text-xs font-semibold uppercase tracking-wide text-primary">{humanize(name)}</legend>
-        {value.length === 0 && (
-          <p className="text-xs text-muted-foreground">Danh sách trống, khối này sẽ được ẩn trên website.</p>
+        <legend className="px-1 text-xs font-semibold uppercase tracking-wide text-primary">
+          {itemLabel} ({length})
+        </legend>
+        {va.length !== ea.length && (
+          <p className="flex items-center gap-1 text-[11px] font-medium text-amber-700 dark:text-amber-400">
+            <AlertTriangle className="size-3" /> Bản Tiếng Việt có {va.length} mục, bản English có {ea.length} mục — mục thiếu được để trống bên dưới.
+          </p>
         )}
-        {value.map((item, index) => (
-          <div key={index} className="relative rounded-lg border bg-muted/30 p-3 pr-11">
-            <button
-              type="button"
-              aria-label={`Xóa mục ${index + 1}`}
-              onClick={() => onChange(value.filter((_, i) => i !== index))}
-              className="absolute right-2 top-2 rounded-md p-1.5 text-muted-foreground hover:bg-red-50 hover:text-red-600"
-            >
-              <Trash2 className="size-4" />
-            </button>
-            <FieldEditor
-              name={typeof item === "string" ? `${humanize(name)} ${index + 1}` : `#${index + 1}`}
-              value={item}
-              onChange={(next) => onChange(value.map((current, i) => (i === index ? next : current)))}
-            />
-          </div>
-        ))}
-        <Button type="button" variant="outline" size="sm" onClick={() => onChange([...value, structuredClone(itemTemplate)])}>
-          <Plus className="size-4" /> Thêm mục
+        {length === 0 && <p className="text-xs text-muted-foreground">Danh sách trống, khối này sẽ được ẩn trên website.</p>}
+        {Array.from({ length }, (_, index) => {
+          const itemVi = va[index] ?? structuredClone(itemTemplate);
+          const itemEn = ea[index] ?? structuredClone(itemTemplate);
+          return (
+            <div key={index} className="relative rounded-lg border bg-muted/30 p-3 pr-11">
+              <button
+                type="button"
+                aria-label={`Xóa mục ${index + 1}`}
+                title="Xóa mục này ở cả 2 ngôn ngữ"
+                onClick={() =>
+                  onChange(
+                    va.filter((_, i) => i !== index),
+                    ea.filter((_, i) => i !== index),
+                  )
+                }
+                className="absolute right-2 top-2 rounded-md p-1.5 text-muted-foreground hover:bg-red-50 hover:text-red-600"
+              >
+                <Trash2 className="size-4" />
+              </button>
+              <PairEditor
+                path={`${path}.${index}`}
+                name={typeof itemVi === "string" ? `${itemLabel} ${index + 1}` : `#${index + 1}`}
+                vi={itemVi}
+                en={itemEn}
+                template={itemTemplate}
+                onChange={(nextVi, nextEn) => {
+                  const outVi = Array.from({ length }, (_, i) => (i === index ? nextVi : va[i] ?? structuredClone(itemTemplate)));
+                  const outEn = Array.from({ length }, (_, i) => (i === index ? nextEn : ea[i] ?? structuredClone(itemTemplate)));
+                  onChange(outVi, outEn);
+                }}
+              />
+            </div>
+          );
+        })}
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => onChange([...va, structuredClone(itemTemplate)], [...ea, structuredClone(itemTemplate)])}
+        >
+          <Plus className="size-4" /> Thêm mục (cả 2 ngôn ngữ)
         </Button>
       </fieldset>
     );
   }
 
-  if (isObject(value)) {
+  if (isObject(sample)) {
+    const vo = isObject(vi) ? vi : {};
+    const eo = isObject(en) ? en : {};
+    const keys = [...new Set([...Object.keys(isObject(template) ? template : {}), ...Object.keys(vo), ...Object.keys(eo)])];
     return (
-      <fieldset className="space-y-3 rounded-xl border p-4">
+      <fieldset className="space-y-4 rounded-xl border p-4">
         <legend className="px-1 text-xs font-semibold uppercase tracking-wide text-primary">{humanize(name)}</legend>
-        {Object.entries(value).map(([key, child]) => (
-          <FieldEditor
+        {keys.map((key) => (
+          <PairEditor
             key={key}
+            path={`${path}.${key}`}
             name={key}
-            value={child}
+            vi={vo[key]}
+            en={eo[key]}
             template={isObject(template) ? template[key] : undefined}
-            onChange={(next) => onChange({ ...value, [key]: next })}
+            onChange={(nextVi, nextEn) => onChange({ ...vo, [key]: nextVi }, { ...eo, [key]: nextEn })}
           />
         ))}
       </fieldset>
@@ -243,9 +317,9 @@ function FieldEditor({
 
 /** Edits the bilingual page copy blocks served by `/page-content`. */
 export function PageContentManager() {
+  const { confirm, dialog } = useConfirm();
   const [rows, setRows] = useState<Partial<Record<PageContentKey, PageContentRow>>>({});
   const [active, setActive] = useState<PageContentKey>("home.hero");
-  const [locale, setLocale] = useState<Locale>("vi");
   const [draft, setDraft] = useState<{ vi: Block; en: Block } | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -259,6 +333,13 @@ export function PageContentManager() {
       .finally(() => setLoading(false));
   }, []);
 
+  useEffect(() => {
+    if (!draft) return;
+    const warn = (event: BeforeUnloadEvent) => event.preventDefault();
+    window.addEventListener("beforeunload", warn);
+    return () => window.removeEventListener("beforeunload", warn);
+  }, [draft]);
+
   const skeleton = SKELETONS[active];
   const initial = useMemo(
     () => ({
@@ -269,14 +350,46 @@ export function PageContentManager() {
   );
   const current = draft ?? initial;
   const block = BLOCKS.find((item) => item.key === active);
+  const gaps = useMemo(
+    () =>
+      Object.fromEntries(
+        BLOCKS.map(({ key }) => [
+          key,
+          key === active ? countGaps(current.vi, current.en) : countGaps(rows[key]?.vi, rows[key]?.en),
+        ]),
+      ) as Record<PageContentKey, number>,
+    [active, current, rows],
+  );
 
-  const selectBlock = (key: PageContentKey) => {
-    if (draft && !window.confirm("Bỏ các thay đổi chưa lưu?")) return;
+  const selectBlock = async (key: PageContentKey) => {
+    if (key === active) return;
+    if (
+      draft &&
+      !(await confirm({
+        title: "Bỏ các thay đổi chưa lưu?",
+        description: `Những chỉnh sửa trong khối “${block?.label}” sẽ bị mất.`,
+        confirmLabel: "Bỏ thay đổi",
+        cancelLabel: "Tiếp tục chỉnh sửa",
+      }))
+    )
+      return;
     setDraft(null);
     setActive(key);
   };
 
   const save = async () => {
+    const missing = countGaps(current.vi, current.en);
+    if (
+      missing > 0 &&
+      !(await confirm({
+        title: `Còn ${missing} ô chỉ có một ngôn ngữ`,
+        description: "Những ô viền vàng sẽ hiển thị trống ở phiên bản ngôn ngữ còn thiếu trên website. Vẫn lưu?",
+        confirmLabel: "Vẫn lưu",
+        cancelLabel: "Quay lại bổ sung",
+        tone: "default",
+      }))
+    )
+      return;
     setSaving(true);
     try {
       const body = await adminRequest<{ data: PageContentRow }>(`page-content/${encodeURIComponent(active)}`, {
@@ -297,62 +410,65 @@ export function PageContentManager() {
   if (loading) return <p className="text-sm text-muted-foreground">Đang tải nội dung…</p>;
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[260px_1fr]">
+    <div className="grid gap-6 lg:grid-cols-[260px_minmax(0,1fr)]">
+      {dialog}
       <nav aria-label="Khối nội dung" className="space-y-1">
         <SearchBox value={blockSearch} onChange={setBlockSearch} placeholder="Tìm khối nội dung..." className="mb-2" />
-        {shownBlocks.length === 0 && (
-          <p className="px-3 py-2 text-xs text-muted-foreground">Không có khối nào khớp.</p>
-        )}
+        {shownBlocks.length === 0 && <p className="px-3 py-2 text-xs text-muted-foreground">Không có khối nào khớp.</p>}
         {shownBlocks.map((item) => (
           <button
             key={item.key}
             type="button"
-            onClick={() => selectBlock(item.key)}
+            onClick={() => void selectBlock(item.key)}
             aria-current={active === item.key}
-            className="w-full rounded-lg px-3 py-2 text-left text-sm transition-colors hover:bg-muted aria-[current=true]:bg-primary aria-[current=true]:text-white"
+            className="group w-full rounded-lg px-3 py-2 text-left text-sm transition-colors hover:bg-muted aria-[current=true]:bg-primary aria-[current=true]:text-white"
           >
-            <span className="block font-medium">{item.label}</span>
+            <span className="flex items-center justify-between gap-2">
+              <span className="font-medium">{item.label}</span>
+              {gaps[item.key] > 0 && (
+                <span
+                  className="shrink-0 rounded-full bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-bold text-amber-700 group-aria-[current=true]:bg-white/20 group-aria-[current=true]:text-white dark:text-amber-400"
+                  title={`${gaps[item.key]} ô chỉ có một ngôn ngữ`}
+                >
+                  {gaps[item.key]} thiếu
+                </span>
+              )}
+            </span>
             {!rows[item.key] && <span className="text-xs opacity-75">Chưa có nội dung, đang ẩn</span>}
           </button>
         ))}
       </nav>
 
-      <section className="space-y-4">
-        <header className="flex flex-wrap items-center justify-between gap-3 border-b pb-4">
+      <section className="min-w-0 space-y-4">
+        <header className="sticky top-14 z-10 -mx-1 flex flex-wrap items-center justify-between gap-3 border-b bg-background/95 px-1 pb-4 pt-2 backdrop-blur">
           <div>
             <h2 className="text-lg font-semibold">{block?.label}</h2>
-            <p className="text-sm text-muted-foreground">{block?.hint} Trường để trống sẽ không hiển thị.</p>
+            <p className="text-sm text-muted-foreground">
+              {block?.hint} Trường để trống sẽ không hiển thị.{" "}
+              {gaps[active] > 0 ? (
+                <span className="font-medium text-amber-700 dark:text-amber-400">{gaps[active]} ô đang thiếu một ngôn ngữ (viền vàng).</span>
+              ) : (
+                <span className="font-medium text-emerald-700 dark:text-emerald-400">Đủ cả 2 ngôn ngữ.</span>
+              )}
+            </p>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="grid grid-cols-2 rounded-lg border p-0.5" role="tablist" aria-label="Ngôn ngữ">
-              {(["vi", "en"] as const).map((code) => (
-                <button
-                  key={code}
-                  type="button"
-                  role="tab"
-                  aria-selected={locale === code}
-                  onClick={() => setLocale(code)}
-                  className="rounded-md px-3 py-1 text-xs font-semibold aria-selected:bg-primary aria-selected:text-white"
-                >
-                  {code === "vi" ? "Tiếng Việt" : "English"}
-                </button>
-              ))}
-            </div>
-            <Button type="button" onClick={save} disabled={saving || !draft}>
-              <Save className="size-4" /> {saving ? "Đang lưu…" : "Lưu"}
-            </Button>
-          </div>
+          <Button type="button" onClick={() => void save()} disabled={saving || !draft}>
+            <Save className="size-4" /> {saving ? "Đang lưu…" : draft ? "Lưu" : "Đã lưu"}
+          </Button>
         </header>
 
-        <div className="space-y-3">
-          {Object.entries(current[locale]).map(([key, value]) => (
-            <FieldEditor
-              key={`${active}-${locale}-${key}`}
+        <BilingualColumnsHeader />
+        <div className="space-y-4">
+          {Object.keys(current.vi).map((key) => (
+            <PairEditor
+              key={`${active}-${key}`}
+              path={`${active}.${key}`}
               name={key}
-              value={value}
+              vi={current.vi[key]}
+              en={current.en[key]}
               template={skeleton[key]}
-              onChange={(next) =>
-                setDraft({ ...current, [locale]: { ...current[locale], [key]: next } })
+              onChange={(nextVi, nextEn) =>
+                setDraft({ vi: { ...current.vi, [key]: nextVi }, en: { ...current.en, [key]: nextEn } })
               }
             />
           ))}

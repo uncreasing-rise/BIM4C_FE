@@ -1,5 +1,5 @@
 import type { AdminProjectContent } from "../types";
-import { createBaseEmptyContent, serializeBaseContent } from "./common";
+import { assignOptional, createBaseEmptyContent, serializeBaseContent } from "./common";
 
 export function createEmptyProject(): AdminProjectContent {
   return {
@@ -38,16 +38,21 @@ export function serializeProjectPayload(data: Partial<AdminProjectContent>): Rec
     payload.categoryId = data.category.id;
   }
 
-  if (data.location_vi) payload.location_vi = data.location_vi.trim();
   if (typeof data.year === "number" && !isNaN(data.year)) payload.year = data.year;
-  if (data.investor) payload.investor = data.investor.trim();
-  if (data.investor_vi) payload.investor_vi = data.investor_vi.trim();
-  if (data.expectedCompletion) payload.expectedCompletion = data.expectedCompletion.trim();
-  if (data.expectedCompletion_vi) payload.expectedCompletion_vi = data.expectedCompletion_vi.trim();
-  if (data.scale) payload.scale = data.scale.trim();
-  if (data.scale_vi) payload.scale_vi = data.scale_vi.trim();
-  if (data.contractPackage) payload.contractPackage = data.contractPackage.trim();
-  if (data.contractPackage_vi) payload.contractPackage_vi = data.contractPackage_vi.trim();
+  else if (data.year === null) payload.year = null;
+  for (const key of [
+    "location_vi",
+    "investor",
+    "investor_vi",
+    "expectedCompletion",
+    "expectedCompletion_vi",
+    "scale",
+    "scale_vi",
+    "contractPackage",
+    "contractPackage_vi",
+  ] as const) {
+    assignOptional(payload, key, data[key]);
+  }
 
   return payload;
 }

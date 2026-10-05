@@ -6,22 +6,35 @@ import { adminContentApi } from "@/features/admin/api/client";
 import { MediaPicker } from "../MediaPicker";
 import { Layers, MoveUp, MoveDown, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
+import { BilingualColumnsHeader, BilingualField, LANGS, LANG_META, SharedBadge, fieldDomId, filled } from "../bilingual";
+import { PROJECT_FIELDS } from "../content-check";
 
 interface ProjectFieldsProps {
   content: Partial<AdminProjectContent>;
-  adminLangTab: "en" | "vi";
   onChange: (patch: Partial<AdminProjectContent>) => void;
 }
 
-export function ProjectFields({ content, adminLangTab, onChange }: ProjectFieldsProps) {
+const PROJECT_HINTS: Record<string, { vi: string; en: string; hint?: string }> = {
+  location: { vi: "TP. Hồ Chí Minh", en: "Ho Chi Minh City" },
+  investor: { vi: "Tên tập đoàn / chủ đầu tư", en: "Investor / developer name" },
+  contractPackage: { vi: "Mô hình BIM LOD 400", en: "BIM modelling LOD 400" },
+  expectedCompletion: { vi: "Quý IV/2026", en: "Q4 2026", hint: "Hiển thị trên trang chi tiết dự án" },
+  scale: { vi: "Diện tích sàn, số tầng, tổng vốn đầu tư...", en: "Floor area, storeys, total investment..." },
+};
+
+export function ProjectFields({ content, onChange }: ProjectFieldsProps) {
+  const row = content as Record<string, unknown>;
   const images = content.images ?? [];
 
   async function addProjectImage(media: { url: string; alt?: string; caption?: string }) {
     const newImage: ProjectGalleryImage = {
       id: `temp-${Date.now()}`,
       url: media.url,
-      alt: media.alt || content.title || "Hình ảnh dự án",
+      alt: media.alt || content.title || content.title_vi || "Hình ảnh dự án",
+      alt_vi: media.alt || content.title_vi || content.title || "Hình ảnh dự án",
       caption: media.caption || null,
+      caption_vi: media.caption || null,
       sortOrder: images.length,
     };
 
@@ -33,7 +46,9 @@ export function ProjectFields({ content, adminLangTab, onChange }: ProjectFields
         const res = await adminContentApi.addProjectImage(content.id, {
           url: newImage.url,
           alt: newImage.alt,
+          alt_vi: newImage.alt_vi,
           caption: newImage.caption ?? undefined,
+          caption_vi: newImage.caption_vi,
           sortOrder: newImage.sortOrder,
         });
         if (res?.data?.id) {
@@ -45,6 +60,20 @@ export function ProjectFields({ content, adminLangTab, onChange }: ProjectFields
         toast.error("Lỗi khi lưu ảnh vào dự án");
       }
     }
+  }
+
+  function setImage(id: string, patch: Partial<ProjectGalleryImage>) {
+    onChange({ images: images.map((item) => (item.id === id ? { ...item, ...patch } : item)) });
+  }
+
+  /** Saves one edited text of an already-stored image (new images are saved with the project). */
+  function persistImage(id: string, key: "alt" | "alt_vi" | "caption" | "caption_vi") {
+    const image = images.find((item) => item.id === id);
+    if (!content.id || !image || image.id.startsWith("temp-")) return;
+    const value = (image[key] ?? "").trim();
+    // The English alt is required by the API; fall back to the Vietnamese one.
+    const body = key === "alt" ? { alt: value || image.alt_vi?.trim() || "Hình ảnh dự án" } : { [key]: value || null };
+    adminContentApi.updateProjectImage(content.id, id, body).catch(() => toast.error("Không lưu được mô tả ảnh"));
   }
 
   async function moveProjectImage(index: number, direction: -1 | 1) {
@@ -78,55 +107,42 @@ export function ProjectFields({ content, adminLangTab, onChange }: ProjectFields
         <h3 className="text-base font-bold text-foreground">Thông số kỹ thuật công trình (Project Details)</h3>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="space-y-1.5">
-          <label className="text-[13px] font-medium text-slate-700 dark:text-foreground">Địa điểm</label>
-          <input
-            placeholder="TP. Hồ Chí Minh / Hà Nội"
-            value={adminLangTab === "en" ? content.location ?? "" : content.location_vi ?? ""}
-            onChange={(e) => onChange(adminLangTab === "en" ? { location: e.target.value } : { location_vi: e.target.value })}
-            className="w-full rounded-md border border-slate-300 bg-white text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-teal-600 focus:ring-2 focus:ring-teal-600/20 dark:border-border dark:bg-background dark:text-foreground px-3 py-2"
-          />
-        </div>
-        <div className="space-y-1.5">
-          <label className="text-[13px] font-medium text-slate-700 dark:text-foreground">Năm thực hiện</label>
-          <input
-            type="number"
-            placeholder="2026"
-            value={content.year ?? ""}
-            onChange={(e) => onChange({ year: e.target.value ? Number(e.target.value) : null })}
-            className="w-full rounded-md border border-slate-300 bg-white text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-teal-600 focus:ring-2 focus:ring-teal-600/20 dark:border-border dark:bg-background dark:text-foreground px-3 py-2"
-          />
-        </div>
-        <div className="space-y-1.5">
-          <label className="text-[13px] font-medium text-slate-700 dark:text-foreground">Chủ đầu tư</label>
-          <input
-            placeholder="Tên tập đoàn / Chủ đầu tư"
-            value={adminLangTab === "en" ? content.investor ?? "" : content.investor_vi ?? ""}
-            onChange={(e) => onChange(adminLangTab === "en" ? { investor: e.target.value } : { investor_vi: e.target.value })}
-            className="w-full rounded-md border border-slate-300 bg-white text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-teal-600 focus:ring-2 focus:ring-teal-600/20 dark:border-border dark:bg-background dark:text-foreground px-3 py-2"
-          />
-        </div>
-        <div className="space-y-1.5">
-          <label className="text-[13px] font-medium text-slate-700 dark:text-foreground">Gói thầu / Dịch vụ</label>
-          <input
-            placeholder="Mô hình BIM LOD 400"
-            value={adminLangTab === "en" ? content.contractPackage ?? "" : content.contractPackage_vi ?? ""}
-            onChange={(e) => onChange(adminLangTab === "en" ? { contractPackage: e.target.value } : { contractPackage_vi: e.target.value })}
-            className="w-full rounded-md border border-slate-300 bg-white text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-teal-600 focus:ring-2 focus:ring-teal-600/20 dark:border-border dark:bg-background dark:text-foreground px-3 py-2"
-          />
-        </div>
-      </div>
-
-      <div className="space-y-1.5">
-        <label className="text-[13px] font-medium text-slate-700 dark:text-foreground">Quy mô công trình</label>
-        <textarea
+      <BilingualColumnsHeader />
+      {PROJECT_FIELDS.map((spec) => (
+        <BilingualField
+          key={spec.id}
+          id={spec.id}
+          label={spec.label}
+          required={spec.required}
+          maxLength={spec.max}
+          multiline={spec.id === "scale"}
           rows={2}
-          placeholder="Diện tích sàn, số tầng, tổng vốn đầu tư..."
-          value={adminLangTab === "en" ? content.scale ?? "" : content.scale_vi ?? ""}
-          onChange={(e) => onChange(adminLangTab === "en" ? { scale: e.target.value } : { scale_vi: e.target.value })}
-          className="w-full rounded-xl border border-border bg-background p-3 text-sm text-foreground outline-none transition focus:border-primary"
+          hint={PROJECT_HINTS[spec.id]?.hint}
+          placeholderVi={PROJECT_HINTS[spec.id]?.vi}
+          placeholderEn={PROJECT_HINTS[spec.id]?.en}
+          vi={row[spec.vi] as string | null | undefined}
+          en={row[spec.en] as string | null | undefined}
+          onChange={(lang, value) => onChange({ [lang === "vi" ? spec.vi : spec.en]: value })}
         />
+      ))}
+
+      <div className="max-w-xs space-y-1.5">
+        <label htmlFor="bf-year" className="flex items-center gap-2 text-[13px] font-semibold text-slate-800 dark:text-foreground">
+          Năm thực hiện <SharedBadge />
+        </label>
+        <input
+          id="bf-year"
+          type="number"
+          min={1900}
+          max={2200}
+          placeholder="2026"
+          value={content.year ?? ""}
+          onChange={(e) => onChange({ year: e.target.value ? Number(e.target.value) : null })}
+          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-xs outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-600/20 dark:border-border dark:bg-background dark:text-foreground"
+        />
+        {content.year != null && (content.year < 1900 || content.year > 2200) && (
+          <p className="text-[11px] font-medium text-red-600">Năm phải trong khoảng 1900–2200</p>
+        )}
       </div>
 
       {/* Project Gallery Sub-editor */}
@@ -134,7 +150,7 @@ export function ProjectFields({ content, adminLangTab, onChange }: ProjectFields
         <div className="flex items-center justify-between">
           <div>
             <h4 className="text-sm font-bold text-foreground">Bộ sưu tập hình ảnh ({images.length})</h4>
-            <p className="text-xs text-muted-foreground">Hình ảnh phối cảnh và tiến độ thực tế dự án</p>
+            <p className="text-xs text-muted-foreground">Ảnh dùng chung; mô tả và chú thích nhập riêng cho từng ngôn ngữ.</p>
           </div>
           <MediaPicker
             label="Thêm ảnh từ Media"
@@ -144,43 +160,37 @@ export function ProjectFields({ content, adminLangTab, onChange }: ProjectFields
 
         <div className="grid gap-3">
           {images.map((image, index) => (
-            <div key={image.id} className="flex items-center gap-4 rounded-xl border border-border bg-card p-3 shadow-2xs">
-              <Image src={image.url} alt={image.alt} width={80} height={56} className="size-14 rounded-lg object-cover border border-border" />
-              <div className="flex-1 space-y-1.5 min-w-0">
-                <input
-                  placeholder="Mô tả alt ảnh..."
-                  value={image.alt}
-                  onChange={(e) =>
-                    onChange({
-                      images: images.map((item) =>
-                        item.id === image.id ? { ...item, alt: e.target.value } : item,
-                      ),
-                    })
-                  }
-                  onBlur={() => {
-                    if (content.id && !image.id.startsWith("temp-")) {
-                      void adminContentApi.updateProjectImage(content.id, image.id, { alt: image.alt });
-                    }
-                  }}
-                  className="w-full rounded border border-border bg-background px-2.5 py-1 text-xs text-foreground outline-none"
-                />
-                <input
-                  placeholder="Chú thích ảnh (caption)..."
-                  value={image.caption ?? ""}
-                  onChange={(e) =>
-                    onChange({
-                      images: images.map((item) =>
-                        item.id === image.id ? { ...item, caption: e.target.value } : item,
-                      ),
-                    })
-                  }
-                  onBlur={() => {
-                    if (content.id && !image.id.startsWith("temp-")) {
-                      void adminContentApi.updateProjectImage(content.id, image.id, { caption: image.caption ?? null });
-                    }
-                  }}
-                  className="w-full rounded border border-border bg-background px-2.5 py-1 text-xs text-muted-foreground outline-none"
-                />
+            <div key={image.id} className="flex items-start gap-4 rounded-xl border border-border bg-card p-3 shadow-2xs">
+              <Image src={image.url} alt={image.alt} width={80} height={56} className="mt-5 size-14 rounded-lg object-cover border border-border" />
+              <div className="grid min-w-0 flex-1 gap-3 md:grid-cols-2">
+                {LANGS.map((lang) => {
+                  const altKey = lang === "vi" ? "alt_vi" : "alt";
+                  const captionKey = lang === "vi" ? "caption_vi" : "caption";
+                  const other = lang === "vi" ? { alt: image.alt, caption: image.caption } : { alt: image.alt_vi, caption: image.caption_vi };
+                  const field = (key: typeof altKey | typeof captionKey, value: string, otherValue: string | null | undefined, placeholder: string) => (
+                    <input
+                      id={index === 0 ? fieldDomId(`gallery-${key.replace("_vi", "")}`, lang) : undefined}
+                      lang={lang}
+                      placeholder={placeholder}
+                      value={value}
+                      onChange={(e) => setImage(image.id, { [key]: e.target.value })}
+                      onBlur={() => persistImage(image.id, key)}
+                      className={cn(
+                        "w-full rounded border bg-background px-2.5 py-1.5 text-xs text-foreground outline-none focus:border-teal-600",
+                        !filled(value) && filled(otherValue) ? "border-amber-400 bg-amber-50/40 dark:bg-amber-500/5" : "border-border",
+                      )}
+                    />
+                  );
+                  return (
+                    <div key={lang} className="space-y-1.5">
+                      <span className="text-[11px] font-semibold text-muted-foreground">
+                        {LANG_META[lang].flag} {LANG_META[lang].name}
+                      </span>
+                      {field(altKey, (image[altKey] as string | null | undefined) ?? "", other.alt, lang === "vi" ? "Mô tả ảnh (alt)..." : "Image description (alt)...")}
+                      {field(captionKey, (image[captionKey] as string | null | undefined) ?? "", other.caption, lang === "vi" ? "Chú thích hiển thị dưới ảnh..." : "Caption shown under the image...")}
+                    </div>
+                  );
+                })}
               </div>
               <div className="flex items-center gap-1">
                 <button

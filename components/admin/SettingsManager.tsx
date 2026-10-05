@@ -2,7 +2,6 @@
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { revalidateCmsCache } from "@/features/admin/api/revalidate";
 import type { CompanyMetric } from "@/features/settings/types";
 import {
@@ -19,6 +18,8 @@ import { FormEvent, useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { adminRequest } from "@/features/admin/api/http-client";
+import { BilingualField, fieldDomId, focusField } from "./bilingual";
+import { DEFAULT_DESCRIPTION, DEFAULT_DESCRIPTION_EN, DEFAULT_TITLE, DEFAULT_TITLE_EN } from "@/lib/seo/site";
 
 type Settings = {
   companyName: string;
@@ -30,6 +31,8 @@ type Settings = {
   socialLinks: Record<string, string>;
   defaultSeoTitle: string;
   defaultSeoDescription: string;
+  defaultSeoTitle_vi?: string | null;
+  defaultSeoDescription_vi?: string | null;
   defaultOgImage?: string;
 };
 
@@ -145,6 +148,17 @@ export function SettingsManager() {
       );
       return;
     }
+    // The API requires the English defaults; say which field instead of a generic 400.
+    if ((data.defaultSeoTitle ?? "").trim().length < 2) {
+      toast.error("Tiêu đề SEO mặc định (English) cần ít nhất 2 ký tự.");
+      focusField(fieldDomId("defaultSeoTitle", "en"));
+      return;
+    }
+    if ((data.defaultSeoDescription ?? "").trim().length < 10) {
+      toast.error("Mô tả SEO mặc định (English) cần ít nhất 10 ký tự.");
+      focusField(fieldDomId("defaultSeoDescription", "en"));
+      return;
+    }
     setBusy(true);
     setMsg("");
     const toastId = toast.loading("Đang lưu cấu hình hệ thống...");
@@ -160,6 +174,8 @@ export function SettingsManager() {
         socialLinks,
         defaultSeoTitle: data.defaultSeoTitle,
         defaultSeoDescription: data.defaultSeoDescription,
+        defaultSeoTitle_vi: data.defaultSeoTitle_vi?.trim() || null,
+        defaultSeoDescription_vi: data.defaultSeoDescription_vi?.trim() || null,
         defaultOgImage: data.defaultOgImage || (null as unknown as string),
       };
 
@@ -298,33 +314,33 @@ export function SettingsManager() {
           <h3 className="text-base font-semibold text-foreground flex items-center gap-2 border-b border-slate-200 dark:border-border/80 pb-3">
             <Globe className="size-4 text-primary" /> SEO mặc định & Liên kết
           </h3>
-          <div>
-            <label className="block text-xs font-semibold text-muted-foreground mb-1.5">
-              Tiêu đề SEO mặc định (SEO Title)
-            </label>
-            <Input
-              value={data.defaultSeoTitle ?? ""}
-              onChange={(e) =>
-                setData({ ...data, defaultSeoTitle: e.target.value })
-              }
-              required
-              className="bg-white dark:bg-background border-slate-200 dark:border-border"
-            />
-          </div>
-          <div>
-            <label className="block text-xs font-semibold text-muted-foreground mb-1.5">
-              Mô tả SEO mặc định (Meta Description)
-            </label>
-            <Textarea
-              rows={3}
-              value={data.defaultSeoDescription ?? ""}
-              onChange={(e) =>
-                setData({ ...data, defaultSeoDescription: e.target.value })
-              }
-              required
-              className="bg-white dark:bg-background border-slate-200 dark:border-border resize-none"
-            />
-          </div>
+          <BilingualField
+            id="defaultSeoTitle"
+            label="Tiêu đề SEO mặc định (SEO Title)"
+            hint="English bắt buộc; Tiếng Việt để trống = dùng mặc định của website"
+            maxLength={240}
+            vi={data.defaultSeoTitle_vi}
+            en={data.defaultSeoTitle}
+            placeholderVi={DEFAULT_TITLE}
+            placeholderEn={DEFAULT_TITLE_EN}
+            onChange={(lang, value) =>
+              setData({ ...data, [lang === "vi" ? "defaultSeoTitle_vi" : "defaultSeoTitle"]: value })
+            }
+          />
+          <BilingualField
+            id="defaultSeoDescription"
+            label="Mô tả SEO mặc định (Meta Description)"
+            hint="Nên 120–160 ký tự"
+            multiline
+            maxLength={500}
+            vi={data.defaultSeoDescription_vi}
+            en={data.defaultSeoDescription}
+            placeholderVi={DEFAULT_DESCRIPTION}
+            placeholderEn={DEFAULT_DESCRIPTION_EN}
+            onChange={(lang, value) =>
+              setData({ ...data, [lang === "vi" ? "defaultSeoDescription_vi" : "defaultSeoDescription"]: value })
+            }
+          />
           <div>
             <label className="block text-xs font-semibold text-muted-foreground mb-1.5">
               Đường dẫn ảnh chia sẻ (OG Image URL)
@@ -415,7 +431,7 @@ export function SettingsManager() {
           Các chỉ số này được hiển thị nổi bật trên Trang Chủ (Hero / Stats
           section) và Trang Giới Thiệu (About Us).
         </p>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 pt-2">
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 pt-2">
           {(data.metrics ?? []).map((metric, idx) => (
             <div
               key={idx}
@@ -447,32 +463,17 @@ export function SettingsManager() {
                   className="bg-white dark:bg-background text-sm font-bold"
                 />
               </div>
-              <div>
-                <label className="block text-[11px] font-medium text-muted-foreground mb-1">
-                  Nhãn Tiếng Việt
-                </label>
-                <Input
-                  value={metric.label_vi}
-                  placeholder="Dự án BIM & Quản lý"
-                  onChange={(e) =>
-                    handleMetricChange(idx, "label_vi", e.target.value)
-                  }
-                  className="bg-white dark:bg-background text-xs"
-                />
-              </div>
-              <div>
-                <label className="block text-[11px] font-medium text-muted-foreground mb-1">
-                  Nhãn Tiếng Anh
-                </label>
-                <Input
-                  value={metric.label_en}
-                  placeholder="BIM & Management Projects"
-                  onChange={(e) =>
-                    handleMetricChange(idx, "label_en", e.target.value)
-                  }
-                  className="bg-white dark:bg-background text-xs"
-                />
-              </div>
+              <BilingualField
+                id={`metric-${idx}`}
+                label="Nhãn hiển thị"
+                vi={metric.label_vi}
+                en={metric.label_en}
+                placeholderVi="Dự án BIM & Quản lý"
+                placeholderEn="BIM & Management Projects"
+                onChange={(lang, value) =>
+                  handleMetricChange(idx, lang === "vi" ? "label_vi" : "label_en", value)
+                }
+              />
             </div>
           ))}
         </div>

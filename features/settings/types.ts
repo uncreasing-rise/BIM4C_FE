@@ -12,5 +12,7 @@ export interface SiteSettingsData {
   socialLinks: Record<string, string>;
   defaultSeoTitle: string;
   defaultSeoDescription: string;
+  defaultSeoTitle_vi?: string;
+  defaultSeoDescription_vi?: string;
   defaultOgImage?: string;
 }

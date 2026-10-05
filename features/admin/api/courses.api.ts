@@ -47,7 +47,7 @@ export const coursesApi = {
   /** Modules giáo trình khóa học */
   addSection: (
     courseId: string,
-    body: { title: string; description: string; sortOrder: number },
+    body: { title: string; title_vi?: string | null; description: string; description_vi?: string | null; sortOrder: number },
   ) =>
     adminRequest<{ data: { id: string } }>(`courses/${courseId}/sections`, {
       method: "POST",
@@ -57,7 +57,7 @@ export const coursesApi = {
   updateSection: (
     courseId: string,
     id: string,
-    body: { title?: string; description?: string; sortOrder?: number },
+    body: { title?: string; title_vi?: string | null; description?: string; description_vi?: string | null; sortOrder?: number },
   ) =>
     adminRequest<{ data: { id: string } }>(`courses/${courseId}/sections/${id}`, {
       method: "PATCH",

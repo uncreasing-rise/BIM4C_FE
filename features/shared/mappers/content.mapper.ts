@@ -281,6 +281,29 @@ export function mapContentDto(dto: ContentEntryDto): ContentEntry {
     learningOutcomes_en:
       dto.learningOutcomes_en ?? undefined,
     softwareStack_vi: dto.softwareStack_vi ?? dto.softwareStack ?? undefined,
+    // Vietnamese copies of per-item texts; each falls back to the base (English) value.
+    authorName_vi: dto.authorName_vi?.trim() || rawContent.authorName,
+    gallery_vi: Array.isArray(dto.gallery)
+      ? dto.gallery
+          .map((image) => ({
+            url: getMediaUrl(image?.url || ""),
+            alt: image?.alt_vi?.trim() || image?.alt?.trim() || "",
+            caption: image?.caption_vi?.trim() || image?.caption?.trim() || undefined,
+            width: image?.width,
+            height: image?.height,
+          }))
+          .filter((img) => Boolean(img.url))
+      : undefined,
+    curriculum_vi: Array.isArray(dto.curriculum)
+      ? dto.curriculum
+          .map((item) => ({
+            id: item?.id,
+            title: item?.title_vi?.trim() || item?.title?.trim() || "",
+            description: item?.description_vi?.trim() || item?.description?.trim() || undefined,
+            sortOrder: item?.sortOrder,
+          }))
+          .filter((item) => Boolean(item.title))
+      : undefined,
     softwareStack_en: dto.softwareStack_en ?? undefined,
   };
 }

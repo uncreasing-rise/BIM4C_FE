@@ -21,7 +21,9 @@ import { scrollToPageTop } from "@/lib/utils/scroll";
 import { CategoryManager } from "./CategoryManager";
 import { ContentBlockEditor } from "./ContentBlockEditor";
 import { MediaPicker } from "./MediaPicker";
-import { BilingualFormTabs } from "./BilingualFormTabs";
+import { BilingualColumnsHeader, BilingualField, SharedBadge, TranslationChecklist, focusField, type Lang } from "./bilingual";
+import { CORE_FIELDS, SEO_FIELDS, checkContent, fillBlockGaps, type TextSpec } from "./content-check";
+import { cn } from "@/lib/utils";
 import { LivePreviewModal } from "./LivePreviewModal";
 import { revalidateCmsCache } from "@/features/admin/api/revalidate";
 import {
@@ -39,6 +41,7 @@ import {
   Trash2,
   Globe,
   Image as ImageIcon,
+  Search,
   FileText,
   X,
 } from "lucide-react";
@@ -46,10 +49,7 @@ import { Button } from "@/components/ui/button";
 import { LoadingState } from "@/components/ui/LoadingState";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { toast } from "sonner";
-import {
-  parseContentBlocks,
-  type ContentBlock,
-} from "@/features/shared/schemas/content-block.schema";
+import { parseContentBlocks } from "@/features/shared/schemas/content-block.schema";
 import { StatusBadge, Tag, formatDateTime, missingLanguages, statusLabel } from "./admin-ui";
 import { useConfirm } from "./ConfirmDialog";
 import {
@@ -90,7 +90,8 @@ function prepareEditorContent(value: AdminContent, contentType: AdminContentType
     sections,
     sections_vi: sectionsVi,
     contentBlocks,
-    contentBlocks_vi: contentBlocksVi.length > 0 ? contentBlocksVi : contentBlocks,
+    // No fallback copy: the editor pairs blocks by position and flags the missing language.
+    contentBlocks_vi: contentBlocksVi,
   } as AdminContent;
 }
 
@@ -102,7 +103,6 @@ export function ContentManager({
   const { confirm, dialog } = useConfirm();
   const params = useSearchParams();
   const router = useRouter();
-  const [adminLangTab, setAdminLangTab] = useState<"vi" | "en">("vi");
   const [items, setItems] = useState<AdminContent[]>([]);
 
   const [categories, setCategories] = useState<AdminCategory[]>([]);
@@ -139,6 +139,9 @@ export function ContentManager({
   const [dirty, setDirty] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [openingId, setOpeningId] = useState<string | null>(null);
+  // New records keep the slug in sync with the title until the editor types one.
+  const [slugTouched, setSlugTouched] = useState(false);
+  const check = useMemo(() => (editor ? checkContent(editor, contentType) : null), [editor, contentType]);
 
   const publicBase =
     contentType === "Dịch vụ"
@@ -275,8 +278,19 @@ export function ContentManager({
     setDirty(true);
   }
 
+  function updateText(spec: TextSpec, lang: Lang, value: string) {
+    const patch: Record<string, unknown> = { [lang === "vi" ? spec.vi : spec.en]: value };
+    if (spec.id === "title" && editor && !editor.id && !slugTouched) {
+      const en = lang === "en" ? value : editor.title ?? "";
+      const vi = lang === "vi" ? value : editor.title_vi ?? "";
+      patch.slug = slugify(en.trim() || vi.trim());
+    }
+    update(patch as Partial<AdminContent>);
+  }
+
   async function openEditor(item: AdminContent) {
     setOpeningId(item.id);
+    setSlugTouched(false);
     try {
       const response = await adminContentApi.getById(contentType, item.id);
       setEditor(prepareEditorContent(response?.data ?? item, contentType));
@@ -289,128 +303,114 @@ export function ContentManager({
     }
   }
 
-  function validateContentBlocks(
-    blocks: ContentBlock[] | undefined,
-    lang: "vi" | "en",
-  ): { isValid: boolean; message?: string } {
-    if (!blocks || blocks.length === 0) return { isValid: true };
-    const langLabel = lang === "vi" ? "Bản Tiếng Việt" : "Bản English";
-
-    for (let i = 0; i < blocks.length; i++) {
-      const block = blocks[i];
-      const indexStr = `Khối #${i + 1} (${langLabel})`;
-
-      if (block.type === "rich-text") {
-        if (!block.content || !block.content.trim()) {
-          return {
-            isValid: false,
-            message: `${indexStr} kiểu "Văn bản" đang để trống nội dung. Vui lòng nhập nội dung hoặc xóa khối trước khi lưu.`,
-          };
-        }
-      } else if (block.type === "image") {
-        if (!block.image?.url || !block.image.url.trim()) {
-          return {
-            isValid: false,
-            message: `${indexStr} kiểu "Hình ảnh" chưa được chọn ảnh. Vui lòng chọn ảnh hoặc xóa khối.`,
-          };
-        }
-      } else if (block.type === "gallery") {
-        if (!block.images || block.images.length === 0) {
-          return {
-            isValid: false,
-            message: `${indexStr} kiểu "Thư viện ảnh" chưa có hình ảnh nào.`,
-          };
-        }
-        const missingIdx = block.images.findIndex((img) => !img.url || !img.url.trim());
-        if (missingIdx !== -1) {
-          return {
-            isValid: false,
-            message: `${indexStr} kiểu "Thư viện ảnh" có ảnh thứ ${missingIdx + 1} chưa có ảnh hợp lệ.`,
-          };
-        }
-      } else if (block.type === "quote") {
-        if (!block.quote || !block.quote.trim()) {
-          return {
-            isValid: false,
-            message: `${indexStr} kiểu "Trích dẫn" đang để trống câu trích dẫn. Vui lòng nhập nội dung hoặc xóa khối.`,
-          };
-        }
-      } else if (block.type === "feature-list") {
-        if (!block.items || block.items.length === 0) {
-          return {
-            isValid: false,
-            message: `${indexStr} kiểu "Danh sách" chưa có mục nào.`,
-          };
-        }
-        const emptyItemIdx = block.items.findIndex((item) => !item || !item.trim());
-        if (emptyItemIdx !== -1) {
-          return {
-            isValid: false,
-            message: `${indexStr} kiểu "Danh sách" có dòng thứ ${emptyItemIdx + 1} bị bỏ trống. Vui lòng nhập hoặc xóa dòng đó.`,
-          };
-        }
-      } else if (block.type === "video") {
-        if (!block.url || !block.url.trim()) {
-          return {
-            isValid: false,
-            message: `${indexStr} kiểu "Video" đang để trống đường dẫn URL.`,
-          };
-        }
+  /**
+   * Gallery images and curriculum modules added in the editor are only local
+   * (temp ids) until the record exists; create them once it has been saved.
+   */
+  async function saveChildren(id: string) {
+    if (!editor) return;
+    const failed: string[] = [];
+    if (contentType === "Dự án") {
+      const images = (editor as AdminProjectContent).images ?? [];
+      for (const [index, image] of images.entries()) {
+        if (!image.id.startsWith("temp-")) continue;
+        await adminContentApi
+          .addProjectImage(id, {
+            url: image.url,
+            alt: image.alt?.trim() || image.alt_vi?.trim() || "Hình ảnh dự án",
+            alt_vi: image.alt_vi?.trim() || null,
+            caption: image.caption?.trim() || undefined,
+            caption_vi: image.caption_vi?.trim() || null,
+            sortOrder: index,
+          })
+          .catch(() => failed.push(`ảnh #${index + 1}`));
       }
     }
-
-    return { isValid: true };
+    if (contentType === "Khóa học") {
+      const sections = (editor as AdminCourseContent).curriculum ?? [];
+      for (const [index, section] of sections.entries()) {
+        if (!section.id.startsWith("temp-")) continue;
+        const title = section.title?.trim() || section.title_vi?.trim() || "";
+        if (!title) continue;
+        await adminContentApi
+          .addCourseSection(id, {
+            title,
+            title_vi: section.title_vi?.trim() || null,
+            description: section.description?.trim() || section.description_vi?.trim() || title,
+            description_vi: section.description_vi?.trim() || null,
+            sortOrder: index,
+          })
+          .catch(() => failed.push(`phần học #${index + 1}`));
+      }
+    }
+    if (failed.length) toast.error(`Nội dung đã lưu nhưng chưa lưu được: ${failed.join(", ")}. Mở lại để thử.`);
   }
 
   async function save() {
-    if (!editor) return;
-    const title = editor.title?.trim() || editor.title_vi?.trim();
-    if (!title) {
-      toast.error("Vui lòng nhập tiêu đề (Tiếng Việt hoặc Tiếng Anh).");
+    if (!editor || !check) return;
+
+    if (check.errors.length > 0) {
+      const first = check.errors[0];
+      toast.error(`${first.label}: ${first.message}`, {
+        description: check.errors.length > 1 ? `Còn ${check.errors.length - 1} lỗi khác trong bảng “Kiểm tra song ngữ”.` : undefined,
+        duration: 6000,
+      });
+      focusField(first.target);
       return;
     }
 
-    // Kiểm tra tính hợp lệ của Khối nội dung Tiếng Việt
-    const viValidation = validateContentBlocks(editor.contentBlocks_vi, "vi");
-    if (!viValidation.isValid) {
-      toast.error(viValidation.message, { duration: 5000 });
-      setAdminLangTab("vi");
-      return;
+    const warnings = check.issues.filter((issue) => issue.severity === "warning");
+    const goingLive = !["DRAFT", "ARCHIVED"].includes(editor.status);
+    if (warnings.length > 0 && goingLive) {
+      const ok = await confirm({
+        title: `Còn ${warnings.length} mục chưa đủ song ngữ`,
+        description: (
+          <span className="block space-y-2">
+            <span className="block">
+              Nội dung đang ở trạng thái hiển thị công khai. Những chỗ thiếu sẽ tạm lấy bản ngôn ngữ còn lại:
+            </span>
+            <span className="block max-h-48 overflow-y-auto rounded-md bg-muted/50 p-2 text-xs">
+              {warnings.slice(0, 12).map((issue, index) => (
+                <span key={index} className="block">
+                  • {issue.lang ? `[${issue.lang.toUpperCase()}] ` : ""}
+                  {issue.label}: {issue.message}
+                </span>
+              ))}
+              {warnings.length > 12 && <span className="block">… và {warnings.length - 12} mục khác</span>}
+            </span>
+          </span>
+        ),
+        confirmLabel: "Vẫn lưu",
+        cancelLabel: "Quay lại bổ sung",
+        tone: "default",
+      });
+      if (!ok) {
+        focusField(warnings[0].target);
+        return;
+      }
     }
 
-    // Kiểm tra tính hợp lệ của Khối nội dung English
-    const enValidation = validateContentBlocks(editor.contentBlocks, "en");
-    if (!enValidation.isValid) {
-      toast.error(enValidation.message, { duration: 5000 });
-      setAdminLangTab("en");
-      return;
-    }
-
-    const description =
-      editor.description?.trim() || editor.description_vi?.trim() || title;
+    const title = editor.title?.trim() || editor.title_vi?.trim() || "";
+    const description = editor.description?.trim() || editor.description_vi?.trim() || title;
 
     setSaving(true);
     const toastId = toast.loading("Đang lưu nội dung...");
     try {
-      const rawBlocks = editor.contentBlocks ? parseContentBlocks(editor.contentBlocks) : [];
-      const rawBlocksVi = editor.contentBlocks_vi ? parseContentBlocks(editor.contentBlocks_vi) : [];
-      const cleanBlocks = rawBlocks.length > 0 ? rawBlocks : rawBlocksVi;
-      const cleanBlocksVi = rawBlocksVi.length > 0 ? rawBlocksVi : rawBlocks;
-
+      const blocks = fillBlockGaps(editor.contentBlocks_vi ?? [], editor.contentBlocks ?? []);
       const slug = editor.slug?.trim() || slugify(title);
       const payload: AdminContent = {
         ...editor,
-        title: editor.title?.trim() || title,
-        title_vi: editor.title_vi?.trim() || editor.title?.trim() || title,
+        title,
+        title_vi: editor.title_vi?.trim() || title,
         slug,
         description,
         description_vi: editor.description_vi?.trim() || description,
         image: editor.image || "/images/hero-skyline-bim.jpg",
-        eyebrow: editor.eyebrow || editor.eyebrow_vi || "BIM4C Enterprise",
+        eyebrow: editor.eyebrow?.trim() || editor.eyebrow_vi?.trim() || "BIM4C Enterprise",
         highlights: Array.isArray(editor.highlights) ? editor.highlights : [],
         sections: Array.isArray(editor.sections) ? editor.sections : [],
-        contentBlocks: cleanBlocks,
-        contentBlocks_vi: cleanBlocksVi,
+        contentBlocks: blocks.en,
+        contentBlocks_vi: blocks.vi,
       };
 
       if (editor.id) {
@@ -422,11 +422,13 @@ export function ContentManager({
           ),
         );
         await adminContentApi.update(contentType, editor.id, payload);
+        await saveChildren(editor.id);
         toast.success("Cập nhật nội dung thành công!", { id: toastId });
       } else {
         const res = await adminContentApi.create(contentType, payload);
         const newItem = (res?.data || payload) as AdminContent;
         setItems((prev) => [{ ...newItem, type: contentType }, ...prev]);
+        if (newItem.id) await saveChildren(newItem.id);
         toast.success("Tạo mới nội dung thành công!", { id: toastId });
       }
       setDirty(false);
@@ -487,21 +489,19 @@ export function ContentManager({
           return;
         }
         setItems((prev) => prev.filter((x) => !selected.includes(x.id)));
-        await Promise.all(selected.map((id) => adminContentApi.remove(contentType, id)));
+        await adminContentApi.bulk(contentType, selected, "delete");
         toast.success(`Đã xóa ${selected.length} nội dung.`, { id: toastId });
       } else {
         const nextStatus: AdminContentStatus =
-          action === "publish" ? "PUBLISHED" : "ARCHIVED";
+          action === "publish" ? (contentType === "Dự án" ? "PROFILED" : "PUBLISHED") : "ARCHIVED";
         setItems((prev) =>
           prev.map((x) =>
             selected.includes(x.id) ? { ...x, status: nextStatus } : x,
           ),
         );
-        await Promise.all(
-          selected.map((id) =>
-            adminContentApi.update(contentType, id, { status: nextStatus }),
-          ),
-        );
+        // Dedicated endpoint: a partial update through the editor serializer
+        // would send empty title/slug/description and be rejected.
+        await adminContentApi.bulk(contentType, selected, action);
         toast.success(
           `Đã ${action === "publish" ? "xuất bản" : "lưu trữ"} ${selected.length} nội dung.`,
           { id: toastId },
@@ -529,15 +529,31 @@ export function ContentManager({
   // ==========================================
   // RENDER FULLSCREEN STUDIO EDITOR VIEW
   // ==========================================
-  if (editor) {
+  if (editor && check) {
     const isEdit = Boolean(editor.id);
     const previewUrl = editor.slug ? `${publicBase}/${editor.slug}` : "";
+    const row = editor as unknown as Record<string, unknown>;
+    const errorCount = check.errors.length;
+    const warningCount = check.issues.length - errorCount;
+    const textField = (spec: TextSpec, extra?: Partial<React.ComponentProps<typeof BilingualField>>) => (
+      <BilingualField
+        key={spec.id}
+        id={spec.id}
+        label={spec.label}
+        required={spec.required}
+        maxLength={spec.max}
+        vi={row[spec.vi] as string | null | undefined}
+        en={row[spec.en] as string | null | undefined}
+        onChange={(lang, value) => updateText(spec, lang, value)}
+        {...extra}
+      />
+    );
 
     return (
       <div className="fullscreen-crud-editor relative -mx-4 -mb-6 sm:-mx-6 sm:-mb-8 lg:-mx-8 lg:-mb-8 min-h-[calc(100vh-56px)] bg-slate-50/50 dark:bg-background text-foreground flex flex-col">
         {dialog}
         {/* Sticky Top Studio Action Bar */}
-        <header className="sticky top-14 z-20 flex items-center justify-between border-b border-slate-200 dark:border-border bg-white dark:bg-card px-4 py-3 shadow-xs md:px-8">
+        <header className="sticky top-14 z-20 flex items-center justify-between gap-3 border-b border-slate-200 dark:border-border bg-white dark:bg-card px-4 py-3 shadow-xs md:px-8">
           <div className="flex items-center gap-3 min-w-0">
             <Button
               type="button"
@@ -553,7 +569,7 @@ export function ContentManager({
             <div className="flex items-center gap-2 truncate">
               <StatusBadge domain={contentType === "Dự án" ? "project" : "content"} value={editor.status} />
               <span className="text-sm font-bold text-foreground truncate max-w-[200px] sm:max-w-xs md:max-w-md">
-                {editor.title || (isEdit ? "Chỉnh sửa nội dung" : `Tạo ${contentType} mới`)}
+                {editor.title_vi || editor.title || (isEdit ? "Chỉnh sửa nội dung" : `Tạo ${contentType} mới`)}
               </span>
               {dirty && (
                 <span className="flex items-center gap-1 text-[11px] font-medium text-amber-500 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
@@ -564,9 +580,23 @@ export function ContentManager({
             </div>
           </div>
 
-          {/* Action Toolbar */}
           <div className="flex items-center gap-2">
-            {previewUrl && (
+            <button
+              type="button"
+              onClick={() => focusField("translation-checklist")}
+              className={cn(
+                "hidden sm:inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-semibold transition",
+                errorCount
+                  ? "border-red-300 bg-red-50 text-red-700 dark:border-red-500/40 dark:bg-red-500/10 dark:text-red-300"
+                  : warningCount
+                    ? "border-amber-300 bg-amber-50 text-amber-800 dark:border-amber-500/40 dark:bg-amber-500/10 dark:text-amber-300"
+                    : "border-emerald-300 bg-emerald-50 text-emerald-700 dark:border-emerald-500/40 dark:bg-emerald-500/10 dark:text-emerald-300",
+              )}
+              title="Xem danh sách mục thiếu / sai"
+            >
+              {errorCount ? `${errorCount} lỗi` : warningCount ? `${warningCount} mục cần xem` : "Song ngữ đầy đủ"}
+            </button>
+            {previewUrl && isEdit && (
               <Link
                 href={previewUrl}
                 target="_blank"
@@ -588,300 +618,227 @@ export function ContentManager({
               <span className="hidden md:inline">Xem trước</span>
             </Button>
 
-            <Button
-              type="button"
-              disabled={saving}
-              onClick={() => void save()}
-              className="gap-1.5"
-            >
+            <Button type="button" disabled={saving} onClick={() => void save()} className="gap-1.5">
               <Save className="size-3.5 text-slate-950" />
-              <span>{saving ? "Đang lưu…" : isEdit ? "Cập nhật" : "Xuất bản"}</span>
+              <span>{saving ? "Đang lưu…" : isEdit ? "Cập nhật" : "Lưu"}</span>
             </Button>
           </div>
         </header>
 
-        {/* Studio Workspace Canvas: 12-Column Grid */}
-        <div className="flex-1 px-4 py-6 md:px-8 max-w-7xl mx-auto w-full">
-          <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 items-start">
-            
-            {/* MAIN COLUMN: 8 Columns (Left) */}
-            <div className="lg:col-span-8 space-y-6">
-              
-              {/* Language Switcher Card */}
-              <div className="rounded-xl border border-border bg-card p-4 sm:p-5 shadow-xs">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-                  <div className="flex items-center gap-2">
-                    <Globe className="size-4 text-primary" />
-                    <h3 className="text-sm font-bold text-foreground">Ngôn ngữ chỉnh sửa</h3>
-                  </div>
-                  <span className="text-xs text-muted-foreground">
-                    Hệ thống lưu trữ độc lập bản tiếng Anh và tiếng Việt
-                  </span>
-                </div>
-                <BilingualFormTabs
-                  activeTab={adminLangTab}
-                  onTabChange={setAdminLangTab}
-                  hasViTranslation={!missingLanguages(editor).includes("VI")}
-                  hasEnTranslation={!missingLanguages(editor).includes("EN")}
-                />
+        <div className="flex-1 px-4 py-6 md:px-8 max-w-[1680px] mx-auto w-full">
+          <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_340px] items-start">
 
+            {/* MAIN COLUMN */}
+            <div className="space-y-6 min-w-0">
+              <div className="flex items-start gap-3 rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 text-xs text-slate-700 dark:text-foreground">
+                <Globe className="mt-0.5 size-4 shrink-0 text-primary" />
+                <p className="leading-relaxed">
+                  Mỗi ô có 2 cột: <strong>🇻🇳 Tiếng Việt</strong> bên trái, <strong>🇬🇧 English</strong> bên phải. Ô viền vàng là
+                  ô còn thiếu hoặc nghi chưa dịch; bấm <em>Chép từ VI/EN</em> để lấy bản kia làm nháp rồi dịch. Ảnh, đường dẫn
+                  và các trường có nhãn <SharedBadge /> chỉ nhập một lần.
+                </p>
               </div>
 
               {/* Core Content Details Card */}
               <div className="rounded-xl border border-border bg-card p-6 shadow-xs space-y-5">
                 <div className="flex items-center gap-2 border-b border-border pb-3">
                   <FileText className="size-4 text-primary" />
-                  <h3 className="text-base font-bold text-foreground">
-                    {adminLangTab === "en" ? "Thông tin chính (English)" : "Bản dịch Tiếng Việt"}
-                  </h3>
+                  <h3 className="text-base font-bold text-foreground">Thông tin chính</h3>
+                </div>
+                <BilingualColumnsHeader />
+
+                {textField(CORE_FIELDS[0], {
+                  emphasis: true,
+                  placeholderVi: "Ví dụ: Tư vấn Điều phối & Quản lý BIM",
+                  placeholderEn: "e.g. BIM Coordination & Management Consulting",
+                  hint: "Bắt buộc ít nhất 1 ngôn ngữ",
+                })}
+
+                <div className="space-y-1.5">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <label htmlFor="bf-slug" className="flex items-center gap-2 text-[13px] font-semibold text-slate-800 dark:text-foreground">
+                      Đường dẫn (slug URL) <SharedBadge />
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSlugTouched(false);
+                        update({ slug: slugify(editor.title?.trim() || editor.title_vi?.trim() || "") });
+                      }}
+                      className="text-[11px] font-semibold text-teal-700 hover:underline dark:text-teal-400"
+                    >
+                      Tạo lại từ tiêu đề
+                    </button>
+                  </div>
+                  <div className="flex items-center rounded-lg border border-slate-300 dark:border-border bg-white dark:bg-background px-3 py-2 text-sm">
+                    <span className="text-xs text-muted-foreground select-none font-mono">{publicBase}/</span>
+                    <input
+                      id="bf-slug"
+                      value={editor.slug}
+                      onChange={(e) => {
+                        setSlugTouched(true);
+                        update({ slug: slugify(e.target.value) });
+                      }}
+                      className="flex-1 bg-transparent px-1 font-mono text-sm text-foreground outline-none"
+                      placeholder="tu-dong-tao-tu-tieu-de"
+                    />
+                  </div>
+                  <p className="text-[11px] text-muted-foreground">
+                    {isEdit
+                      ? "Đổi slug của bài đã đăng sẽ làm hỏng các liên kết cũ."
+                      : "Tự tạo từ tiêu đề English (hoặc Tiếng Việt nếu chưa có) cho đến khi bạn sửa tay."}
+                  </p>
                 </div>
 
-                {adminLangTab === "en" ? (
-                  <>
-                    <div className="space-y-1.5">
-                      <label className="text-[13px] font-medium text-slate-700 dark:text-foreground flex items-center gap-1">
-                        <span>Tiêu đề chính (English - Bắt buộc)</span>
-                        <span className="text-destructive">*</span>
-                      </label>
-                      <input
-                        autoFocus
-                        placeholder="Ví dụ: Advanced BIM Coordination & Management"
-                        value={editor.title}
-                        onChange={(e) =>
-                          update({
-                            title: e.target.value,
-                            slug: editor.id ? editor.slug : slugify(e.target.value),
-                          })
-                        }
-                        className="w-full rounded-xl border border-border bg-background px-4 py-3 text-base font-bold text-foreground placeholder:text-muted-foreground/60 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
-                      />
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <label className="text-[13px] font-medium text-slate-700 dark:text-foreground flex items-center gap-1">
-                        <span>Đường dẫn (Slug URL)</span>
-                        <span className="text-destructive">*</span>
-                      </label>
-                      <div className="flex items-center rounded-xl border border-border bg-background px-3 py-2 text-sm">
-                        <span className="text-xs text-muted-foreground select-none font-mono">
-                          {publicBase}/
-                        </span>
-                        <input
-                          value={editor.slug}
-                          onChange={(e) => update({ slug: slugify(e.target.value) })}
-                          className="flex-1 bg-transparent px-1 font-mono text-sm text-foreground outline-none"
-                          placeholder="my-post-slug"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <label className="text-[13px] font-medium text-slate-700 dark:text-foreground flex items-center gap-1">
-                        <span>Mô tả tóm tắt (English - Bắt buộc)</span>
-                        <span className="text-destructive">*</span>
-                      </label>
-                      <textarea
-                        rows={3}
-                        placeholder="Short summary in English..."
-                        value={editor.description}
-                        onChange={(e) => update({ description: e.target.value })}
-                        className="w-full rounded-xl border border-border bg-background p-3.5 text-sm text-foreground placeholder:text-muted-foreground/60 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                      <div className="space-y-1.5">
-                        <div className="flex items-center justify-between">
-                          <label className="text-[13px] font-medium text-slate-700 dark:text-foreground">
-                            Nhãn nổi bật đầu thẻ (Eyebrow Tag)
-                          </label>
-                          <span className="text-[11px] text-muted-foreground/80">Tag hiển thị trên tiêu đề</span>
-                        </div>
-                        <input
-                          placeholder="e.g. PRACTICAL BIM TRAINING"
-                          value={editor.eyebrow}
-                          onChange={(e) => update({ eyebrow: e.target.value })}
-                          className="w-full rounded-md border border-slate-300 bg-white text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-teal-600 focus:ring-2 focus:ring-teal-600/20 dark:border-border dark:bg-background dark:text-foreground px-3 py-2"
-                        />
-                      </div>
-                      <div className="space-y-1.5">
-                        <div className="flex items-center justify-between">
-                          <label className="text-[13px] font-medium text-slate-700 dark:text-foreground">
-                            Thông tin phụ (Meta / Date)
-                          </label>
-                          <span className="text-[11px] text-muted-foreground/80">Thời lượng / Ngày / Quy mô</span>
-                        </div>
-                        <input
-                          placeholder="e.g. 8 weeks · Online hoặc 15.09.2026"
-                          value={editor.meta ?? ""}
-                          onChange={(e) => update({ meta: e.target.value })}
-                          className="w-full rounded-md border border-slate-300 bg-white text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-teal-600 focus:ring-2 focus:ring-teal-600/20 dark:border-border dark:bg-background dark:text-foreground px-3 py-2"
-                        />
-                      </div>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div className="space-y-1.5">
-                      <label className="text-[13px] font-medium text-slate-700 dark:text-foreground">
-                        Tiêu đề Tiếng Việt
-                      </label>
-                      <input
-                        autoFocus
-                        placeholder="Ví dụ: Tư vấn Điều phối & Quản lý BIM Chuyên sâu"
-                        value={editor.title_vi ?? ""}
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          update({
-                            title_vi: val,
-                            slug: editor.id ? (editor.slug || slugify(val)) : slugify(val),
-                          });
-                        }}
-                        className="w-full rounded-xl border border-border bg-background px-4 py-3 text-base font-bold text-foreground placeholder:text-muted-foreground/60 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
-                      />
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <label className="text-[13px] font-medium text-slate-700 dark:text-foreground flex items-center gap-1">
-                        <span>Đường dẫn (Slug URL)</span>
-                      </label>
-                      <div className="flex items-center rounded-xl border border-border bg-background px-3 py-2 text-sm">
-                        <span className="text-xs text-muted-foreground select-none font-mono">
-                          {publicBase}/
-                        </span>
-                        <input
-                          value={editor.slug}
-                          onChange={(e) => update({ slug: slugify(e.target.value) })}
-                          className="flex-1 bg-transparent px-1 font-mono text-sm text-foreground outline-none"
-                          placeholder="duong-dan-bai-viet"
-                        />
-                      </div>
-                    </div>
-
-
-                    <div className="space-y-1.5">
-                      <label className="text-[13px] font-medium text-slate-700 dark:text-foreground">
-                        Mô tả tóm tắt Tiếng Việt
-                      </label>
-                      <textarea
-                        rows={3}
-                        placeholder="Tóm tắt nội dung bằng Tiếng Việt..."
-                        value={editor.description_vi ?? ""}
-                        onChange={(e) => update({ description_vi: e.target.value })}
-                        className="w-full rounded-xl border border-border bg-background p-3.5 text-sm text-foreground placeholder:text-muted-foreground/60 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                      <div className="space-y-1.5">
-                        <div className="flex items-center justify-between">
-                          <label className="text-[13px] font-medium text-slate-700 dark:text-foreground">
-                            Nhãn nổi bật đầu thẻ (Eyebrow Tiếng Việt)
-                          </label>
-                          <span className="text-[11px] text-muted-foreground/80">Tag hiển thị trên tiêu đề</span>
-                        </div>
-                        <input
-                          placeholder="Ví dụ: ĐÀO TẠO THỰC CHIẾN"
-                          value={editor.eyebrow_vi ?? ""}
-                          onChange={(e) => update({ eyebrow_vi: e.target.value })}
-                          className="w-full rounded-md border border-slate-300 bg-white text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-teal-600 focus:ring-2 focus:ring-teal-600/20 dark:border-border dark:bg-background dark:text-foreground px-3 py-2"
-                        />
-                      </div>
-                      <div className="space-y-1.5">
-                        <div className="flex items-center justify-between">
-                          <label className="text-[13px] font-medium text-slate-700 dark:text-foreground">
-                            Thông tin phụ (Meta Tiếng Việt)
-                          </label>
-                          <span className="text-[11px] text-muted-foreground/80">Thời lượng / Ngày / Quy mô</span>
-                        </div>
-                        <input
-                          placeholder="Ví dụ: 8 tuần · Khai giảng 15/10"
-                          value={editor.meta ?? ""}
-                          onChange={(e) => update({ meta: e.target.value })}
-                          className="w-full rounded-md border border-slate-300 bg-white text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-teal-600 focus:ring-2 focus:ring-teal-600/20 dark:border-border dark:bg-background dark:text-foreground px-3 py-2"
-                        />
-                      </div>
-                    </div>
-                  </>
-                )}
-
+                {textField(CORE_FIELDS[1], {
+                  multiline: true,
+                  rows: 3,
+                  placeholderVi: "Tóm tắt 1–2 câu, hiển thị trên thẻ danh sách...",
+                  placeholderEn: "1–2 sentence summary shown on listing cards...",
+                })}
+                {textField(CORE_FIELDS[2], {
+                  hint: "Dòng chữ nhỏ phía trên tiêu đề",
+                  placeholderVi: "ĐÀO TẠO THỰC CHIẾN",
+                  placeholderEn: "PRACTICAL BIM TRAINING",
+                })}
+                {textField(CORE_FIELDS[3], {
+                  hint: "Thời lượng / ngày / quy mô",
+                  placeholderVi: "8 tuần · Khai giảng 15/10",
+                  placeholderEn: "8 weeks · Starts 15 Oct",
+                })}
               </div>
 
               {/* DOMAIN-SPECIFIC FIELDS */}
               {contentType === "Dự án" && (
-                <ProjectFields
-                  content={editor as unknown as Partial<AdminProjectContent>}
-                  adminLangTab={adminLangTab}
-                  onChange={update}
-                />
+                <ProjectFields content={editor as unknown as Partial<AdminProjectContent>} onChange={update} />
               )}
-
               {contentType === "Khóa học" && (
-                <CourseFields
-                  content={editor as unknown as Partial<AdminCourseContent>}
-                  adminLangTab={adminLangTab}
-                  onChange={update}
-                />
+                <CourseFields content={editor as unknown as Partial<AdminCourseContent>} onChange={update} />
               )}
-
               {(contentType === "Tin tức" || contentType === "Chuyên môn") && (
-                <PostFields
-                  content={editor as unknown as Partial<AdminPostContent>}
-                  onChange={update}
-                />
+                <PostFields content={editor as unknown as Partial<AdminPostContent>} onChange={update} />
               )}
-
               {contentType === "Dịch vụ" && (
-                <ServiceFields
-                  content={editor as unknown as Partial<AdminServiceContent>}
-                  adminLangTab={adminLangTab}
-                  onChange={update}
-                />
+                <ServiceFields content={editor as unknown as Partial<AdminServiceContent>} onChange={update} />
               )}
 
-              {/* STRUCTURED CONTENT BLOCKS EDITOR CARD */}
+              {/* STRUCTURED CONTENT BLOCKS */}
               <div className="rounded-xl border border-border bg-card p-6 shadow-xs space-y-4">
-                <div className="flex items-center justify-between border-b border-border pb-3">
-                  <div>
-                    <h3 className="text-base font-bold text-foreground">Khối nội dung chi tiết (Content Blocks)</h3>
-                    <p className="text-xs text-muted-foreground">Soạn thảo văn bản đa dạng, hình ảnh, trích dẫn, danh sách tính năng</p>
-                  </div>
-                  <span className="text-xs font-medium text-primary bg-primary/10 px-2.5 py-1 rounded-full">
-                    {adminLangTab === "en" ? "🇬🇧 Bản English" : "🇻🇳 Bản Tiếng Việt"}
-                  </span>
+                <div className="border-b border-border pb-3">
+                  <h3 className="text-base font-bold text-foreground">Khối nội dung chi tiết</h3>
+                  <p className="text-xs text-muted-foreground">
+                    Văn bản, hình ảnh, trích dẫn, danh sách… Mỗi khối hiển thị bản Tiếng Việt và English cạnh nhau.
+                  </p>
                 </div>
-
                 <ContentBlockEditor
                   valueVi={editor.contentBlocks_vi ?? []}
                   valueEn={editor.contentBlocks ?? []}
-                  activeLang={adminLangTab}
-                  onChangeBilingual={({ contentBlocks_vi, contentBlocks }) =>
-                    update({
-                      contentBlocks_vi,
-                      contentBlocks,
-                    })
-                  }
+                  onChange={({ contentBlocks_vi, contentBlocks }) => update({ contentBlocks_vi, contentBlocks })}
                 />
               </div>
 
+              {/* SEO */}
+              <div className="rounded-xl border border-border bg-card p-6 shadow-xs space-y-5">
+                <div className="border-b border-border pb-3">
+                  <h3 className="flex items-center gap-2 text-base font-bold text-foreground">
+                    <Search className="size-4 text-primary" /> SEO & chia sẻ mạng xã hội
+                  </h3>
+                  <p className="text-xs text-muted-foreground">
+                    Không bắt buộc. Để trống thì Google dùng tiêu đề và mô tả tóm tắt ở trên.
+                  </p>
+                </div>
+                <BilingualColumnsHeader />
+                {textField(SEO_FIELDS[0], {
+                  hint: "Nên dưới 60 ký tự",
+                  placeholderVi: editor.title_vi || "",
+                  placeholderEn: editor.title || "",
+                })}
+                {textField(SEO_FIELDS[1], {
+                  multiline: true,
+                  rows: 2,
+                  hint: "Nên 120–160 ký tự",
+                  placeholderVi: editor.description_vi || "",
+                  placeholderEn: editor.description || "",
+                })}
+
+                <div className="grid gap-3 md:grid-cols-2">
+                  {(["vi", "en"] as const).map((lang) => {
+                    const t = (lang === "vi" ? editor.seoTitle_vi || editor.title_vi : editor.seoTitle || editor.title) || "";
+                    const d =
+                      (lang === "vi"
+                        ? editor.seoDescription_vi || editor.description_vi
+                        : editor.seoDescription || editor.description) || "";
+                    return (
+                      <div key={lang} className="rounded-lg border border-border bg-white p-3 dark:bg-background">
+                        <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                          Xem trước Google · {lang === "vi" ? "🇻🇳 Tiếng Việt" : "🇬🇧 English"}
+                        </p>
+                        <p className="truncate text-[11px] text-emerald-700 dark:text-emerald-400">
+                          {publicBase}/{editor.slug || "…"}
+                        </p>
+                        <p className={cn("truncate text-sm font-medium", t ? "text-blue-700 dark:text-blue-400" : "italic text-muted-foreground")}>
+                          {t ? (t.length > 60 ? `${t.slice(0, 60)}…` : t) : "Chưa có tiêu đề"}
+                        </p>
+                        <p className={cn("line-clamp-2 text-xs", d ? "text-slate-600 dark:text-muted-foreground" : "italic text-muted-foreground")}>
+                          {d ? (d.length > 160 ? `${d.slice(0, 160)}…` : d) : "Chưa có mô tả"}
+                        </p>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <label htmlFor="bf-seoImage" className="flex items-center gap-2 text-[13px] font-semibold text-slate-800 dark:text-foreground">
+                      Ảnh khi chia sẻ (OG image) <SharedBadge />
+                    </label>
+                    <div className="flex gap-2">
+                      <input
+                        id="bf-seoImage"
+                        value={editor.seoImage ?? ""}
+                        onChange={(e) => update({ seoImage: e.target.value })}
+                        placeholder="Để trống = dùng ảnh đại diện"
+                        className="w-full min-w-0 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-600/20 dark:border-border dark:bg-background"
+                      />
+                      <MediaPicker label="Chọn" onSelect={(media) => update({ seoImage: media.url })} />
+                    </div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label htmlFor="bf-canonicalUrl" className="flex items-center gap-2 text-[13px] font-semibold text-slate-800 dark:text-foreground">
+                      Canonical URL <SharedBadge />
+                    </label>
+                    <input
+                      id="bf-canonicalUrl"
+                      value={editor.canonicalUrl ?? ""}
+                      onChange={(e) => update({ canonicalUrl: e.target.value })}
+                      placeholder="Chỉ điền khi bài đăng lại từ nguồn khác (https://...)"
+                      className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-600/20 dark:border-border dark:bg-background"
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
 
-            {/* SIDEBAR COLUMN: 4 Columns (Right) */}
-            <div className="lg:col-span-4 space-y-6">
+            {/* SIDEBAR */}
+            <div className="space-y-6 xl:sticky xl:top-32">
+              <div id="translation-checklist" className="rounded-xl transition">
+                <TranslationChecklist issues={check.issues} progress={check.progress} />
+              </div>
 
               {/* Publishing Control Card */}
-              <div className="rounded-xl border border-border bg-card p-6 shadow-xs space-y-4">
+              <div className="rounded-xl border border-border bg-card p-5 shadow-xs space-y-4">
                 <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
                   <Save className="size-4 text-primary" />
                   <span>Trạng thái & Phân loại</span>
                 </h3>
 
                 <div className="space-y-1.5">
-                  <label className="text-[13px] font-medium text-slate-700 dark:text-foreground">Trạng thái xuất bản</label>
+                  <label htmlFor="bf-status" className="text-[13px] font-medium text-slate-700 dark:text-foreground">Trạng thái xuất bản</label>
                   <select
+                    id="bf-status"
                     value={editor.status}
                     onChange={(e) => update({ status: e.target.value as AdminContentStatus })}
-                    className="w-full rounded-md border border-slate-300 bg-white text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-teal-600 focus:ring-2 focus:ring-teal-600/20 dark:border-border dark:bg-background dark:text-foreground px-3 py-2"
+                    className="w-full rounded-md border border-slate-300 bg-white text-sm text-slate-900 shadow-sm outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-600/20 dark:border-border dark:bg-background dark:text-foreground px-3 py-2"
                   >
                     {(contentType === "Dự án"
                       ? (["DRAFT", "PROFILED", "PLANNED", "IN_PROGRESS", "COMPLETED", "ARCHIVED"] as const)
@@ -892,15 +849,28 @@ export function ContentManager({
                       </option>
                     ))}
                   </select>
+                  <p className="text-[11px] text-muted-foreground">
+                    {editor.status === "DRAFT"
+                      ? "Bản nháp: chưa hiển thị trên website."
+                      : editor.status === "ARCHIVED"
+                        ? "Lưu trữ: đã ẩn khỏi website."
+                        : "Đang hiển thị công khai trên website."}
+                  </p>
                 </div>
 
-                {(contentType === "Dự án" || contentType === "Tin tức" || contentType === "Chuyên môn") && (
+                {hasCategories && (
                   <div className="space-y-1.5">
-                    <label className="text-[13px] font-medium text-slate-700 dark:text-foreground">Danh mục</label>
+                    <label htmlFor="bf-category" className="text-[13px] font-medium text-slate-700 dark:text-foreground">
+                      Danh mục {contentType === "Dự án" && <span className="text-destructive">*</span>}
+                    </label>
                     <select
+                      id="bf-category"
                       value={"categoryId" in editor ? (editor.categoryId ?? "") : ""}
                       onChange={(e) => update({ categoryId: e.target.value || null })}
-                      className="w-full rounded-md border border-slate-300 bg-white text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-teal-600 focus:ring-2 focus:ring-teal-600/20 dark:border-border dark:bg-background dark:text-foreground px-3 py-2"
+                      className={cn(
+                        "w-full rounded-md border bg-white text-sm text-slate-900 shadow-sm outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-600/20 dark:bg-background dark:text-foreground px-3 py-2",
+                        check.errors.some((issue) => issue.target === "bf-category") ? "border-red-400" : "border-slate-300 dark:border-border",
+                      )}
                     >
                       <option value="">Chọn danh mục</option>
                       {categories.map((cat) => (
@@ -909,6 +879,11 @@ export function ContentManager({
                         </option>
                       ))}
                     </select>
+                    {categories.length === 0 && (
+                      <p className="text-[11px] text-amber-700 dark:text-amber-400">
+                        Chưa có danh mục nào — tạo ở phần Danh mục trên trang danh sách.
+                      </p>
+                    )}
                   </div>
                 )}
 
@@ -926,34 +901,21 @@ export function ContentManager({
               </div>
 
               {/* Featured Image Card */}
-              <div className="rounded-xl border border-border bg-card p-6 shadow-xs space-y-4">
-                <div className="flex items-center justify-between">
+              <div id="bf-image" className="rounded-xl border border-border bg-card p-5 shadow-xs space-y-4">
+                <div className="flex items-center justify-between gap-2">
                   <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
                     <ImageIcon className="size-4 text-primary" />
-                    <span>Ảnh đại diện (Thumbnail)</span>
+                    <span>Ảnh đại diện</span>
+                    <SharedBadge />
                   </h3>
-                  {editor.image && (
-                    <MediaPicker
-                      label="Đổi ảnh"
-                      onSelect={(media) => update({ image: media.url })}
-                    />
-                  )}
+                  {editor.image && <MediaPicker label="Đổi ảnh" onSelect={(media) => update({ image: media.url })} />}
                 </div>
 
                 {editor.image ? (
                   <div className="relative aspect-video w-full overflow-hidden rounded-xl border border-border bg-muted group">
-                    <Image
-                      src={editor.image}
-                      alt="Thumbnail preview"
-                      fill
-                      className="object-cover"
-                      sizes="(max-width: 768px) 100vw, 400px"
-                    />
+                    <Image src={editor.image} alt="Thumbnail preview" fill className="object-cover" sizes="(max-width: 768px) 100vw, 400px" />
                     <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                      <MediaPicker
-                        label="Thay đổi ảnh"
-                        onSelect={(media) => update({ image: media.url })}
-                      />
+                      <MediaPicker label="Thay đổi ảnh" onSelect={(media) => update({ image: media.url })} />
                       <button
                         type="button"
                         onClick={() => update({ image: "" })}
@@ -964,13 +926,10 @@ export function ContentManager({
                     </div>
                   </div>
                 ) : (
-                  <div className="rounded-xl border border-dashed border-border p-6 text-center space-y-3 bg-muted/20">
+                  <div className="rounded-xl border border-dashed border-amber-400 p-6 text-center space-y-3 bg-amber-50/30 dark:bg-amber-500/5">
                     <ImageIcon className="size-8 text-muted-foreground mx-auto" />
-                    <p className="text-xs text-muted-foreground">Chưa có ảnh đại diện cho nội dung này</p>
-                    <MediaPicker
-                      label="Tải ảnh lên / Chọn từ Thư viện"
-                      onSelect={(media) => update({ image: media.url })}
-                    />
+                    <p className="text-xs text-muted-foreground">Chưa có ảnh đại diện — website sẽ dùng ảnh mặc định.</p>
+                    <MediaPicker label="Tải ảnh lên / Chọn từ Thư viện" onSelect={(media) => update({ image: media.url })} />
                   </div>
                 )}
               </div>
@@ -978,13 +937,7 @@ export function ContentManager({
           </div>
         </div>
 
-        {/* Live Preview Modal */}
-        <LivePreviewModal
-          content={editor}
-          lang={adminLangTab}
-          isOpen={previewOpen}
-          onClose={() => setPreviewOpen(false)}
-        />
+        <LivePreviewModal content={editor} lang="vi" isOpen={previewOpen} onClose={() => setPreviewOpen(false)} />
       </div>
     );
   }
@@ -1054,7 +1007,7 @@ export function ContentManager({
           </div>
 
           <Button
-            onClick={() => setEditor(createEmptyContent(contentType))}
+            onClick={() => { setSlugTouched(false); setEditor(createEmptyContent(contentType)); }}
             className="gap-1.5"
           >
             <Plus className="size-4" />
@@ -1233,7 +1186,7 @@ export function ContentManager({
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => setEditor(createEmptyContent(contentType))}
+                        onClick={() => { setSlugTouched(false); setEditor(createEmptyContent(contentType)); }}
                         className="mt-2 text-xs"
                       >
                         ＋ Tạo mới ngay

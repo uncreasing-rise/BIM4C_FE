@@ -27,6 +27,8 @@ export async function getSiteSettings(): Promise<SiteSettingsData | null> {
           : {},
       defaultSeoTitle: data.defaultSeoTitle ?? "",
       defaultSeoDescription: data.defaultSeoDescription ?? "",
+      defaultSeoTitle_vi: data.defaultSeoTitle_vi || undefined,
+      defaultSeoDescription_vi: data.defaultSeoDescription_vi || undefined,
       defaultOgImage: data.defaultOgImage || undefined,
     };
   } catch {

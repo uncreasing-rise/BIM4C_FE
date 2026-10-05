@@ -163,7 +163,7 @@ export const adminContentApi = {
   // Project Gallery helpers
   addProjectImage: (
     projectId: string,
-    body: { url: string; alt: string; caption?: string; sortOrder: number },
+    body: { url: string; alt: string; alt_vi?: string | null; caption?: string; caption_vi?: string | null; sortOrder: number },
   ) => projectsApi.addImage(projectId, body),
 
   deleteProjectImage: (projectId: string, id: string) =>
@@ -172,13 +172,13 @@ export const adminContentApi = {
   updateProjectImage: (
     projectId: string,
     id: string,
-    body: { alt?: string; caption?: string | null; sortOrder?: number },
+    body: { alt?: string; alt_vi?: string | null; caption?: string | null; caption_vi?: string | null; sortOrder?: number },
   ) => projectsApi.updateImage(projectId, id, body),
 
   // Course Curriculum helpers
   addCourseSection: (
     courseId: string,
-    body: { title: string; description: string; sortOrder: number },
+    body: { title: string; title_vi?: string | null; description: string; description_vi?: string | null; sortOrder: number },
   ) => coursesApi.addSection(courseId, body),
 
   deleteCourseSection: (courseId: string, id: string) =>
@@ -187,6 +187,6 @@ export const adminContentApi = {
   updateCourseSection: (
     courseId: string,
     id: string,
-    body: { title?: string; description?: string; sortOrder?: number },
+    body: { title?: string; title_vi?: string | null; description?: string; description_vi?: string | null; sortOrder?: number },
   ) => coursesApi.updateSection(courseId, id, body),
 };

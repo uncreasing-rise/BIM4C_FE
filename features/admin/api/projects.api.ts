@@ -96,7 +96,7 @@ export const projectsApi = {
   /** Album ảnh dự án */
   addImage: (
     projectId: string,
-    body: { url: string; alt: string; caption?: string; sortOrder: number },
+    body: { url: string; alt: string; alt_vi?: string | null; caption?: string; caption_vi?: string | null; sortOrder: number },
   ) =>
     adminRequest<{ data: { id: string } }>(`projects/${projectId}/images`, {
       method: "POST",
@@ -106,7 +106,7 @@ export const projectsApi = {
   updateImage: (
     projectId: string,
     id: string,
-    body: { alt?: string; caption?: string | null; sortOrder?: number },
+    body: { alt?: string; alt_vi?: string | null; caption?: string | null; caption_vi?: string | null; sortOrder?: number },
   ) =>
     adminRequest<{ data: { id: string } }>(`projects/${projectId}/images/${id}`, {
       method: "PATCH",

@@ -6,6 +6,7 @@ export interface AdminPostContent extends AdminBaseContent {
   categoryId?: string | null;
   category?: AdminCategory | null;
   authorName?: string | null;
+  authorName_vi?: string | null;
 }
 
 export type PostFilterQuery = ContentFilterQuery;
@@ -23,6 +24,7 @@ export interface CreatePostPayload {
   contentBlocks?: unknown[];
   categoryId?: string | null;
   authorName?: string | null;
+  authorName_vi?: string | null;
   sortOrder?: number;
   publishedAt?: string | null;
   title_vi?: string | null;

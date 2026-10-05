@@ -1,5 +1,5 @@
 import type { AdminPostContent } from "../types";
-import { createBaseEmptyContent, serializeBaseContent } from "./common";
+import { assignOptional, createBaseEmptyContent, serializeBaseContent } from "./common";
 
 export function createEmptyPost(type: "Tin tức" | "Chuyên môn" = "Tin tức"): AdminPostContent {
   return {
@@ -18,15 +18,15 @@ export function serializePostPayload(data: Partial<AdminPostContent>): Record<st
     ...base,
   };
 
-  if (data.categoryId && data.categoryId.trim()) {
-    payload.categoryId = data.categoryId.trim();
+  // "categoryId" in data means the editor touched it, so an empty choice clears the category.
+  if ("categoryId" in data) {
+    payload.categoryId = data.categoryId?.trim() || null;
   } else if (data.category && typeof data.category === "object" && data.category.id) {
     payload.categoryId = data.category.id;
   }
 
-  if (data.authorName && data.authorName.trim()) {
-    payload.authorName = data.authorName.trim();
-  }
+  assignOptional(payload, "authorName", data.authorName);
+  assignOptional(payload, "authorName_vi", data.authorName_vi);
 
   return payload;
 }

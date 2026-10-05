@@ -3,7 +3,9 @@ import type { AdminBaseContent, ContentFilterQuery } from "./base.types";
 export interface CourseCurriculumSection {
   id: string;
   title: string;
+  title_vi?: string | null;
   description: string;
+  description_vi?: string | null;
   sortOrder: number;
 }
 

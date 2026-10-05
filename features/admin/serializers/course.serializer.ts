@@ -1,5 +1,5 @@
 import type { AdminCourseContent } from "../types";
-import { createBaseEmptyContent, serializeBaseContent } from "./common";
+import { assignOptional, createBaseEmptyContent, serializeBaseContent } from "./common";
 
 export function createEmptyCourse(): AdminCourseContent {
   return {
@@ -28,14 +28,9 @@ export function serializeCoursePayload(data: Partial<AdminCourseContent>): Recor
     ...base,
   };
 
-  if (data.duration) payload.duration = data.duration.trim();
-  if (data.duration_vi) payload.duration_vi = data.duration_vi.trim();
-  if (data.level) payload.level = data.level.trim();
-  if (data.level_vi) payload.level_vi = data.level_vi.trim();
-  if (data.price) payload.price = data.price.trim();
-  if (data.price_vi) payload.price_vi = data.price_vi.trim();
-  if (data.instructor) payload.instructor = data.instructor.trim();
-  if (data.instructor_vi) payload.instructor_vi = data.instructor_vi.trim();
+  for (const key of ["duration", "duration_vi", "level", "level_vi", "price", "price_vi", "instructor", "instructor_vi"] as const) {
+    assignOptional(payload, key, data[key]);
+  }
 
   if (Array.isArray(data.learningOutcomes)) {
     payload.learningOutcomes = data.learningOutcomes.map((item) => String(item).trim()).filter(Boolean);

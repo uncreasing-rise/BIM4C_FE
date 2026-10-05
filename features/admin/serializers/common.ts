@@ -23,6 +23,21 @@ export function normalizeStatus(status: unknown): AdminContentStatus {
   return "DRAFT";
 }
 
+/**
+ * Optional text the editor may clear: an empty string becomes null so the API
+ * erases the stored value instead of silently keeping it (undefined = untouched).
+ */
+export function optionalText(value: string | null | undefined): string | null | undefined {
+  if (value === undefined) return undefined;
+  return value?.trim() || null;
+}
+
+/** Sets `key` on `target` unless the editor never touched it. */
+export function assignOptional(target: Record<string, unknown>, key: string, value: string | null | undefined) {
+  const next = optionalText(value);
+  if (next !== undefined) target[key] = next;
+}
+
 export function serializeBaseContent(data: Partial<AdminBaseContent>): Record<string, unknown> {
   const result: Record<string, unknown> = {
     title: (data.title || data.title_vi || "").trim(),
@@ -49,11 +64,11 @@ export function serializeBaseContent(data: Partial<AdminBaseContent>): Record<st
   }
 
   // Bilingual fields (VI)
-  if (data.title_vi) result.title_vi = data.title_vi.trim();
-  if (data.description_vi) result.description_vi = data.description_vi.trim();
-  if (data.eyebrow_vi) result.eyebrow_vi = data.eyebrow_vi.trim();
-  if (data.meta_vi) result.meta_vi = data.meta_vi.trim();
-  if (Array.isArray(data.highlights_vi) && data.highlights_vi.length > 0) {
+  assignOptional(result, "title_vi", data.title_vi);
+  assignOptional(result, "description_vi", data.description_vi);
+  assignOptional(result, "eyebrow_vi", data.eyebrow_vi);
+  assignOptional(result, "meta_vi", data.meta_vi);
+  if (Array.isArray(data.highlights_vi)) {
     result.highlights_vi = data.highlights_vi.map((h) => String(h).trim()).filter(Boolean);
   }
   if (Array.isArray(data.sections_vi) && data.sections_vi.length > 0) {
@@ -67,12 +82,12 @@ export function serializeBaseContent(data: Partial<AdminBaseContent>): Record<st
   }
 
   // SEO fields
-  if (data.seoTitle) result.seoTitle = data.seoTitle.trim();
-  if (data.seoTitle_vi) result.seoTitle_vi = data.seoTitle_vi.trim();
-  if (data.seoDescription) result.seoDescription = data.seoDescription.trim();
-  if (data.seoDescription_vi) result.seoDescription_vi = data.seoDescription_vi.trim();
-  if (data.seoImage) result.seoImage = data.seoImage.trim();
-  if (data.canonicalUrl) result.canonicalUrl = data.canonicalUrl.trim();
+  assignOptional(result, "seoTitle", data.seoTitle);
+  assignOptional(result, "seoTitle_vi", data.seoTitle_vi);
+  assignOptional(result, "seoDescription", data.seoDescription);
+  assignOptional(result, "seoDescription_vi", data.seoDescription_vi);
+  assignOptional(result, "seoImage", data.seoImage);
+  assignOptional(result, "canonicalUrl", data.canonicalUrl);
   if (Array.isArray(data.relatedIds) && data.relatedIds.length > 0) {
     result.relatedIds = data.relatedIds;
   }

@@ -4,7 +4,9 @@ export interface ContentSectionDto {
   images?: {
     url: string;
     alt?: string;
+    alt_vi?: string | null;
     caption?: string;
+    caption_vi?: string | null;
     width?: number;
     height?: number;
   }[];
@@ -48,6 +50,7 @@ export interface ContentEntryDto {
   seoImage?: string | null;
   canonicalUrl?: string | null;
   authorName?: string | null;
+  authorName_vi?: string | null;
   relatedIds?: string[] | null;
   status?: string | null;
   publishedAt?: string | null;
@@ -72,7 +75,14 @@ export interface ContentEntryDto {
   softwareStack_vi?: string[] | null;
   softwareStack_en?: string[] | null;
   gallery?: ContentSectionDto["images"];
-  curriculum?: { id?: string; title: string; description?: string | null; sortOrder?: number }[] | null;
+  curriculum?: {
+    id?: string;
+    title: string;
+    title_vi?: string | null;
+    description?: string | null;
+    description_vi?: string | null;
+    sortOrder?: number;
+  }[] | null;
   curriculum_vi?: { id?: string; title: string; description?: string | null; sortOrder?: number }[] | null;
   curriculum_en?: { id?: string; title: string; description?: string | null; sortOrder?: number }[] | null;
 }

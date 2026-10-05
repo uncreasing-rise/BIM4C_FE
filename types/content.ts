@@ -49,6 +49,7 @@ export interface ContentEntry {
   seoImage?: string;
   canonicalUrl?: string;
   authorName?: string;
+  authorName_vi?: string;
   relatedIds?: string[];
   status?: string;
   publishedAt?: string;
@@ -77,6 +78,7 @@ export interface ContentEntry {
   softwareStack_vi?: string[];
   softwareStack_en?: string[];
   gallery?: ContentMedia[];
+  gallery_vi?: ContentMedia[];
   curriculum?: { id?: string; title: string; description?: string; sortOrder?: number }[];
   curriculum_vi?: { id?: string; title: string; description?: string; sortOrder?: number }[];
   curriculum_en?: { id?: string; title: string; description?: string; sortOrder?: number }[];

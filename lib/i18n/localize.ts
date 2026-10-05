@@ -48,6 +48,8 @@ export function localizeContent<T extends { title: string }>(
     learningOutcomes_vi?: string[];
     softwareStack_vi?: string[];
     curriculum_vi?: unknown[];
+    gallery_vi?: unknown[];
+    authorName_vi?: string | null;
     location_vi?: string | null;
     investor_vi?: string | null;
     expectedCompletion_vi?: string | null;
@@ -115,6 +117,8 @@ export function localizeContent<T extends { title: string }>(
       ...(item.learningOutcomes_vi?.length ? { learningOutcomes: item.learningOutcomes_vi } : {}),
       ...(item.softwareStack_vi?.length ? { softwareStack: item.softwareStack_vi } : {}),
       ...(item.curriculum_vi?.length ? { curriculum: item.curriculum_vi } : {}),
+      ...(item.gallery_vi?.length ? { gallery: item.gallery_vi } : {}),
+      ...(item.authorName_vi ? { authorName: item.authorName_vi } : {}),
       ...(item.location_vi
         ? { location: item.location_vi }
         : item.location
