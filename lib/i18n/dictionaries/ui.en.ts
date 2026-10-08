@@ -515,8 +515,8 @@ export const uiEn = {
     showAll: "Show all",
   },
   bimShortcuts: {
-    title: "Navigation & shortcuts",
-    open: "Navigation and keyboard shortcuts",
+    title: "User guide",
+    open: "Guide: navigation, example setups, capacity",
     close: "Close",
     mouse: "Mouse",
     keyboard: "Keyboard",
@@ -547,6 +547,78 @@ export const uiEn = {
     keyUndoMeasure: "Undo / redo a measurement (measure tool)",
     keyMeasureLocks: "Lock the next point: X, Y, Z axis, P perpendicular, L parallel",
     touch: "On touch screens: one finger orbits, two fingers pan and pinch to zoom.",
+  },
+  bimGuide: {
+    tabs: { navigation: "Navigation", setups: "Example setups", capacity: "Capacity" },
+    setupsIntro:
+      "Three reference setups by machine type. Hardware levels are recommendations, not minimums: check with the project's real models on the machine that will be used.",
+    device: "Device",
+    model: "Suitable models",
+    settings: "Recommended settings",
+    setups: [
+      {
+        name: "Office laptop",
+        device: "Integrated GPU, 8 GB RAM, current Chrome/Edge",
+        model: "One IFC file up to about 50 MB, or one discipline",
+        settings: [
+          "Display settings: turn off Edges and Ambient occlusion",
+          "Hide the disciplines you do not need in the visibility bar",
+          "Work per storey: section box or storey plan instead of the whole building",
+        ],
+      },
+      {
+        name: "Coordination workstation",
+        device: "Dedicated GPU with 4 GB+ VRAM, 16–32 GB RAM",
+        model: "Federated disciplines (Arch + Struct + MEP), about 250 MB of IFC in total",
+        settings: [
+          "Turn on Edges, AO and Section caps",
+          "Open each file once; later opens come from the cache",
+          "Run clash checks per discipline pair, filter by type to stay under 500 results",
+        ],
+      },
+      {
+        name: "Review meeting / presenting",
+        device: "Tablet, meeting-room display",
+        model: "A pre-converted .bim4c package (no IFC needed)",
+        settings: [
+          "Light environment, orthographic camera for plans and elevations",
+          "Turn on the minimap and column grids (IfcGrid)",
+          "Prepare saved viewpoints and selection sets beforehand",
+        ],
+      },
+    ],
+    urlTitle: "URL parameters",
+    urlParams: [
+      ["?perf=1", "Shows FPS, CPU time per frame, draw calls and pick time."],
+      ["?engine=parser", "Skips the Fragments conversion and draws the IFC parser's own triangles. Use it when a file fails to convert."],
+      ["npm run convert:bim4c -- model.ifc --out dir", "(Admin) Converts IFC to a .bim4c package on a server so viewers skip parsing."],
+    ],
+    capacityIntro:
+      "All processing happens in the viewer's browser, so the practical limit is that machine's RAM and GPU, not the server.",
+    limitsTitle: "Limits in the app",
+    limits: [
+      ["IFC file", "Not blocked; warning above 200 MB", "While parsing, the browser holds the file, the WASM heap and the 3D meshes at once."],
+      [".bim4c package", "512 MB at most", "Element data up to 256 MB."],
+      ["Model cache", "1.5 GB", "Least recently used models are dropped when full; clear it in the Models panel."],
+      ["Federation", "No file count limit", "Files load one after another, each in its own WASM worker."],
+      ["Clash check", "500 results per run", "Most severe first; 30 runs and 50 history entries per clash are kept."],
+      ["Measurement", "1,000 points per measurement", "Applies to multi-point, accumulate, polyline and polygon measurements."],
+    ],
+    benchmarksTitle: "Reference measurements",
+    benchmarks: [
+      ["10 federated files, 5.8 M triangles", "About 0.5 M triangles drawn at a time thanks to levels of detail and culling"],
+      ["Reopening a 250 MB pair of files", "25 s the first time → 0.8 s from the cache"],
+    ],
+    benchmarkNote:
+      "Measured in a test environment, not re-measured on target GPUs. Use ?perf=1 to measure on your machine.",
+    tipsTitle: "When a model is heavy",
+    tips: [
+      "Close other tabs before opening a file above 200 MB.",
+      "After the first open, download the .bim4c package to reopen quickly without the IFC.",
+      "Hide disciplines, isolate a storey or use the section box to draw less.",
+      "While orbiting, small parts are skipped to keep frames smooth; that is intended, not a bug.",
+      "If the browser runs out of storage, clear the cache in the Models panel.",
+    ],
   },
   bimTree: {
     searchPlaceholder: "Search element, type, storey, property…",

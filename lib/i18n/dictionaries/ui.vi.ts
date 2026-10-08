@@ -513,8 +513,8 @@ export const uiVi: UiStrings = {
     showAll: "Hiện tất cả",
   },
   bimShortcuts: {
-    title: "Điều hướng & phím tắt",
-    open: "Hướng dẫn điều hướng và phím tắt",
+    title: "Hướng dẫn sử dụng",
+    open: "Hướng dẫn: điều hướng, cấu hình mẫu, khả năng chịu tải",
     close: "Đóng",
     mouse: "Chuột",
     keyboard: "Bàn phím",
@@ -545,6 +545,78 @@ export const uiVi: UiStrings = {
     keyUndoMeasure: "Hoàn tác / làm lại phép đo (công cụ đo)",
     keyMeasureLocks: "Khóa điểm tiếp theo: trục X, Y, Z, P vuông góc, L song song",
     touch: "Trên màn hình cảm ứng: một ngón để xoay, hai ngón để di chuyển và chụm để phóng to.",
+  },
+  bimGuide: {
+    tabs: { navigation: "Điều hướng", setups: "Cấu hình mẫu", capacity: "Khả năng chịu tải" },
+    setupsIntro:
+      "Ba cấu hình tham khảo theo loại máy. Mức phần cứng là khuyến nghị, không phải yêu cầu tối thiểu: hãy kiểm tra với mô hình thật của dự án trên máy sẽ dùng.",
+    device: "Thiết bị",
+    model: "Mô hình phù hợp",
+    settings: "Thiết lập nên dùng",
+    setups: [
+      {
+        name: "Laptop văn phòng",
+        device: "GPU tích hợp, RAM 8 GB, Chrome/Edge bản mới",
+        model: "Một tệp IFC đến khoảng 50 MB, hoặc một bộ môn",
+        settings: [
+          "Cài đặt hiển thị: tắt Đường cạnh và Bóng đổ tiếp xúc (AO)",
+          "Ẩn các bộ môn không cần trên thanh hiển thị",
+          "Làm việc theo tầng: Hộp cắt hoặc mặt bằng tầng thay vì cả công trình",
+        ],
+      },
+      {
+        name: "Máy trạm điều phối",
+        device: "GPU rời từ 4 GB VRAM, RAM 16–32 GB",
+        model: "Ghép nhiều bộ môn (KT + KC + MEP), tổng khoảng 250 MB IFC",
+        settings: [
+          "Bật Đường cạnh, AO và Tô đặc mặt cắt",
+          "Mở từng tệp một lần đầu; các lần sau được mở lại từ bộ nhớ đệm",
+          "Kiểm tra xung đột theo cặp bộ môn, lọc theo loại để dưới 500 kết quả",
+        ],
+      },
+      {
+        name: "Họp duyệt / trình chiếu",
+        device: "Máy tính bảng, màn hình phòng họp",
+        model: "Gói .bim4c đã chuyển sẵn (không cần mở lại IFC)",
+        settings: [
+          "Nền Sáng, camera Trực giao cho mặt bằng và mặt đứng",
+          "Bật Bản đồ thu nhỏ và Trục lưới (IfcGrid)",
+          "Chuẩn bị trước các góc nhìn đã lưu và tập chọn cần trình bày",
+        ],
+      },
+    ],
+    urlTitle: "Tham số đường dẫn",
+    urlParams: [
+      ["?perf=1", "Hiện FPS, thời gian CPU mỗi khung hình, số lệnh vẽ và thời gian chọn cấu kiện."],
+      ["?engine=parser", "Bỏ qua bộ chuyển Fragments, hiển thị bằng lưới tam giác của bộ phân tích IFC. Dùng khi một tệp chuyển đổi bị lỗi."],
+      ["npm run convert:bim4c -- model.ifc --out dir", "(Quản trị) Chuyển IFC sang gói .bim4c trên máy chủ để người xem không phải phân tích lại."],
+    ],
+    capacityIntro:
+      "Mọi xử lý diễn ra trong trình duyệt của người xem, nên giới hạn thực tế phụ thuộc RAM và GPU của máy đó, không phụ thuộc máy chủ.",
+    limitsTitle: "Giới hạn trong ứng dụng",
+    limits: [
+      ["Tệp IFC", "Không chặn; cảnh báo khi > 200 MB", "Lúc phân tích, trình duyệt giữ cùng lúc tệp, bộ nhớ WASM và lưới 3D."],
+      ["Gói .bim4c", "Tối đa 512 MB", "Phần dữ liệu cấu kiện tối đa 256 MB."],
+      ["Bộ nhớ đệm mô hình", "1,5 GB", "Tự xóa mô hình lâu không dùng nhất khi đầy; xóa tay trong bảng Mô hình."],
+      ["Ghép nhiều tệp", "Không giới hạn số tệp", "Tải lần lượt, mỗi tệp một worker WASM riêng."],
+      ["Kiểm tra xung đột", "500 kết quả mỗi lần chạy", "Nặng nhất xếp trước; lưu 30 lần chạy, 50 mục lịch sử mỗi xung đột."],
+      ["Phép đo", "1.000 điểm mỗi phép đo", "Áp dụng cho đo đa điểm, cộng dồn, đường gấp khúc và đa giác."],
+    ],
+    benchmarksTitle: "Số đo tham chiếu",
+    benchmarks: [
+      ["10 tệp ghép, 5,8 triệu tam giác", "Mỗi lúc chỉ vẽ khoảng 0,5 triệu tam giác nhờ mức chi tiết và loại bỏ phần khuất"],
+      ["Mở lại cặp tệp 250 MB", "25 giây lần đầu → 0,8 giây từ bộ nhớ đệm"],
+    ],
+    benchmarkNote:
+      "Đo trong môi trường kiểm thử, chưa tái đo trên GPU mục tiêu. Dùng ?perf=1 để đo trên máy của bạn.",
+    tipsTitle: "Khi mô hình nặng",
+    tips: [
+      "Đóng các tab khác trước khi mở tệp trên 200 MB.",
+      "Sau lần mở đầu, tải gói .bim4c về để lần sau mở nhanh, không cần IFC.",
+      "Ẩn bộ môn, cô lập tầng hoặc dùng Hộp cắt để giảm phần phải vẽ.",
+      "Khi xoay, các chi tiết nhỏ được tạm bỏ qua để giữ khung hình mượt; đó là chủ ý, không phải lỗi.",
+      "Trình duyệt báo thiếu dung lượng: xóa bộ nhớ đệm trong bảng Mô hình.",
+    ],
   },
   bimTree: {
     searchPlaceholder: "Tìm cấu kiện, loại, tầng, thuộc tính…",

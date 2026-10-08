@@ -6,7 +6,7 @@ import {
   Boxes,
   Camera,
   Columns2,
-  Keyboard,
+  CircleHelp,
   GitCompareArrows,
   Footprints,
   PenLine,
@@ -153,7 +153,7 @@ export function BimToolbar(p: Props) {
             title={`${ui(locale).bimShortcuts.open} (?)`}
             className="grid min-h-10 min-w-10 place-items-center rounded-lg hover:bg-white/10"
           >
-            <Keyboard className="size-4" />
+            <CircleHelp className="size-4" />
           </button>
           <button
             type="button"
