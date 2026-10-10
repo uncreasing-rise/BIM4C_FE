@@ -3,27 +3,36 @@ import { getAllPosts } from "@/features/blog/api/queries";
 import { getCourses } from "@/features/courses/api/queries";
 import { getAllProjects } from "@/features/projects/api/queries";
 import { getServices } from "@/features/services/api/queries";
-import { absoluteUrl, localizedPath } from "@/lib/seo/site";
+import {
+  absoluteUrl,
+  getAlternateLanguages,
+  localizedPath,
+} from "@/lib/seo/site";
 import type { Locale } from "@/lib/i18n/config";
 import type { ContentEntry } from "@/types/content";
 import type { MetadataRoute } from "next";
 import { postGroup } from "@/features/blog/post-group";
 
+type Source = "services" | "projects" | "courses" | "technical" | "news";
+
 interface StaticConfig {
   path: string;
   changeFrequency: MetadataRoute.Sitemap[number]["changeFrequency"];
   priority: number;
+  /** Content whose newest entry dates the page; without one, no lastmod. */
+  source?: Source | "all";
 }
 
 const staticConfigs: StaticConfig[] = [
-  { path: "/", changeFrequency: "daily", priority: 1.0 },
+  { path: "/", changeFrequency: "daily", priority: 1.0, source: "all" },
   { path: "/gioi-thieu", changeFrequency: "monthly", priority: 0.8 },
-  { path: "/dich-vu", changeFrequency: "weekly", priority: 0.9 },
-  { path: "/du-an", changeFrequency: "weekly", priority: 0.9 },
-  { path: "/khoa-hoc", changeFrequency: "weekly", priority: 0.9 },
-  { path: "/chuyen-mon", changeFrequency: "daily", priority: 0.9 },
-  { path: "/tin-tuc", changeFrequency: "daily", priority: 0.85 },
-  { path: "/blog", changeFrequency: "daily", priority: 0.8 },
+  { path: "/dich-vu", changeFrequency: "weekly", priority: 0.9, source: "services" },
+  { path: "/du-an", changeFrequency: "weekly", priority: 0.9, source: "projects" },
+  { path: "/khoa-hoc", changeFrequency: "weekly", priority: 0.9, source: "courses" },
+  { path: "/chuyen-mon", changeFrequency: "daily", priority: 0.9, source: "technical" },
+  { path: "/tin-tuc", changeFrequency: "daily", priority: 0.85, source: "news" },
+  // No /blog: it lists the posts of /chuyen-mon and /tin-tuc again and is
+  // noindex (see app/(public)/blog/page.tsx).
   { path: "/bim-viewer", changeFrequency: "monthly", priority: 0.8 },
   { path: "/phap-ly", changeFrequency: "yearly", priority: 0.5 },
   { path: "/lien-he", changeFrequency: "monthly", priority: 0.7 },
@@ -49,6 +58,13 @@ const lastModified = (entry: ContentEntry) => {
     : undefined;
 };
 
+/** The newest date among the entries; a constant "now" would make lastmod meaningless. */
+const newest = (entries: ContentEntry[]) =>
+  entries
+    .map(lastModified)
+    .filter((date): date is Date => Boolean(date))
+    .sort((a, b) => b.getTime() - a.getTime())[0];
+
 function localizedEntries(
   pathname: string,
   values: Omit<MetadataRoute.Sitemap[number], "url" | "alternates">,
@@ -56,13 +72,8 @@ function localizedEntries(
   return (["vi", "en"] as Locale[]).map((locale) => ({
     ...values,
     url: absoluteUrl(localizedPath(pathname, locale)),
-    alternates: {
-      languages: {
-        "vi-VN": absoluteUrl(localizedPath(pathname, "vi")),
-        "en-US": absoluteUrl(localizedPath(pathname, "en")),
-        "x-default": absoluteUrl(localizedPath(pathname, "vi")),
-      },
-    },
+    // The same set as the pages' own hreflang tags, x-default included.
+    alternates: { languages: getAlternateLanguages(pathname) },
   }));
 }
 
@@ -74,62 +85,44 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     getAllPosts({ strict: false }).catch(() => []),
   ]);
 
-  const staticEntries: MetadataRoute.Sitemap = staticConfigs.flatMap((cfg) =>
-    localizedEntries(cfg.path, {
-      lastModified: new Date(),
-      changeFrequency: cfg.changeFrequency,
-      priority: cfg.priority,
-    }),
-  );
-
-  const dynamicServices: MetadataRoute.Sitemap = services
-    .filter(published)
-    .flatMap((entry) =>
-      localizedEntries(`/dich-vu/${entry.slug}`, {
-        lastModified: lastModified(entry) || new Date(),
-        changeFrequency: "weekly",
-        priority: 0.85,
-      }),
-    );
-
-  const dynamicProjects: MetadataRoute.Sitemap = projects
-    .filter(published)
-    .flatMap((entry) =>
-      localizedEntries(`/du-an/${entry.slug}`, {
-        lastModified: lastModified(entry) || new Date(),
-        changeFrequency: "monthly",
-        priority: 0.8,
-      }),
-    );
-
-  const dynamicCourses: MetadataRoute.Sitemap = courses
-    .filter(published)
-    .flatMap((entry) =>
-      localizedEntries(`/khoa-hoc/${entry.slug}`, {
-        lastModified: lastModified(entry) || new Date(),
-        changeFrequency: "weekly",
-        priority: 0.85,
-      }),
-    );
-
   // Each post once, at its own group's URL (see postGroup).
-  const dynamicTechnicalPosts: MetadataRoute.Sitemap = posts
-    .filter((entry) => published(entry) && postGroup(entry) === "technical")
-    .flatMap((entry) =>
-      localizedEntries(`/chuyen-mon/${entry.slug}`, {
-        lastModified: lastModified(entry) || new Date(),
-        changeFrequency: "monthly",
-        priority: 0.85,
+  const live: Record<Source, ContentEntry[]> = {
+    services: services.filter(published),
+    projects: projects.filter(published),
+    courses: courses.filter(published),
+    technical: posts.filter(
+      (entry) => published(entry) && postGroup(entry) === "technical",
+    ),
+    news: posts.filter(
+      (entry) => published(entry) && postGroup(entry) === "news",
+    ),
+  };
+
+  const staticEntries: MetadataRoute.Sitemap = staticConfigs
+    // An empty news listing is a thin page; it joins with its first post.
+    .filter((cfg) => cfg.source !== "news" || live.news.length > 0)
+    .flatMap((cfg) =>
+      localizedEntries(cfg.path, {
+        lastModified:
+          cfg.source === "all"
+            ? newest(Object.values(live).flat())
+            : cfg.source && newest(live[cfg.source]),
+        changeFrequency: cfg.changeFrequency,
+        priority: cfg.priority,
       }),
     );
 
-  const dynamicNewsPosts: MetadataRoute.Sitemap = posts
-    .filter((entry) => published(entry) && postGroup(entry) === "news")
-    .flatMap((entry) =>
-      localizedEntries(`/tin-tuc/${entry.slug}`, {
-        lastModified: lastModified(entry) || new Date(),
-        changeFrequency: "monthly",
-        priority: 0.75,
+  const detailEntries = (
+    source: Source,
+    base: string,
+    changeFrequency: MetadataRoute.Sitemap[number]["changeFrequency"],
+    priority: number,
+  ): MetadataRoute.Sitemap =>
+    live[source].flatMap((entry) =>
+      localizedEntries(`${base}/${entry.slug}`, {
+        lastModified: lastModified(entry),
+        changeFrequency,
+        priority,
       }),
     );
 
@@ -149,11 +142,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const allEntries = [
     ...staticEntries,
-    ...dynamicServices,
-    ...dynamicProjects,
-    ...dynamicCourses,
-    ...dynamicTechnicalPosts,
-    ...dynamicNewsPosts,
+    ...detailEntries("services", "/dich-vu", "weekly", 0.85),
+    ...detailEntries("projects", "/du-an", "monthly", 0.8),
+    ...detailEntries("courses", "/khoa-hoc", "weekly", 0.85),
+    ...detailEntries("technical", "/chuyen-mon", "monthly", 0.85),
+    ...detailEntries("news", "/tin-tuc", "monthly", 0.75),
     ...legalEntries,
   ];
 

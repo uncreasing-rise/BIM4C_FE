@@ -25,7 +25,10 @@ function load(path) {
     },
   }).outputText;
   const localRequire = (name) =>
-    name.startsWith("@/")
+    // A compiler-provided module: outside a Next build it only throws.
+    name === "next/root-params"
+      ? { locale: async () => undefined }
+      : name.startsWith("@/")
       ? load(name.slice(2))
       : name.startsWith(".")
         ? load(resolve(dirname(filename), name))

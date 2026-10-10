@@ -27,7 +27,7 @@ export function ServicesPageView({
   meta: PageMeta;
 }) {
   usePublicMotion();
-  const { t } = useLanguage();
+  const { t, locale } = useLanguage();
   const faqs = filled(usePageContent("services.faq")?.items).flatMap(({ question, answer }) =>
     question && answer ? [{ question, answer }] : [],
   );
@@ -41,7 +41,7 @@ export function ServicesPageView({
     <main>
       <JsonLd
         data={[
-          breadcrumbSchema(breadcrumbs),
+          breadcrumbSchema(breadcrumbs, locale),
           ...(faqs.length ? [faqPageSchema(faqs)] : []),
         ]}
       />

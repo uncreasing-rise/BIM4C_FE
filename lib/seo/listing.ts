@@ -9,6 +9,7 @@ import {
   localizedPath,
 } from "./site";
 import { getRequestLocale } from "@/lib/i18n/request";
+import type { Locale } from "@/lib/i18n/config";
 
 export type ListingSearchParams = Record<string, string | string[] | undefined>;
 
@@ -44,6 +45,21 @@ export async function pageMetadata(
       description,
       images: [absoluteUrl(image)],
     },
+  };
+}
+
+/**
+ * Metadata of the stand-in a detail page shows while the API is unreachable:
+ * that 200 page has none of the entry's content, so it must not be indexed.
+ */
+export async function unavailableMetadata(
+  copy: Record<Locale, { title: string; description: string }>,
+  pathname: string,
+): Promise<Metadata> {
+  const { title, description } = copy[await getRequestLocale()];
+  return {
+    ...(await pageMetadata(title, description, pathname)),
+    robots: { index: false, follow: true },
   };
 }
 

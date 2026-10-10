@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { LOCALE_COOKIE_NAME, SUPPORTED_LOCALES, negotiateLocale, type Locale } from "@/lib/i18n/config";
-import { LOCALE_HEADER } from "@/lib/i18n/request";
 import { canonicalPageQuery } from "@/lib/seo/page-param";
 
 const PUBLIC_PREFIXES = [
@@ -22,17 +21,11 @@ function isPublicPath(pathname: string) {
   return PUBLIC_PREFIXES.includes(first);
 }
 
-/** The admin UI is Vietnamese-only; render it with lang="vi" regardless of the visitor's site locale. */
-function adminResponse(request: NextRequest) {
-  const headers = new Headers(request.headers);
-  headers.set(LOCALE_HEADER, "vi");
-  return NextResponse.next({ request: { headers } });
-}
-
 export function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
-  if (pathname === "/admin" || pathname.startsWith("/admin/")) return adminResponse(request);
+  // The admin has its own Vietnamese-only root layout (app/admin/layout.tsx).
+  if (pathname === "/admin" || pathname.startsWith("/admin/")) return NextResponse.next();
 
   const segments = pathname.replace(/^\//, "").split("/");
   const requestedLocale = segments[0] as Locale;
@@ -48,26 +41,28 @@ export function proxy(request: NextRequest) {
         return NextResponse.redirect(target, 308);
       }
     }
-    const headers = new Headers(request.headers);
-    headers.set(LOCALE_HEADER, requestedLocale);
-    const rewriteUrl = request.nextUrl.clone();
-    rewriteUrl.pathname = internalPath;
-    const response = NextResponse.rewrite(rewriteUrl, { request: { headers } });
-    response.cookies.set(LOCALE_COOKIE_NAME, requestedLocale, {
-      path: "/",
-      maxAge: 60 * 60 * 24 * 365,
-      sameSite: "lax",
-    });
+    // app/[locale] serves the prefixed URL as is; the cookie only remembers
+    // the choice for the next unprefixed visit. It is set when it changes, so
+    // cached pages are not served with a Set-Cookie on every request.
+    const response = NextResponse.next();
+    if (request.cookies.get(LOCALE_COOKIE_NAME)?.value !== requestedLocale) {
+      response.cookies.set(LOCALE_COOKIE_NAME, requestedLocale, {
+        path: "/",
+        maxAge: 60 * 60 * 24 * 365,
+        sameSite: "lax",
+      });
+    }
     return response;
   }
 
+  // A remembered choice wins; otherwise follow the browser's language.
+  const cookieLocale = request.cookies.get(LOCALE_COOKIE_NAME)?.value as Locale | undefined;
+  const locale =
+    cookieLocale && SUPPORTED_LOCALES.includes(cookieLocale)
+      ? cookieLocale
+      : negotiateLocale(request.headers.get("accept-language"));
+
   if (isPublicPath(pathname) && !pathname.startsWith("/api")) {
-    // A remembered choice wins; otherwise follow the browser's language.
-    const cookieLocale = request.cookies.get(LOCALE_COOKIE_NAME)?.value as Locale | undefined;
-    const locale =
-      cookieLocale && SUPPORTED_LOCALES.includes(cookieLocale)
-        ? cookieLocale
-        : negotiateLocale(request.headers.get("accept-language"));
     const redirectUrl = request.nextUrl.clone();
     redirectUrl.pathname = `/${locale}${pathname === "/" ? "" : pathname}`;
     // Temporary: the target depends on the visitor, so it must never be cached
@@ -75,6 +70,15 @@ export function proxy(request: NextRequest) {
     const response = NextResponse.redirect(redirectUrl, 307);
     response.headers.set("Vary", "Accept-Language, Cookie");
     return response;
+  }
+
+  // Any other page-like path (/xx/du-an) is no page of this site: rendered
+  // under a language so the 404 is the full site page, still with a 404
+  // status. Files (a dot in the path), /api and /_next pass through.
+  if (!/^\/(api|_next)(\/|$)/.test(pathname) && !pathname.includes(".")) {
+    const rewriteUrl = request.nextUrl.clone();
+    rewriteUrl.pathname = `/${locale}${pathname}`;
+    return NextResponse.rewrite(rewriteUrl);
   }
 
   // Admin authentication is verified client-side through /auth/me using the

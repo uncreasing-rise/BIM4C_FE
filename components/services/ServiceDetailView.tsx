@@ -24,7 +24,7 @@ import {
   Layers,
 } from "lucide-react";
 import Image from "next/image";
-import Link from "next/link";
+import { LocalizedLink as Link } from "@/components/shared/LocalizedLink";
 
 import { ui } from "@/lib/i18n/ui";
 interface ServiceDetailViewProps {
@@ -56,8 +56,8 @@ export function ServiceDetailView({
     <>
       <JsonLd
         data={[
-          breadcrumbSchema(breadcrumbItems),
-          contentSchema("service", entry, detailPath),
+          breadcrumbSchema(breadcrumbItems, locale),
+          contentSchema("service", entry, detailPath, locale),
         ]}
       />
       <PageHero

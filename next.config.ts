@@ -28,6 +28,11 @@ function mediaPatterns(): NonNullable<NextConfig["images"]>["remotePatterns"] {
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  experimental: {
+    // app/global-not-found.tsx: the 404 outside app/[locale] and app/admin,
+    // which have no common root layout.
+    globalNotFound: true,
+  },
   // Keep metadata blocking so redirects/notFound raised during metadata generation
   // preserve their HTTP semantics for crawlers as well as browsers.
   htmlLimitedBots: /.*/,

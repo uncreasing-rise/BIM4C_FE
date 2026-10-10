@@ -59,7 +59,7 @@ test("every listing fetches and counts pages with the same size", () => {
   const { PAGE_SIZE } = load("lib/seo/page-param");
   const listings = { "dich-vu": "services", "du-an": "projects", "khoa-hoc": "courses", "chuyen-mon": "posts", "tin-tuc": "posts", blog: "posts" };
   for (const [dir, key] of Object.entries(listings)) {
-    const source = readFileSync(resolve(root, `app/(public)/${dir}/page.tsx`), "utf8");
+    const source = readFileSync(resolve(root, `app/[locale]/(public)/${dir}/page.tsx`), "utf8");
     assert.match(source, new RegExp("limit: PAGE_SIZE\\." + key + ","), `${dir} fetches PAGE_SIZE.${key}`);
     assert.match(source, new RegExp("\\.meta\\.total,\\s*PAGE_SIZE\\." + key + ","), `${dir} counts pages with PAGE_SIZE.${key}`);
     assert.doesNotMatch(source, /limit: \d+/, `${dir} has no hard-coded page size`);

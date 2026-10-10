@@ -22,7 +22,7 @@ import { toLocalizedLabel } from "@/lib/utils/public-labels";
 import type { ContentEntry } from "@/types/content";
 import { ArrowLeft, ArrowRight, CalendarClock } from "lucide-react";
 import Image from "next/image";
-import Link from "next/link";
+import { LocalizedLink as Link } from "@/components/shared/LocalizedLink";
 
 import { ui } from "@/lib/i18n/ui";
 interface ProjectDetailViewProps {
@@ -71,8 +71,8 @@ export function ProjectDetailView({
     <>
       <JsonLd
         data={[
-          breadcrumbSchema(breadcrumbItems),
-          contentSchema("project", entry, detailPath),
+          breadcrumbSchema(breadcrumbItems, locale),
+          contentSchema("project", entry, detailPath, locale),
         ]}
       />
       <PageHero

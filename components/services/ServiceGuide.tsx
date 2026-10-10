@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
+import { LocalizedLink as Link } from "@/components/shared/LocalizedLink";
 import { ArrowRight, Check, Compass } from "lucide-react";
 import { ROUTES } from "@/constants/routes";
 import type { ContentEntry } from "@/types/content";

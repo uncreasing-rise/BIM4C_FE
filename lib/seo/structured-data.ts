@@ -1,9 +1,22 @@
 import type { ContentEntry } from "@/types/content";
-import { absoluteUrl, SITE_NAME, DEFAULT_DESCRIPTION } from "./site";
+import type { Locale } from "@/lib/i18n/config";
+import {
+  absoluteUrl,
+  localizedPath,
+  SITE_NAME,
+  DEFAULT_DESCRIPTION,
+  DEFAULT_DESCRIPTION_EN,
+} from "./site";
 import type { SiteSettingsData } from "@/features/settings/types";
 
 type Schema = Record<string, unknown>;
 const organizationId = absoluteUrl("/#organization");
+
+const languageTag = (locale: Locale) => (locale === "vi" ? "vi-VN" : "en-US");
+
+/** The page's own URL: the language-prefixed address its canonical tag names. */
+const pageUrl = (path: string, locale: Locale) =>
+  absoluteUrl(localizedPath(path, locale));
 
 const validDate = (value?: string) =>
   value && !Number.isNaN(Date.parse(value))
@@ -24,7 +37,8 @@ const imageUrl = (value?: string) => (value ? absoluteUrl(value) : undefined);
  * (registered name, legal representative) are intentionally left out.
  */
 export const organizationSchema = (
-  settings?: SiteSettingsData | null,
+  settings: SiteSettingsData | null | undefined,
+  locale: Locale,
 ): Schema => {
   const sameAs = Object.values(settings?.socialLinks ?? {}).filter((url) =>
     url?.trim(),
@@ -37,7 +51,10 @@ export const organizationSchema = (
     url: absoluteUrl("/"),
     logo: absoluteUrl("/images/logo.png"),
     image: imageUrl(settings?.defaultOgImage),
-    description: settings?.defaultSeoDescription,
+    description:
+      locale === "vi"
+        ? settings?.defaultSeoDescription_vi || DEFAULT_DESCRIPTION
+        : settings?.defaultSeoDescription || DEFAULT_DESCRIPTION_EN,
     address: settings?.address
       ? { "@type": "PostalAddress", streetAddress: settings.address }
       : undefined,
@@ -56,28 +73,24 @@ export const organizationSchema = (
   });
 };
 
-export const websiteSchema = (): Schema => ({
+// No SearchAction: Google retired the sitelinks search box, and its target
+// (/blog?q=) is a noindex utility URL.
+export const websiteSchema = (locale: Locale): Schema => ({
   "@context": "https://schema.org",
   "@type": "WebSite",
   "@id": absoluteUrl("/#website"),
   name: SITE_NAME,
   alternateName: "BIM4C Digital Construction",
   url: absoluteUrl("/"),
-  description: DEFAULT_DESCRIPTION,
+  description: locale === "vi" ? DEFAULT_DESCRIPTION : DEFAULT_DESCRIPTION_EN,
   publisher: { "@id": organizationId },
   inLanguage: ["vi-VN", "en-US"],
-  potentialAction: {
-    "@type": "SearchAction",
-    target: {
-      "@type": "EntryPoint",
-      urlTemplate: `${absoluteUrl("/blog")}?q={search_term_string}`,
-    },
-    "query-input": "required name=search_term_string",
-  },
 });
 
+/** Paths are site paths (/du-an/x); each item gets the page's language prefix. */
 export function breadcrumbSchema(
   items: { name: string; path: string }[],
+  locale: Locale,
 ): Schema {
   return {
     "@context": "https://schema.org",
@@ -86,7 +99,7 @@ export function breadcrumbSchema(
       "@type": "ListItem",
       position: index + 1,
       name: item.name,
-      item: absoluteUrl(item.path),
+      item: pageUrl(item.path, locale),
     })),
   };
 }
@@ -134,19 +147,22 @@ export function faqPageSchema(
   };
 }
 
+/** `entry` is already localized; `path` is the site path without a language prefix. */
 export function contentSchema(
   kind: "course" | "project" | "article" | "service",
   entry: ContentEntry,
   path: string,
+  locale: Locale,
 ): Schema {
+  const url = pageUrl(path, locale);
   const base = {
     "@context": "https://schema.org",
-    "@id": `${absoluteUrl(path)}#entity`,
+    "@id": `${url}#entity`,
     name: entry.title,
     description: entry.description,
     image: imageUrl(entry.seoImage || entry.image),
-    url: absoluteUrl(path),
-    inLanguage: "vi-VN",
+    url,
+    inLanguage: languageTag(locale),
   };
 
   if (kind === "article") {
@@ -156,38 +172,32 @@ export function contentSchema(
       headline: entry.title,
       datePublished: validDate(entry.publishedAt),
       dateModified: validDate(entry.updatedAt || entry.publishedAt),
-      author: {
-        "@type": "Person",
-        name: entry.authorName || "BIM4C Editorial Team",
-      },
+      author: entry.authorName
+        ? { "@type": "Person", name: entry.authorName }
+        : { "@id": organizationId },
       publisher: { "@id": organizationId },
-      mainEntityOfPage: absoluteUrl(path),
+      mainEntityOfPage: url,
     });
   }
 
   if (kind === "course") {
+    // Only what the CMS actually states: no invented level, instructor or
+    // price-less offer.
     return compact({
       ...base,
       "@type": "Course",
       provider: { "@id": organizationId },
-      educationalLevel: entry.level || "Chuyên sâu",
+      educationalLevel: entry.level,
       timeRequired: entry.duration?.startsWith("P")
         ? entry.duration
         : undefined,
-      hasCourseInstance: {
+      hasCourseInstance: compact({
         "@type": "CourseInstance",
         courseMode: "blended",
-        instructor: {
-          "@type": "Person",
-          name: entry.instructor || "BIM4C Senior BIM Manager",
-        },
-      },
-      offers: {
-        "@type": "Offer",
-        category: "BIM Training",
-        priceCurrency: "VND",
-        availability: "https://schema.org/InStock",
-      },
+        instructor: entry.instructor
+          ? { "@type": "Person", name: entry.instructor }
+          : undefined,
+      }),
     });
   }
 
