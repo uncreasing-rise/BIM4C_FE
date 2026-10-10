@@ -26,11 +26,36 @@ interface StaticConfig {
 const staticConfigs: StaticConfig[] = [
   { path: "/", changeFrequency: "daily", priority: 1.0, source: "all" },
   { path: "/gioi-thieu", changeFrequency: "monthly", priority: 0.8 },
-  { path: "/dich-vu", changeFrequency: "weekly", priority: 0.9, source: "services" },
-  { path: "/du-an", changeFrequency: "weekly", priority: 0.9, source: "projects" },
-  { path: "/khoa-hoc", changeFrequency: "weekly", priority: 0.9, source: "courses" },
-  { path: "/chuyen-mon", changeFrequency: "daily", priority: 0.9, source: "technical" },
-  { path: "/tin-tuc", changeFrequency: "daily", priority: 0.85, source: "news" },
+  {
+    path: "/dich-vu",
+    changeFrequency: "weekly",
+    priority: 0.9,
+    source: "services",
+  },
+  {
+    path: "/du-an",
+    changeFrequency: "weekly",
+    priority: 0.9,
+    source: "projects",
+  },
+  {
+    path: "/khoa-hoc",
+    changeFrequency: "weekly",
+    priority: 0.9,
+    source: "courses",
+  },
+  {
+    path: "/chuyen-mon",
+    changeFrequency: "daily",
+    priority: 0.9,
+    source: "technical",
+  },
+  {
+    path: "/tin-tuc",
+    changeFrequency: "daily",
+    priority: 0.85,
+    source: "news",
+  },
   // No /blog: it lists the posts of /chuyen-mon and /tin-tuc again and is
   // noindex (see app/(public)/blog/page.tsx).
   { path: "/bim-viewer", changeFrequency: "monthly", priority: 0.8 },
@@ -64,6 +89,31 @@ const newest = (entries: ContentEntry[]) =>
     .map(lastModified)
     .filter((date): date is Date => Boolean(date))
     .sort((a, b) => b.getTime() - a.getTime())[0];
+
+const MONTHS = [
+  "january",
+  "february",
+  "march",
+  "april",
+  "may",
+  "june",
+  "july",
+  "august",
+  "september",
+  "october",
+  "november",
+  "december",
+];
+
+/** The English legal documents' date ("28 September 2026"), as a UTC day. */
+function legalDate(value: string): Date | undefined {
+  const [, day, month, year] =
+    /^(\d{1,2}) ([a-z]+) (\d{4})$/i.exec(value.trim()) ?? [];
+  const index = MONTHS.indexOf(month?.toLowerCase() ?? "");
+  return index < 0
+    ? undefined
+    : new Date(Date.UTC(Number(year), index, Number(day)));
+}
 
 function localizedEntries(
   pathname: string,
@@ -127,17 +177,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     );
 
   const legalEntries: MetadataRoute.Sitemap = legalDocuments.flatMap(
-    (document) => {
-      const [day, month, year] = document.updatedAt.split(".").map(Number);
-      return localizedEntries(`/phap-ly/${document.slug}`, {
-        lastModified:
-          day && month && year
-            ? new Date(Date.UTC(year, month - 1, day))
-            : undefined,
+    (document) =>
+      localizedEntries(`/phap-ly/${document.slug}`, {
+        lastModified: legalDate(document.updatedAt),
         changeFrequency: "yearly",
         priority: 0.4,
-      });
-    },
+      }),
   );
 
   const allEntries = [
