@@ -4,8 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { adminContentApi, postsApi } from "@/features/admin/api/client";
-import { currentAdmin } from "@/features/admin/auth";
+import { adminContentApi } from "@/features/admin/api/client";
 import { createEmptyContent } from "@/features/admin/serializers";
 import type {
   AdminCategory,
@@ -26,7 +25,6 @@ import { BilingualColumnsHeader, BilingualField, SharedBadge, TranslationCheckli
 import { CORE_FIELDS, SEO_FIELDS, checkContent, fillBlockGaps, type TextSpec } from "./content-check";
 import { cn } from "@/lib/utils";
 import { LivePreviewModal } from "./LivePreviewModal";
-import { PostReviewPanel, PostReviewTag } from "./PostReviewPanel";
 import { revalidateCmsCache } from "@/features/admin/api/revalidate";
 import {
   PostFields,
@@ -63,12 +61,6 @@ import {
   useLoader,
   type SortState,
 } from "./list-controls";
-
-/** Editor state for a post: its pending draft (if any) over the live text. */
-function withDraft(value: AdminContent): AdminContent {
-  const draft = (value as AdminPostContent).draft;
-  return draft && typeof draft === "object" ? ({ ...value, ...draft } as AdminContent) : value;
-}
 
 function prepareEditorContent(value: AdminContent, contentType: AdminContentType): AdminContent {
   const sections = Array.isArray(value.sections) ? value.sections : [];
@@ -134,17 +126,6 @@ export function ContentManager({
   // "Tin tức" and "Chuyên môn" are two views of the same posts table.
   const group =
     contentType === "Tin tức" ? "news" : contentType === "Chuyên môn" ? "technical" : undefined;
-  // Posts go through review: editors save drafts and submit, admins publish.
-  const isPost = group !== undefined;
-  const [canPublish, setCanPublish] = useState(true);
-  useEffect(() => {
-    if (!isPost) return;
-    currentAdmin()
-      .then((admin) => setCanPublish(admin.permissions.includes("*") || admin.permissions.includes("posts.publish")))
-      .catch(() => {});
-  }, [isPost]);
-  /** The open post as stored (live status, draft, review state). */
-  const [stored, setStored] = useState<AdminPostContent | null>(null);
   const debouncedQuery = useDebouncedValue(query.trim(), 300);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
@@ -182,8 +163,7 @@ export function ContentManager({
             page,
             limit: pageSize,
             search: debouncedQuery,
-            status: status === "pending_review" ? undefined : status,
-            review: status === "pending_review" ? "PENDING" : undefined,
+            status,
             category: hasCategories ? category : undefined,
             group,
             sortBy: sort.by,
@@ -290,7 +270,6 @@ export function ContentManager({
     )
       return;
     setEditor(null);
-    setStored(null);
     setDirty(false);
   }
 
@@ -314,13 +293,10 @@ export function ContentManager({
     setSlugTouched(false);
     try {
       const response = await adminContentApi.getById(contentType, item.id);
-      const data = response?.data ?? item;
-      setStored(isPost ? (data as AdminPostContent) : null);
-      setEditor(prepareEditorContent(isPost ? withDraft(data) : data, contentType));
+      setEditor(prepareEditorContent(response?.data ?? item, contentType));
     } catch (error) {
       // Keep the editor usable even if the detail endpoint is temporarily unavailable.
-      setStored(isPost ? (item as AdminPostContent) : null);
-      setEditor(prepareEditorContent(isPost ? withDraft(item) : item, contentType));
+      setEditor(prepareEditorContent(item, contentType));
       toast.error(error instanceof Error ? error.message : "Không thể tải chi tiết nội dung.");
     } finally {
       setOpeningId(null);
@@ -370,16 +346,8 @@ export function ContentManager({
     if (failed.length) toast.error(`Nội dung đã lưu nhưng chưa lưu được: ${failed.join(", ")}. Mở lại để thử.`);
   }
 
-  /** After a review action or a draft save: show the stored post, stay in the editor. */
-  function showStored(post: AdminPostContent) {
-    setStored(post);
-    setEditor(prepareEditorContent(withDraft(post as AdminContent), contentType));
-    setDirty(false);
-  }
-
-  async function save(mode: "live" | "draft" = "live") {
+  async function save() {
     if (!editor || !check) return;
-    const toDraft = isPost && stored?.status === "PUBLISHED" && (mode === "draft" || !canPublish);
 
     if (check.errors.length > 0) {
       const first = check.errors[0];
@@ -392,7 +360,7 @@ export function ContentManager({
     }
 
     const warnings = check.issues.filter((issue) => issue.severity === "warning");
-    const goingLive = !toDraft && !["DRAFT", "ARCHIVED"].includes(editor.status);
+    const goingLive = !["DRAFT", "ARCHIVED"].includes(editor.status);
     if (warnings.length > 0 && goingLive) {
       const ok = await confirm({
         title: `Còn ${warnings.length} mục chưa đủ song ngữ`,
@@ -445,13 +413,6 @@ export function ContentManager({
         contentBlocks_vi: blocks.vi,
       };
 
-      if (editor.id && toDraft) {
-        const res = await postsApi.saveDraft(editor.id, payload as AdminPostContent);
-        toast.success("Đã lưu bản nháp. Trang công khai chưa thay đổi.", { id: toastId });
-        showStored(res.data);
-        await load();
-        return;
-      }
       if (editor.id) {
         setItems((prev) =>
           prev.map((x) =>
@@ -460,27 +421,15 @@ export function ContentManager({
               : x,
           ),
         );
-        const res = await adminContentApi.update(contentType, editor.id, payload);
+        await adminContentApi.update(contentType, editor.id, payload);
         await saveChildren(editor.id);
-        // Saved live from the merged draft: the draft is now on the page.
-        if (isPost && stored?.draftUpdatedAt) await postsApi.discardDraft(editor.id);
         toast.success("Cập nhật nội dung thành công!", { id: toastId });
-        if (isPost && !canPublish && res?.data) {
-          showStored(res.data as AdminPostContent);
-          await load();
-          return;
-        }
       } else {
         const res = await adminContentApi.create(contentType, payload);
         const newItem = (res?.data || payload) as AdminContent;
         setItems((prev) => [{ ...newItem, type: contentType }, ...prev]);
         if (newItem.id) await saveChildren(newItem.id);
         toast.success("Tạo mới nội dung thành công!", { id: toastId });
-        if (isPost && !canPublish && res?.data) {
-          showStored(res.data as AdminPostContent);
-          await load();
-          return;
-        }
       }
       setDirty(false);
       setEditor(null);
@@ -669,22 +618,9 @@ export function ContentManager({
               <span className="hidden md:inline">Xem trước</span>
             </Button>
 
-            {isPost && isEdit && stored?.status === "PUBLISHED" && canPublish && (
-              <Button type="button" variant="outline" size="sm" disabled={saving} onClick={() => void save("draft")} className="gap-1.5 text-xs font-semibold" title="Lưu thành bản nháp, chưa đổi trang công khai">
-                <span>Lưu nháp</span>
-              </Button>
-            )}
             <Button type="button" disabled={saving} onClick={() => void save()} className="gap-1.5">
               <Save className="size-3.5 text-slate-950" />
-              <span>
-                {saving
-                  ? "Đang lưu…"
-                  : isPost && stored?.status === "PUBLISHED" && !canPublish
-                    ? "Lưu bản nháp"
-                    : isEdit
-                      ? "Cập nhật"
-                      : "Lưu"}
-              </span>
+              <span>{saving ? "Đang lưu…" : isEdit ? "Cập nhật" : "Lưu"}</span>
             </Button>
           </div>
         </header>
@@ -889,19 +825,6 @@ export function ContentManager({
                 <TranslationChecklist issues={check.issues} progress={check.progress} />
               </div>
 
-              {isPost && isEdit && stored && (
-                <PostReviewPanel
-                  post={stored}
-                  canPublish={canPublish}
-                  dirty={dirty}
-                  onChanged={(post, published) => {
-                    showStored(post);
-                    void load();
-                    if (published) void revalidateCmsCache();
-                  }}
-                />
-              )}
-
               {/* Publishing Control Card */}
               <div className="rounded-xl border border-border bg-card p-5 shadow-xs space-y-4">
                 <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
@@ -914,15 +837,12 @@ export function ContentManager({
                   <select
                     id="bf-status"
                     value={editor.status}
-                    disabled={isPost && !canPublish && stored?.status === "PUBLISHED"}
                     onChange={(e) => update({ status: e.target.value as AdminContentStatus })}
                     className="w-full rounded-md border border-slate-300 bg-white text-sm text-slate-900 shadow-sm outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-600/20 dark:border-border dark:bg-background dark:text-foreground px-3 py-2"
                   >
                     {(contentType === "Dự án"
                       ? (["DRAFT", "PROFILED", "PLANNED", "IN_PROGRESS", "COMPLETED", "ARCHIVED"] as const)
-                      : (["DRAFT", "PUBLISHED", "ARCHIVED"] as const).filter(
-                          (value) => !isPost || canPublish || value !== "PUBLISHED" || editor.status === "PUBLISHED",
-                        )
+                      : (["DRAFT", "PUBLISHED", "ARCHIVED"] as const)
                     ).map((value) => (
                       <option key={value} value={value}>
                         {statusLabel(contentType === "Dự án" ? "project" : "content", value)}
@@ -930,9 +850,7 @@ export function ContentManager({
                     ))}
                   </select>
                   <p className="text-[11px] text-muted-foreground">
-                    {isPost && !canPublish && editor.status !== "PUBLISHED"
-                      ? "Xuất bản cần quản trị viên duyệt: lưu rồi bấm Gửi duyệt."
-                      : editor.status === "DRAFT"
+                    {editor.status === "DRAFT"
                       ? "Bản nháp: chưa hiển thị trên website."
                       : editor.status === "ARCHIVED"
                         ? "Lưu trữ: đã ẩn khỏi website."
@@ -1059,7 +977,6 @@ export function ContentManager({
                       { value: "draft", label: statusLabel("content", "DRAFT") },
                       { value: "published", label: statusLabel("content", "PUBLISHED") },
                       { value: "archived", label: statusLabel("content", "ARCHIVED") },
-                      ...(isPost ? [{ value: "pending_review", label: "Chờ duyệt" }] : []),
                     ]
               }
             />
@@ -1223,10 +1140,7 @@ export function ContentManager({
                     </span>
                   </td>
                   <td className="px-4 py-3.5 text-xs">
-                    <div className="flex flex-wrap items-center gap-1.5">
-                      <StatusBadge domain={contentType === "Dự án" ? "project" : "content"} value={item.status} />
-                      {isPost && <PostReviewTag post={item as AdminPostContent} />}
-                    </div>
+                    <StatusBadge domain={contentType === "Dự án" ? "project" : "content"} value={item.status} />
                   </td>
                   <td className="px-4 py-3.5 text-xs text-muted-foreground">
                     {formatDateTime(item.publishedAt, false)}
