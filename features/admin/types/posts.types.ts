@@ -7,7 +7,18 @@ export interface AdminPostContent extends AdminBaseContent {
   category?: AdminCategory | null;
   authorName?: string | null;
   authorName_vi?: string | null;
+  /** Edits to a published post waiting for review; the live page is unchanged. */
+  draft?: Partial<AdminPostContent> | null;
+  draftUpdatedAt?: string | null;
+  reviewStatus?: PostReviewStatus;
+  reviewNote?: string | null;
+  submittedAt?: string | null;
+  submittedBy?: { id: string; name: string } | null;
+  reviewedAt?: string | null;
+  reviewedBy?: { id: string; name: string } | null;
 }
+
+export type PostReviewStatus = "NONE" | "PENDING" | "CHANGES_REQUESTED";
 
 export type PostFilterQuery = ContentFilterQuery;
 

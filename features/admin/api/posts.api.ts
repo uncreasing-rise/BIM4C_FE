@@ -34,6 +34,32 @@ export const postsApi = {
       body: JSON.stringify(serializePostPayload(payload)),
     }),
 
+  /** Lưu bản nháp cho bài đã xuất bản (trang công khai chưa đổi) */
+  saveDraft: (id: string, payload: Partial<AdminPostContent>) =>
+    adminRequest<{ data: AdminPostContent }>(`posts/${id}/draft`, {
+      method: "POST",
+      body: JSON.stringify(serializePostPayload(payload)),
+    }),
+
+  /** Bỏ bản nháp, giữ nguyên bài đang hiển thị */
+  discardDraft: (id: string) =>
+    adminRequest<{ data: AdminPostContent }>(`posts/${id}/draft`, { method: "DELETE" }),
+
+  /** Gửi bài (hoặc bản nháp) cho quản trị viên duyệt */
+  submit: (id: string) =>
+    adminRequest<{ data: AdminPostContent }>(`posts/${id}/submit`, { method: "POST" }),
+
+  /** Duyệt: áp bản nháp (nếu có) và xuất bản */
+  approve: (id: string) =>
+    adminRequest<{ data: AdminPostContent }>(`posts/${id}/approve`, { method: "POST" }),
+
+  /** Trả lại cho tác giả kèm ghi chú cần sửa */
+  reject: (id: string, note: string) =>
+    adminRequest<{ data: AdminPostContent }>(`posts/${id}/reject`, {
+      method: "POST",
+      body: JSON.stringify({ note }),
+    }),
+
   /** Xóa bài viết */
   remove: (id: string) =>
     adminRequest<void>(`posts/${id}`, { method: "DELETE" }),
