@@ -1,0 +1,15 @@
+node_modules
+.next
+out
+.git
+.github
+.vercel
+.qa
+.agents
+coverage
+*.log
+*.pdf
+# Secrets never enter the build context; public values come in as build args.
+.env
+.env.*
+!.env.example
