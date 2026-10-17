@@ -8,6 +8,8 @@
  */
 type SchedulerLike = { yield?: () => Promise<void> };
 
+type NodePort = MessagePort & { ref?: () => void; unref?: () => void };
+
 let channel: MessageChannel | null = null;
 const waiting: (() => void)[] = [];
 
@@ -18,11 +20,16 @@ export function yieldToBrowser(): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, 0));
   if (!channel) {
     channel = new MessageChannel();
-    channel.port1.onmessage = () => waiting.shift()?.();
-    // Node (tests, tooling) would otherwise stay alive for the open port.
-    for (const port of [channel.port1, channel.port2])
-      (port as MessagePort & { unref?: () => void }).unref?.();
+    channel.port1.onmessage = () => {
+      waiting.shift()?.();
+      // Idle: let Node (tests, tooling) exit instead of staying alive for the port.
+      if (!waiting.length) (channel!.port1 as NodePort).unref?.();
+    };
+    (channel.port2 as NodePort).unref?.();
   }
+  // Held while a message is in flight: on Node 22 an unref'd port let the
+  // process exit with the yield still pending.
+  (channel.port1 as NodePort).ref?.();
   return new Promise((resolve) => {
     waiting.push(resolve);
     channel!.port2.postMessage(null);

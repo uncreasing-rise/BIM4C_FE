@@ -47,9 +47,12 @@ test("each post has one public URL: news categories under /tin-tuc, the rest und
   assert.equal(postPath({ slug: "no-category" }), "/chuyen-mon/no-category");
 });
 
-test("the frontend's news categories match the backend's", () => {
+// Cross-repo check: needs the BE repo checked out next to this one (local
+// development). CI checks out only this repo, so it is skipped there.
+const backendPosts = resolve(root, "../BE/src/modules/posts/posts.service.ts");
+test("the frontend's news categories match the backend's", { skip: !existsSync(backendPosts) && "BE repo not checked out next to FE" }, () => {
   const { NEWS_SLUGS } = load("features/blog/post-group");
-  const backend = readFileSync(resolve(root, "../BE/src/modules/posts/posts.service.ts"), "utf8");
+  const backend = readFileSync(backendPosts, "utf8");
   const listed = backend.match(/export const NEWS_SLUGS = \[([^\]]*)\]/)?.[1];
   assert.ok(listed, "NEWS_SLUGS not found in posts.service.ts");
   assert.deepEqual(NEWS_SLUGS, [...listed.matchAll(/'([^']+)'/g)].map((m) => m[1]));
