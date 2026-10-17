@@ -4,6 +4,8 @@
 # NEXT_PUBLIC_* are baked in at build time: rebuild after changing them.
 services:
   web:
+    # CI/CD sets FE_IMAGE=ghcr.io/…:<commit> (deploy-app); unset builds locally.
+    image: ${FE_IMAGE:-fe-web}
     build:
       context: .
       args:
