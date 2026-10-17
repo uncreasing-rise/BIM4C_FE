@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { getLegalDocument, legalDocuments } from "@/constants/legal-content";
 import { ROUTES } from "@/constants/routes";
 import { pageMetadata } from "@/lib/seo/listing";
+import { getRequestLocale } from "@/lib/i18n/request";
 import { LegalDetailView } from "@/components/sections/LegalDetailView";
 
 export function generateStaticParams() {
@@ -14,7 +15,10 @@ export async function generateMetadata({
 }: {
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
-  const document = getLegalDocument((await params).slug);
+  const document = getLegalDocument(
+    (await params).slug,
+    await getRequestLocale(),
+  );
   if (!document) notFound();
   return await pageMetadata(
     document.title,
